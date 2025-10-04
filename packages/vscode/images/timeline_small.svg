@@ -1,0 +1,92 @@
+<svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    /* Default state - darker gray for main elements */
+    .timeline-element {
+      fill: #8C8C8C;
+      stroke: #8C8C8C;
+      transition: all 0.2s ease;
+    }
+    
+    /* Background circle - separate styling */
+    .bg-circle {
+      stroke: #8C8C8C;
+      opacity: 0.4;
+      transition: all 0.2s ease;
+    }
+    
+    /* Inner rings */
+    .inner-ring {
+      stroke: #1E1E1E;
+      opacity: 0.3;
+      transition: opacity 0.2s ease;
+    }
+    
+    /* Hover state - lighter gray */
+    svg:hover .timeline-element {
+      fill: #C5C5C5;
+      stroke: #C5C5C5;
+    }
+    
+    svg:hover .bg-circle {
+      stroke: #C5C5C5;
+      opacity: 0.5;
+    }
+    
+    svg:hover .inner-ring {
+      opacity: 0.5;
+    }
+    
+    /* Accent dots */
+    .accent-dot {
+      fill: #8C8C8C;
+      transition: all 0.2s ease;
+    }
+    
+    svg:hover .accent-dot {
+      fill: #C5C5C5;
+    }
+  </style>
+  
+  <!-- Background circle outline - edge to edge -->
+  <circle cx="12" cy="12" r="12" fill="none" class="bg-circle"/>
+  
+  <!-- Main vertical timeline line with rounded caps -->
+  <line x1="12" y1="3" x2="12" y2="21" class="timeline-element" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Timeline nodes with white inner rings to match the colorful version -->
+  <!-- Top node -->
+  <circle cx="12" cy="6" r="2.5" class="timeline-element"/>
+  <circle cx="12" cy="6" r="1.8" fill="none" class="inner-ring" stroke-width="0.4"/>
+  
+  <!-- Middle node (larger for emphasis) -->
+  <circle cx="12" cy="12" r="3" class="timeline-element"/>
+  <circle cx="12" cy="12" r="2.3" fill="none" class="inner-ring" stroke-width="0.4"/>
+  
+  <!-- Bottom node -->
+  <circle cx="12" cy="18" r="2.5" class="timeline-element"/>
+  <circle cx="12" cy="18" r="1.8" fill="none" class="inner-ring" stroke-width="0.4"/>
+  
+  <!-- Branch lines with rounded caps -->
+  <!-- Top branch (right) -->
+  <line x1="14.5" y1="6" x2="20" y2="6" class="timeline-element" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="20.5" cy="6" r="1.2" class="timeline-element"/>
+  
+  <!-- Middle branch (left) -->
+  <line x1="9.5" y1="12" x2="4" y2="12" class="timeline-element" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="3.5" cy="12" r="1.2" class="timeline-element"/>
+  
+  <!-- Bottom branch (right) -->
+  <line x1="14.5" y1="18" x2="20" y2="18" class="timeline-element" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="20.5" cy="18" r="1.2" class="timeline-element"/>
+  
+  <!-- Small accent dots -->
+  <circle cx="12" cy="2" r="0.4" class="accent-dot" opacity="0.6"/>
+  <circle cx="12" cy="22" r="0.4" class="accent-dot" opacity="0.6"/>
+  
+  <!-- Connection dots between main nodes -->
+  <circle cx="12" cy="8.5" r="0.3" class="accent-dot" opacity="0.5"/>
+  <circle cx="12" cy="9.5" r="0.3" class="accent-dot" opacity="0.5"/>
+  
+  <circle cx="12" cy="14.5" r="0.3" class="accent-dot" opacity="0.5"/>
+  <circle cx="12" cy="15.5" r="0.3" class="accent-dot" opacity="0.5"/>
+</svg>

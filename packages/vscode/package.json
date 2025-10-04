@@ -1,15 +1,15 @@
 {
-  "name": "agent-brain-vscode",
-  "displayName": "Agent Brain Platform",
-  "description": "Unified platform for AI-assisted development with timeline visualization, architectural guidance, and pathway testing",
+  "name": "ab-timeline",
+  "displayName": "AB Timeline",
+  "description": "Agent Brain Timeline - Interactive visualization for repository evolution with commits, branches, and releases",
   "version": "0.1.0",
   "publisher": "agent-brain",
+  "icon": "images/timeline_large.png",
   "engines": {
     "vscode": "^1.80.0"
   },
   "categories": [
     "Visualization",
-    "Testing",
     "Other"
   ],
   "activationEvents": [
@@ -19,37 +19,63 @@
   "contributes": {
     "commands": [
       {
-        "command": "agentBrain.showTimeline",
+        "command": "repoTimeline.showTimeline",
         "title": "Show Repository Timeline",
-        "category": "Agent Brain"
+        "category": "Timeline"
       },
       {
-        "command": "agentBrain.refreshData",
+        "command": "repoTimeline.refreshData",
         "title": "Refresh Timeline Data",
-        "category": "Agent Brain",
+        "category": "Timeline",
         "icon": "$(refresh)"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "agentBrainActivityBar",
-          "title": "Agent Brain",
-          "icon": "$(graph)"
+          "id": "repoTimelineActivityBar",
+          "title": "AB Timeline",
+          "icon": "images/timeline_small.svg"
+        }
+      ],
+      "panel": [
+        {
+          "id": "repoTimelinePanel",
+          "title": "AB Timeline",
+          "icon": "images/timeline_small.svg"
         }
       ]
     },
     "views": {
-      "agentBrainActivityBar": [
+      "repoTimelineActivityBar": [
         {
-          "id": "agentBrain.welcomeView",
+          "id": "repoTimeline.welcomeView",
           "name": "Getting Started",
           "type": "webview"
-        },
+        }
+      ],
+      "repoTimelinePanel": [
         {
-          "id": "agentBrain.timelineView",
-          "name": "Timeline",
+          "id": "repoTimeline.evolutionView",
+          "name": "AB Timeline",
           "type": "webview"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "repoTimeline.showTimeline",
+        "key": "ctrl+shift+t",
+        "mac": "cmd+shift+t",
+        "when": "!terminalFocus"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "repoTimeline.refreshData",
+          "when": "view == repoTimeline.evolutionView",
+          "group": "navigation"
         }
       ]
     }
