@@ -4,7 +4,6 @@
   "description": "Unified platform for AI-assisted development with timeline visualization, architectural guidance, and pathway testing",
   "version": "0.1.0",
   "publisher": "agent-brain",
-  "icon": "images/icon.png",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -62,12 +61,10 @@
     "clean": "rm -rf dist *.vsix"
   },
   "dependencies": {
-    "@agent-brain/shared": "^0.1.0",
-    "@agent-brain/core": "^0.1.0",
-    "@agent-brain/timeline": "^0.1.0",
-    "@agent-brain/testing": "^0.1.0"
+    "d3": "^7.9.0"
   },
   "devDependencies": {
+    "@types/d3": "^7.4.3",
     "@types/node": "^20.19.19",
     "@types/vscode": "^1.80.0",
     "@vscode/vsce": "^2.22.0",

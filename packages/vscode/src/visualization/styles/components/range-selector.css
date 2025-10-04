@@ -1,0 +1,177 @@
+/* Range Selector - Bottom of main container, flush with bottom */
+.range-selector-section {
+    flex: 0 0 120px; /* Fixed height in flex layout */
+    margin: 10px 20px 0 20px; /* No bottom margin for flush positioning */
+    z-index: 500;  /* Above timeline but below popups */
+    pointer-events: none; /* Allow clicks to pass through to timeline below */
+    position: relative; /* For positioning labels */
+    display: flex;
+    flex-direction: column;
+    gap: 0; /* No gap between elements */
+}
+
+#range-selector,
+.range-selector-container {
+    position: relative;
+    height: 100px !important;
+    min-height: 100px !important;
+    width: 100%;
+    background: rgba(45, 45, 48, 0.95); /* Semi-transparent dark background */
+    border: 0.5px solid #6b7280; /* Thin mid-grey border */
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    overflow: visible !important;
+    display: block !important;
+    visibility: visible !important;
+    pointer-events: all !important; /* Re-enable pointer events for the selector */
+    backdrop-filter: blur(8px); /* Blur background for modern glass effect */
+}
+
+/* Ensure SVG takes full space */
+#range-svg {
+    width: 100%;
+    height: 100%;
+    display: block !important;
+    visibility: visible !important;
+}
+
+/* Histogram bars - subtle background reference */
+.range-bar {
+    fill: #00d4ff;
+    opacity: 0.3; /* Subtle background bars */
+    transition: opacity 0.2s ease;
+    pointer-events: none; /* Don't interfere with brush */
+}
+
+.range-bar:hover {
+    opacity: 0.4;
+}
+
+/* Brush selection area - more visible */
+.brush .selection {
+    fill: #00d4ff !important;
+    fill-opacity: 0.25 !important;
+    stroke: #00d4ff !important;
+    stroke-width: 2 !important;
+    stroke-opacity: 1 !important;
+    cursor: move !important;
+    pointer-events: all !important;
+    visibility: visible !important;
+}
+
+/* Brush handles - prominent and visible */
+.brush .handle {
+    fill: #ffffff !important;
+    stroke: #00d4ff !important;
+    stroke-width: 2 !important;
+    opacity: 0.9 !important;
+    cursor: ew-resize !important;
+    pointer-events: all !important;
+    visibility: visible !important;
+}
+
+/* Make handles more prominent */
+.brush .handle--w,
+.brush .handle--e {
+    width: 10px !important;
+    fill: #ffffff !important;
+    stroke: #00d4ff !important;
+    stroke-width: 2 !important;
+    rx: 2 !important;
+}
+
+/* Ensure brush overlay stays on top */
+.brush-layer {
+    pointer-events: all !important;
+    visibility: visible !important;
+}
+
+.range-group {
+    pointer-events: all;
+}
+
+/* X-axis styling */
+.range-axis-layer text {
+    fill: #969696;
+    font-size: 10px;
+}
+
+.range-axis-layer path,
+.range-axis-layer line {
+    stroke: #3e3e42;
+}
+
+/* Range Labels - positioned below the range selector panel */
+.range-label {
+    position: absolute;
+    top: 100px; /* Position below the 100px range-selector-container */
+    font-size: 11px;
+    color: var(--vscode-foreground);
+    background: transparent; /* No background, let container background show through */
+    padding: 2px 0;
+    border: none;
+    pointer-events: none;
+    z-index: 10;
+    font-weight: 500;
+    line-height: 1.2;
+}
+
+.range-label.start {
+    left: 0; /* Flush to left edge, no padding */
+}
+
+.range-label.end {
+    right: 0; /* Flush to right edge, no padding */
+}
+
+/* Ensure visibility in both themes */
+.vscode-dark #range-selector {
+    background: rgba(30, 30, 30, 0.95);
+    border-color: #6b7280;
+}
+
+.vscode-light #range-selector {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: #6b7280;
+}
+
+.vscode-light .range-bar {
+    fill: #00d4ff;
+}
+
+.vscode-light .brush .selection {
+    fill: #00d4ff !important;
+    stroke: #00d4ff !important;
+}
+
+.vscode-light .brush .handle {
+    fill: #333333 !important;
+    stroke: #00d4ff !important;
+}
+
+/* Ensure legend doesn't overlap range selector */
+.legend {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 100;
+}
+
+/* Improved axis label visibility */
+.range-selector-container .axis.x .tick text {
+    overflow: visible;
+    padding-bottom: 10px; /* More padding for labels */
+}
+
+/* Prevent label cutoff */
+.range-axis-layer .tick text {
+    overflow: visible;
+    text-anchor: middle;
+    dominant-baseline: hanging; /* Align text below tick */
+}
+
+/* Ensure tick labels aren't cut off */
+.range-selector-container {
+    padding-bottom: 10px; /* More padding for labels */
+    overflow: visible !important; /* Allow labels to extend */
+}

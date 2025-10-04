@@ -9,8 +9,8 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { DataOrchestrator } from '@agent-brain/timeline/orchestration/DataOrchestrator';
-import { CanonicalEvent, FilterState } from '@agent-brain/shared';
+import { DataOrchestrator } from '../orchestration/DataOrchestrator';
+import { CanonicalEvent, FilterState } from '../core/CanonicalEvent';
 import { logger, LogCategory, LogPathway } from '../utils/Logger';
 
 export class TimelineProvider implements vscode.WebviewViewProvider {

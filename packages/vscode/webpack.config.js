@@ -1,5 +1,4 @@
 const path = require('path');
-const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
@@ -19,14 +18,7 @@ const extensionConfig = {
     vscode: 'commonjs vscode'
   },
   resolve: {
-    extensions: ['.js', '.ts'],
-    mainFields: ['main', 'module'],
-    alias: {
-      '@agent-brain/shared': path.resolve(__dirname, '../shared/dist/index.js'),
-      '@agent-brain/core': path.resolve(__dirname, '../core/dist/index.js'),
-      '@agent-brain/timeline': path.resolve(__dirname, '../timeline/dist'),
-      '@agent-brain/testing': path.resolve(__dirname, '../testing/dist')
-    }
+    extensions: ['.ts', '.js']
   },
   module: {
     rules: [
@@ -37,7 +29,8 @@ const extensionConfig = {
           {
             loader: 'ts-loader',
             options: {
-              configFile: path.resolve(__dirname, 'tsconfig.json')
+              configFile: path.resolve(__dirname, 'tsconfig.json'),
+              transpileOnly: false
             }
           }
         ]
@@ -54,7 +47,7 @@ const webviewConfig = {
   target: 'web',
   mode: 'production',
   entry: {
-    'webview-main': path.resolve(__dirname, '../timeline/src/webview/main.ts')
+    'webview-main': path.resolve(__dirname, 'src/webview/main.ts')
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -62,10 +55,7 @@ const webviewConfig = {
     clean: false
   },
   resolve: {
-    extensions: ['.ts', '.js'],
-    alias: {
-      '@agent-brain/shared': path.resolve(__dirname, '../shared/src')
-    }
+    extensions: ['.ts', '.js']
   },
   module: {
     rules: [
@@ -78,7 +68,8 @@ const webviewConfig = {
             options: {
               transpileOnly: true,
               compilerOptions: {
-                module: 'esnext'
+                module: 'esnext',
+                lib: ['ES2020', 'DOM']
               }
             }
           }
@@ -92,14 +83,14 @@ const webviewConfig = {
   },
   plugins: [
     new HtmlWebpackPlugin({
-      template: path.resolve(__dirname, '../timeline/src/visualization/templates/timeline.html'),
+      template: path.resolve(__dirname, 'src/visualization/templates/timeline.html'),
       filename: 'timeline.html',
       chunks: ['webview-main']
     }),
     new CopyWebpackPlugin({
       patterns: [
         {
-          from: path.resolve(__dirname, '../timeline/src/visualization/styles'),
+          from: path.resolve(__dirname, 'src/visualization/styles'),
           to: 'styles'
         }
       ]

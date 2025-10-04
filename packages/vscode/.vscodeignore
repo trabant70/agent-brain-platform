@@ -1,0 +1,14 @@
+**/.git
+**/.git/**
+../**
+../../**
+src/**
+.gitignore
+.yarnrc
+**/tsconfig.json
+**/*.map
+**/*.ts
+!dist/**/*.js
+!dist/**/*.html
+!dist/**/*.css
+node_modules/**
