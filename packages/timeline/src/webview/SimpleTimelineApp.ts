@@ -19,6 +19,9 @@ interface CanonicalEvent {
     branches: string[];
     primaryBranch?: string;
     hash?: string;
+    fullHash?: string;
+    providerId?: string;
+    sources?: any[];
     impact?: any;
     metadata?: any;
 }
@@ -62,7 +65,7 @@ export class SimpleTimelineApp {
         // Setup renderer with callbacks
         this.renderer.initialize(container, {
             animations: true,
-            showLegend: true,
+            customSettings: { showLegend: true },
             theme: 'cosmic'
         });
 
@@ -425,6 +428,7 @@ export class SimpleTimelineApp {
         this.currentProcessedData = processedData;
 
         try {
+            // @ts-ignore - Access to protected method needed for rendering
             await this.renderer.renderData(processedData);
             console.log('[SimpleTimelineApp] Render complete');
 
@@ -663,6 +667,7 @@ export class SimpleTimelineApp {
             LogPathway.CONFIG_SYNC
         );
         if (this.renderer) {
+            // @ts-ignore - Dispose method may not be in interface but is needed
             this.renderer.dispose();
         }
     }

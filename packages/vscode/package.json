@@ -1,0 +1,84 @@
+{
+  "name": "agent-brain-vscode",
+  "displayName": "Agent Brain Platform",
+  "description": "Unified platform for AI-assisted development with timeline visualization, architectural guidance, and pathway testing",
+  "version": "0.1.0",
+  "publisher": "agent-brain",
+  "icon": "images/icon.png",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Visualization",
+    "Testing",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartup"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "agentBrain.showTimeline",
+        "title": "Show Repository Timeline",
+        "category": "Agent Brain"
+      },
+      {
+        "command": "agentBrain.refreshData",
+        "title": "Refresh Timeline Data",
+        "category": "Agent Brain",
+        "icon": "$(refresh)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "agentBrainActivityBar",
+          "title": "Agent Brain",
+          "icon": "$(graph)"
+        }
+      ]
+    },
+    "views": {
+      "agentBrainActivityBar": [
+        {
+          "id": "agentBrain.welcomeView",
+          "name": "Getting Started",
+          "type": "webview"
+        },
+        {
+          "id": "agentBrain.timelineView",
+          "name": "Timeline",
+          "type": "webview"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "webpack --mode production",
+    "watch": "webpack --mode development --watch",
+    "package": "vsce package",
+    "clean": "rm -rf dist *.vsix"
+  },
+  "dependencies": {
+    "@agent-brain/shared": "^0.1.0",
+    "@agent-brain/core": "^0.1.0",
+    "@agent-brain/timeline": "^0.1.0",
+    "@agent-brain/testing": "^0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.19",
+    "@types/vscode": "^1.80.0",
+    "@vscode/vsce": "^2.22.0",
+    "clean-webpack-plugin": "^4.0.0",
+    "copy-webpack-plugin": "^12.0.2",
+    "css-loader": "^7.1.2",
+    "html-webpack-plugin": "^5.6.4",
+    "style-loader": "^4.0.0",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.9.2",
+    "webpack": "^5.101.3",
+    "webpack-cli": "^6.0.1"
+  }
+}

@@ -2,7 +2,6 @@
   "$schema": "node_modules/lerna/schemas/lerna-schema.json",
   "version": "0.1.0",
   "npmClient": "npm",
-  "useWorkspaces": true,
   "packages": [
     "packages/*"
   ],
@@ -11,10 +10,6 @@
       "ignoreChanges": ["*.md"],
       "message": "chore(release): publish",
       "registry": "https://registry.npmjs.org"
-    },
-    "bootstrap": {
-      "ignore": "component-*",
-      "npmClientArgs": ["--no-package-lock"]
     }
   }
 }

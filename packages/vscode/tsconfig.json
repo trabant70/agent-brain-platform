@@ -3,13 +3,15 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "composite": true,
-    "lib": ["ES2020", "DOM"],
-    "skipLibCheck": true,
-    "noImplicitAny": false
+    "lib": ["ES2020"],
+    "module": "commonjs",
+    "moduleResolution": "node"
   },
   "references": [
-    { "path": "../shared" }
+    { "path": "../shared" },
+    { "path": "../core" },
+    { "path": "../timeline" },
+    { "path": "../testing" }
   ],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts"]
