@@ -1,7 +1,7 @@
 {
-  "name": "ab-timeline",
-  "displayName": "AB Timeline",
-  "description": "Agent Brain Timeline - Interactive visualization for repository evolution with commits, branches, and releases",
+  "name": "agent-brain-platform",
+  "displayName": "Agent Brain Platform",
+  "description": "Unified platform for AI-assisted development with timeline visualization, architectural guidance, and pathway testing",
   "version": "0.1.0",
   "publisher": "agent-brain",
   "icon": "images/timeline_large.png",
@@ -81,8 +81,9 @@
     }
   },
   "scripts": {
-    "build": "webpack --mode production",
-    "watch": "webpack --mode development --watch",
+    "copy:assets": "node -e \"const fs=require('fs'),path=require('path');const copyDir=(src,dest)=>{if(!fs.existsSync(dest))fs.mkdirSync(dest,{recursive:true});fs.readdirSync(src).forEach(item=>{const srcPath=path.join(src,item),destPath=path.join(dest,item);fs.statSync(srcPath).isDirectory()?copyDir(srcPath,destPath):fs.copyFileSync(srcPath,destPath)})};copyDir('src/visualization/styles','dist/visualization/styles');copyDir('src/visualization/templates','dist/visualization/templates');console.log('Assets copied');\"",
+    "build": "npm run copy:assets && webpack --mode production",
+    "watch": "npm run copy:assets && webpack --mode development --watch",
     "package": "vsce package",
     "clean": "rm -rf dist *.vsix"
   },
