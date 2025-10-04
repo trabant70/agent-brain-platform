@@ -1,0 +1,223 @@
+/**
+ * Timeline Visualization Component Styles
+ * Stage 2: Extracted from embedded styles
+ */
+
+/* Layout Structure - Correct Stacking */
+#timeline-container {
+    flex: 1; /* Take remaining space in main flex container */
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* TOP: Filters */
+.filter-controls {
+    flex: 0 0 auto;  /* Don't grow or shrink */
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+    z-index: 100;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    background: var(--bg-secondary);
+}
+
+/* MIDDLE: Main Timeline - Elastic height with explicit constraint for ResizeObserver */
+.timeline-main {
+    flex: 1 1 auto;  /* Take all available space */
+    min-height: 200px; /* Minimum viable height */
+    max-height: calc(100vh - 200px); /* Explicit constraint - makes ResizeObserver work! */
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#branch-timeline-container {
+    flex: 1 1 auto; /* Fill parent timeline-main */
+    min-height: 200px;
+    max-height: 100%; /* Fill parent's calculated height */
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#visualization {
+    width: 100%;
+    height: 100%; /* Use full parent height */
+    position: relative;
+    overflow: hidden;
+    cursor: grab;
+}
+
+#visualization:active {
+    cursor: grabbing;
+}
+
+#main-svg {
+    width: 100%;
+    height: 100%; /* SVG fills the visualization container */
+    display: block;
+}
+
+/* BOTTOM: Range Selector */
+.range-selector-panel {
+    flex: 0 0 80px;  /* Fixed height */
+    border-top: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    position: relative;
+}
+
+/* Ensure SVG takes full space */
+.timeline-main svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* Z-index layering for event rendering */
+.lanes { z-index: 1; }
+.connections { z-index: 2; }
+.events { z-index: 3; }
+.axis { z-index: 4; }
+
+/* Event visibility styles */
+.timeline-event {
+    stroke: var(--border-color);
+    stroke-width: 1px;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.timeline-event:hover {
+    opacity: 1;
+    stroke-width: 2px;
+}
+
+.event-group {
+    cursor: help;  /* Use help cursor (arrow with ?) for consistency with connections */
+    transition: transform 0.3s ease;
+}
+
+.event-group:hover .event-node {
+    transform: scale(1.15);
+}
+
+.event-node {
+    transition: transform 0.2s;
+    stroke: none;  /* No stroke overlay - use pure event type colors from EventVisualTheme */
+}
+
+.event-label {
+    fill: var(--text-secondary);
+    font-size: 10px;
+    pointer-events: none;
+}
+
+.branch-lane {
+    stroke: var(--border-color);
+    stroke-width: 1;
+    stroke-dasharray: 4, 4;
+    opacity: 0.3;
+}
+
+.branch-label {
+    fill: var(--text-muted);
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.axis line,
+.axis path {
+    stroke: var(--border-color);
+    opacity: 0.5;
+}
+
+.axis text {
+    fill: var(--text-muted);
+    font-size: 11px;
+}
+
+.connection-line {
+    fill: none;
+    stroke-width: 1.5;
+    /* stroke color set by D3 based on connection type */
+    opacity: 0.3;
+}
+
+.legend {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: var(--bg-tertiary);
+    border: 0.5px solid var(--accent-commit);
+    border-radius: 8px;
+    padding: 0;
+    z-index: 10;
+    pointer-events: auto;
+    font-size: 0.75em;
+    min-width: 180px;
+    max-width: 250px;
+    width: auto;
+    height: auto;
+}
+
+.legend-title {
+    font-weight: 600;
+    font-size: 0.9em;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+    user-select: none;
+    background: var(--bg-secondary);
+    border-radius: 8px 8px 0 0;
+}
+
+.legend-content {
+    padding: 0.75rem;
+}
+
+.legend-section {
+    margin-bottom: 0.5rem;
+}
+
+.legend-section-title {
+    font-weight: 600;
+    font-size: 0.85em;
+    margin-bottom: 0.4rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.legend-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9em;
+}
+
+.legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.legend-shape {
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+}

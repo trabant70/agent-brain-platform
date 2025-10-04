@@ -1,0 +1,16 @@
+{
+  "name": "@agent-brain/shared",
+  "version": "0.1.0",
+  "description": "Shared types and utilities for Agent Brain platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "watch": "tsc -b --watch",
+    "clean": "rm -rf dist *.tsbuildinfo"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "name": "agent-brain-platform",
+  "version": "0.1.0",
+  "description": "Unified platform for AI-assisted development with timeline visualization, architectural guidance, and pathway testing",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/agent-brain-platform"
+  },
+  "license": "MIT",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "lerna run build",
+    "build:shared": "lerna run build --scope=@agent-brain/shared",
+    "build:core": "lerna run build --scope=@agent-brain/core",
+    "build:timeline": "lerna run build --scope=@agent-brain/timeline",
+    "build:testing": "lerna run build --scope=@agent-brain/testing",
+    "build:vscode": "lerna run build --scope=@agent-brain/vscode",
+    "test": "lerna run test",
+    "test:timeline": "lerna run test --scope=@agent-brain/timeline",
+    "test:pathway": "lerna run test:pathway --scope=@agent-brain/testing",
+    "clean": "lerna run clean && lerna clean -y",
+    "watch": "lerna run watch --parallel",
+    "package:vscode": "cd packages/vscode && vsce package",
+    "dev": "lerna run dev --parallel"
+  },
+  "devDependencies": {
+    "@types/node": "^18.19.0",
+    "lerna": "^8.0.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

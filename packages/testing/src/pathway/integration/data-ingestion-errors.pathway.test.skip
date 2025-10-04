@@ -1,0 +1,142 @@
+/**
+ * DATA_INGESTION Pathway - Error Scenario Tests
+ *
+ * Tests error handling and failure modes in data ingestion:
+ * - Invalid repository paths
+ * - Git command failures
+ * - Partial data scenarios
+ *
+ * Phase 3 - Week 5-6: Error scenario testing
+ */
+
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import { PathwayAsserter } from '../../utils/PathwayAsserter';
+import { getLogCapture } from '../../utils/LogCapture';
+import { LogPathway } from '../../../src/utils/Logger';
+import { GitEventRepository } from '../../../src/timeline/infrastructure/GitEventRepository';
+
+describe('DATA_INGESTION Pathway - Error Scenarios', () => {
+    let repository: GitEventRepository;
+
+    beforeEach(() => {
+        getLogCapture().clear();
+        getLogCapture().enable(LogPathway.DATA_INGESTION);
+        repository = new GitEventRepository();
+    });
+
+    it('should handle invalid repository path gracefully', async () => {
+        // Attempt to extract from non-existent path
+        await expect(
+            repository.extractGitEvents('/invalid/nonexistent/path')
+        ).rejects.toThrow();
+
+        // Verify pathway started but failed appropriately
+        const logs = getLogCapture().getLogs();
+        expect(logs.length).toBeGreaterThan(0);
+
+        // Should have started extraction
+        const startLog = logs.find(log =>
+            log.message.includes('Extracting events')
+        );
+        expect(startLog).toBeDefined();
+    });
+
+    it('should handle empty string repository path', async () => {
+        await expect(
+            repository.extractGitEvents('')
+        ).rejects.toThrow();
+    });
+
+    it('should handle null/undefined repository path', async () => {
+        await expect(
+            repository.extractGitEvents(null as any)
+        ).rejects.toThrow();
+
+        getLogCapture().clear();
+
+        await expect(
+            repository.extractGitEvents(undefined as any)
+        ).rejects.toThrow();
+    });
+
+    it('should validate event structure after successful extraction', async () => {
+        const projectRepo = '/mnt/c/projects/repo-timeline-extension';
+        const collection = await repository.extractGitEvents(projectRepo);
+
+        // Validate collection structure
+        expect(collection).toBeDefined();
+        expect(collection.events).toBeDefined();
+        expect(Array.isArray(collection.events)).toBe(true);
+        expect(Array.isArray(collection.branches)).toBe(true);
+
+        // Validate every event has required fields
+        if (collection.events.length > 0) {
+            collection.events.forEach(event => {
+                expect(event.id).toBeDefined();
+                expect(event.date).toBeInstanceOf(Date);
+                expect(event.type).toBeDefined();
+                expect(event.title).toBeDefined();
+                expect(event.author).toBeDefined();
+                expect(event.branch).toBeDefined();
+
+                // Validate types
+                expect(typeof event.id).toBe('string');
+                expect(typeof event.type).toBe('string');
+                expect(typeof event.title).toBe('string');
+                expect(typeof event.author).toBe('string');
+                expect(typeof event.branch).toBe('string');
+
+                // Validate date is valid
+                expect(event.date.getTime()).not.toBeNaN();
+            });
+        }
+    });
+
+    it('should log pathway milestones for valid extraction', async () => {
+        const asserter = new PathwayAsserter(LogPathway.DATA_INGESTION)
+            .expectMilestone('GitEventRepository.extractGitEvents')
+            .expectMilestone('GitEventRepository.extractCommitEvents')
+            .expectMilestone('GitEventRepository.parseCommitOutput');
+
+        const projectRepo = '/mnt/c/projects/repo-timeline-extension';
+        const collection = await repository.extractGitEvents(projectRepo);
+
+        expect(collection.events.length).toBeGreaterThan(0);
+
+        // Verify pathway
+        asserter.setCapturedLogs(getLogCapture().getLogs());
+        const result = asserter.verify();
+
+        expect(result.passed).toBe(true);
+    });
+
+    it('should handle paths with special characters', async () => {
+        // Test various invalid paths that might cause issues
+        const invalidPaths = [
+            '/path/with spaces/repo',
+            '/path/with/../../traversal',
+            '/path/with/null\x00byte',
+            ''
+        ];
+
+        for (const invalidPath of invalidPaths) {
+            getLogCapture().clear();
+
+            await expect(
+                repository.extractGitEvents(invalidPath)
+            ).rejects.toThrow();
+        }
+    });
+
+    it('should maintain chronological event order', async () => {
+        const projectRepo = '/mnt/c/projects/repo-timeline-extension';
+        const collection = await repository.extractGitEvents(projectRepo);
+
+        // Events should be ordered by date
+        for (let i = 0; i < collection.events.length - 1; i++) {
+            const current = collection.events[i].date;
+            const next = collection.events[i + 1].date;
+            expect(current.getTime()).toBeLessThanOrEqual(next.getTime());
+        }
+    });
+});
