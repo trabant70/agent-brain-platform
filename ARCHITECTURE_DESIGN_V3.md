@@ -950,7 +950,170 @@ Timeline shows the learning
 
 ## Data Flows
 
-### Flow 1: Agent Emission → Timeline (Direct)
+### Flow 0: Initial Load (Core Operation)
+
+```
+User opens file in VS Code
+    ↓
+TimelineProvider detects repo path
+    ↓
+DataOrchestrator.getEvents(repoPath)
+    ↓
+Check cache (cache miss on first load)
+    ↓
+ProviderRegistry.getHealthyProviders()
+    → Returns: [GitProvider, GitHubProvider, IntelligenceProvider]
+    ↓
+For each provider in parallel:
+  GitProvider.fetchEvents(context)
+    ↓
+  GitEventRepository.extractGitEvents()
+    ↓
+  Git commands execute (log, branch, tag)
+    ↓
+  Transform GitEvent → CanonicalEvent (ONCE, at source)
+    ↓
+  Return CanonicalEvent[]
+
+  GitHubProvider.fetchEvents(context)
+    ↓
+  GitHubClient.fetchPRs/Issues/Releases()
+    ↓
+  Transform GitHub API → CanonicalEvent (ONCE, at source)
+    ↓
+  Return CanonicalEvent[]
+
+  IntelligenceProvider.fetchEvents(context)
+    ↓
+  LearningSystem.getAllLearnings() + PatternSystem.getPatterns()
+    ↓
+  Transform Learning/Pattern → CanonicalEvent (ONCE, at source)
+    ↓
+  Return CanonicalEvent[]
+    ↓
+DataOrchestrator aggregates all CanonicalEvent[]
+    ↓
+Sort by timestamp, deduplicate
+    ↓
+Cache in DataOrchestrator (per repo)
+    ↓
+postMessage(CanonicalEvent[]) to webview
+    ↓
+SimpleTimelineApp.handleTimelineData()
+    ↓
+D3TimelineRenderer.renderData()
+    ↓
+Timeline renders with full data (git + github + intelligence)
+```
+
+**Key principle:** Transform ONCE at provider boundary. Everything downstream works with CanonicalEvent.
+
+---
+
+### Flow 1: Filter Application
+
+```
+User applies branch filter (e.g., selects "main" branch only)
+    ↓
+FilterController emits filter change event
+    ↓
+SimpleTimelineApp.handleFilterUpdate()
+    ↓
+postMessage(filterState) to extension host
+    ↓
+DataOrchestrator.getFilteredEvents(filters)
+    ↓
+Get cached CanonicalEvent[] (NO network call, NO re-transform)
+    ↓
+Apply filters (inline, pure function):
+  events.filter(e =>
+    filters.branches.includes(e.branches) &&
+    filters.authors.includes(e.author.name) &&
+    filters.eventTypes.includes(e.type) &&
+    e.timestamp >= filters.dateRange.start &&
+    e.timestamp <= filters.dateRange.end
+  )
+    ↓
+Return filtered CanonicalEvent[]
+    ↓
+postMessage(filtered CanonicalEvent[]) to webview
+    ↓
+D3TimelineRenderer.update(filteredEvents)
+    ↓
+Timeline re-renders with filtered data
+    ↓
+Legend updates (shows only visible event types)
+```
+
+**Key principle:** Filter on cached CanonicalEvents. No provider calls. Fast.
+
+---
+
+### Flow 2: Range Selector (Time Window)
+
+```
+User drags brush on range selector (mini timeline at bottom)
+    ↓
+InteractionHandler.onBrushMove()
+    ↓
+Calculate new date range from brush position:
+  start = xScale.invert(brushSelection[0])
+  end = xScale.invert(brushSelection[1])
+    ↓
+Filter events to date range (client-side, no postMessage):
+  visibleEvents = allEvents.filter(e =>
+    e.timestamp >= start && e.timestamp <= end
+  )
+    ↓
+D3TimelineRenderer.update(visibleEvents)
+    ↓
+Main timeline updates to show events in range
+    ↓
+Y-axis rescales if needed
+    ↓
+Smooth transition animation (D3)
+```
+
+**Key principle:** Entirely client-side. No extension host involved. Instant feedback.
+
+---
+
+### Flow 3: Intelligence Extension Triggered Analysis
+
+```
+External system (CI/CD, IDE action, WebSocket) triggers analysis
+    ↓
+POST /api/analyze { files: ['src/validator.ts'] }
+    OR
+WebSocket emit('trigger-analysis', files)
+    ↓
+AnalysisTrigger.handleRequest()
+    ↓
+AgentBrainCore.analyzeFiles(files)
+    ↓
+PatternEngine.detectPatterns(code)
+    ↓
+PatternValidator.validateAgainstADRs(patterns)
+    ↓
+If new pattern detected:
+  LearningStorage.storePattern(pattern)
+    ↓
+  WebSocket emit('pattern-discovered', pattern)
+    ↓
+  IntelligenceProvider creates new CanonicalEvent
+    ↓
+  DataOrchestrator cache updated
+    ↓
+  postMessage to all connected webviews
+    ↓
+  Timeline updates in real-time (new PATTERN_DETECTED event appears)
+```
+
+**Key principle:** Intelligence input adapters → processing → CanonicalEvent output → timeline visualization. Same flow as git/github.
+
+---
+
+### Flow 4: Agent Emission → Timeline (Direct) [FUTURE - Phase 9]
 
 ```
 1. User action in Claude Code
