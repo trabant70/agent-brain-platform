@@ -566,36 +566,86 @@ Different rendering engines (D3 vs Canvas vs WebGL) for the **same visualization
 **Critical Architectural Insight:**
 The intelligence domain contains the original agent-brain's core capability: **multiple input adapters** that collect data to learn from and verify that architectural decisions are followed. These input mechanisms must be preserved exactly.
 
-**Structure:**
+**⚠️ ARCHITECTURAL REFINEMENT (2025-10-05):**
+Analysis of the backup intelligence domain (~4,500 LOC) revealed critical type conflicts and architectural issues requiring refactoring. See `PHASE_6_INTELLIGENCE_INTEGRATION.md` for comprehensive integration plan.
+
+**Refined Structure (Post-Analysis):**
 ```
 intelligence/
-├── engine/
-│   └── AgentBrainCore.ts          [Main orchestrator]
-├── patterns/
-│   ├── PatternEngine.ts           [Pattern matching]
-│   ├── PatternValidator.ts        [Validate against ADRs]
-│   └── PatternSystem.ts           [Facade]
-├── learning/
-│   ├── LearningAnalyzer.ts        [Extract patterns from failures]
-│   ├── LearningStorage.ts         [Persist learnings]
-│   ├── LearningPropagator.ts      [Apply learnings across codebase]
-│   └── LearningSystem.ts          [Facade]
-├── versioning/
-│   └── PatternVersionControl.ts   [Pattern versioning]
-└── adapters/                      [INPUT ADAPTERS - THE CORE]
-    ├── base/
-    │   └── IntelligenceAdapter.ts [Base adapter interface]
-    ├── extensions/                [Plugin System for Custom Patterns/ADRs]
-    │   ├── ExtensionAPI.ts       [Extension interface]
-    │   ├── ExtensionLoader.ts    [Load npm extensions]
-    │   └── ExtensionRegistry.ts  [Manage loaded extensions]
-    ├── webhooks/                  [Real-time Events & External Triggers]
-    │   ├── WebSocketAdapter.ts   [Real-time learning events]
-    │   └── AnalysisTrigger.ts    [External analysis triggers]
-    ├── testing/                   [Test Integration]
-    │   └── PathwayLearningAdapter.ts [Pathway tests → Learning]
-    └── agents/                    [FUTURE: Agent Integration]
-        └── AgentEmissionAdapter.ts [Agent work → Learning]
+├── core/                          [Core Intelligence Logic]
+│   ├── engine/
+│   │   └── AgentBrainCore.ts     [Main orchestrator - REFACTORED]
+│   ├── patterns/
+│   │   ├── PatternEngine.ts      [Pattern matching engine]
+│   │   ├── PatternValidator.ts   [Validate against ADRs]
+│   │   ├── PatternSystem.ts      [Facade]
+│   │   └── types.ts              [EnginePattern, EnginePatternContext]
+│   ├── learning/
+│   │   ├── LearningAnalyzer.ts   [Extract patterns from failures]
+│   │   ├── LearningStorage.ts    [Persist learnings]
+│   │   ├── LearningPropagator.ts [Apply learnings across codebase]
+│   │   ├── LearningSystem.ts     [Facade]
+│   │   └── types.ts              [LearningPattern, TestFailure]
+│   └── versioning/
+│       └── PatternVersionControl.ts [Pattern versioning]
+│
+├── adapters/                      [INPUT ADAPTERS - THE CORE CAPABILITY]
+│   ├── base/
+│   │   ├── IntelligenceAdapter.ts [Base adapter interface]
+│   │   └── RuntimeTypes.ts       [Extension API types - separated]
+│   ├── extensions/               [Plugin System for Custom Patterns/ADRs]
+│   │   ├── ExtensionAPI.ts      [Extension interface]
+│   │   ├── ExtensionLoader.ts   [Load npm extensions]
+│   │   └── ExtensionRegistry.ts [Manage loaded extensions]
+│   ├── webhooks/                 [Real-time Events & External Triggers]
+│   │   ├── WebSocketAdapter.ts  [Real-time learning events]
+│   │   └── AnalysisTrigger.ts   [External analysis triggers]
+│   ├── testing/                  [Test Integration]
+│   │   └── PathwayLearningAdapter.ts [Pathway tests → Learning]
+│   └── agents/                   [FUTURE: Phase 9 - Agent Integration]
+│       └── AgentEmissionAdapter.ts [Agent work → Learning]
+│
+├── converters/                    [Type Conversions - NEW]
+│   ├── PatternConverter.ts       [Original pattern converter]
+│   └── TypeBridges.ts           [Bridge Runtime ↔ Engine ↔ Learning types]
+│
+└── index.ts                       [Unified exports]
+```
+
+**Type System Resolution:**
+```typescript
+// THREE distinct type systems (by design):
+
+// 1. RuntimePattern (Extension API contracts)
+//    Location: adapters/base/RuntimeTypes.ts
+//    Purpose: Public API for extensions
+interface RuntimePattern {
+  id: string;
+  trigger: RegExp | string;
+  severity: 'error' | 'warning' | 'info';
+}
+
+// 2. EnginePattern (Pattern matching execution)
+//    Location: core/patterns/types.ts
+//    Purpose: Internal pattern engine
+interface EnginePattern {
+  id: string;
+  trigger: RegExp | string;
+  severity: 'error' | 'warning' | 'suggestion';
+  autoFix?: AutoFixConfig;
+}
+
+// 3. LearningPattern (Knowledge storage)
+//    Location: core/learning/types.ts
+//    Purpose: Learned patterns from failures
+interface LearningPattern {
+  name: string;
+  category: string;
+  rootCause: any;
+  preventionRule: any;
+}
+
+// TypeBridges converts between these as needed
 ```
 
 **Intelligence Input Adapters (Must Preserve):**
@@ -1440,6 +1490,8 @@ This architecture:
 - ✅ **Symmetric:** Provider registry (input) peers with visualization registry (output)
 
 **Status:** Approved and ready for implementation
+
+**Latest Update (2025-10-05):** Comprehensive analysis of intelligence domain completed. See `PHASE_6_INTELLIGENCE_INTEGRATION.md` for detailed implementation plan addressing type conflicts, circular dependencies, and proper adapter integration.
 
 ---
 

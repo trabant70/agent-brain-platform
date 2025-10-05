@@ -13,3 +13,6 @@ export * from './git';
 
 // GitHub provider (GitHub API)
 export * from './github';
+
+// Intelligence provider (patterns & learnings)
+export * from './intelligence';
