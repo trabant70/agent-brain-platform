@@ -12,7 +12,7 @@
  * - Merges: Match by hash + parent hashes
  */
 
-import { CanonicalEvent, EventType, EventSource } from '../core/CanonicalEvent';
+import { CanonicalEvent, EventType, EventSource } from '@agent-brain/core/domains/events';
 import { logger, LogCategory, createContextLogger } from '../utils/Logger';
 
 export interface MatchResult {

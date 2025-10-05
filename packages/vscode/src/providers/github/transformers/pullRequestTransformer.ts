@@ -4,7 +4,7 @@
  * Transforms GitHub Pull Request data to CanonicalEvent format.
  */
 
-import { CanonicalEvent, EventType, Author } from '../../../core/CanonicalEvent';
+import { CanonicalEvent, EventType, Author } from '@agent-brain/core/domains/events';
 import { GitHubPullRequest } from '../types/github-api.types';
 
 /**

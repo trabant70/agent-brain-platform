@@ -18,7 +18,7 @@ import {
   ProviderContext,
   ProviderCapabilities,
   ProviderConfig
-} from '../../core/CanonicalEvent';
+} from '@agent-brain/core/domains/events';
 import { Feature, requireFeature } from '../../core/FeatureFlags';
 import { GitHubClient, RepositoryInfo } from './GitHubClient';
 import { transformPullRequests } from './transformers/pullRequestTransformer';

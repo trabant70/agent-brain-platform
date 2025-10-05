@@ -19,7 +19,7 @@
  * - Export/import filter configurations
  */
 
-import { FilterState } from '../core/CanonicalEvent';
+import { FilterState } from '@agent-brain/core/domains/events';
 import { logger, LogCategory, LogPathway } from '../utils/Logger';
 
 export interface FilterStateManagerOptions {

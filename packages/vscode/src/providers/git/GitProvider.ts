@@ -19,7 +19,7 @@ import {
   ProviderContext,
   ProviderCapabilities,
   ProviderConfig
-} from '../../core/CanonicalEvent';
+} from '@agent-brain/core/domains/events';
 import { IDataProvider } from '../../orchestration/ProviderRegistry';
 import { GitEventRepository } from '../../timeline/infrastructure/GitEventRepository';
 import { GitEvent } from '../../timeline/domain/git-event.types';

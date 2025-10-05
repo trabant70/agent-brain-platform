@@ -11,7 +11,7 @@
  * Uses EventVisualTheme for consistent colors across the extension
  */
 
-import { FilterState, EventType } from '../../core/CanonicalEvent';
+import { FilterState, EventType } from '@agent-brain/core/domains/events';
 import { EventVisualTheme } from '../theme/EventVisualTheme';
 import { logger, LogCategory, LogPathway } from '../../utils/Logger';
 

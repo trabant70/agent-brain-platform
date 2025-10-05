@@ -10,7 +10,7 @@ import {
   ProviderContext,
   ProviderCapabilities,
   ProviderConfig
-} from '../core/CanonicalEvent';
+} from '@agent-brain/core/domains/events';
 
 /**
  * Simplified data provider interface

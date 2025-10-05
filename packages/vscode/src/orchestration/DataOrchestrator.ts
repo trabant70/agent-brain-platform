@@ -25,7 +25,7 @@ import {
   FilterState,
   CachedRepoData,
   ProviderContext
-} from '../core/CanonicalEvent';
+} from '@agent-brain/core/domains/events';
 import { ProviderRegistry } from './ProviderRegistry';
 import { GitProvider } from '../providers/git/GitProvider';
 import { GitHubProvider } from '../providers/github/GitHubProvider';

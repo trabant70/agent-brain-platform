@@ -1,5 +1,5 @@
 {
-  "name": "@agent-brain/core",
+  "name": "@agent-brain/core-backup",
   "version": "0.1.0",
   "description": "Agent Brain core engine - Pattern detection, learning system, and analysis",
   "main": "dist/index.js",

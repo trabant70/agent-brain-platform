@@ -4,7 +4,7 @@
  * Transforms GitHub Release data to CanonicalEvent format.
  */
 
-import { CanonicalEvent, EventType, Author } from '../../../core/CanonicalEvent';
+import { CanonicalEvent, EventType, Author } from '@agent-brain/core/domains/events';
 import { GitHubRelease } from '../types/github-api.types';
 
 /**

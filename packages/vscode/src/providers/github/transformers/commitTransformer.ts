@@ -4,7 +4,7 @@
  * Transforms GitHub Commit data to CanonicalEvent format.
  */
 
-import { CanonicalEvent, EventType, Author, ImpactMetrics } from '../../../core/CanonicalEvent';
+import { CanonicalEvent, EventType, Author, ImpactMetrics } from '@agent-brain/core/domains/events';
 import { GitHubCommit } from '../types/github-api.types';
 
 /**
