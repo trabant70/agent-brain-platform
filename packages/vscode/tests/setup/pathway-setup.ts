@@ -5,7 +5,7 @@
  * Import this file in jest.config.js setupFilesAfterEnv to enable pathway testing.
  */
 
-import { logger, LogLevel, LogCategory, LogPathway } from '../../src/utils/Logger';
+import { logger, LogLevel, LogCategory, LogPathway } from '@agent-brain/core/infrastructure/logging/Logger';
 import { LogCapture, getLogCapture } from '../utils/LogCapture';
 import { pathwayMatchers } from '../utils/pathway-matchers';
 

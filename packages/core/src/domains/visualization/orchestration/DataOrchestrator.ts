@@ -26,11 +26,12 @@ import {
   CachedRepoData,
   ProviderContext
 } from '../../events';
-import { ProviderRegistry, GitProvider, GitHubProvider } from '../../providers';
+import { ProviderRegistry, GitProvider, GitHubProvider, IntelligenceProvider } from '../../providers';
 import { FilterStateManager } from '../filters/FilterStateManager';
 import { EventMatcher } from './EventMatcher';
 import { logger, LogCategory, LogPathway, createContextLogger } from '../../../infrastructure/logging';
 import { FeatureFlagManager, Feature } from '../../../infrastructure/config/FeatureFlags';
+import { LearningSystem, PatternSystem } from '../../intelligence';
 
 export interface DataOrchestratorOptions {
   cacheTTL?: number; // Cache time-to-live in milliseconds
@@ -114,6 +115,23 @@ export class DataOrchestrator {
       }
     } else {
       this.log.info(LogCategory.ORCHESTRATION, 'GitHub provider feature is disabled', 'initialize');
+    }
+
+    // Register Intelligence provider (agent-brain intelligence domain)
+    try {
+      this.log.info(LogCategory.ORCHESTRATION, 'Registering Intelligence provider', 'initialize');
+      const learningSystem = new LearningSystem();
+      const patternSystem = new PatternSystem();
+      const intelligenceProvider = new IntelligenceProvider(learningSystem, patternSystem);
+
+      await this.providerRegistry.registerProvider(intelligenceProvider, {
+        enabled: true, // Enabled by default - provides learnings and patterns
+        priority: 3
+      });
+      this.log.info(LogCategory.ORCHESTRATION, 'Intelligence provider registered successfully', 'initialize');
+    } catch (error) {
+      this.log.error(LogCategory.ORCHESTRATION, `Failed to register Intelligence provider: ${error}`, 'initialize');
+      // Continue without Intelligence provider
     }
 
     this.log.info(
