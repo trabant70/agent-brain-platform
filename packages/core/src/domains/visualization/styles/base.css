@@ -1,0 +1,28 @@
+/**
+ * Base Styles and Layout
+ * Stage 2: Extracted from embedded styles
+ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--vscode-font-family);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    height: 100vh;
+    overflow: hidden;
+    font-size: 14px;
+}
+
+#container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Visualization and SVG styles moved to timeline.css to avoid conflicts */

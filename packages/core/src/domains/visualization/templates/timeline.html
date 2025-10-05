@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Repository Evolution Timeline</title>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src {{cspSource}} 'unsafe-inline'; script-src {{cspSource}}; connect-src https://agent-brain.io;">
+    <style>
+        {{cssContent}}
+    </style>
+</head>
+<body>
+    <div id="container">
+        <!-- Original Statistics Panel (Restored) -->
+        <div id="stats-bar">
+            <div class="stats-items">
+                <div class="stat-item" data-tooltip="Count of events currently displayed after applying filters"><span class="stat-label">Visible Events:</span><span class="stat-value" id="stat-visible">0</span></div>
+                <div class="stat-item" data-tooltip="Total count of all events in the repository, regardless of filters"><span class="stat-label">Total Events:</span><span class="stat-value" id="stat-total">0</span></div>
+                <div class="stat-item" data-tooltip="Number of unique authors who contributed to the currently visible events"><span class="stat-label">Contributors:</span><span class="stat-value" id="stat-contributors">0</span></div>
+                <div class="stat-item" data-tooltip="Count of branches with visible events (affected by filters)"><span class="stat-label">Active Branches:</span><span class="stat-value" id="stat-branches">0</span></div>
+                <div class="stat-item" data-tooltip="Time span in days between first and last visible event"><span class="stat-label">Window:</span><span class="stat-value" id="stat-window">-</span></div>
+                <div class="stat-item" data-tooltip="Development activity rate: events per day (higher = more frequent commits/changes)"><span class="stat-label">Velocity:</span><span class="stat-value" id="stat-velocity">0/day</span></div>
+            </div>
+            <div class="filters-trigger" id="filters-trigger" tabindex="0" role="button" aria-label="Show control center menu">Control Center</div>
+        </div>
+        <div id="timeline-container">
+            <!-- Branch Timeline -->
+            <div id="branch-timeline-container" class="timeline-main">
+                <div id="visualization">
+                    <svg id="main-svg"></svg>
+                    <div class="tooltip" id="tooltip"></div>
+                    <div class="toast" id="toast"></div>
+                    <div class="connection-tooltip" id="connection-tooltip" style="display: none;">
+                        <div class="connection-tooltip-content"></div>
+                    </div>
+                    <div class="event-popup" id="event-popup">
+                        <button class="popup-close" id="popup-close">×</button>
+                        <div class="popup-lock-indicator" id="popup-lock-indicator" title="Popup is locked - click outside or press Escape to close">📌</div>
+                        <div class="popup-header">
+                            <div class="popup-title-row">
+                                <span class="popup-event-type" id="popup-event-type"></span>
+                                <span class="popup-timestamp" id="popup-timestamp"></span>
+                            </div>
+                            <h3 class="popup-title" id="popup-title"></h3>
+                            <div class="popup-tabs" id="popup-tabs" style="display: none;">
+                                <div class="popup-tab active" data-tab="overview">Overview</div>
+                                <div class="popup-tab" data-tab="impact">Impact</div>
+                                <div class="popup-tab" data-tab="related">Related</div>
+                                <div class="popup-tab" data-tab="technical">Technical</div>
+                            </div>
+                        </div>
+                        <div class="popup-content" id="popup-content">
+                            <div class="popup-tab-content active" id="tab-overview"></div>
+                            <div class="popup-tab-content" id="tab-impact"></div>
+                            <div class="popup-tab-content" id="tab-related"></div>
+                            <div class="popup-tab-content" id="tab-technical"></div>
+                        </div>
+                        <div class="popup-action-bar" id="popup-action-bar"></div>
+                    </div>
+                    <div class="legend" id="timeline-legend">
+                        <div class="legend-title">Legend</div>
+                        <div class="legend-content">
+                            <div id="legend-items"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM: Range Selector (Slider + Bar Chart) - Moved to bottom of main container -->
+        <div id="range-selector-section" class="range-selector-section">
+            <div id="range-selector" class="range-selector-container">
+                <svg id="range-svg"></svg>
+                <div class="range-label start" id="range-start-label">-</div>
+                <div class="range-label end" id="range-end-label">-</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Webpack will inject script tags here -->
+</body>
+</html>

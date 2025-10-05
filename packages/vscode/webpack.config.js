@@ -54,7 +54,7 @@ const webviewConfig = {
   target: 'web',
   mode: isProduction ? 'production' : 'development',
   entry: {
-    webview: './src/webview/main.ts'
+    webview: '../core/src/domains/visualization/webview/main.ts'
   },
   output: {
     path: path.resolve(__dirname, 'dist/webview'),
@@ -66,8 +66,8 @@ const webviewConfig = {
     extensions: ['.ts', '.js', '.json'],
     alias: {
       '@agent-brain/core': path.resolve(__dirname, '../core/src'),
-      '@visualization': path.resolve(__dirname, 'src/visualization'),
-      '@webview': path.resolve(__dirname, 'src/webview')
+      '@visualization': path.resolve(__dirname, '../core/src/domains/visualization'),
+      '@webview': path.resolve(__dirname, '../core/src/domains/visualization/webview')
     },
     fallback: {
       'fs': false,
@@ -117,7 +117,7 @@ const webviewConfig = {
       cleanOnceBeforeBuildPatterns: ['**/*', '!extension.*']
     }),
     new HtmlWebpackPlugin({
-      template: './src/visualization/templates/timeline.html',
+      template: '../core/src/domains/visualization/templates/timeline.html',
       filename: 'webview.html',
       inject: 'body',
       minify: isProduction ? {

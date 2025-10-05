@@ -81,7 +81,7 @@
     }
   },
   "scripts": {
-    "copy:assets": "node -e \"const fs=require('fs'),path=require('path');const copyDir=(src,dest)=>{if(!fs.existsSync(dest))fs.mkdirSync(dest,{recursive:true});fs.readdirSync(src).forEach(item=>{const srcPath=path.join(src,item),destPath=path.join(dest,item);fs.statSync(srcPath).isDirectory()?copyDir(srcPath,destPath):fs.copyFileSync(srcPath,destPath)})};copyDir('src/visualization/styles','dist/visualization/styles');copyDir('src/visualization/templates','dist/visualization/templates');console.log('Assets copied');\"",
+    "copy:assets": "node -e \"const fs=require('fs'),path=require('path');const copyDir=(src,dest)=>{if(!fs.existsSync(dest))fs.mkdirSync(dest,{recursive:true});fs.readdirSync(src).forEach(item=>{const srcPath=path.join(src,item),destPath=path.join(dest,item);fs.statSync(srcPath).isDirectory()?copyDir(srcPath,destPath):fs.copyFileSync(srcPath,destPath)})};copyDir('../core/src/domains/visualization/styles','dist/visualization/styles');copyDir('../core/src/domains/visualization/templates','dist/visualization/templates');console.log('Assets copied');\"",
     "build": "npm run copy:assets && webpack --mode production",
     "watch": "npm run copy:assets && webpack --mode development --watch",
     "package": "vsce package",
