@@ -22,7 +22,10 @@ const extensionConfig = {
     vscode: 'commonjs vscode'
   },
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.ts', '.js'],
+    alias: {
+      '@agent-brain/core': path.resolve(__dirname, '../core/src')
+    }
   },
   module: {
     rules: [
@@ -62,6 +65,7 @@ const webviewConfig = {
   resolve: {
     extensions: ['.ts', '.js', '.json'],
     alias: {
+      '@agent-brain/core': path.resolve(__dirname, '../core/src'),
       '@visualization': path.resolve(__dirname, 'src/visualization'),
       '@webview': path.resolve(__dirname, 'src/webview')
     },

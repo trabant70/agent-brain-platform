@@ -1,8 +1,8 @@
 # Migration Progress Tracker
 
 **Last Updated:** 2025-10-05
-**Current Phase:** Phase 2 Complete
-**Status:** ✅ Event system migrated, ready for Phase 3
+**Current Phase:** Phase 3 Complete
+**Status:** ✅ Providers migrated to core, ready for Phase 4
 
 ---
 
@@ -51,31 +51,56 @@
 - ✅ VSCode package imports updated
 - ⏸️ Tests not yet run (will test after more components moved)
 
+### ✅ Phase 3: Domain: Providers (COMPLETE)
+**Duration:** ~2 hours
+**Commit:** (pending)
+
+**Completed:**
+- ✅ Created provider directory structure in `core/domains/providers/`:
+  - base/ (ProviderRegistry, IDataProvider interface)
+  - git/ (GitProvider, GitEventRepository, git-event.types)
+  - github/ (GitHubProvider, GitHubClient, RateLimitManager, transformers/, types/)
+- ✅ Moved infrastructure utilities to `core/infrastructure/`:
+  - logging/ (Logger.ts with LogCategory, LogLevel, LogPathway)
+  - config/ (FeatureFlags.ts)
+- ✅ Updated all imports in provider files to use relative paths
+- ✅ Fixed TypeScript compilation errors:
+  - Added missing CollectionMetadata fields (totalEvents, uniqueAuthors, extractedAt)
+  - Fixed duplicate vscode import in GitHubProvider
+  - Fixed FeatureFlags import paths
+- ✅ Configured webpack aliases for `@agent-brain/core`
+- ✅ Fixed tsconfig path mappings (removed rootDir restrictions)
+- ✅ Built core package successfully (0 errors)
+- ✅ Built vscode package successfully (12 warnings only)
+
+**Files Moved:**
+- Git provider: GitProvider.ts, GitEventRepository.ts, git-event.types.ts
+- GitHub provider: GitHubProvider.ts, GitHubClient.ts, RateLimitManager.ts
+- GitHub transformers: commitTransformer.ts, issueTransformer.ts, pullRequestTransformer.ts, releaseTransformer.ts
+- GitHub types: github-api.types.ts
+- Base: ProviderRegistry.ts
+- Infrastructure: Logger.ts, FeatureFlags.ts
+
+**Verification:**
+- ✅ Core package builds without errors
+- ✅ VSCode package builds successfully
+- ✅ All provider imports resolved correctly
+- ✅ Extension and webview bundles created
+- ⏸️ Extension run test pending
+
 ---
 
 ## Next Steps
 
-### 📋 Phase 3: Domain: Providers (2-3 hours)
-**Goal:** Move CanonicalEvent system to `core/domains/events/`
+### 📋 Phase 4: Domain: Visualization (2-3 hours)
+**Goal:** Move visualization code to `core/domains/visualization/`
 
 **Tasks:**
-1. Move CanonicalEvent files from vscode to core
-2. Extract EventType enum, Author, ImpactMetrics, VisualizationHints into separate files
-3. Update all imports in vscode package
-4. Configure TypeScript path mapping
-5. Build and test (149 pathway tests must still pass)
-6. Git checkpoint
-
-**Files to move:**
-- `packages/vscode/src/core/CanonicalEvent.ts` → `packages/core/src/domains/events/`
-
-**Files to create:**
-- `packages/core/src/domains/events/EventType.ts`
-- `packages/core/src/domains/events/Author.ts`
-- `packages/core/src/domains/events/ImpactMetrics.ts`
-- `packages/core/src/domains/events/VisualizationHints.ts`
-- `packages/core/src/domains/events/types.ts`
-- `packages/core/src/domains/events/index.ts`
+1. Move TimelineRenderer and related visualization code
+2. Move FilterController and UI components
+3. Update imports in webview code
+4. Build and verify
+5. Git checkpoint
 
 ---
 
@@ -83,8 +108,8 @@
 
 **Part 1: Recreate What We Have (Phases 1-8)**
 - [x] Phase 1: Foundation & Cleanup ✅
-- [ ] Phase 2: Domain: Events
-- [ ] Phase 3: Domain: Providers
+- [x] Phase 2: Domain: Events ✅
+- [x] Phase 3: Domain: Providers ✅
 - [ ] Phase 4: Domain: Visualization
 - [ ] Phase 5: Infrastructure
 - [ ] Phase 6: Domain: Intelligence

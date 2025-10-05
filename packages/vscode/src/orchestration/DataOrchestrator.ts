@@ -26,9 +26,7 @@ import {
   CachedRepoData,
   ProviderContext
 } from '@agent-brain/core/domains/events';
-import { ProviderRegistry } from './ProviderRegistry';
-import { GitProvider } from '../providers/git/GitProvider';
-import { GitHubProvider } from '../providers/github/GitHubProvider';
+import { ProviderRegistry, GitProvider, GitHubProvider } from '@agent-brain/core/domains/providers';
 import { FilterStateManager } from './FilterStateManager';
 import { EventMatcher } from './EventMatcher';
 import { logger, LogCategory, LogPathway, createContextLogger } from '../utils/Logger';
