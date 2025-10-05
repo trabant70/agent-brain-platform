@@ -30,6 +30,7 @@ module.exports = {
   // Module name mapping for imports and mocks
   moduleNameMapper: {
     '^vscode$': '<rootDir>/tests/mocks/vscode.mock.ts',
+    '^@agent-brain/core/(.*)$': '<rootDir>/../core/src/$1',
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@tests/(.*)$': '<rootDir>/tests/$1'
   },
@@ -180,6 +181,7 @@ module.exports = {
       setupFilesAfterEnv: ['<rootDir>/tests/setup/pathway-integration-setup.ts'],
       moduleNameMapper: {
         '^vscode$': '<rootDir>/tests/mocks/vscode.mock.ts',
+        '^@agent-brain/core/(.*)$': '<rootDir>/../core/src/$1',
         '^@/(.*)$': '<rootDir>/src/$1',
         '^@tests/(.*)$': '<rootDir>/tests/$1'
       }

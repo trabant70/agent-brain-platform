@@ -12,8 +12,8 @@ import { TimelineUISimulator } from '../../utils/TimelineUISimulator';
 import { PathwayAsserter } from '../../utils/PathwayAsserter';
 import { PathwayDebugger } from '../../utils/PathwayDebugger';
 import { getLogCapture } from '../../utils/LogCapture';
-import { LogPathway } from '../../../src/utils/Logger';
-import { FilterController } from '../../../src/visualization/ui/FilterController';
+import { LogPathway } from '@agent-brain/core/infrastructure/logging';
+import { FilterController } from '@agent-brain/core/domains/visualization/ui/FilterController';
 import { FilterStateManager } from '../../../src/orchestration/FilterStateManager';
 
 describe('FILTER_APPLY Pathway - Integration', () => {

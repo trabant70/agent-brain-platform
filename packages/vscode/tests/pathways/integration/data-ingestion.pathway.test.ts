@@ -11,9 +11,9 @@ import { describe, it, expect, beforeEach, afterAll } from '@jest/globals';
 import { PathwayAsserter } from '../../utils/PathwayAsserter';
 import { PathwayDebugger } from '../../utils/PathwayDebugger';
 import { getLogCapture } from '../../utils/LogCapture';
-import { LogPathway } from '../../../src/utils/Logger';
+import { LogPathway } from '@agent-brain/core/infrastructure/logging';
 import { TestRepositories } from '../../fixtures/test-repositories';
-import { GitEventRepository } from '../../../src/timeline/infrastructure/GitEventRepository';
+import { GitEventRepository } from '@agent-brain/core/domains/providers/git/GitEventRepository';
 
 describe('DATA_INGESTION Pathway - Integration', () => {
     let testRepoPath: string;

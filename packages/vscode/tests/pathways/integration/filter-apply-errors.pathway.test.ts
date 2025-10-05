@@ -12,7 +12,7 @@
 import { describe, it, expect, beforeEach } from '@jest/globals';
 import { PathwayAsserter } from '../../utils/PathwayAsserter';
 import { getLogCapture } from '../../utils/LogCapture';
-import { LogPathway } from '../../../src/utils/Logger';
+import { LogPathway } from '@agent-brain/core/infrastructure/logging';
 import { FilterStateManager } from '../../../src/orchestration/FilterStateManager';
 
 describe('FILTER_APPLY Pathway - Error Scenarios', () => {

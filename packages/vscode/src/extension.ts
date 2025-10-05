@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { TimelineProvider } from './providers/timeline-provider-webpack';
 import { WelcomeViewProvider } from './providers/WelcomeViewProvider';
-import { logger, LogCategory, createContextLogger } from './utils/Logger';
+import { logger, LogCategory, createContextLogger } from '@agent-brain/core/infrastructure/logging/Logger';
 
 let timelineProvider: TimelineProvider | null = null;
 const log = createContextLogger(LogCategory.EXTENSION);

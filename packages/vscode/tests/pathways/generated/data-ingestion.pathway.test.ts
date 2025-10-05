@@ -12,7 +12,7 @@ import {
     createMinimalDataIngestionPathway,
     createExtendedDataIngestionPathway
 } from '../definitions/data-ingestion.pathway';
-import { LogPathway } from '../../../src/utils/Logger';
+import { LogPathway } from '@agent-brain/core/infrastructure/logging';
 
 describe('DATA_INGESTION Pathway', () => {
     beforeEach(() => {

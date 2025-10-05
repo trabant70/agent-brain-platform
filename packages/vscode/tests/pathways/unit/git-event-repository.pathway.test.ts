@@ -10,7 +10,7 @@ import { describe, it, expect, beforeEach, afterAll } from '@jest/globals';
 import { PathwayAsserter } from '../../utils/PathwayAsserter';
 import { PathwayDebugger } from '../../utils/PathwayDebugger';
 import { getLogCapture } from '../../utils/LogCapture';
-import { LogPathway } from '../../../src/utils/Logger';
+import { LogPathway } from '@agent-brain/core/infrastructure/logging';
 import { TestRepositories } from '../../fixtures/test-repositories';
 
 describe('GitEventRepository - Component Pathways', () => {

@@ -18,25 +18,15 @@
     "baseUrl": ".",
     "paths": {
       "@agent-brain/core/*": ["../core/src/*"],
-      "@visualization/*": ["src/visualization/*"],
-      "@webview/*": ["src/webview/*"]
+      "@visualization/*": ["../core/src/domains/visualization/*"],
+      "@webview/*": ["../core/src/domains/visualization/webview/*"]
     }
   },
   "include": [
-    "src/webview/**/*",
-    "src/visualization/**/*"
+    "../core/src/domains/visualization/**/*"
   ],
   "exclude": [
     "node_modules",
-    "dist",
-    "src/extension.ts",
-    "src/data/**/*",
-    "src/timeline/**/*",
-    "src/filtering/**/*",
-    "src/orchestration/**/*",
-    "src/providers/**/*",
-    "src/ui/**/*",
-    "**/*.node.ts",
-    "**/*Provider.ts"
+    "dist"
   ]
 }

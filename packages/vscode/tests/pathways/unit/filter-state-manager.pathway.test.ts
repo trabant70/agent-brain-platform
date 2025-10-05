@@ -8,7 +8,7 @@ import { FilterStateManager } from '../../../src/orchestration/FilterStateManage
 import { PathwayAsserter } from '../../utils/PathwayAsserter';
 import { PathwayDebugger } from '../../utils/PathwayDebugger';
 import { getLogCapture } from '../../utils/LogCapture';
-import { LogPathway } from '../../../src/utils/Logger';
+import { LogPathway } from '@agent-brain/core/infrastructure/logging';
 
 describe('FilterStateManager - Component Pathways', () => {
     let manager: FilterStateManager;

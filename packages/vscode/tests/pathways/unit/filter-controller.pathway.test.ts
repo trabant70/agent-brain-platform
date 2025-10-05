@@ -10,8 +10,8 @@ import { describe, it, expect, beforeEach } from '@jest/globals';
 import { PathwayAsserter } from '../../utils/PathwayAsserter';
 import { PathwayDebugger } from '../../utils/PathwayDebugger';
 import { getLogCapture } from '../../utils/LogCapture';
-import { LogPathway } from '../../../src/utils/Logger';
-import { FilterController, AvailableOptions } from '../../../src/visualization/ui/FilterController';
+import { LogPathway } from '@agent-brain/core/infrastructure/logging';
+import { FilterController, AvailableOptions } from '@agent-brain/core/domains/visualization/ui/FilterController';
 
 describe('FilterController - Component Pathways', () => {
     let controller: FilterController;

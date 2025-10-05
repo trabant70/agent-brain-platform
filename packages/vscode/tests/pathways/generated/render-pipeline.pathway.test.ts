@@ -13,7 +13,7 @@ import {
     createReRenderPathway,
     createResizeRenderPathway
 } from '../definitions/render-pipeline.pathway';
-import { LogPathway } from '../../../src/utils/Logger';
+import { LogPathway } from '@agent-brain/core/infrastructure/logging';
 
 describe('RENDER_PIPELINE Pathway', () => {
     beforeEach(() => {

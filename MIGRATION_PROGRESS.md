@@ -1,8 +1,8 @@
 # Migration Progress Tracker
 
 **Last Updated:** 2025-10-05
-**Current Phase:** Phase 3 Complete
-**Status:** ✅ Providers migrated to core, ready for Phase 4
+**Current Phase:** Phase 8 Complete (Extension Wrapper Clean)
+**Status:** ✅ Clean architecture achieved - VSCode package is now a thin wrapper over core
 
 ---
 
@@ -90,7 +90,7 @@
 
 ### ✅ Phase 4: Domain: Visualization (COMPLETE)
 **Duration:** ~2 hours
-**Commit:** (pending)
+**Commit:** `fd8d625`
 
 **Completed:**
 - ✅ Created visualization directory structure in `core/domains/visualization/`:
@@ -134,6 +134,47 @@
 - ✅ Extension bundle: 195KB
 - ✅ Webview bundles: 993KB total (vendors: 700KB, webview: 293KB)
 - ⏸️ Extension run test pending
+
+### ✅ Phase 8: Extension Wrapper (COMPLETE)
+**Duration:** ~1 hour
+**Commit:** Pending
+
+**Completed:**
+- ✅ **Deleted ALL duplicate files from vscode/src/**:
+  - Removed: `providers/git/`, `providers/github/` (duplicates of core)
+  - Removed: `utils/Logger.ts` (duplicate of core/infrastructure/logging)
+  - Removed: `orchestration/` directory (duplicate of core)
+  - Removed: `core/`, `data/`, `filtering/`, `timeline/`, `ui/`, `visualization/`, `webview/` (all old duplicate directories)
+  - Removed: `providers/JavaScriptLoader.ts`, `providers/TemplateLoader.ts` (unused)
+
+- ✅ **Updated imports to use @agent-brain/core**:
+  - `extension.ts`: Logger imports from `@agent-brain/core/infrastructure/logging`
+  - `timeline-provider-webpack.ts`: DataOrchestrator from `@agent-brain/core/domains/visualization/orchestration`
+  - `timeline-provider-webpack.ts`: Logger from `@agent-brain/core/infrastructure/logging`
+
+- ✅ **Updated TypeScript configuration**:
+  - Fixed `tsconfig.webview.json` to reference core visualization files
+  - Cleaned up include/exclude paths
+
+- ✅ **Clean vscode/src/ structure** (only VSCode-specific code):
+  - `extension.ts` - Extension entry point
+  - `providers/TimelineProvider.ts` - Webview lifecycle manager
+  - `providers/WelcomeViewProvider.ts` - Welcome view
+  - `utils/git-project-manager.ts` - VSCode workspace utilities
+
+**Files Deleted:** 76 duplicate files removed
+**Bundle Verification:**
+- ✅ Extension bundle: 186KB (extension.js)
+- ✅ Webview bundles: 993KB total (vendors: 700KB, webview: 293KB)
+- ✅ Only 3 JavaScript bundles in dist/
+- ✅ Declaration files only from core and vscode (35 total, no duplicates)
+
+**Architecture Achieved:**
+- ✅ VSCode package is now a THIN WRAPPER over core
+- ✅ All business logic in core package
+- ✅ No duplication between packages
+- ✅ Clean separation: platform-agnostic (core) vs VSCode-specific (vscode)
+- ✅ Follows ARCHITECTURE_DESIGN_V3.md principles
 
 ---
 

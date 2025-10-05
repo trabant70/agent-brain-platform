@@ -13,7 +13,7 @@ import {
     createDateRangeFilterPathway,
     createAuthorFilterPathway
 } from '../definitions/filter-apply.pathway';
-import { LogPathway } from '../../../src/utils/Logger';
+import { LogPathway } from '@agent-brain/core/infrastructure/logging';
 
 describe('FILTER_APPLY Pathway', () => {
     beforeEach(() => {

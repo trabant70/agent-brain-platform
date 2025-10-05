@@ -9,9 +9,9 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { DataOrchestrator } from '../orchestration/DataOrchestrator';
+import { DataOrchestrator } from '@agent-brain/core/domains/visualization/orchestration/DataOrchestrator';
 import { CanonicalEvent, FilterState } from '@agent-brain/core/domains/events';
-import { logger, LogCategory, LogPathway } from '../utils/Logger';
+import { logger, LogCategory, LogPathway } from '@agent-brain/core/infrastructure/logging/Logger';
 
 export class TimelineProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'repoTimeline.evolutionView';
