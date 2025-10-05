@@ -1,8 +1,8 @@
 # Migration Progress Tracker
 
 **Last Updated:** 2025-10-05
-**Current Phase:** Phase 1 Complete
-**Status:** ✅ Foundation established, ready for Phase 2
+**Current Phase:** Phase 2 Complete
+**Status:** ✅ Event system migrated, ready for Phase 3
 
 ---
 
@@ -29,11 +29,33 @@
 - ✅ Git commit successful
 - ⏸️ Tests not yet run (no code moved yet)
 
+### ✅ Phase 2: Domain: Events (COMPLETE)
+**Duration:** ~1 hour
+**Commit:** `5fd3544`
+
+**Completed:**
+- ✅ Created modular event system in `core/domains/events/`:
+  - EventType.ts (enum with all event types including future ones)
+  - Author.ts, ImpactMetrics.ts, VisualizationHints.ts, EventSource.ts
+  - CanonicalEvent.ts (main interface with imports)
+  - types.ts (FilterState, FilterOptions, ProviderContext, etc.)
+  - index.ts (unified exports)
+- ✅ Configured TypeScript path mapping (`@agent-brain/core/*`)
+- ✅ Updated 13 files with new import paths
+- ✅ Built core package successfully
+- ✅ Git checkpoint created
+
+**Verification:**
+- ✅ Core package compiles without errors
+- ✅ All event types properly exported
+- ✅ VSCode package imports updated
+- ⏸️ Tests not yet run (will test after more components moved)
+
 ---
 
 ## Next Steps
 
-### 📋 Phase 2: Domain: Events (1-2 hours)
+### 📋 Phase 3: Domain: Providers (2-3 hours)
 **Goal:** Move CanonicalEvent system to `core/domains/events/`
 
 **Tasks:**

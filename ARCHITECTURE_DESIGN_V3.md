@@ -44,6 +44,15 @@ Build layers that enhance each other, not parallel systems that need integration
 ### 6. Two-Tiered Data Flow (NEW)
 Agent emissions are first-tier sources that feed learning systems, which are meta-interpretation layers.
 
+### 7. CanonicalEvent as Universal Contract (CRITICAL)
+**Everything speaks CanonicalEvent. Everything.**
+
+All data sources (Git, GitHub, Intelligence, Agents) emit CanonicalEvents. All visualizations (Timeline, Dashboard, future viz) consume CanonicalEvents. DataOrchestrator is the single aggregation point.
+
+**No exceptions. No transformations. No separate data paths.**
+
+This is how the timeline and agent-brain repositories merge into one unified architecture: **one event format, one orchestrator, peer visualizations.**
+
 ---
 
 ## Architectural Layers
@@ -151,6 +160,8 @@ agent-brain-platform/
 │   │   │   │   │   └── types.ts
 │   │   │   │   │
 │   │   │   │   ├── intelligence/     [Pattern & Learning Engine]
+│   │   │   │   │   ├── engine/
+│   │   │   │   │   │   └── AgentBrainCore.ts       [Main analysis orchestrator]
 │   │   │   │   │   ├── patterns/
 │   │   │   │   │   │   ├── PatternEngine.ts        [Pattern matching & validation]
 │   │   │   │   │   │   ├── PatternValidator.ts     [Pattern quality checks]
@@ -159,10 +170,23 @@ agent-brain-platform/
 │   │   │   │   │   │   ├── LearningAnalyzer.ts     [Extract patterns from failures]
 │   │   │   │   │   │   ├── LearningPropagator.ts   [Apply learnings across codebase]
 │   │   │   │   │   │   ├── LearningStorage.ts      [Persist learnings]
-│   │   │   │   │   │   ├── LearningSystem.ts       [Orchestrator]
-│   │   │   │   │   │   └── PathwayLearningAdapter.ts [NEW: Pathway test → Learning]
-│   │   │   │   │   └── analysis/
-│   │   │   │   │       └── AgentBrainCore.ts       [Main analysis engine]
+│   │   │   │   │   │   └── LearningSystem.ts       [Orchestrator]
+│   │   │   │   │   ├── versioning/
+│   │   │   │   │   │   └── PatternVersionControl.ts [Pattern versioning]
+│   │   │   │   │   └── adapters/                    [CRITICAL: Intelligence Input Mechanisms]
+│   │   │   │   │       ├── base/
+│   │   │   │   │       │   └── IntelligenceAdapter.ts [Base adapter interface]
+│   │   │   │   │       ├── extensions/              [Plugin System for Custom Patterns/ADRs]
+│   │   │   │   │       │   ├── ExtensionAPI.ts      [Extension interface]
+│   │   │   │   │       │   ├── ExtensionLoader.ts   [Load npm extensions]
+│   │   │   │   │       │   └── ExtensionRegistry.ts [Manage loaded extensions]
+│   │   │   │   │       ├── webhooks/                [Real-time Events & External Triggers]
+│   │   │   │   │       │   ├── WebSocketAdapter.ts  [Real-time learning events]
+│   │   │   │   │       │   └── AnalysisTrigger.ts   [External analysis triggers]
+│   │   │   │   │       ├── testing/                 [Test Integration]
+│   │   │   │   │       │   └── PathwayLearningAdapter.ts [Pathway tests → Learning]
+│   │   │   │   │       └── agents/                  [FUTURE: Agent Integration]
+│   │   │   │   │           └── AgentEmissionAdapter.ts [Agent work → Learning]
 │   │   │   │   │
 │   │   │   │   ├── providers/        [Data Providers - Tier 1]
 │   │   │   │   │   ├── base/
@@ -175,7 +199,9 @@ agent-brain-platform/
 │   │   │   │   │   ├── github/
 │   │   │   │   │   │   ├── GitHubProvider.ts
 │   │   │   │   │   │   └── GitHubClient.ts
-│   │   │   │   │   └── agents/                     [NEW: Agent Emission Providers]
+│   │   │   │   │   ├── intelligence/                [NEW: Intelligence as Provider]
+│   │   │   │   │   │   └── IntelligenceProvider.ts      [Wraps learning/pattern domains]
+│   │   │   │   │   └── agents/                      [FUTURE: Agent Emission Providers]
 │   │   │   │   │       ├── AgentEmissionProvider.ts     [Aggregator for all agents]
 │   │   │   │   │       ├── adapters/
 │   │   │   │   │       │   ├── ClaudeCodeAdapter.ts     [Claude Code emissions]
@@ -533,33 +559,234 @@ Different rendering engines (D3 vs Canvas vs WebGL) for the **same visualization
 
 ### domains/intelligence/ - Pattern & Learning Engine
 
-**Purpose:** Extract patterns from activities, learn from failures, propagate knowledge
+**Purpose:** Extract patterns from activities, learn from failures, propagate knowledge, validate against ADRs
 
-**Key principle:** Intelligence processes raw inputs (emissions, test failures) into meaningful patterns.
+**Key principle:** Intelligence has its OWN input adapters (extensions, webhooks, triggers) - this is the core capability of agent-brain. Intelligence is both a consumer (of events) and a provider (of meta-events).
 
-**Contents:**
-- **patterns/**: Pattern matching, validation, quality checks
-- **learning/**: Failure analysis, pattern extraction, storage, propagation
-  - **NEW:** `PathwayLearningAdapter.ts` - Connects pathway test failures to learning system
-- **analysis/**: `AgentBrainCore.ts` - Main orchestrator
+**Critical Architectural Insight:**
+The intelligence domain contains the original agent-brain's core capability: **multiple input adapters** that collect data to learn from and verify that architectural decisions are followed. These input mechanisms must be preserved exactly.
 
-**Unique capability:** This domain is both a **consumer** (of events) and a **provider** (of meta-events).
-
-**As Consumer:**
-```typescript
-learningSystem.processEvent(agentEmissionEvent)
-learningSystem.processFailure(pathwayTestFailure)
+**Structure:**
+```
+intelligence/
+├── engine/
+│   └── AgentBrainCore.ts          [Main orchestrator]
+├── patterns/
+│   ├── PatternEngine.ts           [Pattern matching]
+│   ├── PatternValidator.ts        [Validate against ADRs]
+│   └── PatternSystem.ts           [Facade]
+├── learning/
+│   ├── LearningAnalyzer.ts        [Extract patterns from failures]
+│   ├── LearningStorage.ts         [Persist learnings]
+│   ├── LearningPropagator.ts      [Apply learnings across codebase]
+│   └── LearningSystem.ts          [Facade]
+├── versioning/
+│   └── PatternVersionControl.ts   [Pattern versioning]
+└── adapters/                      [INPUT ADAPTERS - THE CORE]
+    ├── base/
+    │   └── IntelligenceAdapter.ts [Base adapter interface]
+    ├── extensions/                [Plugin System for Custom Patterns/ADRs]
+    │   ├── ExtensionAPI.ts       [Extension interface]
+    │   ├── ExtensionLoader.ts    [Load npm extensions]
+    │   └── ExtensionRegistry.ts  [Manage loaded extensions]
+    ├── webhooks/                  [Real-time Events & External Triggers]
+    │   ├── WebSocketAdapter.ts   [Real-time learning events]
+    │   └── AnalysisTrigger.ts    [External analysis triggers]
+    ├── testing/                   [Test Integration]
+    │   └── PathwayLearningAdapter.ts [Pathway tests → Learning]
+    └── agents/                    [FUTURE: Agent Integration]
+        └── AgentEmissionAdapter.ts [Agent work → Learning]
 ```
 
-**As Provider:**
+**Intelligence Input Adapters (Must Preserve):**
+
+#### 1. Extension System (Plugin Architecture)
+Teams extend agent-brain with custom patterns, analyzers, and ADRs:
+
 ```typescript
-class IntelligenceProvider implements IDataProvider {
-  async fetchEvents() {
-    const patterns = await learningSystem.getPatterns();
-    return patterns.map(toCanonicalEvent);
+// Extensions loaded from npm packages (@agent-brain-ext/*)
+interface AgentBrainExtension {
+  name: string;
+  version: string;
+
+  patterns?(): Pattern[];              // Custom patterns
+  analyzers?(): Analyzer[];            // Custom code analyzers
+  beforeAnalysis?(code, context): void; // Pre-analysis hook
+  afterAnalysis?(results): void;        // Post-analysis hook
+  interventionStrategy?(intent): Strategy; // Custom interventions
+  onLearn?(learning): void;             // Learning event hook
+  commands?(): Command[];               // Custom commands
+}
+
+// Example:
+//  @agent-brain-ext/company-adr - Company architecture decision records
+//  @agent-brain-ext/security-patterns - Security best practices
+//  @agent-brain-ext/react-patterns - React-specific patterns
+```
+
+#### 2. WebSocket Events (Real-time Intelligence Feed)
+Real-time learning events, analysis triggers, external system integration:
+
+```typescript
+WebSocketEvents {
+  // Outbound: Learning notifications
+  'pattern-discovered': (pattern) => void;
+  'pattern-applied': (patternId, file) => void;
+  'failure-processed': (failure) => void;
+  'metrics-updated': (metrics) => void;
+
+  // Inbound: Triggers (INPUT)
+  'trigger-analysis': (files[]) => void;
+  'apply-suggestion': (patternId, file) => void;
+}
+```
+
+#### 3. Analysis Trigger (REST - INPUT ONLY)
+External systems can trigger analysis:
+
+```typescript
+POST /api/analyze        // Trigger analysis on files
+POST /api/patterns       // Add custom pattern
+
+// NOTE: GET endpoints ELIMINATED!
+// Dashboard no longer has separate API
+// Dashboard is now a Visualization that queries DataOrchestrator
+```
+
+#### 4. Pathway Learning Adapter (NEW)
+Learn from pathway test failures:
+
+```typescript
+class PathwayLearningAdapter {
+  async processFailure(pathwayTest: PathwayTest): Promise<void> {
+    const failure: TestFailure = {
+      testName: pathwayTest.name,
+      expected: pathwayTest.expectations,
+      actual: pathwayTest.results,
+      stackTrace: pathwayTest.error
+    };
+
+    await learningSystem.processFailure(failure);
   }
 }
 ```
+
+#### 5. Agent Emission Adapter (FUTURE - Phase 9)
+Learn from agent coding activities:
+
+```typescript
+class AgentEmissionAdapter {
+  async processAgentActivity(emission: AgentActivityRollup): Promise<void> {
+    // Extract patterns from agent work
+    const patterns = await learningAnalyzer.extractFromActivity(emission);
+
+    // Store learnings
+    await learningStorage.store(patterns);
+
+    // Validate against ADRs
+    await patternValidator.validateAgainstADRs(patterns);
+  }
+}
+```
+
+**Unique Capability: Intelligence is Both Consumer AND Provider**
+
+**As Consumer (Intelligence Adapters → Processing):**
+```typescript
+// From extensions
+extensionLoader.loadFromPackages();
+const customPatterns = extensionLoader.getAllPatterns();
+
+// From webhooks
+webSocketAdapter.on('trigger-analysis', files => {
+  agentBrainCore.analyzeFiles(files);
+});
+
+// From pathway tests
+pathwayLearningAdapter.processFailure(testFailure);
+
+// From agent emissions (FUTURE)
+agentEmissionAdapter.processAgentActivity(emission);
+```
+
+**As Provider (Processing → IntelligenceProvider → CanonicalEvents):**
+```typescript
+class IntelligenceProvider implements IDataProvider {
+  constructor(
+    private learningSystem: LearningSystem,
+    private patternSystem: PatternSystem
+  ) {}
+
+  async fetchEvents(): Promise<CanonicalEvent[]> {
+    const events: CanonicalEvent[] = [];
+
+    // Learnings as events
+    const learnings = await this.learningSystem.getAllLearnings();
+    learnings.forEach(learning => {
+      events.push({
+        type: EventType.LEARNING_STORED,
+        title: learning.description,
+        timestamp: learning.discoveredAt,
+        author: { id: 'agent-brain', name: 'Agent Brain' },
+        metadata: { learning, source: learning.source }
+      });
+    });
+
+    // Patterns as events
+    const patterns = await this.patternSystem.getPatterns();
+    patterns.forEach(pattern => {
+      events.push({
+        type: EventType.PATTERN_DETECTED,
+        title: pattern.name,
+        timestamp: pattern.detectedAt,
+        metadata: { pattern }
+      });
+    });
+
+    return events;
+  }
+
+  // Real-time updates
+  subscribe(callback: (event: CanonicalEvent) => void): void {
+    this.learningSystem.on('learning-stored', learning => {
+      callback(this.convertToCanonicalEvent(learning));
+    });
+  }
+}
+```
+
+**Data Flow: Intelligence Domain**
+
+```
+INPUT ADAPTERS (Data Collection)
+├── Extension System → Custom patterns/ADRs
+├── WebSocket → Analysis triggers
+├── Pathway Tests → Test failures
+└── Agent Emissions → FUTURE
+           ↓
+    PROCESSING LOGIC
+    ├── AgentBrainCore (orchestrator)
+    ├── LearningSystem (analyze, store, propagate)
+    └── PatternSystem (match, validate, version)
+           ↓
+    OUTPUT PROVIDER
+    └── IntelligenceProvider → CanonicalEvents
+              ↓
+        DataOrchestrator
+              ↓
+      All Visualizations (Timeline, Dashboard, etc.)
+```
+
+**Critical: Dashboard API Eliminated**
+
+The intelligence domain previously had a `dashboard-api.ts` with GET endpoints for patterns, learnings, and metrics. **This is now eliminated** because:
+
+- Dashboard is now a **Visualization** registered in VisualizationRegistry
+- Dashboard queries DataOrchestrator for CanonicalEvents (just like Timeline)
+- All visualizations are peers consuming from the same orchestrator
+- No separate REST API needed
+
+**This is how timeline and agent-brain merge into one unified architecture.**
 
 ---
 
@@ -575,7 +802,9 @@ providers/
 ├── base/              [Provider interface, registry, config]
 ├── git/               [Local git repository]
 ├── github/            [GitHub API]
-└── agents/            [NEW: Coding agent emissions]
+├── intelligence/      [NEW: Intelligence as Provider]
+│   └── IntelligenceProvider.ts   [Wraps learning/pattern domains]
+└── agents/            [FUTURE: Coding agent emissions]
     ├── AgentEmissionProvider.ts      [Aggregates all agent adapters]
     ├── adapters/
     │   ├── ClaudeCodeAdapter.ts
@@ -583,6 +812,15 @@ providers/
     │   ├── CopilotAdapter.ts
     │   └── CommitMessageAdapter.ts
     └── types.ts
+```
+
+**All Providers (Current & Future):**
+1. **GitProvider** - Local git commits, branches, tags
+2. **GitHubProvider** - PRs, issues, releases from GitHub API
+3. **IntelligenceProvider** (NEW Phase 7) - Learnings, patterns detected
+4. **AgentEmissionProvider** (FUTURE Phase 9) - Agent coding activities
+
+**Every provider emits CanonicalEvents. Every visualization consumes from DataOrchestrator.**
 ```
 
 **Agent Provider Architecture:**
