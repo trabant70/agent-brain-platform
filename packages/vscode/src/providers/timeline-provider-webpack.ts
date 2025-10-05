@@ -21,9 +21,11 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
   private extensionUri: vscode.Uri;
   private currentRepoPath: string = '';
 
-  constructor(extensionUri: vscode.Uri) {
+  constructor(extensionUri: vscode.Uri, storagePath?: string) {
     this.extensionUri = extensionUri;
-    this.orchestrator = new DataOrchestrator();
+    this.orchestrator = new DataOrchestrator({
+      storagePath: storagePath || './.agent-brain'
+    });
   }
 
   /**

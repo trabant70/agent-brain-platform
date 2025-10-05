@@ -18,6 +18,8 @@
  * Provider → CanonicalEvent[] → Cache → Filter → Renderer
  */
 
+import * as path from 'path';
+import * as fs from 'fs/promises';
 import {
   CanonicalEvent,
   EventType,
@@ -31,10 +33,11 @@ import { FilterStateManager } from '../filters/FilterStateManager';
 import { EventMatcher } from './EventMatcher';
 import { logger, LogCategory, LogPathway, createContextLogger } from '../../../infrastructure/logging';
 import { FeatureFlagManager, Feature } from '../../../infrastructure/config/FeatureFlags';
-import { LearningSystem, PatternSystem } from '../../intelligence';
+import { LearningSystem, PatternSystem, FileLearningStorage } from '../../intelligence';
 
 export interface DataOrchestratorOptions {
   cacheTTL?: number; // Cache time-to-live in milliseconds
+  storagePath?: string; // Path to .agent-brain/ directory for persistent storage
 }
 
 /**
@@ -58,12 +61,14 @@ export class DataOrchestrator {
 
   // Options
   private cacheTTL: number;
+  private storagePath: string;
 
   // Current state
   private currentRepoPath: string = '';
 
   constructor(options: DataOrchestratorOptions = {}) {
     this.cacheTTL = options.cacheTTL || 300000; // 5 minutes default
+    this.storagePath = options.storagePath || './.agent-brain';
     this.providerRegistry = new ProviderRegistry();
     this.filterStateManager = new FilterStateManager();
     this.eventMatcher = new EventMatcher();
@@ -71,7 +76,7 @@ export class DataOrchestrator {
       LogCategory.ORCHESTRATION,
       'DataOrchestrator constructed with simplified architecture',
       'constructor',
-      { cacheTTL: this.cacheTTL },
+      { cacheTTL: this.cacheTTL, storagePath: this.storagePath },
       LogPathway.DATA_INGESTION
     );
   }
@@ -87,6 +92,9 @@ export class DataOrchestrator {
       undefined,
       LogPathway.DATA_INGESTION
     );
+
+    // Ensure storage directory exists
+    await this.ensureStorageDirectory();
 
     // Register Git provider (always enabled)
     const gitProvider = new GitProvider();
@@ -120,15 +128,31 @@ export class DataOrchestrator {
     // Register Intelligence provider (agent-brain intelligence domain)
     try {
       this.log.info(LogCategory.ORCHESTRATION, 'Registering Intelligence provider', 'initialize');
-      const learningSystem = new LearningSystem();
+
+      // Create file-based storage paths
+      const learningsPath = path.join(this.storagePath, 'learnings.json');
+      const patternsPath = path.join(this.storagePath, 'patterns.json');
+
+      // Use FileLearningStorage for persistent storage
+      const learningSystem = new LearningSystem({
+        storage: new FileLearningStorage(learningsPath)
+      });
+
+      // PatternSystem file storage to be implemented in future phase
       const patternSystem = new PatternSystem();
+
       const intelligenceProvider = new IntelligenceProvider(learningSystem, patternSystem);
 
       await this.providerRegistry.registerProvider(intelligenceProvider, {
         enabled: true, // Enabled by default - provides learnings and patterns
         priority: 3
       });
-      this.log.info(LogCategory.ORCHESTRATION, 'Intelligence provider registered successfully', 'initialize');
+
+      this.log.info(
+        LogCategory.ORCHESTRATION,
+        `Intelligence provider registered successfully (storage: ${this.storagePath})`,
+        'initialize'
+      );
     } catch (error) {
       this.log.error(LogCategory.ORCHESTRATION, `Failed to register Intelligence provider: ${error}`, 'initialize');
       // Continue without Intelligence provider
@@ -657,6 +681,31 @@ export class DataOrchestrator {
 
     const age = Date.now() - cached.fetchedAt.getTime();
     return age < this.cacheTTL;
+  }
+
+  /**
+   * Ensure storage directory exists
+   */
+  private async ensureStorageDirectory(): Promise<void> {
+    try {
+      await fs.mkdir(this.storagePath, { recursive: true });
+      this.log.debug(
+        LogCategory.ORCHESTRATION,
+        `Storage directory ready: ${this.storagePath}`,
+        'ensureStorageDirectory',
+        undefined,
+        LogPathway.DATA_INGESTION
+      );
+    } catch (error) {
+      this.log.error(
+        LogCategory.ORCHESTRATION,
+        `Failed to create storage directory: ${error}`,
+        'ensureStorageDirectory',
+        error,
+        LogPathway.DATA_INGESTION
+      );
+      throw error;
+    }
   }
 
   /**

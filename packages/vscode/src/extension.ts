@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
 import { TimelineProvider } from './providers/timeline-provider-webpack';
 import { WelcomeViewProvider } from './providers/WelcomeViewProvider';
 import { logger, LogCategory, createContextLogger } from '@agent-brain/core/infrastructure/logging/Logger';
@@ -13,6 +14,10 @@ export async function activate(context: vscode.ExtensionContext) {
     outputChannel.appendLine('🚀 Activating Repository Timeline Extension...');
 
     try {
+        // Determine storage location for intelligence data
+        const storagePath = getStoragePath(context);
+        log.info(LogCategory.EXTENSION, `Intelligence storage: ${storagePath}`, 'activate');
+        outputChannel.appendLine(`📂 Intelligence storage: ${storagePath}`);
         // Register the welcome view for the activity bar sidebar
         log.debug(LogCategory.EXTENSION, 'Creating welcome view provider', 'registration');
         outputChannel.appendLine('👋 Creating welcome view provider for activity bar...');
@@ -31,7 +36,7 @@ export async function activate(context: vscode.ExtensionContext) {
         log.debug(LogCategory.EXTENSION, 'Creating timeline webview provider', 'registration');
         outputChannel.appendLine('📊 Creating timeline webview provider...');
 
-        timelineProvider = new TimelineProvider(context.extensionUri);
+        timelineProvider = new TimelineProvider(context.extensionUri, storagePath);
         const timelineView = vscode.window.registerWebviewViewProvider(
             TimelineProvider.viewType,
             timelineProvider
@@ -135,4 +140,23 @@ export function deactivate() {
 
     log.info(LogCategory.EXTENSION, 'Extension deactivated successfully');
     outputChannel.appendLine('✅ Extension deactivated successfully');
+}
+
+/**
+ * Determine storage path for intelligence data
+ *
+ * Priority:
+ * 1. Workspace folder (preferred) - .agent-brain/ in workspace root
+ * 2. Global storage (fallback) - VSCode extension storage directory
+ */
+function getStoragePath(context: vscode.ExtensionContext): string {
+    // Try workspace first (preferred for team sharing)
+    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+
+    if (workspaceRoot) {
+        return path.join(workspaceRoot, '.agent-brain');
+    }
+
+    // Fallback to global storage (when no workspace is open)
+    return path.join(context.globalStorageUri.fsPath, 'agent-brain');
 }

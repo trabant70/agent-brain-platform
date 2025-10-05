@@ -70,6 +70,54 @@ Pathway testing framework:
 ### @agent-brain/vscode
 Unified VSCode extension integrating all capabilities.
 
+## 📂 Data Storage
+
+Agent-Brain stores intelligence data locally to remember learnings across VSCode sessions.
+
+### Storage Location
+
+**When workspace is open:**
+```
+your-project/
+  .agent-brain/
+    learnings.json    # Captured patterns from test failures and code analysis
+    patterns.json     # Code pattern detection rules (future)
+```
+
+**When no workspace is open:**
+```
+~/.vscode/extensions/.../globalStorage/agent-brain/
+```
+
+### Privacy Options
+
+Agent-Brain learnings may contain code snippets and error messages from your project.
+
+**Option 1: Keep learnings private** (add to `.gitignore`):
+```bash
+echo ".agent-brain/" >> .gitignore
+```
+
+**Option 2: Share learnings with team** (commit to git):
+```bash
+git add .agent-brain/
+git commit -m "Add team learnings from Agent-Brain"
+```
+
+### What's Stored?
+
+- **Learning Patterns**: Insights from test failures, build errors, and code analysis
+- **Pattern Rules**: Custom detection rules you've configured
+- **ADRs**: Architectural Decision Records (future feature)
+
+All data is stored in **human-readable JSON format** and can be inspected or edited manually.
+
+### Data Sanitization
+
+⚠️ **Note:** Future versions will include automatic sanitization of sensitive data (API keys, credentials, etc.). For now, review `.agent-brain/learnings.json` before committing to version control.
+
+See [packages/vscode/docs/STORAGE.md](packages/vscode/docs/STORAGE.md) for detailed documentation.
+
 ## Development
 
 ### Building a Single Package
