@@ -19,7 +19,9 @@
       "Bash(npm run package:*)",
       "Bash(npx vsce package:*)",
       "Bash(npx vsce ls:*)",
-      "Bash(npx jest:*)"
+      "Bash(npx jest:*)",
+      "Bash(npx @vscode/vsce package:*)",
+      "Bash(npx @vscode/vsce ls:*)"
     ],
     "deny": [],
     "ask": []
