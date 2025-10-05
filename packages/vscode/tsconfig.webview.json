@@ -1,0 +1,42 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "outDir": "./dist/webview-ts",
+    "rootDir": "./src",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "types": [],
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "declaration": false,
+    "declarationMap": false,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "baseUrl": "./src",
+    "paths": {
+      "@visualization/*": ["visualization/*"],
+      "@webview/*": ["webview/*"]
+    }
+  },
+  "include": [
+    "src/webview/**/*",
+    "src/visualization/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/extension.ts",
+    "src/data/**/*",
+    "src/timeline/**/*",
+    "src/filtering/**/*",
+    "src/orchestration/**/*",
+    "src/providers/**/*",
+    "src/ui/**/*",
+    "**/*.node.ts",
+    "**/*Provider.ts"
+  ]
+}

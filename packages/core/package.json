@@ -1,35 +1,25 @@
 {
   "name": "@agent-brain/core",
   "version": "0.1.0",
-  "description": "Agent Brain core engine - Pattern detection, learning system, and analysis",
+  "description": "Core platform for Agent-Brain - unified domains",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc -b",
-    "watch": "tsc -b --watch",
+    "build": "tsc",
     "test": "jest",
-    "clean": "rm -rf dist *.tsbuildinfo"
+    "test:pathways": "jest --selectProjects=\"Pathway Tests\"",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@agent-brain/shared": "^0.1.0",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.3",
-    "@types/glob": "^8.1.0",
-    "cors": "^2.8.5",
-    "express": "^5.1.0",
-    "glob": "^10.4.5",
-    "js-yaml": "^4.1.0"
+    "d3": "^7.9.0",
+    "@octokit/rest": "^22.0.0"
   },
   "devDependencies": {
-    "@types/fs-extra": "^11.0.4",
-    "@types/jest": "^29.0.0",
-    "@types/js-yaml": "^4.0.5",
-    "@types/node": "^18.19.0",
-    "@types/supertest": "^6.0.3",
+    "@types/d3": "^7.4.3",
+    "@types/node": "^20.19.19",
+    "typescript": "^5.9.2",
     "jest": "^29.7.0",
-    "socket.io": "^4.8.1",
-    "supertest": "^7.1.4",
-    "ts-jest": "^29.1.1",
-    "typescript": "^5.3.3"
+    "@types/jest": "^29.5.12",
+    "ts-jest": "^29.2.5"
   }
 }

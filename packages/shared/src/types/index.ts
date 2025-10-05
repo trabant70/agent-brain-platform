@@ -9,6 +9,7 @@
  */
 
 export * from './CanonicalEvent';
+export * from './Logger';
 
 /**
  * Base provider interface

@@ -144,14 +144,14 @@ export class FilterStateManager {
     const state = this.repoFilters.get(repoPath);
     if (!state) return false;
 
-    // Check if any filter fields are set
+    // Check if any filter fields are set (even empty arrays count as filters)
     return !!(
-      state.selectedBranches?.length ||
-      state.selectedAuthors?.length ||
-      state.selectedEventTypes?.length ||
-      state.selectedProviders?.length ||
-      state.selectedTags?.length ||
-      state.selectedLabels?.length ||
+      state.selectedBranches !== undefined ||
+      state.selectedAuthors !== undefined ||
+      state.selectedEventTypes !== undefined ||
+      state.selectedProviders !== undefined ||
+      state.selectedTags !== undefined ||
+      state.selectedLabels !== undefined ||
       state.searchQuery ||
       state.dateRange
     );

@@ -1,10 +1,97 @@
-.vscode/**
-.vscode-test/**
-src/**
-.gitignore
-tsconfig.json
+# Source code (only compiled output needed)
+src/
+*.ts
+!*.d.ts
+
+# Build and development files
+tsconfig*.json
 webpack.config.js
+.vscode/
+.gitignore
+*/.gitignore
+**/.gitignore
+.git/
+*/.git/
+**/.git/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Build outputs to exclude
+out/
 **/*.map
-node_modules/**
-.git/**
-**/.git/**
+*.vsix
+
+# Don't exclude node_modules - we need runtime dependencies
+# Just exclude the big stuff we don't need
+
+# Exclude git artifacts from node_modules
+node_modules/**/.git/**
+node_modules/**/.github/**
+node_modules/**/.gitignore
+node_modules/**/.gitattributes
+
+# Exclude development dependencies
+node_modules/@types/**
+node_modules/undici-types/**
+node_modules/@babel/**
+node_modules/@jest/**
+node_modules/typescript/**
+node_modules/webpack/**
+node_modules/ts-loader/**
+node_modules/jest/**
+node_modules/babel-jest/**
+node_modules/ts-jest/**
+node_modules/clean-webpack-plugin/**
+node_modules/copy-webpack-plugin/**
+node_modules/css-loader/**
+node_modules/html-webpack-plugin/**
+node_modules/style-loader/**
+
+# Exclude huge TypeScript definition files (saves ~6MB)
+node_modules/@octokit/openapi-types/**
+node_modules/**/dist-types/
+
+# Exclude source maps
+node_modules/**/*.map
+
+# Documentation files (keep only README.md and LICENSE in VSIX)
+*.md
+!README.md
+!LICENSE
+
+# Screenshots and images (except extension icons)
+Screenshot*
+*.jpg
+*.jpeg
+*.gif
+# Keep the icon images for the extension
+!images/**
+
+# Tests, mocks, and analysis
+**/*.test.*
+**/*.spec.*
+__mocks__/
+tests/
+coverage/
+analysis/
+analysis_0112/
+archive/
+archived-confusing-classes/
+*-backup/
+*-broken/
+realistic-timeline-repo/
+
+# Development and test files
+babel.config.js
+jest.config.js
+
+# Development artifacts
+.claude/
+*.zip
+
+# OS files
+.DS_Store
+Thumbs.db

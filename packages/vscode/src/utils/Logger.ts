@@ -102,16 +102,22 @@ class Logger {
                 this.enabledPathways.add(LogPathway.NONE);
             }
         } catch (error) {
-            // Fallback for non-VS Code environments (tests, etc.)
-            const envLevel = process.env.REPO_TIMELINE_LOG_LEVEL || 'info';
-            this.currentLogLevel = this.parseLogLevel(envLevel);
+            // Fallback for non-VS Code environments (tests, browser, etc.)
+            // Check if process is available (Node.js) before accessing it
+            if (typeof process !== 'undefined' && process.env) {
+                const envLevel = process.env.REPO_TIMELINE_LOG_LEVEL || 'info';
+                this.currentLogLevel = this.parseLogLevel(envLevel);
 
-            // Check for pathway env vars
-            const envPathways = process.env.REPO_TIMELINE_LOG_PATHWAYS;
-            if (envPathways) {
-                this.pathwayMode = 'exclusive';
-                this.enabledPathways = new Set(envPathways.split(',') as LogPathway[]);
-                this.enabledPathways.add(LogPathway.NONE);
+                // Check for pathway env vars
+                const envPathways = process.env.REPO_TIMELINE_LOG_PATHWAYS;
+                if (envPathways) {
+                    this.pathwayMode = 'exclusive';
+                    this.enabledPathways = new Set(envPathways.split(',') as LogPathway[]);
+                    this.enabledPathways.add(LogPathway.NONE);
+                }
+            } else {
+                // Browser environment - use default log level
+                this.currentLogLevel = LogLevel.INFO;
             }
         }
     }

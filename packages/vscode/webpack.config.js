@@ -78,6 +78,7 @@ const webviewConfig = {
         use: [{
           loader: 'ts-loader',
           options: {
+            configFile: path.resolve(__dirname, 'tsconfig.webview.json'),
             transpileOnly: isDevelopment
           }
         }],

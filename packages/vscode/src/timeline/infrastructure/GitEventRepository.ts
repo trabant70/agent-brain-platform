@@ -688,13 +688,17 @@ export class GitEventRepository {
         const commitCount = events.filter(e => e.type === 'commit').length;
         const mergeCount = events.filter(e => e.type === 'merge').length;
         const branchCount = [...new Set(events.map(e => e.branch))].length;
+        const uniqueAuthors = [...new Set(events.map(e => e.author))].length;
 
         return {
             repositoryName: project.name,
+            totalEvents: events.length,
             totalCommits: commitCount,
             totalMerges: mergeCount,
             totalBranches: branchCount,
+            uniqueAuthors,
             collectionDate: new Date(),
+            extractedAt: new Date(),
             gitRootPath: project.rootPath
         };
     }
