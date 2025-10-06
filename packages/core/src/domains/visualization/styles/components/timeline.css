@@ -176,7 +176,8 @@
 }
 
 .legend-content {
-    padding: 0.75rem;
+    /* Remove top padding to bring tabs closer to header */
+    padding: 0 0.75rem 0.75rem 0.75rem;
 }
 
 .legend-section {
@@ -227,6 +228,8 @@
     display: flex;
     gap: 0;
     border-bottom: 1px solid var(--border-color);
+    /* Reduce bottom margin and add small top margin for better spacing */
+    margin-top: 0.4rem;
     margin-bottom: 0.5rem;
 }
 

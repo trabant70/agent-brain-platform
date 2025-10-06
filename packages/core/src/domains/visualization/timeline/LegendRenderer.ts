@@ -129,9 +129,11 @@ export class LegendRenderer {
      * Check if event type is an intelligence event
      */
     private isIntelligenceEvent(eventType: string): boolean {
-        return eventType === 'learning-stored' ||
-               eventType === 'pattern-detected' ||
-               eventType === 'adr-recorded';
+        // Normalize the event type (trim, lowercase) for robust comparison
+        const normalized = (eventType || '').toLowerCase().trim();
+        return normalized === 'learning-stored' ||
+               normalized === 'pattern-detected' ||
+               normalized === 'adr-recorded';
     }
 
     /**
