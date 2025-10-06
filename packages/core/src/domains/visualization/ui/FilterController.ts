@@ -408,9 +408,9 @@ export class FilterController {
                   <p class="config-hint" style="margin-left: 24px; margin-top: 4px; color: #888; font-size: 0.8em;">
                     Enabling GitHub API will prompt for authentication.
                   </p>
-                  <div class="provider-item disabled">
-                    <input type="checkbox" id="provider-agent-brain" disabled>
-                    <label for="provider-agent-brain">Agent-Brain - AI insights (coming soon)</label>
+                  <div class="provider-item">
+                    <input type="checkbox" id="provider-agent-brain">
+                    <label for="provider-agent-brain">Agent-Brain - Patterns, learnings, and ADRs</label>
                   </div>
                 </div>
               </div>
@@ -619,6 +619,34 @@ export class FilterController {
 
         // Update sync mode availability
         updateSyncModeAvailability();
+
+        // Notify backend to persist the configuration change
+        this.applyFilters();
+      });
+    }
+
+    // Agent-Brain provider toggle
+    const agentBrainCheckbox = this.floatingMenu.querySelector('#provider-agent-brain') as HTMLInputElement;
+    if (agentBrainCheckbox) {
+      agentBrainCheckbox.addEventListener('change', (e) => {
+        const isChecked = (e.target as HTMLInputElement).checked;
+
+        console.log('[FilterController] Agent-Brain provider toggle:', isChecked);
+
+        // Update local state
+        // Note: No local boolean needed as this is managed via enabledProviders
+
+        // Persist to filterState for session persistence
+        this.updateEnabledProviders('intelligence', isChecked);
+
+        // Send toggleProvider message to extension
+        if ((window as any).vscode) {
+          (window as any).vscode.postMessage({
+            type: 'toggleProvider',
+            providerId: 'intelligence',
+            enabled: isChecked
+          });
+        }
 
         // Notify backend to persist the configuration change
         this.applyFilters();

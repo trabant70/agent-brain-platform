@@ -9,6 +9,8 @@ import { IDataProvider } from '../base';
 import { CanonicalEvent, EventType, ProviderCapabilities, ProviderConfig, ProviderContext } from '../../events';
 import { LearningSystem, LearningPattern } from '../../intelligence/core/learning';
 import { PatternSystem, EnginePattern } from '../../intelligence/core/patterns';
+import { ADRSystem, ADR } from '../../intelligence/core/adrs';
+import { ADRConverter } from '../../intelligence/converters/ADRConverter';
 
 export class IntelligenceProvider implements IDataProvider {
   readonly id = 'intelligence';
@@ -21,14 +23,16 @@ export class IntelligenceProvider implements IDataProvider {
     supportsSearch: false,
     supportsAuthentication: false,
     supportsWriteOperations: false,
-    supportedEventTypes: [EventType.LEARNING_STORED, EventType.PATTERN_DETECTED]
+    supportedEventTypes: [EventType.LEARNING_STORED, EventType.PATTERN_DETECTED, EventType.ADR_RECORDED]
   };
 
   private eventCache: CanonicalEvent[] = [];
+  private adrConverter = new ADRConverter();
 
   constructor(
     private learningSystem: LearningSystem,
-    private patternSystem: PatternSystem
+    private patternSystem: PatternSystem,
+    private adrSystem: ADRSystem
   ) {}
 
   async initialize(config: ProviderConfig): Promise<void> {
@@ -50,6 +54,11 @@ export class IntelligenceProvider implements IDataProvider {
     patterns.forEach(pattern => {
       events.push(this.patternToEvent(pattern));
     });
+
+    // Get ADRs as events
+    const adrs = await this.adrSystem.getADRs();
+    const adrEvents = this.adrConverter.convertToEvents(adrs);
+    events.push(...adrEvents);
 
     this.eventCache = events;
     return events;

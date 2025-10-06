@@ -30,9 +30,10 @@ export enum EventType {
   BUILD_FAILED = 'build-failed',
   TEST_RUN = 'test-run',
 
-  // Intelligence events (for future - Phase 6)
+  // Intelligence events
   LEARNING_STORED = 'learning-stored',
   PATTERN_DETECTED = 'pattern-detected',
+  ADR_RECORDED = 'adr-recorded',
 
   // Agent events (for future - Phase 9)
   AGENT_TASK_COMPLETED = 'agent-task-completed',

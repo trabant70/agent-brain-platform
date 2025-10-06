@@ -835,6 +835,14 @@ export class TimelineRenderer {
                 return d3.symbol().type(d3.symbolCircle).size(0)();
             });
 
+        // Add emoji icon for intelligence events
+        enterGroups.append('text')
+            .attr('class', 'event-icon')
+            .attr('text-anchor', 'middle')
+            .attr('dominant-baseline', 'central')
+            .style('opacity', 0)
+            .style('pointer-events', 'none');
+
         enterGroups.append('text')
             .attr('class', 'event-label')
             .attr('text-anchor', 'middle')
@@ -854,8 +862,25 @@ export class TimelineRenderer {
                 const x = this.xScale(new Date(d.timestamp));
                 const y = this.yScale(d.branch);
                 const safeX = x !== undefined && !isNaN(x) ? x : 0;
-                const safeY = y !== undefined && !isNaN(y) ?
+                let safeY = y !== undefined && !isNaN(y) ?
                     y + this.yScale.bandwidth() / 2 : 0;
+
+                // Offset intelligence events above branch lanes with staggered tracks
+                const isIntelligenceEvent = d.type === 'learning-stored' ||
+                                           d.type === 'pattern-detected' ||
+                                           d.type === 'adr-recorded';
+                if (isIntelligenceEvent) {
+                    const bandwidth = this.yScale.bandwidth();
+
+                    // Use a hash of the event ID to determine track (0, 1, or 2)
+                    // This provides consistent but varied placement to reduce overlap
+                    const trackHash = (d.id || '').split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
+                    const track = trackHash % 3;
+
+                    // Three tracks above the lane: 0.6, 0.8, 1.0 bandwidth offsets
+                    const offsetMultiplier = 0.6 + (track * 0.2);
+                    safeY = safeY - bandwidth * offsetMultiplier;
+                }
 
                 // Log first few events for debugging
                 if (i < 3) {
@@ -865,8 +890,19 @@ export class TimelineRenderer {
                 return `translate(${safeX}, ${safeY})`;
             });
 
+        // Check if event is intelligence type
+        const isIntelligenceEvent = (d: any) =>
+            d.type === 'learning-stored' ||
+            d.type === 'pattern-detected' ||
+            d.type === 'adr-recorded';
+
         transition.select('.event-node')
             .attr('d', (d: any) => {
+                // Hide D3 shape for intelligence events (we'll use emoji instead)
+                if (isIntelligenceEvent(d)) {
+                    return null;
+                }
+
                 const d3 = (window as any).d3;
                 const shape = EventVisualTheme.getEventShape(d.type);
                 const size = this.sizeScale(d.impact || 1);
@@ -905,7 +941,18 @@ export class TimelineRenderer {
 
                 return color;
             })
-            .style('cursor', 'pointer');
+            .style('cursor', 'pointer')
+            .style('opacity', (d: any) => isIntelligenceEvent(d) ? 0 : 1);
+
+        // Render emoji icons for intelligence events
+        transition.select('.event-icon')
+            .text((d: any) => isIntelligenceEvent(d) ? EventVisualTheme.getEventIcon(d.type) : '')
+            .style('font-size', (d: any) => {
+                if (!isIntelligenceEvent(d)) return '0px';
+                const size = this.sizeScale(d.impact || 1);
+                return `${Math.max(16, size * 1.5)}px`;  // Emojis need to be larger
+            })
+            .style('opacity', (d: any) => isIntelligenceEvent(d) ? 1 : 0);
 
         transition.select('.event-label')
             .attr('y', (d: any) => {

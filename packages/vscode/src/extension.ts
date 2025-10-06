@@ -3,6 +3,7 @@ import * as path from 'path';
 import { TimelineProvider } from './providers/timeline-provider-webpack';
 import { WelcomeViewProvider } from './providers/WelcomeViewProvider';
 import { logger, LogCategory, createContextLogger } from '@agent-brain/core/infrastructure/logging/Logger';
+import { ADRSystem, FileADRStorage, ADRStatus } from '@agent-brain/core/domains/intelligence';
 
 let timelineProvider: TimelineProvider | null = null;
 const log = createContextLogger(LogCategory.EXTENSION);
@@ -83,6 +84,28 @@ export async function activate(context: vscode.ExtensionContext) {
         });
         context.subscriptions.push(refreshDataCommand);
 
+        // Record ADR command
+        const recordADRCommand = vscode.commands.registerCommand('repoTimeline.recordADR', async () => {
+            log.info(LogCategory.EXTENSION, 'Record ADR command executed');
+            outputChannel.appendLine('📝 Recording Architectural Decision Record...');
+
+            try {
+                await recordADR(storagePath);
+                log.info(LogCategory.EXTENSION, 'ADR recorded successfully');
+                outputChannel.appendLine('✅ ADR recorded successfully');
+
+                // Refresh timeline to show new ADR
+                if (timelineProvider) {
+                    await vscode.commands.executeCommand('repoTimeline.refreshData');
+                }
+            } catch (error) {
+                log.error(LogCategory.EXTENSION, 'Failed to record ADR', 'recordADR', error);
+                outputChannel.appendLine(`❌ Failed to record ADR: ${error}`);
+                vscode.window.showErrorMessage(`Failed to record ADR: ${error}`);
+            }
+        });
+        context.subscriptions.push(recordADRCommand);
+
 
         log.info(LogCategory.EXTENSION, 'All commands registered successfully');
         outputChannel.appendLine('✅ Commands registered successfully');
@@ -159,4 +182,108 @@ function getStoragePath(context: vscode.ExtensionContext): string {
 
     // Fallback to global storage (when no workspace is open)
     return path.join(context.globalStorageUri.fsPath, 'agent-brain');
+}
+
+/**
+ * Record an Architectural Decision Record
+ */
+async function recordADR(storagePath: string): Promise<void> {
+    // Prompt user for ADR details
+    const title = await vscode.window.showInputBox({
+        prompt: 'ADR Title',
+        placeHolder: 'e.g., Use microservices architecture',
+        validateInput: (value) => value ? null : 'Title is required'
+    });
+
+    if (!title) {
+        return; // User cancelled
+    }
+
+    const context = await vscode.window.showInputBox({
+        prompt: 'Context (What is the situation/problem?)',
+        placeHolder: 'Describe the forces at play...',
+        validateInput: (value) => value ? null : 'Context is required'
+    });
+
+    if (!context) {
+        return;
+    }
+
+    const decision = await vscode.window.showInputBox({
+        prompt: 'Decision (What did you decide?)',
+        placeHolder: 'We will use...',
+        validateInput: (value) => value ? null : 'Decision is required'
+    });
+
+    if (!decision) {
+        return;
+    }
+
+    const consequences = await vscode.window.showInputBox({
+        prompt: 'Consequences (What are the implications?)',
+        placeHolder: 'This means that...',
+        validateInput: (value) => value ? null : 'Consequences are required'
+    });
+
+    if (!consequences) {
+        return;
+    }
+
+    // Optional: capture code snippet from active editor selection
+    const editor = vscode.window.activeTextEditor;
+    let codeSnippet: { file: string; lineStart: number; lineEnd: number; code: string; } | undefined;
+
+    if (editor && !editor.selection.isEmpty) {
+        const selection = editor.selection;
+        const selectedText = editor.document.getText(selection);
+
+        if (selectedText.trim()) {
+            const includeCode = await vscode.window.showQuickPick(['Yes', 'No'], {
+                placeHolder: 'Include selected code snippet in ADR?'
+            });
+
+            if (includeCode === 'Yes') {
+                codeSnippet = {
+                    file: vscode.workspace.asRelativePath(editor.document.uri.fsPath),
+                    lineStart: selection.start.line + 1,
+                    lineEnd: selection.end.line + 1,
+                    code: selectedText
+                };
+            }
+        }
+    }
+
+    // Optional: tags
+    const tagsInput = await vscode.window.showInputBox({
+        prompt: 'Tags (comma-separated, optional)',
+        placeHolder: 'e.g., architecture, backend, security'
+    });
+
+    const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+    // Get author info from git config or use defaults
+    const author = {
+        name: vscode.workspace.getConfiguration('git').get<string>('defaultUserName') || 'Unknown',
+        email: vscode.workspace.getConfiguration('git').get<string>('defaultUserEmail')
+    };
+
+    // Create ADR using ADRSystem
+    const adrsPath = path.join(storagePath, 'adrs.json');
+    const adrSystem = new ADRSystem({
+        storage: new FileADRStorage(adrsPath)
+    });
+
+    await adrSystem.createADR({
+        title,
+        status: ADRStatus.ACCEPTED,
+        context,
+        decision,
+        consequences,
+        tags,
+        author,
+        codeSnippet,
+        relatedFiles: editor ? [vscode.workspace.asRelativePath(editor.document.uri.fsPath)] : undefined
+    });
+
+    vscode.window.showInformationMessage(`✅ ADR recorded: ${title}`);
 }

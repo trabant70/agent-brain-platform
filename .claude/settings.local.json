@@ -21,7 +21,19 @@
       "Bash(npx vsce ls:*)",
       "Bash(npx jest:*)",
       "Bash(npx @vscode/vsce package:*)",
-      "Bash(npx @vscode/vsce ls:*)"
+      "Bash(npx @vscode/vsce ls:*)",
+      "Bash(cp:*)",
+      "Bash(tee:*)",
+      "Bash(npm run build:all:*)",
+      "Bash(npm run compile:*)",
+      "Bash(git restore:*)",
+      "Read(//c/projects/agent-brain/docs/**)",
+      "Read(//c/projects/agent-brain/**)",
+      "Bash(npx lerna run:*)",
+      "Bash(ls:*)",
+      "Read(//c/Users/**)",
+      "Bash(unzip:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []

@@ -198,6 +198,14 @@ export class SimpleTimelineApp {
             EventVisualTheme.setActiveProviders(enabledProviders);
         }
 
+        // Update legend with enabled providers for tab visibility
+        if ((this.renderer as any).d3Renderer) {
+            const d3Renderer = (this.renderer as any).d3Renderer;
+            if (d3Renderer.setEnabledProviders) {
+                d3Renderer.setEnabledProviders(enabledProviders);
+            }
+        }
+
         this.currentEvents = filteredEvents; // Store filtered events for current state
         this.currentFilterOptions = filterOptions;
         this.currentAppliedFilters = appliedFilters;  // Store applied filters for branch visibility
@@ -235,6 +243,14 @@ export class SimpleTimelineApp {
         } else {
             // No filters applied - reset to empty state
             filterController.updateFiltersFromBackend({});
+        }
+
+        // Update legend with enabled providers (from filter state)
+        if ((this.renderer as any).d3Renderer) {
+            const d3Renderer = (this.renderer as any).d3Renderer;
+            if (d3Renderer.setEnabledProviders) {
+                d3Renderer.setEnabledProviders(enabledProviders);
+            }
         }
 
         // Pass data context to popup controller

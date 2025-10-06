@@ -5,31 +5,53 @@
 
 export * from './PatternEngine';
 export * from './PatternValidator';
+export * from './PatternStorage';
 
 import { PatternEngine, EnginePattern, EnginePatternContext, ValidationResult, EnginePatternCategory } from './PatternEngine';
 import { PatternValidator, PatternValidationResult } from './PatternValidator';
+import { PatternStorage, PatternStorageMetadata } from './PatternStorage';
 
 export interface PatternsConfig {
   enableValidation?: boolean;
   enableConflictChecking?: boolean;
   autoLoadDefaults?: boolean;
+  storage?: PatternStorage;
+  autoSave?: boolean;
 }
 
 export class PatternSystem {
   private engine: PatternEngine;
   private validator: PatternValidator;
   private config: PatternsConfig;
+  private storage?: PatternStorage;
 
   constructor(config: PatternsConfig = {}) {
     this.config = {
       enableValidation: true,
       enableConflictChecking: true,
       autoLoadDefaults: true,
+      autoSave: true,
       ...config
     };
 
     this.engine = new PatternEngine();
     this.validator = new PatternValidator();
+    this.storage = config.storage;
+  }
+
+  /**
+   * Initialize pattern system and load patterns from storage
+   */
+  async initialize(): Promise<void> {
+    if (this.storage) {
+      const patterns = await this.storage.load();
+      for (const pattern of patterns) {
+        // Register without saving (avoid loop)
+        this.engine.registerPattern(pattern);
+        this.validator.registerPattern(pattern);
+      }
+      console.log(`✅ PatternSystem initialized with ${patterns.length} patterns from storage`);
+    }
   }
 
   /**
@@ -62,6 +84,11 @@ export class PatternSystem {
     this.engine.registerPattern(pattern);
     this.validator.registerPattern(pattern);
 
+    // Auto-save if enabled
+    if (this.config.autoSave && this.storage) {
+      await this.savePatterns();
+    }
+
     console.log(`✅ Successfully registered pattern: ${pattern.name}`);
     return validation;
   }
@@ -73,6 +100,14 @@ export class PatternSystem {
     const success = this.engine.unregisterPattern(patternId);
     if (success) {
       this.validator.unregisterPattern(patternId);
+
+      // Auto-save if enabled
+      if (this.config.autoSave && this.storage) {
+        this.savePatterns().catch(err =>
+          console.error('Failed to save after unregister:', err)
+        );
+      }
+
       console.log(`🗑️ Unregistered pattern: ${patternId}`);
     }
     return success;
@@ -195,6 +230,26 @@ export class PatternSystem {
     })) as EnginePattern[];
 
     return this.loadExtensionPatterns(patterns);
+  }
+
+  /**
+   * Save patterns to storage
+   */
+  async savePatterns(): Promise<void> {
+    if (this.storage) {
+      const patterns = this.getPatterns();
+      await this.storage.save(patterns);
+    }
+  }
+
+  /**
+   * Get storage metadata
+   */
+  async getStorageMetadata(): Promise<PatternStorageMetadata | null> {
+    if (this.storage) {
+      return await this.storage.getMetadata();
+    }
+    return null;
   }
 }
 

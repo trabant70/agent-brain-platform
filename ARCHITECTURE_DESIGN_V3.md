@@ -1,8 +1,9 @@
 # Agent-Brain Platform - Architectural Design Document
 
-**Version:** 3.0.0
+**Version:** 3.1.0
 **Status:** Approved Design
 **Date:** 2025-10-05
+**Last Updated:** Phase 8B - ADR System & Intelligence Storage Complete
 **Philosophy:** Architecturally sound, pragmatic, built for the long term
 
 ---
@@ -10,9 +11,10 @@
 ## Executive Summary
 
 This document defines the architecture for the Agent-Brain Platform, a unified system that combines:
-- **AI Development Observatory:** Timeline visualization of all development events (git, agents, patterns, learnings)
-- **Pattern Intelligence Engine:** Learning from code patterns, test failures, and agent activities
+- **AI Development Observatory:** Timeline visualization of all development events (git, agents, patterns, learnings, ADRs)
+- **Intelligence System:** Comprehensive learning, pattern detection, and architectural decision tracking
 - **Pathway Testing Framework:** Milestone-based testing for the entire system
+- **Persistent Knowledge Base:** File-based storage for institutional memory (learnings, patterns, ADRs)
 
 ### Core Design Insight
 
@@ -169,8 +171,17 @@ agent-brain-platform/
 │   │   │   │   │   ├── learning/
 │   │   │   │   │   │   ├── LearningAnalyzer.ts     [Extract patterns from failures]
 │   │   │   │   │   │   ├── LearningPropagator.ts   [Apply learnings across codebase]
-│   │   │   │   │   │   ├── LearningStorage.ts      [Persist learnings]
-│   │   │   │   │   │   └── LearningSystem.ts       [Orchestrator]
+│   │   │   │   │   │   ├── LearningStorage.ts      [Persist learnings - FileLearningStorage]
+│   │   │   │   │   │   ├── LearningSystem.ts       [Orchestrator]
+│   │   │   │   │   │   └── types.ts                [LearningPattern interface]
+│   │   │   │   │   ├── adrs/                        [IMPLEMENTED: Phase 8B]
+│   │   │   │   │   │   ├── types.ts                [ADR interface, ADRStatus enum, ADRMetrics]
+│   │   │   │   │   │   ├── ADRStorage.ts           [FileADRStorage - persist to .agent-brain/adrs.json]
+│   │   │   │   │   │   └── ADRSystem.ts            [createADR, supersede, deprecate operations]
+│   │   │   │   │   ├── converters/                  [Type Conversions]
+│   │   │   │   │   │   ├── PatternConverter.ts     [Pattern → CanonicalEvent]
+│   │   │   │   │   │   ├── ADRConverter.ts         [ADR → CanonicalEvent (ADR_RECORDED)]
+│   │   │   │   │   │   └── TypeBridges.ts          [Bridge Runtime ↔ Engine ↔ Learning types]
 │   │   │   │   │   ├── versioning/
 │   │   │   │   │   │   └── PatternVersionControl.ts [Pattern versioning]
 │   │   │   │   │   └── adapters/                    [CRITICAL: Intelligence Input Mechanisms]
@@ -199,8 +210,11 @@ agent-brain-platform/
 │   │   │   │   │   ├── github/
 │   │   │   │   │   │   ├── GitHubProvider.ts
 │   │   │   │   │   │   └── GitHubClient.ts
-│   │   │   │   │   ├── intelligence/                [NEW: Intelligence as Provider]
-│   │   │   │   │   │   └── IntelligenceProvider.ts      [Wraps learning/pattern domains]
+│   │   │   │   │   ├── intelligence/                [Intelligence as Provider]
+│   │   │   │   │   │   └── IntelligenceProvider.ts      [Exposes learnings/patterns/ADRs as CanonicalEvents]
+│   │   │   │   │   │       - Integrates LearningSystem, PatternSystem, ADRSystem
+│   │   │   │   │   │       - Converts to CanonicalEvents: LEARNING_STORED, PATTERN_DETECTED, ADR_RECORDED
+│   │   │   │   │   │       - Registered with DataOrchestrator as peer provider to Git/GitHub
 │   │   │   │   │   └── agents/                      [FUTURE: Agent Emission Providers]
 │   │   │   │   │       ├── AgentEmissionProvider.ts     [Aggregator for all agents]
 │   │   │   │   │       ├── adapters/
@@ -1568,7 +1582,649 @@ From discussion:
 
 ---
 
+---
+
+## Phase 8: Intelligence System Implementation (COMPLETED)
+
+### Overview
+
+Phase 8 implemented a complete intelligence infrastructure with three interconnected systems:
+1. **Pattern System** - Detect and manage code patterns (Phase 8A)
+2. **ADR System** - Track architectural decisions (Phase 8B)
+3. **Learning System** - Capture knowledge from pathway tests and failures
+
+All three systems share a common architecture pattern and integrate seamlessly with the timeline visualization.
+
+### Storage Architecture
+
+**Design Decision: File-Based Persistent Storage**
+
+All intelligence data is stored in `.agent-brain/` directory as human-readable JSON:
+
+```
+workspace-root/
+└── .agent-brain/
+    ├── learnings.json    - LearningSystem storage
+    ├── patterns.json     - PatternSystem storage (Phase 8A)
+    └── adrs.json         - ADRSystem storage (Phase 8B)
+```
+
+**Rationale:**
+- **Human-readable**: Developers can browse/edit in any text editor
+- **Version-controllable**: Commit to git, share with team, track evolution
+- **Portable**: No database dependencies, works anywhere
+- **Diffable**: See exactly what knowledge changed in each commit
+- **Team-friendly**: Knowledge base travels with the codebase
+
+**Storage Classes:**
+
+```typescript
+// All follow the same pattern for consistency
+class FileLearningStorage implements LearningStorage {
+  private filePath: string;  // .agent-brain/learnings.json
+
+  async load(): Promise<LearningPattern[]>
+  async save(patterns: LearningPattern[]): Promise<void>
+  async getMetrics(): Promise<LearningMetrics>
+}
+
+class FilePatternStorage implements PatternStorage {
+  private filePath: string;  // .agent-brain/patterns.json
+
+  async load(): Promise<EnginePattern[]>
+  async save(patterns: EnginePattern[]): Promise<void>
+  async getMetadata(): Promise<PatternMetadata>
+}
+
+class FileADRStorage implements ADRStorage {
+  private filePath: string;  // .agent-brain/adrs.json
+
+  async load(): Promise<ADR[]>
+  async save(adrs: ADR[]): Promise<void>
+  async getMetrics(): Promise<ADRMetrics>
+}
+```
+
+### Phase 8A: Pattern Persistence (COMPLETED)
+
+**Problem:** Patterns were in-memory only, lost on VSCode restart
+
+**Solution:**
+1. Created `FilePatternStorage` with save/load/getMetadata methods
+2. Updated `PatternSystem` with:
+   - `storage?: PatternStorage` config option
+   - `autoSave: boolean` flag
+   - `initialize()` method to load patterns on startup
+   - Auto-save after `registerPattern()` and `unregisterPattern()`
+3. Updated `DataOrchestrator` to initialize PatternSystem with storage
+
+**Result:** Patterns now survive VSCode restarts
+
+### Phase 8B: ADR System (COMPLETED)
+
+**Problem:** No system for recording architectural decisions
+
+**Solution:** Complete ADR implementation following standard ADR format
+
+#### ADR Data Model
+
+```typescript
+interface ADR {
+  id: string;                    // Sequential: adr-001, adr-002, etc.
+  number: number;                // Numeric: 1, 2, 3, etc.
+  timestamp: Date;
+
+  // Standard ADR fields
+  title: string;                 // "Use microservices architecture"
+  status: ADRStatus;             // proposed | accepted | deprecated | superseded
+  context: string;               // The situation/problem
+  decision: string;              // What was decided
+  consequences: string;          // Implications of the decision
+
+  // Additional context
+  alternatives?: string[];       // Other options considered
+  supersedes?: string;           // ADR ID this supersedes (e.g., "adr-003")
+  supersededBy?: string;         // ADR ID that supersedes this
+  tags: string[];                // Searchable tags
+  author: {
+    name: string;
+    email?: string;
+  };
+
+  // Code linkage
+  relatedFiles?: string[];       // Files affected by this decision
+  codeSnippet?: {                // Optional code context
+    file: string;
+    lineStart: number;
+    lineEnd: number;
+    code: string;
+  };
+}
+
+enum ADRStatus {
+  PROPOSED = 'proposed',         // Under consideration
+  ACCEPTED = 'accepted',         // Active decision
+  DEPRECATED = 'deprecated',     // No longer recommended
+  SUPERSEDED = 'superseded'      // Replaced by newer ADR
+}
+```
+
+#### ADR System Operations
+
+```typescript
+class ADRSystem {
+  constructor(config: { storage: ADRStorage }) {
+    this.storage = config.storage;
+  }
+
+  // Create new ADR with auto-generated sequential ID
+  async createADR(input: Omit<ADR, 'id' | 'number' | 'timestamp'>): Promise<ADR> {
+    const existing = await this.storage.getAll();
+    const number = existing.length + 1;
+    const id = `adr-${String(number).padStart(3, '0')}`;  // adr-001, adr-002, etc.
+
+    const adr: ADR = {
+      id,
+      number,
+      timestamp: new Date(),
+      ...input
+    };
+
+    await this.storage.store(adr);
+    return adr;
+  }
+
+  // Supersede an existing ADR with a new one
+  async supersede(oldId: string, newADR: Omit<ADR, 'id' | 'number' | 'timestamp'>): Promise<ADR> {
+    // Mark old ADR as superseded
+    await this.storage.update(oldId, { status: ADRStatus.SUPERSEDED });
+
+    // Create new ADR that supersedes the old one
+    const created = await this.createADR({
+      ...newADR,
+      supersedes: oldId
+    });
+
+    // Link back to new ADR
+    await this.storage.update(oldId, { supersededBy: created.id });
+
+    return created;
+  }
+
+  // Mark ADR as deprecated
+  async deprecate(id: string, reason?: string): Promise<void> {
+    await this.storage.update(id, {
+      status: ADRStatus.DEPRECATED,
+      metadata: { deprecationReason: reason }
+    });
+  }
+
+  async getADRs(filter?: ADRFilter): Promise<ADR[]>
+  async getMetrics(): Promise<ADRMetrics>
+}
+```
+
+#### VSCode Integration
+
+**Command: `repoTimeline.recordADR`**
+
+Multi-step input dialog for recording ADRs:
+
+1. **Title** (required): "Use microservices architecture"
+2. **Context** (required): "Monolithic architecture causing deployment bottlenecks..."
+3. **Decision** (required): "Migrate to microservices using Docker containers..."
+4. **Consequences** (required): "Improved scalability, increased operational complexity..."
+5. **Code Snippet** (optional): Capture from active editor selection
+6. **Tags** (optional): Comma-separated tags for categorization
+
+```typescript
+// In extension.ts
+const recordADRCommand = vscode.commands.registerCommand('repoTimeline.recordADR', async () => {
+  const title = await vscode.window.showInputBox({
+    prompt: 'ADR Title',
+    placeHolder: 'e.g., Use microservices architecture',
+    validateInput: (value) => value ? null : 'Title is required'
+  });
+
+  // ... collect context, decision, consequences, code snippet, tags
+
+  const adrSystem = new ADRSystem({
+    storage: new FileADRStorage(path.join(storagePath, 'adrs.json'))
+  });
+
+  await adrSystem.createADR({
+    title,
+    status: ADRStatus.ACCEPTED,
+    context,
+    decision,
+    consequences,
+    tags,
+    author,
+    codeSnippet,
+    relatedFiles
+  });
+
+  vscode.window.showInformationMessage(`✅ ADR recorded: ${title}`);
+  await vscode.commands.executeCommand('repoTimeline.refreshData');
+});
+```
+
+**Command Registration:**
+
+```json
+// package.json
+{
+  "commands": [
+    {
+      "command": "repoTimeline.recordADR",
+      "title": "Record Architectural Decision",
+      "category": "Timeline",
+      "icon": "$(note)"
+    }
+  ],
+  "menus": {
+    "view/title": [
+      {
+        "command": "repoTimeline.recordADR",
+        "when": "view == repoTimeline.evolutionView",
+        "group": "navigation"
+      }
+    ],
+    "commandPalette": [
+      {
+        "command": "repoTimeline.recordADR",
+        "when": "workspaceFolderCount > 0"
+      }
+    ]
+  }
+}
+```
+
+### CanonicalEvent Integration
+
+All three intelligence systems convert to CanonicalEvents for timeline visualization:
+
+```typescript
+// IntelligenceProvider integrates all three systems
+class IntelligenceProvider implements IDataProvider {
+  readonly id = 'intelligence';
+  readonly capabilities: ProviderCapabilities = {
+    supportedEventTypes: [
+      EventType.LEARNING_STORED,
+      EventType.PATTERN_DETECTED,
+      EventType.ADR_RECORDED
+    ]
+  };
+
+  constructor(
+    private learningSystem: LearningSystem,
+    private patternSystem: PatternSystem,
+    private adrSystem: ADRSystem
+  ) {}
+
+  async fetchEvents(context: ProviderContext): Promise<CanonicalEvent[]> {
+    const events: CanonicalEvent[] = [];
+
+    // Learnings as events
+    const learnings = await this.learningSystem.getPatterns();
+    learnings.forEach(learning => {
+      events.push({
+        id: `learning-${learning.id}`,
+        canonicalId: `intelligence:learning-${learning.id}`,
+        providerId: 'intelligence',
+        type: EventType.LEARNING_STORED,
+        timestamp: learning.timestamp || new Date(),
+        title: `Learning: ${learning.name || learning.description}`,
+        description: learning.description,
+        author: { id: 'agent-brain', name: 'Agent Brain' },
+        branches: [],
+        parentIds: [],
+        metadata: {
+          category: learning.category,
+          confidence: learning.confidenceScore,
+          rootCause: learning.rootCause,
+          preventionRule: learning.preventionRule
+        }
+      });
+    });
+
+    // Patterns as events
+    const patterns = this.patternSystem.getPatterns();
+    patterns.forEach(pattern => {
+      events.push({
+        id: `pattern-${pattern.id}`,
+        canonicalId: `intelligence:pattern-${pattern.id}`,
+        providerId: 'intelligence',
+        type: EventType.PATTERN_DETECTED,
+        timestamp: new Date(),
+        title: `Pattern: ${pattern.name}`,
+        description: pattern.description || `Pattern ${pattern.id} detected`,
+        author: { id: 'agent-brain', name: 'Agent Brain' },
+        branches: [],
+        parentIds: [],
+        metadata: {
+          patternId: pattern.id,
+          category: pattern.category,
+          severity: pattern.severity,
+          autoFixable: pattern.autoFix?.enabled || false
+        }
+      });
+    });
+
+    // ADRs as events (NEW - Phase 8B)
+    const adrs = await this.adrSystem.getADRs();
+    const adrConverter = new ADRConverter();
+    const adrEvents = adrConverter.convertToEvents(adrs);
+    events.push(...adrEvents);
+
+    return events;
+  }
+}
+```
+
+**ADR Converter:**
+
+```typescript
+class ADRConverter {
+  convertToEvent(adr: ADR): CanonicalEvent {
+    return {
+      id: adr.id,
+      canonicalId: `adr-system:${adr.id}`,
+      providerId: 'adr-system',
+      type: EventType.ADR_RECORDED,
+      timestamp: adr.timestamp,
+
+      title: `ADR-${String(adr.number).padStart(3, '0')}: ${adr.title}`,
+      description: this.buildDescription(adr),
+
+      author: {
+        id: adr.author.email || adr.author.name,
+        name: adr.author.name,
+        email: adr.author.email
+      },
+
+      branches: [],  // ADRs are not branch-specific
+      parentIds: adr.supersedes ? [adr.supersedes] : [],  // Link to superseded ADR
+
+      tags: adr.tags,
+
+      metadata: {
+        adrNumber: adr.number,
+        status: adr.status,
+        supersedes: adr.supersedes,
+        supersededBy: adr.supersededBy,
+        alternatives: adr.alternatives,
+        decision: adr.decision,
+        context: adr.context,
+        consequences: adr.consequences,
+        relatedFiles: adr.relatedFiles,
+        codeSnippet: adr.codeSnippet
+      }
+    };
+  }
+
+  private buildDescription(adr: ADR): string {
+    const parts: string[] = [];
+    parts.push(`**Status**: ${adr.status}`);
+    parts.push(`**Decision**: ${adr.decision}`);
+    if (adr.supersedes) parts.push(`*Supersedes ${adr.supersedes}*`);
+    if (adr.supersededBy) parts.push(`*Superseded by ${adr.supersededBy}*`);
+    return parts.join('\n\n');
+  }
+}
+```
+
+### Timeline Visualization
+
+Intelligence events appear on the timeline with distinct visual styles:
+
+```typescript
+// EventVisualTheme.ts - INTELLIGENCE_EVENTS section
+private static readonly INTELLIGENCE_EVENTS: Record<string, EventTypeVisual> = {
+  'learning-stored': {
+    shape: 'circle',
+    semanticColor: '#9B59B6',  // Purple - learning/knowledge
+    icon: '🧠',
+    label: 'Learning Stored'
+  },
+  'pattern-detected': {
+    shape: 'diamond',
+    semanticColor: '#3498DB',  // Blue - pattern/analysis
+    icon: '🔍',
+    label: 'Pattern Detected'
+  },
+  'adr-recorded': {
+    shape: 'square',
+    semanticColor: '#E67E22',  // Orange - architectural decision
+    icon: '📐',
+    label: 'ADR Recorded'
+  }
+};
+
+// Z-index for rendering order (higher = more visible)
+static getEventZIndex(eventType: string): number {
+  const normalized = eventType.toLowerCase().replace(/_/g, '-');
+
+  // Intelligence events - high visibility
+  if (normalized === 'learning-stored') return 8;
+  if (normalized === 'pattern-detected') return 8;
+  if (normalized === 'adr-recorded') return 9;  // ADRs are architectural - very important
+
+  // ... other event types
+}
+```
+
+**Visual Appearance:**
+
+- **Learnings**: Purple circles (🧠) at z-index 8
+- **Patterns**: Blue diamonds (🔍) at z-index 8
+- **ADRs**: Orange squares (📐) at z-index 9 (highest visibility - architectural importance)
+
+### DataOrchestrator Initialization
+
+```typescript
+// DataOrchestrator.ts
+async initialize(): Promise<void> {
+  // ... Git and GitHub providers ...
+
+  // Register Intelligence provider
+  try {
+    const learningsPath = path.join(this.storagePath, 'learnings.json');
+    const patternsPath = path.join(this.storagePath, 'patterns.json');
+    const adrsPath = path.join(this.storagePath, 'adrs.json');
+
+    // Create systems with persistent storage
+    const learningSystem = new LearningSystem({
+      storage: new FileLearningStorage(learningsPath)
+    });
+
+    const patternSystem = new PatternSystem({
+      storage: new FilePatternStorage(patternsPath),
+      autoSave: true
+    });
+    await patternSystem.initialize();  // Load existing patterns
+
+    const adrSystem = new ADRSystem({
+      storage: new FileADRStorage(adrsPath)
+    });
+
+    // Register provider with all three systems
+    const intelligenceProvider = new IntelligenceProvider(
+      learningSystem,
+      patternSystem,
+      adrSystem
+    );
+
+    await this.providerRegistry.registerProvider(intelligenceProvider, {
+      enabled: true,
+      priority: 3
+    });
+
+    this.log.info('Intelligence provider registered successfully');
+  } catch (error) {
+    this.log.error(`Failed to register Intelligence provider: ${error}`);
+  }
+}
+```
+
+### Data Flow: ADR Creation to Timeline
+
+```
+User Action (VSCode Command)
+    ↓
+recordADR() function
+    ↓ (collects input via dialogs)
+ADRSystem.createADR()
+    ↓ (generates sequential ID, timestamp)
+FileADRStorage.store()
+    ↓ (writes to .agent-brain/adrs.json)
+Timeline Refresh Triggered
+    ↓
+DataOrchestrator.getEvents()
+    ↓
+IntelligenceProvider.fetchEvents()
+    ↓
+ADRSystem.getADRs()
+    ↓ (loads from adrs.json)
+ADRConverter.convertToEvent()
+    ↓ (converts ADR → CanonicalEvent)
+CanonicalEvent { type: ADR_RECORDED, ... }
+    ↓
+DataOrchestrator aggregates + caches
+    ↓
+Timeline renders:
+  - Orange square (📐)
+  - Title: "ADR-001: Use microservices architecture"
+  - Click reveals: context, decision, consequences, code snippet
+```
+
+### Sample Storage File
+
+```json
+// .agent-brain/adrs.json
+{
+  "version": "1.0.0",
+  "exportedAt": "2025-10-05T14:30:00.000Z",
+  "statistics": {
+    "total": 3,
+    "byStatus": {
+      "proposed": 0,
+      "accepted": 2,
+      "deprecated": 0,
+      "superseded": 1
+    },
+    "byTag": {
+      "architecture": 3,
+      "backend": 2,
+      "security": 1
+    },
+    "recentADRs": ["adr-003", "adr-002", "adr-001"]
+  },
+  "adrs": [
+    {
+      "id": "adr-001",
+      "number": 1,
+      "timestamp": "2025-10-01T10:00:00.000Z",
+      "title": "Use microservices architecture",
+      "status": "superseded",
+      "context": "Monolithic architecture causing deployment bottlenecks",
+      "decision": "Migrate to microservices using Docker containers",
+      "consequences": "Improved scalability, increased operational complexity",
+      "tags": ["architecture", "backend"],
+      "author": {
+        "name": "John Doe",
+        "email": "john@example.com"
+      },
+      "supersededBy": "adr-003",
+      "relatedFiles": ["src/services/**"]
+    },
+    {
+      "id": "adr-002",
+      "number": 2,
+      "timestamp": "2025-10-02T14:30:00.000Z",
+      "title": "Use PostgreSQL for primary database",
+      "status": "accepted",
+      "context": "Need reliable ACID-compliant database",
+      "decision": "Use PostgreSQL 14+ with connection pooling",
+      "consequences": "Strong consistency, requires more ops knowledge",
+      "alternatives": ["MongoDB", "MySQL"],
+      "tags": ["architecture", "backend"],
+      "author": {
+        "name": "Jane Smith",
+        "email": "jane@example.com"
+      },
+      "codeSnippet": {
+        "file": "src/config/database.ts",
+        "lineStart": 12,
+        "lineEnd": 18,
+        "code": "export const dbConfig = {\n  host: process.env.DB_HOST,\n  port: 5432,\n  database: 'app_db'\n};"
+      }
+    },
+    {
+      "id": "adr-003",
+      "number": 3,
+      "timestamp": "2025-10-05T09:15:00.000Z",
+      "title": "Use Kubernetes for microservices orchestration",
+      "status": "accepted",
+      "context": "Docker containers need orchestration at scale",
+      "decision": "Deploy microservices to Kubernetes cluster",
+      "consequences": "Powerful orchestration, steep learning curve",
+      "supersedes": "adr-001",
+      "tags": ["architecture", "backend"],
+      "author": {
+        "name": "John Doe",
+        "email": "john@example.com"
+      }
+    }
+  ]
+}
+```
+
+### Benefits of Phase 8 Implementation
+
+**1. Institutional Memory**
+- Knowledge persists across VSCode restarts
+- Team knowledge travels with the codebase (via git)
+- New developers can browse `.agent-brain/` to understand project decisions
+
+**2. Architectural Traceability**
+- Why was this decision made? → Read ADR context
+- What alternatives were considered? → Check ADR alternatives
+- Has this been superseded? → Follow ADR supersession chain
+
+**3. Pattern Recognition**
+- Recurring issues automatically detected
+- Patterns persist and accumulate over time
+- Auto-save ensures patterns are never lost
+
+**4. Timeline Integration**
+- Visual correlation: "We made ADR-003 right after that refactoring commit"
+- Chronological narrative: See decisions in project history context
+- Filter by intelligence events to see learning evolution
+
+**5. Team Collaboration**
+- ADRs in git → reviewable in pull requests
+- Shared knowledge base → consistent team understanding
+- Metrics → track team learning velocity
+
+### Future Enhancements (Phase 8C & 8D)
+
+**Phase 8C: Webhook Integration** (Planned)
+- Generic webhook endpoint for external events
+- Pattern detection webhook
+- ADR submission webhook
+- Validation and authentication
+
+**Phase 8D: Pathway Test Integration** (Planned)
+- Capture pathway test results as learnings
+- Link test outcomes to patterns
+- Generate insights from test data
+
+---
+
 **Document Version History:**
 - v1.0 (Initial proposal) - Collapsed architecture
 - v2.0 (After first review) - Added three-layer model
+- v3.0 (2025-10-05) - Intelligence domain integration
+- v3.1 (2025-10-05) - Phase 8 implementation: ADR System, Pattern Persistence, Complete Intelligence Storage
 - v3.0 (Current) - Two-tiered providers, learning as meta-layer, visualization registry elevation

@@ -33,7 +33,7 @@ import { FilterStateManager } from '../filters/FilterStateManager';
 import { EventMatcher } from './EventMatcher';
 import { logger, LogCategory, LogPathway, createContextLogger } from '../../../infrastructure/logging';
 import { FeatureFlagManager, Feature } from '../../../infrastructure/config/FeatureFlags';
-import { LearningSystem, PatternSystem, FileLearningStorage } from '../../intelligence';
+import { LearningSystem, PatternSystem, FileLearningStorage, FilePatternStorage, ADRSystem, FileADRStorage } from '../../intelligence';
 
 export interface DataOrchestratorOptions {
   cacheTTL?: number; // Cache time-to-live in milliseconds
@@ -132,19 +132,31 @@ export class DataOrchestrator {
       // Create file-based storage paths
       const learningsPath = path.join(this.storagePath, 'learnings.json');
       const patternsPath = path.join(this.storagePath, 'patterns.json');
+      const adrsPath = path.join(this.storagePath, 'adrs.json');
 
       // Use FileLearningStorage for persistent storage
       const learningSystem = new LearningSystem({
         storage: new FileLearningStorage(learningsPath)
       });
 
-      // PatternSystem file storage to be implemented in future phase
-      const patternSystem = new PatternSystem();
+      // Use FilePatternStorage for persistent storage
+      const patternSystem = new PatternSystem({
+        storage: new FilePatternStorage(patternsPath),
+        autoSave: true
+      });
 
-      const intelligenceProvider = new IntelligenceProvider(learningSystem, patternSystem);
+      // Initialize pattern system to load existing patterns
+      await patternSystem.initialize();
+
+      // Use FileADRStorage for persistent storage
+      const adrSystem = new ADRSystem({
+        storage: new FileADRStorage(adrsPath)
+      });
+
+      const intelligenceProvider = new IntelligenceProvider(learningSystem, patternSystem, adrSystem);
 
       await this.providerRegistry.registerProvider(intelligenceProvider, {
-        enabled: true, // Enabled by default - provides learnings and patterns
+        enabled: true, // Enabled by default - provides learnings, patterns, and ADRs
         priority: 3
       });
 

@@ -2,7 +2,7 @@
   "name": "agent-brain-platform",
   "displayName": "Agent Brain Platform",
   "description": "Unified platform for AI-assisted development with timeline visualization, architectural guidance, and pathway testing",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "publisher": "agent-brain",
   "icon": "images/timeline_large.png",
   "engines": {
@@ -28,6 +28,12 @@
         "title": "Refresh Timeline Data",
         "category": "Timeline",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "repoTimeline.recordADR",
+        "title": "Record Architectural Decision",
+        "category": "Timeline",
+        "icon": "$(note)"
       }
     ],
     "viewsContainers": {
@@ -76,6 +82,17 @@
           "command": "repoTimeline.refreshData",
           "when": "view == repoTimeline.evolutionView",
           "group": "navigation"
+        },
+        {
+          "command": "repoTimeline.recordADR",
+          "when": "view == repoTimeline.evolutionView",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "repoTimeline.recordADR",
+          "when": "workspaceFolderCount > 0"
         }
       ]
     }

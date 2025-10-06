@@ -25,6 +25,8 @@ export class LegendRenderer {
     private container: any; // D3 selection of #legend-items
     private colorMap: { [key: string]: string };
     private dragSetup: boolean = false;
+    private currentTab: 'git' | 'intelligence' = 'git';
+    private enabledProviders: string[] = ['git-local'];
 
     constructor(options: LegendOptions) {
         this.colorMap = options.colorMap;
@@ -117,6 +119,54 @@ export class LegendRenderer {
     }
 
     /**
+     * Set enabled providers to determine which tabs to show
+     */
+    setEnabledProviders(providers: string[]): void {
+        this.enabledProviders = providers || ['git-local'];
+    }
+
+    /**
+     * Check if event type is an intelligence event
+     */
+    private isIntelligenceEvent(eventType: string): boolean {
+        return eventType === 'learning-stored' ||
+               eventType === 'pattern-detected' ||
+               eventType === 'adr-recorded';
+    }
+
+    /**
+     * Switch between legend tabs
+     */
+    private switchLegendTab(tab: 'git' | 'intelligence'): void {
+        this.currentTab = tab;
+
+        const legendElement = this.container.node()?.parentElement;
+        if (!legendElement) return;
+
+        // Update tab button states
+        const tabButtons = legendElement.querySelectorAll('.legend-tab-btn');
+        tabButtons.forEach((btn: Element) => {
+            const btnTab = (btn as HTMLElement).dataset.tab;
+            if (btnTab === tab) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        // Update tab content visibility
+        const tabPanels = legendElement.querySelectorAll('.legend-tab-panel');
+        tabPanels.forEach((panel: Element) => {
+            const panelTab = (panel as HTMLElement).dataset.tab;
+            if (panelTab === tab) {
+                (panel as HTMLElement).style.display = 'block';
+            } else {
+                (panel as HTMLElement).style.display = 'none';
+            }
+        });
+    }
+
+    /**
      * Update legend with available event types and sync states
      */
     updateLegend(availableEventTypes: string[]): void {
@@ -125,6 +175,27 @@ export class LegendRenderer {
         if (!legendElement) {
             return;
         }
+
+        // Defensive programming: filter out any invalid types that may have slipped through
+        const validEventTypes = (availableEventTypes || []).filter(type =>
+            type && typeof type === 'string' && type.trim().length > 0
+        );
+
+        // Separate event types by category
+        const gitEventTypes = validEventTypes.filter(type => !this.isIntelligenceEvent(type));
+        const intelligenceEventTypes = validEventTypes.filter(type => this.isIntelligenceEvent(type));
+
+        // Determine which tabs should be visible
+        const showGitTab = this.enabledProviders.includes('git-local') ||
+                          this.enabledProviders.includes('github');
+        const showIntelligenceTab = this.enabledProviders.includes('intelligence');
+
+        // If no tabs should show, hide legend entirely
+        if (!showGitTab && !showIntelligenceTab) {
+            legendElement.style.display = 'none';
+            return;
+        }
+        legendElement.style.display = 'block';
 
         // Clear existing content div
         let contentDiv = legendElement.querySelector('.legend-content');
@@ -136,17 +207,66 @@ export class LegendRenderer {
         }
         contentDiv.innerHTML = '';
 
-        // Use D3 to select the content div
+        // Only show tabs if both categories exist
+        const showTabs = showGitTab && showIntelligenceTab;
+
+        if (showTabs) {
+            // Create tab navigation
+            const tabNav = document.createElement('div');
+            tabNav.className = 'legend-tab-nav';
+            tabNav.innerHTML = `
+                <button class="legend-tab-btn ${this.currentTab === 'git' ? 'active' : ''}" data-tab="git">Git Events</button>
+                <button class="legend-tab-btn ${this.currentTab === 'intelligence' ? 'active' : ''}" data-tab="intelligence">Agent-Brain</button>
+            `;
+            contentDiv.appendChild(tabNav);
+
+            // Setup tab click handlers
+            const gitBtn = tabNav.querySelector('[data-tab="git"]');
+            const intelligenceBtn = tabNav.querySelector('[data-tab="intelligence"]');
+
+            if (gitBtn) {
+                gitBtn.addEventListener('click', () => this.switchLegendTab('git'));
+            }
+            if (intelligenceBtn) {
+                intelligenceBtn.addEventListener('click', () => this.switchLegendTab('intelligence'));
+            }
+        }
+
         const d3 = (window as any).d3;
-        const contentSelection = d3.select(contentDiv);
-
-        // Defensive programming: filter out any invalid types that may have slipped through
-        const validEventTypes = (availableEventTypes || []).filter(type =>
-            type && typeof type === 'string' && type.trim().length > 0
-        );
-
         const colorMode = EventVisualTheme.getColorMode();
 
+        // Git Events Tab Panel
+        if (showGitTab && gitEventTypes.length > 0) {
+            const gitPanel = document.createElement('div');
+            gitPanel.className = 'legend-tab-panel';
+            gitPanel.dataset.tab = 'git';
+            gitPanel.style.display = (!showTabs || this.currentTab === 'git') ? 'block' : 'none';
+            contentDiv.appendChild(gitPanel);
+
+            const gitSelection = d3.select(gitPanel);
+            this.renderEventTypeSection(gitSelection, gitEventTypes, colorMode);
+        }
+
+        // Intelligence Events Tab Panel
+        if (showIntelligenceTab && intelligenceEventTypes.length > 0) {
+            const intelligencePanel = document.createElement('div');
+            intelligencePanel.className = 'legend-tab-panel';
+            intelligencePanel.dataset.tab = 'intelligence';
+            intelligencePanel.style.display = (!showTabs || this.currentTab === 'intelligence') ? 'block' : 'none';
+            contentDiv.appendChild(intelligencePanel);
+
+            const intelligenceSelection = d3.select(intelligencePanel);
+            this.renderEventTypeSection(intelligenceSelection, intelligenceEventTypes, colorMode);
+        }
+
+        // Setup drag behavior after content is rendered
+        this.setupDragBehavior();
+    }
+
+    /**
+     * Render event type section (shared by both tabs)
+     */
+    private renderEventTypeSection(contentSelection: any, eventTypes: string[], colorMode: string): void {
         // Event Types Section (Shapes and Colors in semantic mode)
         const eventTypeTitle = colorMode === 'semantic'
             ? 'Event Types (Shape & Color)'
@@ -159,7 +279,7 @@ export class LegendRenderer {
         contentSelection.append('div')
             .attr('class', 'legend-items')
             .selectAll('.legend-item')
-            .data(validEventTypes)
+            .data(eventTypes)
             .join('div')
             .attr('class', 'legend-item')
             .html((d: string) => {
@@ -170,8 +290,8 @@ export class LegendRenderer {
                 return `<div class="legend-shape" style="color: ${color}">${icon}</div><span>${label}</span>`;
             });
 
-        // Sync States Section (Colors) - only show in sync-state mode
-        if (colorMode === 'sync-state') {
+        // Sync States Section (Colors) - only show in sync-state mode and only for git events
+        if (colorMode === 'sync-state' && eventTypes.some(type => !this.isIntelligenceEvent(type))) {
             contentSelection.append('div')
                 .attr('class', 'legend-section')
                 .style('margin-top', '12px')
@@ -189,9 +309,6 @@ export class LegendRenderer {
                     return `<div class="legend-color" style="background-color: ${visual.color}"></div><span>${visual.label}</span>`;
                 });
         }
-
-        // Setup drag behavior after content is rendered
-        this.setupDragBehavior();
     }
 
     /**

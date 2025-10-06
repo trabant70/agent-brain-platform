@@ -257,6 +257,13 @@ export class D3TimelineRenderer {
     }
 
     /**
+     * Set enabled providers for legend tab visibility
+     */
+    setEnabledProviders(providers: string[]): void {
+        this.legendRenderer.setEnabledProviders(providers);
+    }
+
+    /**
      * Show event hover popup
      */
     showEventHover(event: any, position: { x: number; y: number }): void {

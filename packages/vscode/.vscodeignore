@@ -1,7 +1,7 @@
 # Source code (only compiled output needed)
 src/
 *.ts
-!*.d.ts
+!dist/**/*.d.ts
 
 # Build and development files
 tsconfig*.json
@@ -90,6 +90,9 @@ jest.config.js
 
 # Development artifacts
 .claude/
+**/.claude/
+../../**
+../**
 *.zip
 
 # OS files

@@ -191,6 +191,31 @@ export class EventVisualTheme {
     };
 
     /**
+     * Intelligence events (learnings, patterns, ADRs)
+     * Shape represents event type, semantic colors distinguish intelligence sources
+     */
+    private static readonly INTELLIGENCE_EVENTS: Record<string, EventTypeVisual> = {
+        'learning-stored': {
+            shape: 'circle',
+            semanticColor: '#9B59B6',  // Purple - learning/knowledge
+            icon: '🧠',
+            label: 'Learning Stored'
+        },
+        'pattern-detected': {
+            shape: 'diamond',
+            semanticColor: '#3498DB',  // Blue - pattern/analysis
+            icon: '🔍',
+            label: 'Pattern Detected'
+        },
+        'adr-recorded': {
+            shape: 'square',
+            semanticColor: '#E67E22',  // Orange - architectural decision
+            icon: '📐',
+            label: 'ADR Recorded'
+        }
+    };
+
+    /**
      * Connection line styling by type
      *
      * Semantic colors match event types for visual consistency:
@@ -260,6 +285,7 @@ export class EventVisualTheme {
         return (
             this.GIT_EVENTS[normalized] ||
             this.EXTERNAL_EVENTS[normalized] ||
+            this.INTELLIGENCE_EVENTS[normalized] ||
             {
                 color: '#6366f1',  // Default indigo
                 shape: 'circle' as const,
@@ -483,7 +509,8 @@ export class EventVisualTheme {
     static getAllEventTypes(): string[] {
         return [
             ...Object.keys(this.GIT_EVENTS),
-            ...Object.keys(this.EXTERNAL_EVENTS)
+            ...Object.keys(this.EXTERNAL_EVENTS),
+            ...Object.keys(this.INTELLIGENCE_EVENTS)
         ];
     }
 
@@ -510,7 +537,7 @@ export class EventVisualTheme {
      */
     static hasEventType(eventType: string): boolean {
         const normalized = eventType.toLowerCase().replace(/_/g, '-');
-        return !!(this.GIT_EVENTS[normalized] || this.EXTERNAL_EVENTS[normalized]);
+        return !!(this.GIT_EVENTS[normalized] || this.EXTERNAL_EVENTS[normalized] || this.INTELLIGENCE_EVENTS[normalized]);
     }
 
     /**
@@ -550,6 +577,11 @@ export class EventVisualTheme {
         // Tier 5 - Critical events
         if (normalized === 'deployment') return 10;
         if (normalized === 'ci') return 10;
+
+        // Intelligence events - high visibility
+        if (normalized === 'learning-stored') return 8;
+        if (normalized === 'pattern-detected') return 8;
+        if (normalized === 'adr-recorded') return 9;  // ADRs are architectural - very important
 
         // Default: middle tier
         return 5;
