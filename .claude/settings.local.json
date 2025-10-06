@@ -33,7 +33,15 @@
       "Bash(ls:*)",
       "Read(//c/Users/**)",
       "Bash(unzip:*)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(gh repo create:*)",
+      "Bash(git push:*)",
+      "Bash(while read dir)",
+      "Bash(do echo \"=== $dir ===\")",
+      "Bash(done)",
+      "Bash(npm ls:*)",
+      "Bash(npm run build:core:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []
