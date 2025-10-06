@@ -74,6 +74,7 @@ export class FilterController {
   private currentColorMode: 'semantic' | 'sync-state' = 'semantic';
   private gitProviderEnabled: boolean = true; // Default to enabled
   private githubProviderEnabled: boolean = false; // Default to disabled
+  private intelligenceProviderEnabled: boolean = false; // Default to disabled (like GitHub)
   private showConnections: boolean = true; // Default to showing connections
 
   // Callbacks
@@ -409,7 +410,7 @@ export class FilterController {
                     Enabling GitHub API will prompt for authentication.
                   </p>
                   <div class="provider-item">
-                    <input type="checkbox" id="provider-agent-brain">
+                    <input type="checkbox" id="provider-agent-brain" ${this.intelligenceProviderEnabled ? 'checked' : ''}>
                     <label for="provider-agent-brain">Agent-Brain - Patterns, learnings, and ADRs</label>
                   </div>
                 </div>
@@ -1441,15 +1442,20 @@ export class FilterController {
     // Update local state
     this.gitProviderEnabled = enabledProviders.includes('git-local');
     this.githubProviderEnabled = enabledProviders.includes('github');
+    this.intelligenceProviderEnabled = enabledProviders.includes('intelligence');
 
     // Update provider checkboxes in UI
     const gitCheckbox = document.getElementById('provider-git') as HTMLInputElement;
     const githubCheckbox = document.getElementById('provider-github') as HTMLInputElement;
+    const intelligenceCheckbox = document.getElementById('provider-agent-brain') as HTMLInputElement;
     if (gitCheckbox) {
       gitCheckbox.checked = this.gitProviderEnabled;
     }
     if (githubCheckbox) {
       githubCheckbox.checked = this.githubProviderEnabled;
+    }
+    if (intelligenceCheckbox) {
+      intelligenceCheckbox.checked = this.intelligenceProviderEnabled;
     }
 
     // Restore show connections toggle (default to true if not set)
