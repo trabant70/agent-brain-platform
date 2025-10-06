@@ -14,5 +14,12 @@
     "moduleResolution": "node"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "tests"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tests",
+    "src/domains/intelligence/adapters/extensions/**",
+    "src/domains/intelligence/adapters/webhooks/**",
+    "src/domains/intelligence/adapters/testing/**"
+  ]
 }

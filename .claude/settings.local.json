@@ -41,7 +41,8 @@
       "Bash(done)",
       "Bash(npm ls:*)",
       "Bash(npm run build:core:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(npm run:*)"
     ],
     "deny": [],
     "ask": []

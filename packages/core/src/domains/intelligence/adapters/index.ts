@@ -3,6 +3,7 @@
  */
 
 export * from './base';
-export * from './extensions';
-export * from './webhooks';
-export * from './testing';
+// Future features - disabled for now (missing dependencies)
+// export * from './extensions';
+// export * from './webhooks';
+// export * from './testing';
