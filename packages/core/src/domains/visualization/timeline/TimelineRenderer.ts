@@ -169,43 +169,21 @@ export class TimelineRenderer {
      * Validate container setup for debugging
      */
     private validateContainerSetup(): void {
-        console.log('TimelineRenderer: CONTAINER VALIDATION');
 
         const containerNode = this.container.node();
         const rect = containerNode?.getBoundingClientRect();
 
-        console.log('CONTAINER CHECK:', {
-            containerExists: !!containerNode,
-            width: rect?.width,
-            height: rect?.height,
-            display: containerNode ? window.getComputedStyle(containerNode).display : 'unknown',
-            visibility: containerNode ? window.getComputedStyle(containerNode).visibility : 'unknown'
-        });
 
-        console.log('SVG STRUCTURE CHECK:', {
-            svgExists: !!this.svg.node(),
-            mainGroupExists: !!this.mainGroup.node(),
-            eventsGroupExists: !!this.eventsGroup.node(),
-            svgNode: this.svg.node()
-        });
 
-        console.log('SCALE CHECK:', {
-            xScaleExists: !!this.xScale,
-            yScaleExists: !!this.yScale,
-            sizeScaleExists: !!this.sizeScale
-        });
     }
 
     /**
      * Resize the visualization
      */
     resize(): void {
-        console.log('TimelineRenderer: resize() called');
         const containerNode = this.container.node();
-        console.log('TimelineRenderer: container node:', containerNode);
 
         if (!containerNode) {
-            console.error('TimelineRenderer: Container node is null - cannot resize');
             return;
         }
 
@@ -222,10 +200,6 @@ export class TimelineRenderer {
             const svgRect = svgNode.getBoundingClientRect();
             width = svgRect.width;
             height = svgRect.height;
-            console.log('TimelineRenderer: SVG actual rendered dimensions:', {
-                width: svgRect.width,
-                height: svgRect.height
-            });
         }
 
         // Fallback: try container dimensions if SVG has no size
@@ -233,15 +207,12 @@ export class TimelineRenderer {
             const containerRect = containerNode.getBoundingClientRect();
             width = containerRect.width;
             height = containerRect.height;
-            console.log('TimelineRenderer: Using container dimensions as fallback:', { width, height });
         }
 
         if (width === 0 || height === 0) {
-            console.warn('TimelineRenderer: Container has zero dimensions:', { width, height });
             // Use fallback dimensions for calculations only
             const fallbackWidth = 800;
             const fallbackHeight = 400;
-            console.log('TimelineRenderer: Using fallback dimensions:', { fallbackWidth, fallbackHeight });
 
             this.margin = {
                 top: 20,
@@ -263,11 +234,6 @@ export class TimelineRenderer {
             this.innerHeight = height - this.margin.top - this.margin.bottom; // Full height usage
         }
 
-        console.log('TimelineRenderer: Final dimensions:', {
-            margin: this.margin,
-            innerWidth: this.innerWidth,
-            innerHeight: this.innerHeight
-        });
 
         this.mainGroup.attr('transform', `translate(${this.margin.left},${this.margin.top})`);
         this.xScale.range([0, this.innerWidth]);
@@ -280,16 +246,9 @@ export class TimelineRenderer {
             this.yScale.paddingInner(paddingRatio).paddingOuter(paddingRatio / 2);
         }
 
-        console.log('TimelineRenderer: Scale ranges set:', {
-            xScale: this.xScale.range(),
-            yScale: this.yScale.range(),
-            yScalePadding: this.yScale.paddingInner()
-        });
 
         // If we have data, re-render immediately
         if (this.lastRenderData && this.lastRenderData.events) {
-            console.log('TimelineRenderer: Re-rendering after resize with new height:', this.innerHeight);
-            console.log('TimelineRenderer: yScale range updated to:', this.yScale.range());
             this.render(
                 this.lastRenderData.events,
                 this.lastRenderData.branches,
@@ -298,7 +257,6 @@ export class TimelineRenderer {
                 false // No transition for resize
             );
         } else {
-            console.warn('TimelineRenderer: No lastRenderData available for resize re-render');
         }
     }
 
@@ -306,11 +264,6 @@ export class TimelineRenderer {
      * Main render method
      */
     render(visibleEvents: any[], activeBranches: string[], dateRange: [Date, Date], impactDomain: [number, number], useTransition: boolean): void {
-        console.log('TimelineRenderer: render() called');
-        console.log('TimelineRenderer: visibleEvents count:', visibleEvents?.length);
-        console.log('TimelineRenderer: activeBranches:', activeBranches);
-        console.log('TimelineRenderer: dateRange:', dateRange);
-        console.log('TimelineRenderer: impactDomain:', impactDomain);
 
         // Store render data for resize re-rendering
         this.lastRenderData = {
@@ -322,34 +275,23 @@ export class TimelineRenderer {
 
         // Early return for empty data to prevent NaN errors
         if (!visibleEvents || visibleEvents.length === 0) {
-            console.warn('TimelineRenderer: No events to render, clearing visualization');
             this.clearVisualization();
             return;
         }
 
         // Ensure container is properly sized before rendering
         if (this.innerWidth === 0 || this.innerHeight === 0) {
-            console.warn('TimelineRenderer: Zero dimensions detected, calling resize first');
             this.resize();
         }
 
         // Validate dimensions after resize
         if (this.innerWidth <= 0 || this.innerHeight <= 0 || isNaN(this.innerWidth) || isNaN(this.innerHeight)) {
-            console.error('TimelineRenderer: Invalid dimensions after resize:', {
-                innerWidth: this.innerWidth,
-                innerHeight: this.innerHeight
-            });
             return;
         }
 
-        console.log('TimelineRenderer: Current dimensions:', {
-            innerWidth: this.innerWidth,
-            innerHeight: this.innerHeight
-        });
 
         // Validate date range
         if (!dateRange || !dateRange[0] || !dateRange[1] || isNaN(dateRange[0].getTime()) || isNaN(dateRange[1].getTime())) {
-            console.error('TimelineRenderer: Invalid date range:', dateRange);
             return;
         }
 
@@ -360,24 +302,13 @@ export class TimelineRenderer {
         this.yScale.domain(validBranches);
         this.sizeScale.domain([0, impactDomain[1] || 100]);
 
-        console.log('TimelineRenderer: Scale domains set:', {
-            xScale: this.xScale.domain(),
-            yScale: this.yScale.domain(),
-            sizeScale: this.sizeScale.domain()
-        });
 
-        console.log('TimelineRenderer: Scale ranges:', {
-            xScale: this.xScale.range(),
-            yScale: this.yScale.range(),
-            sizeScale: this.sizeScale.range()
-        });
 
         this.drawBranchLanes(validBranches, useTransition);
         this.drawConnections(visibleEvents, useTransition);
         this.drawEvents(visibleEvents, useTransition);
         this.updateAxes(useTransition);
 
-        console.log('TimelineRenderer: render() completed');
     }
 
     /**
@@ -395,11 +326,9 @@ export class TimelineRenderer {
      * This is a lightweight update without full re-render
      */
     updateXScale(timeRange: [Date, Date]): void {
-        console.log('TimelineRenderer: Updating X-scale to:', timeRange);
 
         const d3 = (window as any).d3;
         if (!d3 || !this.xScale) {
-            console.error('TimelineRenderer: D3 or xScale not initialized');
             return;
         }
 
@@ -415,7 +344,6 @@ export class TimelineRenderer {
         // Re-position events for new scale with smooth transition
         this.updateEventPositions();
 
-        console.log('TimelineRenderer: X-scale updated and view transformed');
     }
 
     /**
@@ -475,12 +403,10 @@ export class TimelineRenderer {
     private drawBranchLanes(branches: string[], useTransition: boolean): void {
         // Validate inputs to prevent NaN errors
         if (!branches || branches.length === 0) {
-            console.warn('TimelineRenderer: No branches to draw lanes for');
             return;
         }
 
         if (!this.innerWidth || isNaN(this.innerWidth) || this.innerWidth <= 0) {
-            console.error('TimelineRenderer: Invalid innerWidth for drawing lanes:', this.innerWidth);
             return;
         }
 
@@ -557,7 +483,6 @@ export class TimelineRenderer {
 
                 // If tooltip doesn't exist, create it dynamically
                 if (!tooltipEl) {
-                    console.log('[TimelineRenderer] Creating connection-tooltip element');
                     const vizContainer = document.getElementById('visualization');
                     if (vizContainer) {
                         tooltipEl = document.createElement('div');
@@ -585,7 +510,6 @@ export class TimelineRenderer {
                         tooltipEl.style.display = 'block';
                         tooltipEl.classList.add('show');
 
-                        console.log('[TimelineRenderer] Tooltip shown with text:', text);
                     }
                 }
             })
@@ -780,7 +704,6 @@ export class TimelineRenderer {
      * Handles empty arrays gracefully without breaking axis/timeline
      */
     private drawEvents(events: any[], useTransition: boolean): void {
-        console.log('TimelineRenderer: drawEvents() called with', events?.length, 'events');
 
         // Always do the D3 update pattern, even with empty array
         // This ensures proper cleanup of old events
@@ -796,7 +719,6 @@ export class TimelineRenderer {
 
         // If no events, we're done (but axis remains)
         if (!events || events.length === 0) {
-            console.log('TimelineRenderer: No events to draw, but keeping timeline structure');
             return;
         }
 
@@ -804,7 +726,6 @@ export class TimelineRenderer {
         const drawableEvents = events.filter((d: any) => this.yScale(d.branch) !== undefined);
 
         if (drawableEvents.length === 0) {
-            console.log('TimelineRenderer: No drawable events (invalid branches)');
             return;
         }
 
@@ -815,7 +736,6 @@ export class TimelineRenderer {
             return zIndexA - zIndexB;
         });
 
-        console.log('TimelineRenderer: Drawing', sortedEvents.length, 'drawable events (sorted by z-index)');
 
         // Re-bind with sorted events for enter/update
         const drawableGroups = this.eventsGroup.selectAll('.event-group')
@@ -841,7 +761,8 @@ export class TimelineRenderer {
             .attr('text-anchor', 'middle')
             .attr('dominant-baseline', 'central')
             .style('opacity', 0)
-            .style('pointer-events', 'none');
+            .style('cursor', 'pointer')
+            // Note: pointer-events set later based on whether this is an intelligence event
 
         enterGroups.append('text')
             .attr('class', 'event-label')
@@ -850,7 +771,6 @@ export class TimelineRenderer {
 
         // MERGE enter and update selections
         const mergedGroups = enterGroups.merge(drawableGroups);
-        console.log('TimelineRenderer: Merged groups size:', mergedGroups.size());
 
         // Apply transitions and positioning to all merged groups
         const transition = mergedGroups.transition()
@@ -866,35 +786,54 @@ export class TimelineRenderer {
                     y + this.yScale.bandwidth() / 2 : 0;
 
                 // Offset intelligence events above branch lanes with staggered tracks
-                const isIntelligenceEvent = d.type === 'learning-stored' ||
-                                           d.type === 'pattern-detected' ||
-                                           d.type === 'adr-recorded';
+                // Trust the providerId - proper architecture!
+                const isIntelligenceEvent = d.providerId === 'intelligence';
                 if (isIntelligenceEvent) {
-                    const bandwidth = this.yScale.bandwidth();
+                    const originalY = safeY;
 
                     // Use a hash of the event ID to determine track (0, 1, or 2)
                     // This provides consistent but varied placement to reduce overlap
                     const trackHash = (d.id || '').split('').reduce((acc: number, char: string) => acc + char.charCodeAt(0), 0);
                     const track = trackHash % 3;
 
-                    // Three tracks above the lane: 0.6, 0.8, 1.0 bandwidth offsets
-                    const offsetMultiplier = 0.6 + (track * 0.2);
-                    safeY = safeY - bandwidth * offsetMultiplier;
-                }
+                    // Three staggered tracks above the branch line: 20px, 22px, 25px
+                    // Close enough to associate with branch, but clear of git event circles
+                    const baseOffset = 20;
+                    const trackOffset = track * 2.5; // 0px, 2.5px, 5px
+                    safeY = safeY - (baseOffset + trackOffset);
 
-                // Log first few events for debugging
-                if (i < 3) {
-                    console.log(`TimelineRenderer: Event ${i} (${d.branch}) positioned at y=${safeY}, yScale range=${this.yScale.range()}`);
+                    // Pathway logging for intelligence event positioning
+                    if (i < 3) {
+                        const webviewLogger = (window as any).webviewLogger;
+                        const LogCategory = (window as any).LogCategory;
+                        const LogPathway = (window as any).LogPathway;
+                        if (webviewLogger) {
+                            webviewLogger.debug(
+                                LogCategory.VISUALIZATION,
+                                `Intelligence event positioned with vertical offset`,
+                                'TimelineRenderer.render',
+                                {
+                                    type: d.type,
+                                    providerId: d.providerId,
+                                    track: track,
+                                    baseOffset: baseOffset,
+                                    trackOffset: trackOffset,
+                                    totalOffset: baseOffset + trackOffset,
+                                    originalY: originalY,
+                                    newY: safeY
+                                },
+                                LogPathway.RENDER_PIPELINE
+                            );
+                        }
+                    }
                 }
 
                 return `translate(${safeX}, ${safeY})`;
             });
 
-        // Check if event is intelligence type
-        const isIntelligenceEvent = (d: any) =>
-            d.type === 'learning-stored' ||
-            d.type === 'pattern-detected' ||
-            d.type === 'adr-recorded';
+        // Check if event is from intelligence provider
+        // Trust the providerId - proper architecture!
+        const isIntelligenceEvent = (d: any) => d.providerId === 'intelligence';
 
         transition.select('.event-node')
             .attr('d', (d: any) => {
@@ -928,15 +867,6 @@ export class TimelineRenderer {
 
                 // DEBUG: Log sync state and color for releases and first few events
                 if (d.type === 'release' || Math.random() < 0.05) {
-                    console.log(`[TimelineRenderer] Event "${d.title?.substring(0, 30)}" (${d.type}):`, {
-                        syncState,
-                        color,
-                        colorMode: EventVisualTheme.getColorMode(),
-                        activeProviders: EventVisualTheme.getActiveProviders(),
-                        hasSources: !!d.sources,
-                        sourcesCount: d.sources?.length || 0,
-                        sources: d.sources?.map((s: any) => s.providerId) || []
-                    });
                 }
 
                 return color;
@@ -952,6 +882,7 @@ export class TimelineRenderer {
                 const size = this.sizeScale(d.impact || 1);
                 return `${Math.max(16, size * 1.5)}px`;  // Emojis need to be larger
             })
+            .style('pointer-events', (d: any) => isIntelligenceEvent(d) ? 'auto' : 'none')
             .style('opacity', (d: any) => isIntelligenceEvent(d) ? 1 : 0);
 
         transition.select('.event-label')
@@ -971,26 +902,22 @@ export class TimelineRenderer {
         // Attach new handlers with namespaces and logging
         mergedGroups
             .on('mouseenter.timeline', (event: MouseEvent, d: any) => {
-                console.log('TimelineRenderer: [TR] event hover', d?.title || d?.type);
                 if (this.onEventHover) {
                     this.onEventHover(event, d);
                 }
             })
             .on('mouseleave.timeline', (event: MouseEvent, d: any) => {
-                console.log('TimelineRenderer: [TR] event leave', d?.title || d?.type);
                 if (this.onEventLeave) {
                     this.onEventLeave(event, d);
                 }
             })
             .on('click.timeline', (event: MouseEvent, d: any) => {
-                console.log('TimelineRenderer: [TR] event click', d?.title || d?.type);
                 event.stopPropagation();
                 if (this.onEventClick) {
                     this.onEventClick(event, d);
                 }
             });
 
-        console.log('TimelineRenderer: drawEvents() completed');
     }
 
     /**
