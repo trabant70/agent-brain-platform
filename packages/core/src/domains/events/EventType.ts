@@ -35,6 +35,9 @@ export enum EventType {
   PATTERN_DETECTED = 'pattern-detected',
   ADR_RECORDED = 'adr-recorded',
 
+  // Agent Brain session events (Phase 1)
+  AGENT_SESSION = 'agent-session',
+
   // Agent events (for future - Phase 9)
   AGENT_TASK_COMPLETED = 'agent-task-completed',
   AGENT_TASK_ABANDONED = 'agent-task-abandoned',
