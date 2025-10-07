@@ -360,11 +360,24 @@ export class D3TimelineRenderer {
     }
 
     /**
-     * Get available event types from events
+     * Get available event types from events with provider context
+     * Returns array of {type, providerId} for proper categorization
      */
-    private getAvailableEventTypes(events: any[]): string[] {
-        const types = new Set(events.map(e => e.type || 'commit'));
-        return Array.from(types).sort();
+    private getAvailableEventTypes(events: any[]): Array<{type: string, providerId: string}> {
+        const typeMap = new Map<string, string>();
+
+        events.forEach(e => {
+            const type = e.type || 'commit';
+            const providerId = e.providerId || 'git-local';
+            // Use first providerId seen for each type
+            if (!typeMap.has(type)) {
+                typeMap.set(type, providerId);
+            }
+        });
+
+        return Array.from(typeMap.entries())
+            .map(([type, providerId]) => ({ type, providerId }))
+            .sort((a, b) => a.type.localeCompare(b.type));
     }
 
     /**

@@ -51,7 +51,8 @@ export enum LogPathway {
     USER_INTERACTION = 'INTERACT',
     WEBVIEW_MESSAGING = 'MESSAGE',
     CONFIG_SYNC = 'CONFIG',
-    RANGE_SELECTOR = 'RANGE'
+    RANGE_SELECTOR = 'RANGE',
+    LEGEND = 'LEGEND'
 }
 
 /**

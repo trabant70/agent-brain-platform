@@ -136,14 +136,30 @@ export class LegendRenderer {
     }
 
     /**
-     * Check if event type is an intelligence event
+     * Check if event is from intelligence provider
+     * Trusts the providerId from the event source - proper architecture!
      */
-    private isIntelligenceEvent(eventType: string): boolean {
-        // Normalize the event type (trim, lowercase) for robust comparison
-        const normalized = (eventType || '').toLowerCase().trim();
-        return normalized === 'learning-stored' ||
-               normalized === 'pattern-detected' ||
-               normalized === 'adr-recorded';
+    private isIntelligenceEvent(eventTypeInfo: {type: string, providerId?: string} | string): boolean {
+        // Support both old string format and new object format for backwards compatibility
+        const providerId = typeof eventTypeInfo === 'string' ? undefined : eventTypeInfo.providerId;
+        const eventType = typeof eventTypeInfo === 'string' ? eventTypeInfo : eventTypeInfo.type;
+
+        const isIntel = providerId === 'intelligence';
+
+        // Deep logging to trace categorization by provider
+        webviewLogger.debug(
+            LogCategory.VISUALIZATION,
+            `Event categorization by providerId: type="${eventType}" providerId="${providerId}" isIntelligence=${isIntel}`,
+            'LegendRenderer.isIntelligenceEvent',
+            {
+                eventType: eventType,
+                providerId: providerId,
+                isIntelligence: isIntel
+            },
+            LogPathway.LEGEND
+        );
+
+        return isIntel;
     }
 
     /**
@@ -180,40 +196,41 @@ export class LegendRenderer {
 
     /**
      * Update legend with available event types and sync states
+     * Categorizes by providerId - trusts the source!
      */
-    updateLegend(availableEventTypes: string[]): void {
+    updateLegend(availableEventTypes: Array<{type: string, providerId: string}> | string[]): void {
         const legendElement = this.container.node()?.parentElement;
 
         if (!legendElement) {
             return;
         }
 
-        // Defensive programming: filter out any invalid types that may have slipped through
-        const validEventTypes = (availableEventTypes || []).filter(type =>
-            type && typeof type === 'string' && type.trim().length > 0
+        // Normalize to object format for consistent handling
+        const normalizedEventTypes = (availableEventTypes || []).map(item => {
+            if (typeof item === 'string') {
+                // Legacy string format - assume git-local
+                return { type: item, providerId: 'git-local' };
+            }
+            return item;
+        }).filter(item =>
+            item.type && typeof item.type === 'string' && item.type.trim().length > 0
         );
 
-        webviewLogger.debug(
+        webviewLogger.info(
             LogCategory.VISUALIZATION,
-            `Categorizing ${validEventTypes.length} event types for legend`,
+            `Categorizing ${normalizedEventTypes.length} event types for legend`,
             'LegendRenderer.updateLegend',
-            { validEventTypes },
+            {
+                normalizedEventTypes: normalizedEventTypes,
+                rawEventTypes: availableEventTypes,
+                enabledProviders: this.enabledProviders
+            },
             LogPathway.LEGEND
         );
 
-        // Separate event types by category
-        const gitEventTypes = validEventTypes.filter(type => {
-            const isIntel = this.isIntelligenceEvent(type);
-            webviewLogger.debug(
-                LogCategory.VISUALIZATION,
-                `Categorizing event type: "${type}" -> isIntelligence=${isIntel}`,
-                'LegendRenderer.categorize',
-                { eventType: type, isIntelligence: isIntel },
-                LogPathway.LEGEND
-            );
-            return !isIntel;
-        });
-        const intelligenceEventTypes = validEventTypes.filter(type => this.isIntelligenceEvent(type));
+        // Separate event types by providerId - trust the source!
+        const gitEventTypes = normalizedEventTypes.filter(item => !this.isIntelligenceEvent(item));
+        const intelligenceEventTypes = normalizedEventTypes.filter(item => this.isIntelligenceEvent(item));
 
         // Determine which tabs should be visible
         const showGitTab = this.enabledProviders.includes('git-local') ||
@@ -222,13 +239,18 @@ export class LegendRenderer {
 
         webviewLogger.info(
             LogCategory.VISUALIZATION,
-            `Legend categorization complete`,
+            `Legend categorization complete (by providerId)`,
             'LegendRenderer.updateLegend',
             {
-                gitEventTypes,
-                intelligenceEventTypes,
-                showGitTab,
-                showIntelligenceTab
+                showGitTab: showGitTab,
+                showIntelligenceTab: showIntelligenceTab,
+                summary: {
+                    totalEvents: normalizedEventTypes.length,
+                    gitCount: gitEventTypes.length,
+                    intelligenceCount: intelligenceEventTypes.length,
+                    gitList: gitEventTypes.map(e => `${e.type} (${e.providerId})`),
+                    intelligenceList: intelligenceEventTypes.map(e => `${e.type} (${e.providerId})`)
+                }
             },
             LogPathway.LEGEND
         );
@@ -287,7 +309,8 @@ export class LegendRenderer {
             contentDiv.appendChild(gitPanel);
 
             const gitSelection = d3.select(gitPanel);
-            this.renderEventTypeSection(gitSelection, gitEventTypes, colorMode);
+            const gitTypeStrings = gitEventTypes.map(e => e.type);
+            this.renderEventTypeSection(gitSelection, gitTypeStrings, colorMode);
         }
 
         // Intelligence Events Tab Panel
@@ -299,7 +322,8 @@ export class LegendRenderer {
             contentDiv.appendChild(intelligencePanel);
 
             const intelligenceSelection = d3.select(intelligencePanel);
-            this.renderEventTypeSection(intelligenceSelection, intelligenceEventTypes, colorMode);
+            const intelligenceTypeStrings = intelligenceEventTypes.map(e => e.type);
+            this.renderEventTypeSection(intelligenceSelection, intelligenceTypeStrings, colorMode);
         }
 
         // Setup drag behavior after content is rendered
