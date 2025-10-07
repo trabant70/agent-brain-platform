@@ -310,7 +310,7 @@ export class LegendRenderer {
 
             const gitSelection = d3.select(gitPanel);
             const gitTypeStrings = gitEventTypes.map(e => e.type);
-            this.renderEventTypeSection(gitSelection, gitTypeStrings, colorMode);
+            this.renderEventTypeSection(gitSelection, gitTypeStrings, colorMode, true);
         }
 
         // Intelligence Events Tab Panel
@@ -323,7 +323,7 @@ export class LegendRenderer {
 
             const intelligenceSelection = d3.select(intelligencePanel);
             const intelligenceTypeStrings = intelligenceEventTypes.map(e => e.type);
-            this.renderEventTypeSection(intelligenceSelection, intelligenceTypeStrings, colorMode);
+            this.renderEventTypeSection(intelligenceSelection, intelligenceTypeStrings, colorMode, false);
         }
 
         // Setup drag behavior after content is rendered
@@ -333,7 +333,7 @@ export class LegendRenderer {
     /**
      * Render event type section (shared by both tabs)
      */
-    private renderEventTypeSection(contentSelection: any, eventTypes: string[], colorMode: string): void {
+    private renderEventTypeSection(contentSelection: any, eventTypes: string[], colorMode: string, isGitTab: boolean = false): void {
         // Event Types Section (Shapes and Colors in semantic mode)
         const eventTypeTitle = colorMode === 'semantic'
             ? 'Event Types (Shape & Color)'
@@ -357,8 +357,8 @@ export class LegendRenderer {
                 return `<div class="legend-shape" style="color: ${color}">${icon}</div><span>${label}</span>`;
             });
 
-        // Sync States Section (Colors) - only show in sync-state mode and only for git events
-        if (colorMode === 'sync-state' && eventTypes.some(type => !this.isIntelligenceEvent(type))) {
+        // Sync States Section (Colors) - only show in sync-state mode and only on Git Events tab
+        if (colorMode === 'sync-state' && isGitTab) {
             contentSelection.append('div')
                 .attr('class', 'legend-section')
                 .style('margin-top', '12px')
