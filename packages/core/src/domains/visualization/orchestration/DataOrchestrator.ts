@@ -28,12 +28,11 @@ import {
   CachedRepoData,
   ProviderContext
 } from '../../events';
-import { ProviderRegistry, GitProvider, GitHubProvider, IntelligenceProvider } from '../../providers';
+import { ProviderRegistry, GitProvider, GitHubProvider } from '../../providers';
 import { FilterStateManager } from '../filters/FilterStateManager';
 import { EventMatcher } from './EventMatcher';
 import { logger, LogCategory, LogPathway, createContextLogger } from '../../../infrastructure/logging';
 import { FeatureFlagManager, Feature } from '../../../infrastructure/config/FeatureFlags';
-import { LearningSystem, PatternSystem, FileLearningStorage, FilePatternStorage, ADRSystem, FileADRStorage } from '../../intelligence';
 
 export interface DataOrchestratorOptions {
   cacheTTL?: number; // Cache time-to-live in milliseconds
@@ -125,50 +124,9 @@ export class DataOrchestrator {
       this.log.info(LogCategory.ORCHESTRATION, 'GitHub provider feature is disabled', 'initialize');
     }
 
-    // Register Intelligence provider (agent-brain intelligence domain)
-    try {
-      this.log.info(LogCategory.ORCHESTRATION, 'Registering Intelligence provider', 'initialize');
-
-      // Create file-based storage paths
-      const learningsPath = path.join(this.storagePath, 'learnings.json');
-      const patternsPath = path.join(this.storagePath, 'patterns.json');
-      const adrsPath = path.join(this.storagePath, 'adrs.json');
-
-      // Use FileLearningStorage for persistent storage
-      const learningSystem = new LearningSystem({
-        storage: new FileLearningStorage(learningsPath)
-      });
-
-      // Use FilePatternStorage for persistent storage
-      const patternSystem = new PatternSystem({
-        storage: new FilePatternStorage(patternsPath),
-        autoSave: true
-      });
-
-      // Initialize pattern system to load existing patterns
-      await patternSystem.initialize();
-
-      // Use FileADRStorage for persistent storage
-      const adrSystem = new ADRSystem({
-        storage: new FileADRStorage(adrsPath)
-      });
-
-      const intelligenceProvider = new IntelligenceProvider(learningSystem, patternSystem, adrSystem);
-
-      await this.providerRegistry.registerProvider(intelligenceProvider, {
-        enabled: false, // Disabled by default - user opt-in required
-        priority: 3
-      });
-
-      this.log.info(
-        LogCategory.ORCHESTRATION,
-        `Intelligence provider registered successfully (storage: ${this.storagePath})`,
-        'initialize'
-      );
-    } catch (error) {
-      this.log.error(LogCategory.ORCHESTRATION, `Failed to register Intelligence provider: ${error}`, 'initialize');
-      // Continue without Intelligence provider
-    }
+    // Intelligence provider removed - patterns/ADRs/learnings are now knowledge-only
+    // They no longer emit timeline events automatically
+    // Use Knowledge System (Phase 2) to access this data for prompt enhancement
 
     this.log.info(
       LogCategory.ORCHESTRATION,
