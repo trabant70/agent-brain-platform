@@ -9,8 +9,43 @@ import { SimpleTimelineApp } from './SimpleTimelineApp';
 import { EventVisualTheme } from '../theme/EventVisualTheme';
 import { webviewLogger, LogLevel, LogCategory, LogPathway } from './WebviewLogger';
 
+// Import CSS - webpack will bundle it inline
+import '../styles/timeline.css';
+
 // Expose D3 globally
 window.d3 = d3;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PATHWAY DEBUGGING CONFIGURATION (Build-time)
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// To debug specific data flows, enable pathway filtering here before building.
+// This filters console output to ONLY logs tagged with selected pathways.
+//
+// Available Pathways:
+//   LogPathway.DATA_INGESTION  - Provider → Orchestrator → Webview → Render
+//   LogPathway.FILTER_APPLY    - Filter UI → State → Data refresh
+//   LogPathway.STATE_PERSIST   - State save/restore
+//   LogPathway.RENDER_PIPELINE - Data processing → D3 → DOM
+//   LogPathway.USER_INTERACTION- User events → Handlers → UI updates
+//   LogPathway.WEBVIEW_MESSAGING - Extension ↔ Webview messages
+//   LogPathway.CONFIG_SYNC     - Config changes → State → UI
+//   LogPathway.RANGE_SELECTOR  - Time slider interactions
+//   LogPathway.LEGEND          - Legend rendering and categorization
+//
+// Usage:
+//   1. Uncomment lines below
+//   2. Set mode: 'exclusive' (strict filtering) or 'filter' (allow NONE pathway too)
+//   3. Add pathways to enablePathways([...])
+//   4. Rebuild: npm run build && npm run package
+//   5. After debugging, comment out and rebuild to restore all logs
+
+// DEBUG CONFIG: Enable pathway filtering
+webviewLogger.setPathwayMode('exclusive');
+webviewLogger.enablePathways([LogPathway.LEGEND]);
+console.log('🔍 DEBUG MODE: LEGEND pathway active');
+
+// ═══════════════════════════════════════════════════════════════════════════
 
 // VSCode API
 declare global {
