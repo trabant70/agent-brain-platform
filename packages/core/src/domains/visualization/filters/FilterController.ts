@@ -97,7 +97,6 @@ export class FilterController {
       undefined,
       LogPathway.FILTER_APPLY
     );
-    console.log('[FilterController] Initializing checkbox-based filters');
     this.createFloatingMenu();
     this.setupClickBehavior();
     logger.debug(
@@ -149,7 +148,6 @@ export class FilterController {
       },
       LogPathway.FILTER_APPLY
     );
-    console.log('[FilterController] Updating available options', options, 'all:', allEvents?.length, 'filtered:', filteredEvents?.length);
     this.availableOptions = options;
 
     // Compute counts from events if provided
@@ -235,7 +233,6 @@ export class FilterController {
    * Clear all filters
    */
   clearAllFilters(): void {
-    console.log('[FilterController] Clearing all filters');
 
     this.filterState = {};
 
@@ -263,7 +260,6 @@ export class FilterController {
   private setupClickBehavior(): void {
     const filtersTrigger = document.getElementById('filters-trigger');
     if (!filtersTrigger) {
-      console.warn('[FilterController] Filters trigger not found');
       return;
     }
 
@@ -484,7 +480,6 @@ export class FilterController {
     modeRadios.forEach(radio => {
       radio.addEventListener('change', (e) => {
         const mode = (e.target as HTMLInputElement).value as 'semantic' | 'sync-state';
-        console.log('[FilterController] Color mode changed:', mode);
 
         // Update local state
         this.currentColorMode = mode;
@@ -520,7 +515,6 @@ export class FilterController {
 
         // If sync mode becomes unavailable while selected, auto-switch to semantic
         if (!syncAvailable && syncRadio.checked) {
-          console.log('[FilterController] Auto-switching to semantic mode (git-local + github not both enabled)');
           semanticRadio.checked = true;
           this.currentColorMode = 'semantic';
           this.filterState.colorMode = 'semantic';
@@ -568,7 +562,6 @@ export class FilterController {
       gitCheckbox.addEventListener('change', (e) => {
         const isChecked = (e.target as HTMLInputElement).checked;
 
-        console.log('[FilterController] Git provider toggle:', isChecked);
 
         // Update local state
         this.gitProviderEnabled = isChecked;
@@ -600,7 +593,6 @@ export class FilterController {
       githubCheckbox.addEventListener('change', (e) => {
         const isChecked = (e.target as HTMLInputElement).checked;
 
-        console.log('[FilterController] GitHub provider toggle:', isChecked);
 
         // Update local state
         this.githubProviderEnabled = isChecked;
@@ -633,7 +625,6 @@ export class FilterController {
     if (connectionsCheckbox) {
       connectionsCheckbox.addEventListener('change', (e) => {
         const isChecked = (e.target as HTMLInputElement).checked;
-        console.log('[FilterController] Show connections toggle:', isChecked);
 
         // Update local state
         this.showConnections = isChecked;
@@ -1011,8 +1002,6 @@ export class FilterController {
    * Handle branch checkbox change
    */
   private onBranchChange(branch: string, checked: boolean): void {
-    console.log(`[FilterController] ═══ onBranchChange ═══ branch="${branch}", checked=${checked}`);
-    console.log('[FilterController]   BEFORE filterState.selectedBranches:', this.filterState.selectedBranches);
 
     if (checked) {
       // Checking: add to selection
@@ -1039,7 +1028,6 @@ export class FilterController {
       }
     }
 
-    console.log('[FilterController]   AFTER filterState.selectedBranches:', this.filterState.selectedBranches);
     this.updateSectionCounts();
     this.updateActiveFilterBadges();
     this.applyFilters();
@@ -1123,32 +1111,26 @@ export class FilterController {
    * Update section counts - show "selected/total"
    */
   private updateSectionCounts(): void {
-    console.log('[FilterController] updateSectionCounts - availableOptions:', this.availableOptions);
-    console.log('[FilterController] updateSectionCounts - filterState:', this.filterState);
 
     // Event Types
     const eventTypesSelected = this.filterState.selectedEventTypes?.length ?? this.availableOptions.eventTypes.length;
     const eventTypesTotal = this.availableOptions.eventTypes.length;
-    console.log('[FilterController] Event types:', eventTypesSelected, '/', eventTypesTotal);
     this.updateSectionCount('event-types', eventTypesSelected, eventTypesTotal);
 
     // Branches
     const branchesSelected = this.filterState.selectedBranches?.length ?? this.availableOptions.branches.length;
     const branchesTotal = this.availableOptions.branches.length;
-    console.log('[FilterController] Branches:', branchesSelected, '/', branchesTotal);
     this.updateSectionCount('branches', branchesSelected, branchesTotal);
 
     // Authors
     const authorsSelected = this.filterState.selectedAuthors?.length ?? this.availableOptions.authors.length;
     const authorsTotal = this.availableOptions.authors.length;
-    console.log('[FilterController] Authors:', authorsSelected, '/', authorsTotal);
     this.updateSectionCount('authors', authorsSelected, authorsTotal);
 
     // Providers
     if (this.availableOptions.providers && this.availableOptions.providers.length > 1) {
       const providersSelected = this.filterState.selectedProviders?.length ?? this.availableOptions.providers.length;
       const providersTotal = this.availableOptions.providers.length;
-      console.log('[FilterController] Providers:', providersSelected, '/', providersTotal);
       this.updateSectionCount('providers', providersSelected, providersTotal);
     }
   }
@@ -1315,22 +1297,16 @@ export class FilterController {
       );
     }
 
-    console.log('[FilterController] Updated enabledProviders:', this.filterState.enabledProviders);
   }
 
   /**
    * Apply current filters
    */
   private applyFilters(): void {
-    console.log('[FilterController] ═══ applyFilters() ═══');
-    console.log('[FilterController]   Full filterState:', JSON.stringify(this.filterState, null, 2));
-    console.log('[FilterController]   onFilterUpdate callback exists?', !!this.onFilterUpdate);
 
     if (this.onFilterUpdate) {
-      console.log('[FilterController]   Calling onFilterUpdate callback with filterState...');
       this.onFilterUpdate(this.filterState);
     } else {
-      console.warn('[FilterController]   WARNING: onFilterUpdate callback NOT SET!');
     }
   }
 
@@ -1371,9 +1347,6 @@ export class FilterController {
    * This ensures the UI checkboxes reflect the persisted filter state for the new repository
    */
   updateFiltersFromBackend(filterState: FilterState): void {
-    console.log('[FilterController] ═══ updateFiltersFromBackend() ═══');
-    console.log('[FilterController]   Received filterState:', JSON.stringify(filterState, null, 2));
-    console.log('[FilterController]   Previous filterState:', JSON.stringify(this.filterState, null, 2));
 
     // Update internal state
     this.filterState = { ...filterState };
@@ -1384,18 +1357,15 @@ export class FilterController {
     // Rebuild UI to reflect the new filter state (updates checkboxes)
     this.rebuildFilterUI();
 
-    console.log('[FilterController]   ✓ Filter state synchronized from backend');
   }
 
   /**
    * Restore configuration settings (color mode, enabled providers) from filterState
    */
   private restoreConfigurationState(): void {
-    console.log('[FilterController] ═══ restoreConfigurationState() ═══');
 
     // Restore color mode (default to 'semantic' if not set)
     const colorMode = this.filterState.colorMode || 'semantic';
-    console.log('[FilterController]   Restoring colorMode:', colorMode);
     this.currentColorMode = colorMode;
 
     // Update color mode radio buttons in UI
@@ -1408,7 +1378,6 @@ export class FilterController {
 
     // Restore enabled providers (default to git-local only if not set)
     const enabledProviders = this.filterState.enabledProviders || ['git-local'];
-    console.log('[FilterController]   Restoring enabledProviders:', enabledProviders);
 
     // Update local state
     this.gitProviderEnabled = enabledProviders.includes('git-local');
@@ -1442,7 +1411,6 @@ export class FilterController {
     // If sync-state mode is not available but was selected, switch to semantic
     let finalColorMode = colorMode;
     if (colorMode === 'sync-state' && !syncAvailable) {
-      console.log('[FilterController]   Sync-state not available (providers not enabled), switching to semantic');
       finalColorMode = 'semantic';
       this.currentColorMode = 'semantic';
       this.filterState.colorMode = 'semantic';
@@ -1469,7 +1437,6 @@ export class FilterController {
     // This ensures the timeline renders with the correct colors, not defaults
     // MUST include enabledProviders for sync-state mode to work
     if ((window as any).vscode) {
-      console.log('[FilterController]   Sending setColorMode message to apply restored mode');
       (window as any).vscode.postMessage({
         type: 'setColorMode',
         mode: finalColorMode,
@@ -1477,7 +1444,6 @@ export class FilterController {
       });
     }
 
-    console.log('[FilterController]   ✓ Configuration state restored');
   }
 
   /**
@@ -1532,8 +1498,6 @@ export class FilterController {
    * Follows same pattern as colorMode and showConnections
    */
   updateTimeWindow(timeWindow: { start: Date; end: Date } | null): void {
-    console.log('[FilterController] ═══ updateTimeWindow() ═══');
-    console.log('[FilterController]   New time window:', timeWindow);
 
     if (timeWindow) {
       // Store time window in filterState

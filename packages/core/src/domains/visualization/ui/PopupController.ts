@@ -56,7 +56,6 @@ export class PopupController {
      * Initialize popup controller after DOM is ready
      */
     public initialize(): void {
-        console.log('PopupController: [PC] Initializing...');
 
         // Bind close button to our handler
         this.eventPopup.bindCloseHandler(() => this.handleCloseButton());
@@ -72,7 +71,6 @@ export class PopupController {
         // Escape key handler
         this.escapeHandler = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && this.eventPopup.isLocked) {
-                console.log('PopupController: [PC] Escape key pressed');
                 this.closePopups();
             }
         };
@@ -88,7 +86,6 @@ export class PopupController {
                 !popupElement.contains(target) &&
                 !target.closest('.event-group') &&
                 !target.closest('.event-node')) {
-                console.log('PopupController: [PC] Clicked outside popup');
                 this.closePopups();
             }
         };
@@ -113,7 +110,6 @@ export class PopupController {
      * Handle event hover
      */
     private handleEventHover(event: Event, d: any): void {
-        console.log('PopupController: [PC] handleEventHover', d?.title || d?.type);
 
         // Don't show hover if locked popup is open
         if (this.eventPopup.isLocked) {
@@ -130,7 +126,6 @@ export class PopupController {
      * Handle event leave
      */
     private handleEventLeave(event: Event, d: any): void {
-        console.log('PopupController: [PC] handleEventLeave', d?.title || d?.type);
 
         // Only hide if not locked
         if (!this.eventPopup.isLocked) {
@@ -142,7 +137,6 @@ export class PopupController {
      * Handle event click
      */
     private handleEventClick(event: Event, d: any): void {
-        console.log('PopupController: [PC] handleEventClick', d?.title || d?.type);
 
         const mouseEvent = event as MouseEvent;
         mouseEvent.stopPropagation();
@@ -162,7 +156,6 @@ export class PopupController {
      * Handle close button click
      */
     private handleCloseButton(): void {
-        console.log('PopupController: [PC] Close button clicked');
         this.closePopups();
 
         // PopupController only handles popup state - no application actions needed
@@ -173,7 +166,6 @@ export class PopupController {
      * Close all popups
      */
     closePopups(): void {
-        console.log('PopupController: [PC] Closing all popups');
         if (this.eventPopup) {
             this.eventPopup.hide();
         }
@@ -260,7 +252,6 @@ export class PopupController {
      */
     handlePopupDragStart(event: any): void {
         // Popup drag is handled by EventDetailsPopup internally
-        console.log('Popup drag started');
     }
 
     /**
@@ -307,7 +298,6 @@ export class PopupController {
      * Cleanup
      */
     public destroy(): void {
-        console.log('PopupController: [PC] Destroying...');
 
         if (this.escapeHandler) {
             document.removeEventListener('keydown', this.escapeHandler);

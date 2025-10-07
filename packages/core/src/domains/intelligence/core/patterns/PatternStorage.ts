@@ -49,9 +49,7 @@ export class FilePatternStorage implements PatternStorage {
       };
 
       await fs.writeFile(this.filePath, JSON.stringify(data, null, 2));
-      console.log(`🔍 Saved ${patterns.length} patterns to ${this.filePath}`);
     } catch (error) {
-      console.error(`Failed to save patterns to ${this.filePath}:`, error);
       throw error;
     }
   }
@@ -65,11 +63,9 @@ export class FilePatternStorage implements PatternStorage {
         this.deserializePattern(p)
       );
 
-      console.log(`🔍 Loaded ${patterns.length} patterns from ${this.filePath}`);
       return patterns;
     } catch (error) {
       // File doesn't exist or is invalid - return empty array
-      console.log(`🔍 No existing patterns file, starting fresh`);
       return [];
     }
   }

@@ -49,19 +49,16 @@ export class D3TimelineRenderer {
         const timelineOptions: TimelineRenderOptions = {
             selector: options.timelineSelector,
             onEventHover: (event, d) => {
-                console.log('D3TimelineRenderer: [D3TR] event hover', d?.title || d?.type);
                 if (options.onEventHover) {
                     options.onEventHover(event, d);
                 }
             },
             onEventLeave: (event, d) => {
-                console.log('D3TimelineRenderer: [D3TR] event leave', d?.title || d?.type);
                 if (options.onEventLeave) {
                     options.onEventLeave(event, d);
                 }
             },
             onEventClick: (event, d) => {
-                console.log('D3TimelineRenderer: [D3TR] event click', d?.title || d?.type);
                 if (options.onEventClick) {
                     options.onEventClick(event, d);
                 }
@@ -100,11 +97,9 @@ export class D3TimelineRenderer {
      * Update viewport while preserving timeline structure
      */
     public updateViewport(timeRange: [Date, Date]): void {
-        console.log('D3TimelineRenderer: updateViewport called:', timeRange);
         this.currentViewport = timeRange;
 
         if (!this.timelineRenderer) {
-            console.error('D3TimelineRenderer: Timeline renderer not initialized');
             return;
         }
 
@@ -112,7 +107,6 @@ export class D3TimelineRenderer {
             // Filter events within the new viewport
             const visibleEvents = this.filterEventsForViewport(this.allEvents, timeRange);
 
-            console.log('D3TimelineRenderer: Filtered to', visibleEvents.length, 'visible events');
 
             // Calculate branches - use default if no events
             const activeBranches = visibleEvents.length > 0
@@ -124,7 +118,6 @@ export class D3TimelineRenderer {
                 ? this.calculateImpactDomain(visibleEvents)
                 : [1, 100] as [number, number];
 
-            console.log('D3TimelineRenderer: Rendering with', visibleEvents.length, 'events');
 
             // Always render, even with empty events (to maintain axis/structure)
             this.timelineRenderer.render(
@@ -135,7 +128,6 @@ export class D3TimelineRenderer {
                 false
             );
         } else {
-            console.log('D3TimelineRenderer: No events available, maintaining timeline structure');
             // Maintain timeline structure when no events at all
             this.timelineRenderer.render(
                 [],
@@ -156,10 +148,6 @@ export class D3TimelineRenderer {
         impactDomain: [number, number],
         useTransition: boolean = true
     ): void {
-        console.log('D3TimelineRenderer: render() called');
-        console.log('  Events count:', events?.length);
-        console.log('  Date range provided:', dateRange);
-        console.log('  Is initial render:', this.isInitialRender);
 
         // Store all events for later filtering
         this.allEvents = events || [];
@@ -167,7 +155,6 @@ export class D3TimelineRenderer {
         // Validate and normalize events
         const validatedEvents = this.validateEventData(events);
         if (validatedEvents.length === 0) {
-            console.log('D3TimelineRenderer: No valid events - clearing visualization');
             // IMPORTANT: Must clear the visualization when no events, not just return!
             this.timelineRenderer.render(
                 [],           // No events
@@ -192,13 +179,11 @@ export class D3TimelineRenderer {
                 // Use saved brush range instead of calculating default
                 effectiveViewport = this.currentBrushRange;
                 this.currentViewport = effectiveViewport;
-                console.log('D3TimelineRenderer: Using saved brush range:', effectiveViewport);
             } else {
                 // No saved range, show rightmost 1/3 of timeline (default)
                 effectiveViewport = this.calculateInitialViewport(fullDateRange);
                 this.currentViewport = effectiveViewport;
                 this.currentBrushRange = effectiveViewport;
-                console.log('D3TimelineRenderer: Initial viewport calculated:', effectiveViewport);
             }
         } else if (this.currentViewport) {
             // Use current viewport if set
@@ -210,7 +195,6 @@ export class D3TimelineRenderer {
 
         // Filter events to only those within the viewport
         const visibleEvents = this.filterEventsForViewport(validatedEvents, effectiveViewport);
-        console.log('D3TimelineRenderer: Visible events after filtering:', visibleEvents.length);
 
         // Calculate active branches and event types from visible events
         const activeBranches = this.getActiveBranches(visibleEvents);
@@ -233,7 +217,6 @@ export class D3TimelineRenderer {
             this.isInitialRender = false;
         }
 
-        console.log('D3TimelineRenderer: render completed');
     }
 
     /**
@@ -243,7 +226,6 @@ export class D3TimelineRenderer {
         // Calculate initial brush range if not set
         if (!this.currentBrushRange && this.isInitialRender) {
             this.currentBrushRange = this.calculateInitialViewport(fullDateRange);
-            console.log('D3TimelineRenderer: Setting initial brush range:', this.currentBrushRange);
         }
 
         this.interactionHandler.render(allEvents, fullDateRange, this.currentBrushRange || undefined);
@@ -346,12 +328,10 @@ export class D3TimelineRenderer {
      */
     private filterEventsForViewport(events: any[], viewport: [Date, Date]): any[] {
         if (!events || events.length === 0) {
-            console.log('D3TimelineRenderer: No events to filter - returning empty array');
             return [];
         }
 
         if (!viewport || !viewport[0] || !viewport[1]) {
-            console.log('D3TimelineRenderer: Invalid viewport - returning all events');
             return events;
         }
 
@@ -363,14 +343,11 @@ export class D3TimelineRenderer {
             const inRange = eventTime >= viewport[0] && eventTime <= viewport[1];
 
             if (!inRange) {
-                console.log('D3TimelineRenderer: Event', event.id, 'at', eventTime.toISOString(),
-                            'filtered OUT of viewport');
             }
 
             return inRange;
         });
 
-        console.log(`D3TimelineRenderer: Filtered ${events.length} events to ${filtered.length}`);
         return filtered;
     }
 
@@ -395,7 +372,6 @@ export class D3TimelineRenderer {
      */
     private validateEventData(events: any[]): any[] {
         if (!events || !Array.isArray(events)) {
-            console.warn('D3TimelineRenderer: Invalid events data');
             return [];
         }
 
@@ -409,7 +385,6 @@ export class D3TimelineRenderer {
 
             // Validate timestamp
             if (isNaN(event.timestamp.getTime())) {
-                console.warn('D3TimelineRenderer: Invalid event timestamp:', event);
                 return false;
             }
 
@@ -434,7 +409,6 @@ export class D3TimelineRenderer {
 
         const d3 = (window as any).d3;
         if (!d3) {
-            console.error('D3 not available for extent calculation');
             const firstEvent = new Date(events[0].timestamp);
             const lastEvent = new Date(events[events.length - 1].timestamp);
             return [firstEvent, lastEvent];
@@ -443,7 +417,6 @@ export class D3TimelineRenderer {
         const extent = d3.extent(events, (d: any) => d.timestamp);
 
         if (!extent[0] || !extent[1]) {
-            console.warn('Unable to calculate extent, using fallback');
             const now = new Date();
             const oneMonthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
             return [oneMonthAgo, now];
@@ -541,7 +514,6 @@ export class D3TimelineRenderer {
      * Show empty state when no events are available
      */
     private showEmptyState(): void {
-        console.log('D3TimelineRenderer: Showing empty state');
 
         // Clear any existing content and show empty message
         const d3 = (window as any).d3;

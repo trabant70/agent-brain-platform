@@ -87,7 +87,6 @@ export class RendererRegistry {
      */
     async registerRenderer(definition: RendererDefinition): Promise<void> {
         try {
-            console.log(`RendererRegistry: Registering renderer: ${definition.id}`);
 
             // Validate renderer definition
             this.validateRendererDefinition(definition);
@@ -105,10 +104,8 @@ export class RendererRegistry {
                 this.initializeHealthMonitoring(definition.id);
             }
 
-            console.log(`RendererRegistry: Successfully registered renderer: ${definition.displayName}`);
 
         } catch (error) {
-            console.error(`RendererRegistry: Failed to register renderer ${definition.id}:`, error);
             throw new RendererRegistrationError(definition.id, error as Error);
         }
     }
@@ -123,7 +120,6 @@ export class RendererRegistry {
         }
 
         try {
-            console.log(`RendererRegistry: Unregistering renderer: ${rendererId}`);
 
             // Destroy all active instances
             const instances = this.activeInstances.get(rendererId) || [];
@@ -136,10 +132,8 @@ export class RendererRegistry {
             this.healthStatus.delete(rendererId);
             this.activeInstances.delete(rendererId);
 
-            console.log(`RendererRegistry: Successfully unregistered renderer: ${rendererId}`);
 
         } catch (error) {
-            console.error(`RendererRegistry: Failed to unregister renderer ${rendererId}:`, error);
             throw error;
         }
     }
@@ -158,7 +152,6 @@ export class RendererRegistry {
         }
 
         try {
-            console.log(`RendererRegistry: Creating renderer instance: ${rendererId}`);
 
             // Merge default options with provided options
             const mergedOptions = { ...definition.defaultOptions, ...options };
@@ -176,11 +169,9 @@ export class RendererRegistry {
                 this.setupInstanceMonitoring(rendererId, instance);
             }
 
-            console.log(`RendererRegistry: Successfully created renderer: ${definition.displayName}`);
             return instance;
 
         } catch (error) {
-            console.error(`RendererRegistry: Failed to create renderer ${rendererId}:`, error);
             throw new RendererCreationError(rendererId, error as Error);
         }
     }
@@ -238,7 +229,6 @@ export class RendererRegistry {
      * Perform health checks on all renderers
      */
     async performHealthChecks(): Promise<Map<string, RendererHealthStatus>> {
-        console.log('RendererRegistry: Performing health checks...');
 
         const healthResults = new Map<string, RendererHealthStatus>();
 
@@ -248,7 +238,6 @@ export class RendererRegistry {
                 healthResults.set(rendererId, health);
                 this.healthStatus.set(rendererId, health);
             } catch (error) {
-                console.error(`Health check failed for renderer ${rendererId}:`, error);
             }
         }
 
@@ -300,7 +289,6 @@ export class RendererRegistry {
      * Load built-in renderers
      */
     private async loadBuiltInRenderers(): Promise<void> {
-        console.log('RendererRegistry: Loading built-in renderers...');
 
         // Built-in renderers will be registered by their respective modules
         // This method serves as a hook for auto-discovery

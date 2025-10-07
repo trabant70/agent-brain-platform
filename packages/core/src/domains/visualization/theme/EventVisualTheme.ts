@@ -336,7 +336,6 @@ export class EventVisualTheme {
 
         // Auto-switch to semantic mode if git-local + github combo is broken
         if (!this.isSyncStateModeAvailable() && this.currentColorMode === 'sync-state') {
-            console.log('[EventVisualTheme] Auto-switching to semantic mode (git-local + github not both enabled)');
             this.currentColorMode = 'semantic';
         }
     }
@@ -391,7 +390,6 @@ export class EventVisualTheme {
 
         // DEBUG: Log ALL event types to find the issue
         if (event.title && event.title.includes('Remote-only')) {
-            console.log(`[EventVisualTheme] *** FOUND ISSUE EVENT ***: type="${event.type}", title="${event.title}"`);
         }
 
         // Check if event has multiple sources (both git-local and github)
@@ -402,13 +400,6 @@ export class EventVisualTheme {
             );
 
             if (shouldLog) {
-                console.log(`[EventVisualTheme] Determining sync state for ${event.type} "${event.title}":`, {
-                    hasSources: true,
-                    sourcesCount: event.sources.length,
-                    sources: event.sources.map((s: any) => s.providerId),
-                    hasLocalSource: !!localSource,
-                    hasRemoteSource: !!remoteSource
-                });
             }
 
             // Both sources exist - check for divergence
@@ -416,7 +407,6 @@ export class EventVisualTheme {
                 // Check if timestamps or hashes differ significantly
                 const diverged = this.checkDivergence(event, localSource, remoteSource);
                 if (shouldLog) {
-                    console.log(`  → Both sources present, diverged=${diverged}, returning: ${diverged ? 'diverged' : 'synced'}`);
                 }
                 return diverged ? 'diverged' : 'synced';
             }
@@ -434,7 +424,6 @@ export class EventVisualTheme {
 
         // Fallback: check single providerId
         if (shouldLog) {
-            console.log(`[EventVisualTheme] No sources[] for ${event.type} "${event.title}", falling back to providerId="${event.providerId}"`);
         }
 
         if (event.providerId === 'git-local') return 'local-only';
@@ -465,14 +454,6 @@ export class EventVisualTheme {
             const diffHours = diff / (60 * 60 * 1000);
 
             // DEBUG: Log timestamp comparison for non-commit events
-            console.log(`[EventVisualTheme] Timestamp divergence check for "${event.title}":`, {
-                localTime: new Date(localSource.timestamp).toISOString(),
-                remoteTime: new Date(remoteSource.timestamp).toISOString(),
-                diffMs: diff,
-                diffHours: diffHours.toFixed(2),
-                threshold24h: oneDayMs,
-                isDiverged: diff > oneDayMs
-            });
 
             if (diff > oneDayMs) {
                 return true; // Diverged - timestamps too far apart

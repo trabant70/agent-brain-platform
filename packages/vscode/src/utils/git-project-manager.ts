@@ -148,7 +148,6 @@ export class GitProjectManager {
             return projectInfo;
 
         } catch (error) {
-            console.warn('Failed to detect project from path:', dirPath, error);
             return null;
         }
     }
@@ -207,7 +206,6 @@ export class GitProjectManager {
             return await this.getGitBranchViaCommand(gitRoot);
 
         } catch (error) {
-            console.warn('Failed to get git branch info:', error);
             return undefined;
         }
     }
@@ -301,7 +299,6 @@ export class GitProjectManager {
             return this.parseGitLogOutput(stdout);
 
         } catch (error) {
-            console.warn('Failed to get git commits:', error);
             return [];
         }
     }
@@ -406,7 +403,6 @@ export class GitProjectManager {
             return branches;
 
         } catch (error) {
-            console.warn('Failed to get git branches:', error);
             return [];
         }
     }
@@ -447,7 +443,6 @@ export class GitProjectManager {
             return tags;
 
         } catch (error) {
-            console.warn('Failed to get git tags:', error);
             return [];
         }
     }
@@ -480,7 +475,6 @@ export class GitProjectManager {
             const authors = stdout.trim().split('\n').filter(author => author.trim().length > 0);
             return [...new Set(authors)]; // Remove duplicates
         } catch (error) {
-            console.warn('Failed to get git contributors:', error);
             return [];
         }
     }
@@ -520,7 +514,6 @@ export class GitProjectManager {
                 }
             }
         } catch (error) {
-            console.warn('Failed to get GitHub repository info:', error);
         }
 
         return null;
@@ -540,7 +533,6 @@ export class GitProjectManager {
 
         const githubRepo = await this.getGitHubRepository(targetProject);
         if (!githubRepo) {
-            console.log('Not a GitHub repository, skipping GitHub events');
             return [];
         }
 
@@ -553,9 +545,7 @@ export class GitProjectManager {
             // const githubApiEvents = await this.fetchRealGitHubEvents(githubRepo, since, types);
             // events.push(...githubApiEvents);
 
-            console.log('GitHub events loaded (real API not implemented yet):', events.length);
         } catch (error) {
-            console.warn('Failed to get GitHub events:', error);
         }
 
         return events;

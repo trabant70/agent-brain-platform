@@ -35,7 +35,6 @@ export class MemoryLearningStorage implements LearningStorage {
     }
     this.failures.get(id)!.push(failure);
 
-    console.log(`🧠 Stored pattern: ${pattern.name} (${id})`);
   }
 
   async getPatterns(): Promise<LearningPattern[]> {
@@ -185,7 +184,6 @@ export class FileLearningStorage implements LearningStorage {
     this.patterns.set(id, pattern);
     await this.saveToFile();
 
-    console.log(`🧠 Stored pattern to file: ${pattern.name} (${id})`);
   }
 
   async getPatterns(): Promise<LearningPattern[]> {
@@ -253,10 +251,8 @@ export class FileLearningStorage implements LearningStorage {
         }
       });
 
-      console.log(`📂 Loaded ${patterns.length} patterns from ${this.storageFile}`);
     } catch (error) {
       // File doesn't exist or is invalid, start fresh
-      console.log(`📂 No existing patterns file, starting fresh`);
     }
   }
 
@@ -271,7 +267,6 @@ export class FileLearningStorage implements LearningStorage {
       const patterns = Array.from(this.patterns.values());
       await fs.writeFile(this.storageFile, JSON.stringify(patterns, null, 2));
     } catch (error) {
-      console.error(`Failed to save patterns to ${this.storageFile}:`, error);
     }
   }
 

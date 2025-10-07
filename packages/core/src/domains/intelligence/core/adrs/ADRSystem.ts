@@ -42,7 +42,6 @@ export class ADRSystem {
     };
 
     await this.storage.store(adr);
-    console.log(`✅ Created ADR-${String(number).padStart(3, '0')}: ${adr.title}`);
     return adr;
   }
 
@@ -91,7 +90,6 @@ export class ADRSystem {
       supersededBy: created.id
     });
 
-    console.log(`🔄 ADR ${oldId} superseded by ${created.id}`);
     return created;
   }
 
@@ -102,7 +100,6 @@ export class ADRSystem {
     await this.storage.update(id, {
       status: ADRStatus.DEPRECATED
     });
-    console.log(`⚠️ ADR ${id} marked as deprecated`);
   }
 
   /**

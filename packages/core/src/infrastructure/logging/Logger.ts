@@ -41,7 +41,8 @@ export enum LogPathway {
     USER_INTERACTION = 'INTERACT',  // User clicks/hovers → Event handlers → UI updates
     WEBVIEW_MESSAGING = 'MESSAGE',  // Extension ↔ Webview postMessage communication
     CONFIG_SYNC = 'CONFIG',         // Configuration changes → State → UI updates
-    RANGE_SELECTOR = 'RANGE'        // Time slider/brush interactions → Viewport updates
+    RANGE_SELECTOR = 'RANGE',       // Time slider/brush interactions → Viewport updates
+    LEGEND = 'LEGEND'               // Legend rendering → Event categorization → Tab display
 }
 
 interface LogEntry {
@@ -255,17 +256,13 @@ class Logger {
         if (!this.testMode) {
             switch (level) {
                 case LogLevel.ERROR:
-                    console.error(formattedMessage, data ? data : '');
                     break;
                 case LogLevel.WARN:
-                    console.warn(formattedMessage, data ? data : '');
                     break;
                 case LogLevel.INFO:
-                    console.info(formattedMessage, data ? data : '');
                     break;
                 case LogLevel.DEBUG:
                 case LogLevel.TRACE:
-                    console.log(formattedMessage, data ? data : '');
                     break;
             }
         }

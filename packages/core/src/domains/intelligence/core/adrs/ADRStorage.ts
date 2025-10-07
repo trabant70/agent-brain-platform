@@ -33,7 +33,6 @@ export class FileADRStorage implements ADRStorage {
   async store(adr: ADR): Promise<void> {
     this.adrs.set(adr.id, adr);
     await this.saveToFile();
-    console.log(`📋 Stored ADR: ${adr.title} (${adr.id})`);
   }
 
   async getAll(): Promise<ADR[]> {
@@ -50,14 +49,12 @@ export class FileADRStorage implements ADRStorage {
     if (existing) {
       this.adrs.set(id, { ...existing, ...updates });
       await this.saveToFile();
-      console.log(`📋 Updated ADR: ${id}`);
     }
   }
 
   async delete(id: string): Promise<void> {
     this.adrs.delete(id);
     await this.saveToFile();
-    console.log(`📋 Deleted ADR: ${id}`);
   }
 
   async getMetrics(): Promise<ADRMetrics> {
@@ -102,9 +99,7 @@ export class FileADRStorage implements ADRStorage {
         this.adrs.set(adr.id, adr);
       });
 
-      console.log(`📋 Loaded ${adrs.length} ADRs from ${this.filePath}`);
     } catch (error) {
-      console.log(`📋 No existing ADRs file, starting fresh`);
     }
   }
 
@@ -119,7 +114,6 @@ export class FileADRStorage implements ADRStorage {
       const adrs = Array.from(this.adrs.values());
       await fs.writeFile(this.filePath, JSON.stringify(adrs, null, 2));
     } catch (error) {
-      console.error(`Failed to save ADRs to ${this.filePath}:`, error);
       throw error;
     }
   }

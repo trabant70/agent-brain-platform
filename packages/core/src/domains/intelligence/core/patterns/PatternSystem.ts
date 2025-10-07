@@ -50,7 +50,6 @@ export class PatternSystem {
         this.engine.registerPattern(pattern);
         this.validator.registerPattern(pattern);
       }
-      console.log(`✅ PatternSystem initialized with ${patterns.length} patterns from storage`);
     }
   }
 
@@ -64,19 +63,16 @@ export class PatternSystem {
       validation = this.validator.validatePattern(pattern);
 
       if (!validation.valid) {
-        console.error(`❌ Pattern validation failed for '${pattern.name}':`, validation.errors);
         return validation;
       }
 
       if (validation.warnings.length > 0) {
-        console.warn(`⚠️ Pattern warnings for '${pattern.name}':`, validation.warnings);
       }
     }
 
     if (this.config.enableConflictChecking) {
       const conflicts = this.validator.checkConflicts(pattern);
       if (conflicts.length > 0) {
-        console.warn(`🔄 Pattern conflicts detected for '${pattern.name}':`, conflicts);
       }
     }
 
@@ -89,7 +85,6 @@ export class PatternSystem {
       await this.savePatterns();
     }
 
-    console.log(`✅ Successfully registered pattern: ${pattern.name}`);
     return validation;
   }
 
@@ -103,12 +98,11 @@ export class PatternSystem {
 
       // Auto-save if enabled
       if (this.config.autoSave && this.storage) {
-        this.savePatterns().catch(err =>
-          console.error('Failed to save after unregister:', err)
-        );
+        this.savePatterns().catch(err => {
+          // Error during auto-save
+        });
       }
 
-      console.log(`🗑️ Unregistered pattern: ${patternId}`);
     }
     return success;
   }
@@ -189,7 +183,6 @@ export class PatternSystem {
     }
 
     const successCount = results.filter(r => r.valid).length;
-    console.log(`📦 Loaded ${successCount}/${extensionPatterns.length} patterns from extension`);
 
     return results;
   }

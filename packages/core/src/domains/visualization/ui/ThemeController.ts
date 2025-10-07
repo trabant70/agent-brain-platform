@@ -98,7 +98,6 @@ export class ThemeController {
 
         const theme = this.availableThemes.find(t => t.id === themeId);
         if (!theme) {
-            console.warn(`Theme '${themeId}' not found`);
             return;
         }
 
@@ -113,7 +112,6 @@ export class ThemeController {
             this.onThemeChange(themeId);
         }
 
-        console.log(`Theme switched to: ${theme.displayName}`);
     }
 
     /**

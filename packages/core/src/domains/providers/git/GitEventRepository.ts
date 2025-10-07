@@ -94,7 +94,6 @@ export class GitEventRepository {
             { projectName: project.name, rootPath: project.rootPath },
             LogPathway.DATA_INGESTION
         );
-        console.log(`GitEventRepository: Extracting events from ${project.name}...`);
 
         try {
             // Extract all event types in parallel for efficiency
@@ -136,7 +135,6 @@ export class GitEventRepository {
                 metadata
             };
 
-            console.log(`GitEventRepository: Extracted ${allEvents.length} events from ${branches.length} branches`);
             return collection;
 
         } catch (error: any) {
@@ -181,7 +179,6 @@ export class GitEventRepository {
             { command },
             LogPathway.DATA_INGESTION
         );
-        console.log(`GitEventRepository: Executing: ${command}`);
 
         try {
             // Extract branch containment map in parallel
@@ -197,7 +194,6 @@ export class GitEventRepository {
             return this.parseCommitOutput(logOutput.stdout, branchContainment);
 
         } catch (error) {
-            console.warn('GitEventRepository: Failed to extract commits:', error);
             return [];
         }
     }
@@ -214,7 +210,6 @@ export class GitEventRepository {
             );
 
             const branchNames = branchOutput.trim().split('\n').filter(Boolean);
-            console.log(`GitEventRepository: Found ${branchNames.length} branches for reflog analysis`);
 
             // Extract creation events for each branch using reflog
             const branchPromises = branchNames.map(branchName =>
@@ -224,11 +219,9 @@ export class GitEventRepository {
             const branchEvents = (await Promise.all(branchPromises))
                 .filter((event): event is GitEvent => event !== null);
 
-            console.log(`GitEventRepository: Extracted ${branchEvents.length} branch creation events`);
             return branchEvents;
 
         } catch (error) {
-            console.warn('GitEventRepository: Failed to extract branch events:', error);
             return [];
         }
     }
@@ -270,7 +263,6 @@ export class GitEventRepository {
 
         } catch (error: any) {
             // Some branches may not have reflog entries - this is normal
-            console.debug(`GitEventRepository: No reflog for branch ${branchName}:`, error.message || 'Unknown error');
             return null;
         }
     }
@@ -315,11 +307,9 @@ export class GitEventRepository {
                 };
             }).filter(event => event.id && !isNaN(event.date.getTime()));
 
-            console.log(`GitEventRepository: Extracted ${releaseEvents.length} release events`);
             return releaseEvents;
 
         } catch (error) {
-            console.warn('GitEventRepository: Failed to extract releases:', error);
             return [];
         }
     }
@@ -365,11 +355,9 @@ export class GitEventRepository {
                 })
                 .filter(event => event && event.id && !isNaN(event.date.getTime())) as GitEvent[];
 
-            console.log(`GitEventRepository: Extracted ${deletionEvents.length} branch deletion events`);
             return deletionEvents;
 
         } catch (error) {
-            console.warn('GitEventRepository: Failed to extract branch deletions:', error);
             return [];
         }
     }
@@ -418,11 +406,9 @@ export class GitEventRepository {
                 })
                 .filter(event => event && event.id && !isNaN(event.date.getTime())) as GitEvent[];
 
-            console.log(`GitEventRepository: Extracted ${checkoutEvents.length} branch checkout events`);
             return checkoutEvents;
 
         } catch (error) {
-            console.warn('GitEventRepository: Failed to extract checkout events:', error);
             return [];
         }
     }
@@ -504,7 +490,6 @@ export class GitEventRepository {
             ));
         }
 
-        console.log(`GitEventRepository: Parsed ${events.length} commit/merge events`);
         return events;
     }
 
@@ -527,11 +512,6 @@ export class GitEventRepository {
 
         // Debug logging for branch associations
         if (commitBranches.length > 1) {
-            console.log(`GitEventRepository: Multi-branch commit found:`, {
-                hash: event.id!.substring(0, 7),
-                title: event.title?.substring(0, 50),
-                branches: commitBranches
-            });
         }
 
         // Clean up source ref to get branch name
@@ -627,22 +607,12 @@ export class GitEventRepository {
                         containmentMap.get(hash)!.push(branch);
                     }
                 } catch (error) {
-                    console.warn(`GitEventRepository: Failed to get commits for branch ${branch}:`, error);
                 }
             }
 
-            console.log(`GitEventRepository: Built containment map for ${containmentMap.size} commits across ${branches.length} branches`);
-            console.log(`GitEventRepository: Sample branch data:`, {
-                branches: branches,
-                sampleCommits: Array.from(containmentMap.entries()).slice(0, 3).map(([hash, branches]) => ({
-                    hash: hash.substring(0, 7),
-                    branches
-                }))
-            });
             return containmentMap;
 
         } catch (error) {
-            console.warn('GitEventRepository: Failed to extract branch containment map:', error);
             return new Map();
         }
     }
@@ -718,7 +688,6 @@ export class GitEventRepository {
         const activeEditor = vscode.window.activeTextEditor;
         if (activeEditor) {
             targetPath = path.dirname(activeEditor.document.uri.fsPath);
-            console.log(`GitEventRepository: Using active editor path: ${targetPath}`);
             const project = await this.detectProjectFromPath(targetPath);
             if (project) {
                 // Cache this as the primary project for this session
@@ -730,7 +699,6 @@ export class GitEventRepository {
         // Check if we have a cached session project (for reload consistency)
         if (this.cachedProjects.has('__current_session__')) {
             const cachedProject = this.cachedProjects.get('__current_session__')!;
-            console.log(`GitEventRepository: Using cached session project: ${cachedProject.rootPath}`);
             // Verify the cached project still exists
             try {
                 await fs.promises.access(path.join(cachedProject.rootPath, '.git'));
@@ -744,7 +712,6 @@ export class GitEventRepository {
         // Fallback to workspace folder
         if (vscode.workspace.workspaceFolders?.[0]) {
             targetPath = vscode.workspace.workspaceFolders[0].uri.fsPath;
-            console.log(`GitEventRepository: Falling back to workspace folder: ${targetPath}`);
             return this.detectProjectFromPath(targetPath);
         }
 
@@ -773,7 +740,6 @@ export class GitEventRepository {
             return projectInfo;
 
         } catch (error: any) {
-            console.warn('GitEventRepository: Failed to detect project:', error);
             return null;
         }
     }
@@ -814,6 +780,5 @@ export class GitEventRepository {
      */
     clearSessionCache(): void {
         this.cachedProjects.delete('__current_session__');
-        console.log('GitEventRepository: Session cache cleared');
     }
 }

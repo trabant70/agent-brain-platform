@@ -242,7 +242,6 @@ export class LearningPropagator {
           fileUpdates.set(filePath, updatedContent);
         }
       } catch (error) {
-        console.warn(`Failed to apply fix to ${filePath}:`, error);
       }
     }
 

@@ -46,7 +46,6 @@ export class ProviderRegistry {
    */
   async registerProvider(provider: IDataProvider, config: ProviderConfig): Promise<void> {
     try {
-      console.log(`ProviderRegistry: Registering provider: ${provider.id} (${provider.name})`);
 
       // Validate provider
       this.validateProvider(provider);
@@ -62,9 +61,7 @@ export class ProviderRegistry {
       // Initial health check
       await this.updateProviderHealth(provider.id);
 
-      console.log(`ProviderRegistry: Successfully registered provider: ${provider.id}`);
     } catch (error) {
-      console.error(`ProviderRegistry: Failed to register provider ${provider.id}:`, error);
       throw error;
     }
   }
@@ -79,7 +76,6 @@ export class ProviderRegistry {
     }
 
     try {
-      console.log(`ProviderRegistry: Unregistering provider: ${providerId}`);
 
       // Dispose provider resources
       await provider.dispose();
@@ -90,9 +86,7 @@ export class ProviderRegistry {
       this.healthStatus.delete(providerId);
       this.loadOrder = this.loadOrder.filter(id => id !== providerId);
 
-      console.log(`ProviderRegistry: Successfully unregistered provider: ${providerId}`);
     } catch (error) {
-      console.error(`ProviderRegistry: Failed to unregister provider ${providerId}:`, error);
       throw error;
     }
   }
@@ -142,7 +136,6 @@ export class ProviderRegistry {
       throw new Error(`Provider configuration not found: ${providerId}`);
     }
 
-    console.log(`ProviderRegistry: Setting provider ${providerId} enabled=${enabled}`);
     config.enabled = enabled;
   }
 

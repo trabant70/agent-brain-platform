@@ -183,11 +183,9 @@ export class EventDetailsPopup {
             this.closeBtn.on('click.external', (event: Event) => {
                 event.stopPropagation();
                 event.preventDefault();
-                console.log('EventDetailsPopup: Close button clicked - calling external handler');
                 handler();
             });
         } else {
-            console.warn('EventDetailsPopup: Close button not found in DOM');
         }
     }
 
@@ -371,7 +369,6 @@ export class EventDetailsPopup {
      * Show hover popup (non-locked) - Pure UI operation
      */
     showHover(event: any, position: { x: number; y: number }, allEvents: any[]): void {
-        console.log('EventDetailsPopup: [EDP] Showing hover popup');
 
         // Clear any pending timeouts from previous interactions
         this.clearPendingTimeouts();
@@ -400,7 +397,6 @@ export class EventDetailsPopup {
      * Show locked popup (clickable) - Pure UI operation
      */
     showLocked(event: any, position: { x: number; y: number }, allEvents: any[]): void {
-        console.log('EventDetailsPopup: [EDP] Showing locked popup');
 
         // Clear any pending timeouts from previous interactions
         this.clearPendingTimeouts();
@@ -434,7 +430,6 @@ export class EventDetailsPopup {
      * Hide the popup - Pure UI operation
      */
     hide(): void {
-        console.log('EventDetailsPopup: [EDP] Hiding popup');
 
         if (!this.popup) return;
 
@@ -547,7 +542,6 @@ export class EventDetailsPopup {
      * Copy commit hash to clipboard
      */
     private copyCommitHash(hash: string): void {
-        console.log('EventDetailsPopup: [EDP] Copying hash:', hash);
 
         // Use the clipboard API if available
         if (navigator.clipboard && window.isSecureContext) {
@@ -584,7 +578,6 @@ export class EventDetailsPopup {
      * Show commit diff via VSCode message
      */
     private showCommitDiff(event: any): void {
-        console.log('EventDetailsPopup: [EDP] Opening diff for commit:', event.hash);
 
         if ((window as any).vscode) {
             (window as any).vscode.postMessage({

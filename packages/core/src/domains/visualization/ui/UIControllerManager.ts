@@ -32,7 +32,6 @@ export class UIControllerManager {
     private contextController: ContextController;
 
     constructor(options: UIControllerOptions = {}) {
-        console.log('UIControllerManager: [UICM] Constructing...');
 
         // Initialize all controllers
         this.filterController = new FilterController({
@@ -56,7 +55,6 @@ export class UIControllerManager {
      * Initialize UI controller manager
      */
     public async initialize(): Promise<void> {
-        console.log('UIControllerManager: [UICM] Initializing...');
 
         // Initialize filter controller first (sets up DOM elements and event listeners)
         this.filterController.initialize();
@@ -65,7 +63,6 @@ export class UIControllerManager {
         this.popupController.initialize();
 
         // Initialize other components as needed
-        console.log('UIControllerManager: [UICM] Initialization complete');
     }
 
     /**
@@ -248,7 +245,6 @@ export class UIControllerManager {
     handleResize(): void {
         // Notify controllers that might need to adjust to new size
         // Currently, most UI elements are responsive via CSS
-        console.log('UI controllers handling resize');
     }
 
 
@@ -257,7 +253,6 @@ export class UIControllerManager {
      */
     cleanup(): void {
         // Cleanup any event listeners or resources
-        console.log('UI Controller Manager cleanup');
         this.destroy();
     }
 
@@ -265,7 +260,6 @@ export class UIControllerManager {
      * Destroy UI controller manager
      */
     public destroy(): void {
-        console.log('UIControllerManager: [UICM] Destroying...');
         this.popupController.destroy();
         // Cleanup other controllers as needed
     }

@@ -156,7 +156,7 @@ export class DataOrchestrator {
       const intelligenceProvider = new IntelligenceProvider(learningSystem, patternSystem, adrSystem);
 
       await this.providerRegistry.registerProvider(intelligenceProvider, {
-        enabled: true, // Enabled by default - provides learnings, patterns, and ADRs
+        enabled: false, // Disabled by default - user opt-in required
         priority: 3
       });
 
@@ -282,17 +282,8 @@ export class DataOrchestrator {
     // DEBUG: Check if sources[] is present in events
     const eventsWithSources = allEvents.filter(e => e.sources && e.sources.length > 0);
     if (eventsWithSources.length > 0) {
-      console.log(`[DataOrchestrator] DEBUG: ${eventsWithSources.length} events have sources[] populated`);
       const sampleEvent = eventsWithSources[0];
-      console.log(`[DataOrchestrator] Sample event "${sampleEvent.title}":`, {
-        canonicalId: sampleEvent.canonicalId,
-        providerId: sampleEvent.providerId,
-        hasSources: !!sampleEvent.sources,
-        sourcesCount: sampleEvent.sources?.length,
-        sources: sampleEvent.sources?.map(s => s.providerId)
-      });
     } else {
-      console.log(`[DataOrchestrator] WARNING: NO events have sources[] populated!`);
     }
 
     return {
