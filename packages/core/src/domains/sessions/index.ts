@@ -7,3 +7,4 @@
 
 export * from './types';
 export * from './SessionManager';
+export * from './SessionStorage';
