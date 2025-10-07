@@ -1281,8 +1281,8 @@ export class FilterController {
    */
   private updateEnabledProviders(providerId: string, enabled: boolean): void {
     if (!this.filterState.enabledProviders) {
-      // Initialize with defaults if not set
-      this.filterState.enabledProviders = ['git-local'];
+      // Initialize with empty array - DataOrchestrator is source of truth
+      this.filterState.enabledProviders = [];
     }
 
     if (enabled) {
@@ -1376,8 +1376,8 @@ export class FilterController {
       syncRadio.checked = (colorMode === 'sync-state');
     }
 
-    // Restore enabled providers (default to git-local only if not set)
-    const enabledProviders = this.filterState.enabledProviders || ['git-local'];
+    // Restore enabled providers from filterState (DataOrchestrator is source of truth)
+    const enabledProviders = this.filterState.enabledProviders || [];
 
     // Update local state
     this.gitProviderEnabled = enabledProviders.includes('git-local');

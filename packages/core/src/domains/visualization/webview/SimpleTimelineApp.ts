@@ -122,7 +122,6 @@ export class SimpleTimelineApp {
         const originalOnBrush = (this.renderer as any).handleBrush?.bind(this.renderer);
 
         (this.renderer as any).handleBrush = (selection: [Date, Date] | null) => {
-            console.log('[SimpleTimelineApp] Brush selection changed:', selection);
 
             // Call original handler
             if (originalOnBrush) {
@@ -157,7 +156,6 @@ export class SimpleTimelineApp {
     private updateViewport(dateRange: [Date, Date]) {
         if (!this.currentProcessedData) return;
 
-        console.log('[SimpleTimelineApp] Updating viewport:', dateRange);
 
         // Filter events to visible range
         const visibleEvents = this.currentProcessedData.allEvents.filter((event: any) => {
@@ -165,7 +163,6 @@ export class SimpleTimelineApp {
             return eventDate >= dateRange[0] && eventDate <= dateRange[1];
         });
 
-        console.log(`[SimpleTimelineApp] Filtered ${this.currentProcessedData.allEvents.length} → ${visibleEvents.length} events for viewport`);
 
         // Update renderer viewport
         this.renderer.updateViewport(dateRange);
@@ -191,8 +188,9 @@ export class SimpleTimelineApp {
         webviewLogger.info(LogCategory.DATA, `Handling timeline data: ${allEvents.length} total, ${filteredEvents.length} filtered for ${repoPath}`, 'handleTimelineData', undefined, LogPathway.DATA_INGESTION);
 
         // Update EventVisualTheme with enabled providers for sync mode availability
-        const enabledProviders = appliedFilters?.enabledProviders || ['git-local'];
-        webviewLogger.debug(LogCategory.VISUALIZATION, 'Setting active providers', 'handleTimelineData', enabledProviders, LogPathway.CONFIG_SYNC);
+        // DataOrchestrator is source of truth - no fallback defaults
+        const enabledProviders = appliedFilters?.enabledProviders || [];
+        webviewLogger.debug(LogCategory.VISUALIZATION, 'Setting active providers from appliedFilters', 'handleTimelineData', { enabledProviders }, LogPathway.CONFIG_SYNC);
         const EventVisualTheme = (window as any).EventVisualTheme;
         if (EventVisualTheme) {
             EventVisualTheme.setActiveProviders(enabledProviders);
@@ -400,8 +398,6 @@ export class SimpleTimelineApp {
         });
         const contributorCount = contributorsSet.size;
 
-        console.log('[SimpleTimelineApp] Active branches from filtered events:', activeBranches);
-        console.log('[SimpleTimelineApp] Contributors from filtered events:', contributorCount);
 
         return {
             // visibleEvents & allEvents contain EXPANDED instances (one per branch)
@@ -438,7 +434,6 @@ export class SimpleTimelineApp {
      * Render the timeline
      */
     private async render(processedData: any) {
-        console.log('[SimpleTimelineApp] Calling renderer.renderData()');
 
         // Store for viewport updates
         this.currentProcessedData = processedData;
@@ -446,12 +441,10 @@ export class SimpleTimelineApp {
         try {
             // @ts-ignore - Access to protected method needed for rendering
             await this.renderer.renderData(processedData);
-            console.log('[SimpleTimelineApp] Render complete');
 
             // Update stats display
             this.updateStats(processedData.summaryStats);
         } catch (error) {
-            console.error('[SimpleTimelineApp] Render failed:', error);
             throw error;
         }
     }
@@ -586,7 +579,6 @@ export class SimpleTimelineApp {
         // Safety: if filtering removes all branches, keep first available
         // This shouldn't happen if event passed the filter, but defensive check
         if (visibleBranches.length === 0 && eventBranches.length > 0) {
-            console.warn('[SimpleTimelineApp] filterEventBranches: All branches filtered out, keeping first:', eventBranches[0]);
             return [eventBranches[0]];
         }
 

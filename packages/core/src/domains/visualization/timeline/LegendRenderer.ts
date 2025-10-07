@@ -11,6 +11,7 @@
  */
 
 import { EventVisualTheme } from '../theme/EventVisualTheme';
+import { webviewLogger, LogCategory, LogPathway } from '../webview/WebviewLogger';
 
 export interface LegendOptions {
     selector: string;
@@ -26,7 +27,7 @@ export class LegendRenderer {
     private colorMap: { [key: string]: string };
     private dragSetup: boolean = false;
     private currentTab: 'git' | 'intelligence' = 'git';
-    private enabledProviders: string[] = ['git-local'];
+    private enabledProviders: string[] = []; // No default - set by DataOrchestrator via setEnabledProviders()
 
     constructor(options: LegendOptions) {
         this.colorMap = options.colorMap;
@@ -42,9 +43,6 @@ export class LegendRenderer {
         // Select legend directly by ID - same as EventDetailsPopup does
         this.legend = d3.select('#timeline-legend');
         this.container = d3.select(selector);
-
-        console.log('[LegendRenderer] setupContainer - legend selection:', this.legend, 'empty?', this.legend.empty());
-        console.log('[LegendRenderer] setupContainer - container selection:', this.container, 'empty?', this.container.empty());
     }
 
     /**
@@ -57,13 +55,11 @@ export class LegendRenderer {
 
         const legendElement = document.getElementById('timeline-legend');
         if (!legendElement) {
-            console.log('[LegendRenderer] Could not find #timeline-legend');
             return;
         }
 
         const legendTitle = legendElement.querySelector('.legend-title') as HTMLElement;
         if (!legendTitle) {
-            console.log('[LegendRenderer] Could not find .legend-title');
             return;
         }
 
@@ -120,9 +116,23 @@ export class LegendRenderer {
 
     /**
      * Set enabled providers to determine which tabs to show
+     * Single source of truth: providers come from DataOrchestrator
      */
     setEnabledProviders(providers: string[]): void {
-        this.enabledProviders = providers || ['git-local'];
+        // No fallback default - accept what DataOrchestrator provides (including empty array)
+        this.enabledProviders = providers || [];
+
+        webviewLogger.info(
+            LogCategory.VISUALIZATION,
+            `Legend enabled providers set from DataOrchestrator`,
+            'LegendRenderer.setEnabledProviders',
+            {
+                providers: this.enabledProviders,
+                hasGit: this.enabledProviders.includes('git-local') || this.enabledProviders.includes('github'),
+                hasIntelligence: this.enabledProviders.includes('intelligence')
+            },
+            LogPathway.LEGEND
+        );
     }
 
     /**
@@ -183,14 +193,45 @@ export class LegendRenderer {
             type && typeof type === 'string' && type.trim().length > 0
         );
 
+        webviewLogger.debug(
+            LogCategory.VISUALIZATION,
+            `Categorizing ${validEventTypes.length} event types for legend`,
+            'LegendRenderer.updateLegend',
+            { validEventTypes },
+            LogPathway.LEGEND
+        );
+
         // Separate event types by category
-        const gitEventTypes = validEventTypes.filter(type => !this.isIntelligenceEvent(type));
+        const gitEventTypes = validEventTypes.filter(type => {
+            const isIntel = this.isIntelligenceEvent(type);
+            webviewLogger.debug(
+                LogCategory.VISUALIZATION,
+                `Categorizing event type: "${type}" -> isIntelligence=${isIntel}`,
+                'LegendRenderer.categorize',
+                { eventType: type, isIntelligence: isIntel },
+                LogPathway.LEGEND
+            );
+            return !isIntel;
+        });
         const intelligenceEventTypes = validEventTypes.filter(type => this.isIntelligenceEvent(type));
 
         // Determine which tabs should be visible
         const showGitTab = this.enabledProviders.includes('git-local') ||
                           this.enabledProviders.includes('github');
         const showIntelligenceTab = this.enabledProviders.includes('intelligence');
+
+        webviewLogger.info(
+            LogCategory.VISUALIZATION,
+            `Legend categorization complete`,
+            'LegendRenderer.updateLegend',
+            {
+                gitEventTypes,
+                intelligenceEventTypes,
+                showGitTab,
+                showIntelligenceTab
+            },
+            LogPathway.LEGEND
+        );
 
         // If no tabs should show, hide legend entirely
         if (!showGitTab && !showIntelligenceTab) {

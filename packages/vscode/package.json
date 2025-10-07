@@ -2,8 +2,8 @@
   "name": "agent-brain-platform",
   "displayName": "Agent Brain Platform",
   "description": "Unified platform for AI-assisted development with timeline visualization, architectural guidance, and pathway testing",
-  "version": "0.1.4",
-  "publisher": "agent-brain",
+  "version": "0.1.20",
+  "publisher": "agent-brain-local",
   "icon": "images/timeline_large.png",
   "engines": {
     "vscode": "^1.80.0"
@@ -99,10 +99,11 @@
   },
   "scripts": {
     "copy:assets": "node -e \"const fs=require('fs'),path=require('path');const copyDir=(src,dest)=>{if(!fs.existsSync(dest))fs.mkdirSync(dest,{recursive:true});fs.readdirSync(src).forEach(item=>{const srcPath=path.join(src,item),destPath=path.join(dest,item);fs.statSync(srcPath).isDirectory()?copyDir(srcPath,destPath):fs.copyFileSync(srcPath,destPath)})};copyDir('../core/src/domains/visualization/styles','dist/visualization/styles');copyDir('../core/src/domains/visualization/templates','dist/visualization/templates');console.log('Assets copied');\"",
+    "version:bump": "node -e \"const fs=require('fs');const pkg=JSON.parse(fs.readFileSync('package.json','utf8'));const v=pkg.version.split('.');v[2]=parseInt(v[2])+1;pkg.version=v.join('.');fs.writeFileSync('package.json',JSON.stringify(pkg,null,2)+'\\n');console.log('Version bumped to',pkg.version);\"",
     "build": "npm run copy:assets && webpack --mode production",
     "watch": "npm run copy:assets && webpack --mode development --watch",
-    "package": "vsce package",
-    "clean": "rm -rf dist *.vsix"
+    "package": "npm run version:bump && vsce package",
+    "clean": "rm -rf dist"
   },
   "dependencies": {
     "d3": "^7.9.0"
