@@ -19,8 +19,33 @@
                 <div class="stat-item" data-tooltip="Development activity rate: events per day (higher = more frequent commits/changes)"><span class="stat-label">Velocity:</span><span class="stat-value" id="stat-velocity">0/day</span></div>
             </div>
             <div class="filters-trigger" id="filters-trigger" tabindex="0" role="button" aria-label="Show control center menu">Control Center</div>
+            <div class="quick-prompt-trigger" id="quick-prompt-trigger" tabindex="0" role="button" aria-label="Create AI prompt">🧠 New AI Prompt</div>
+            <div id="ai-companion-slot"></div>
         </div>
-        <div id="timeline-container">
+
+        <!-- Tab Navigation -->
+        <div id="tab-navigation">
+            <button class="tab-button active" data-tab="timeline" aria-label="Timeline view" aria-selected="true">📊 Timeline</button>
+            <button class="tab-button" data-tab="prompt" aria-label="Prompt Support view" aria-selected="false">🧠 Prompt Support</button>
+            <button class="tab-button" data-tab="config" aria-label="Configurations view" aria-selected="false">⚙️ Configurations</button>
+            <button class="tab-button" data-tab="knowledge" aria-label="Knowledge Management view" aria-selected="false">📚 Knowledge</button>
+            <button class="tab-button" data-tab="support" aria-label="Support and Help view" aria-selected="false">💡 Support</button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div id="tab-contents">
+            <!-- Timeline Tab -->
+            <div id="tab-timeline" class="tab-content active" aria-hidden="false">
+                <!-- Containers for UI panels that work with timeline -->
+                <div id="quick-prompt-container"></div>
+                <div id="ai-companion-container"></div>
+                <div id="error-recovery-container"></div>
+                <div id="comparison-container"></div>
+                <div id="celebration-toast-container"></div>
+                <div id="achievement-panel-container"></div>
+                <div id="profile-wizard-container"></div>
+
+                <div id="timeline-container">
             <!-- Branch Timeline -->
             <div id="branch-timeline-container" class="timeline-main">
                 <div id="visualization">
@@ -64,14 +89,46 @@
             </div>
         </div>
 
-        <!-- BOTTOM: Range Selector (Slider + Bar Chart) - Moved to bottom of main container -->
-        <div id="range-selector-section" class="range-selector-section">
-            <div id="range-selector" class="range-selector-container">
-                <svg id="range-svg"></svg>
-                <div class="range-label start" id="range-start-label">-</div>
-                <div class="range-label end" id="range-end-label">-</div>
+                <!-- BOTTOM: Range Selector (Slider + Bar Chart) - Part of timeline tab -->
+                <div id="range-selector-section" class="range-selector-section">
+                    <div id="range-selector" class="range-selector-container">
+                        <svg id="range-svg"></svg>
+                        <div class="range-label start" id="range-start-label">-</div>
+                        <div class="range-label end" id="range-end-label">-</div>
+                    </div>
+                </div>
+            </div>
+            <!-- End Timeline Tab -->
+
+            <!-- Prompt Support Tab -->
+            <div id="tab-prompt" class="tab-content" aria-hidden="true">
+                <div id="prompt-support-container">
+                    <!-- Content will be populated by PromptSupportView -->
+                </div>
+            </div>
+
+            <!-- Configurations Tab -->
+            <div id="tab-config" class="tab-content" aria-hidden="true">
+                <div id="configuration-container">
+                    <!-- Content will be populated by ConfigurationView -->
+                </div>
+            </div>
+
+            <!-- Knowledge Management Tab -->
+            <div id="tab-knowledge" class="tab-content" aria-hidden="true">
+                <div id="knowledge-management-container">
+                    <!-- Content will be populated by KnowledgeManagementView -->
+                </div>
+            </div>
+
+            <!-- Support Tab -->
+            <div id="tab-support" class="tab-content" aria-hidden="true">
+                <div id="support-container">
+                    <!-- Content will be populated by SupportView -->
+                </div>
             </div>
         </div>
+        <!-- End Tab Contents -->
     </div>
 
     <!-- Webpack will inject script tags here -->

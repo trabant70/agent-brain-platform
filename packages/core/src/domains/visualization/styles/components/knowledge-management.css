@@ -1,0 +1,148 @@
+/**
+ * Knowledge Management Tab Styles
+ */
+
+.config-header {
+  margin-bottom: 24px;
+}
+
+.config-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  margin: 0 0 8px 0;
+}
+
+.config-header p {
+  font-size: 14px;
+  color: var(--vscode-descriptionForeground);
+  margin: 0;
+}
+
+.config-row {
+  padding: 12px 0;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.config-row:last-child {
+  border-bottom: none;
+}
+
+.config-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--vscode-foreground);
+}
+
+.config-label span {
+  flex: 1;
+}
+
+.config-label input[type="checkbox"] {
+  margin-left: 12px;
+}
+
+.config-select, .config-input {
+  padding: 6px 12px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 4px;
+  font-family: var(--vscode-font-family);
+  font-size: 13px;
+  min-width: 200px;
+}
+
+.config-select:focus, .config-input:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: -1px;
+}
+
+.config-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 2px solid var(--vscode-panel-border);
+}
+
+.knowledge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.knowledge-list-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.knowledge-list-item:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.knowledge-list-item input[type="checkbox"] {
+  flex-shrink: 0;
+}
+
+.knowledge-list-item-content {
+  flex: 1;
+}
+
+.knowledge-list-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.knowledge-list-item-meta {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  margin-top: 4px;
+}
+
+.knowledge-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.knowledge-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.knowledge-stat-card {
+  padding: 16px;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  text-align: center;
+}
+
+.knowledge-stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--vscode-charts-blue);
+  display: block;
+}
+
+.knowledge-stat-label {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  margin-top: 4px;
+  display: block;
+}

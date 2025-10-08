@@ -7,6 +7,12 @@
 
 import { D3TimelineRendererImpl } from '../timeline/D3TimelineRendererImpl';
 import { UIControllerManager } from '../ui/UIControllerManager';
+import { QuickPromptPanel } from '../ui/QuickPromptPanel';
+import { AICompanionDot } from '../ui/AICompanionDot';
+import { ErrorRecoveryPanel } from '../ui/ErrorRecoveryPanel';
+import { ComparisonView } from '../ui/ComparisonView';
+import { TabManager } from '../ui/TabManager';
+import { PromptSupportView } from '../ui/PromptSupportView';
 import { webviewLogger, LogCategory, LogPathway } from './WebviewLogger';
 
 interface CanonicalEvent {
@@ -37,12 +43,19 @@ interface FilterOptions {
 export class SimpleTimelineApp {
     private renderer: D3TimelineRendererImpl;
     private uiManager: UIControllerManager;
+    private quickPromptPanel: QuickPromptPanel;
+    private aiCompanionDot: AICompanionDot;
+    private errorRecoveryPanel: ErrorRecoveryPanel;
+    private comparisonView: ComparisonView;
+    private tabManager: TabManager;
+    private promptSupportView: PromptSupportView;
     private currentEvents: CanonicalEvent[] = [];
     private currentFilterOptions: FilterOptions | null = null;
     private currentAppliedFilters: any = null;  // Current filter state for branch visibility
     private currentProcessedData: any = null;
     private container: HTMLElement;
     private currentRepoPath: string = '';
+    private isTimelineTabActive: boolean = true;
 
     constructor(containerId: string = 'visualization') {
         const container = document.getElementById(containerId);
@@ -74,6 +87,44 @@ export class SimpleTimelineApp {
             webviewLogger.info(LogCategory.UI, 'UI controllers initialized', 'constructor');
             this.connectFilterCallbacks();
         });
+
+        // Initialize new Phase 1 UI components
+        this.quickPromptPanel = new QuickPromptPanel((prompt: string, agent: string) => this.handlePromptEnhance(prompt, agent));
+        this.aiCompanionDot = new AICompanionDot();
+        this.errorRecoveryPanel = new ErrorRecoveryPanel();
+
+        // Initialize Phase 2 UI components
+        this.comparisonView = new ComparisonView();
+
+        // Initialize with container IDs from timeline.html
+        this.quickPromptPanel.initialize('quick-prompt-container');
+        this.aiCompanionDot.initialize('ai-companion-slot');
+        this.errorRecoveryPanel.initialize('error-recovery-container');
+        this.comparisonView.initialize('comparison-container');
+
+        // Setup quick prompt trigger button
+        const quickPromptTrigger = document.getElementById('quick-prompt-trigger');
+        quickPromptTrigger?.addEventListener('click', () => {
+            this.quickPromptPanel.show();
+        });
+
+        webviewLogger.info(LogCategory.UI, 'Phase 1 AI companion components initialized', 'constructor');
+
+        // Initialize tab manager
+        this.tabManager = new TabManager();
+        this.tabManager.initialize();
+
+        // Listen for tab changes to pause/resume timeline rendering
+        this.tabManager.on('tab:changed', (event: any) => {
+            this.handleTabChange(event);
+        });
+
+        webviewLogger.info(LogCategory.UI, 'Tab manager initialized', 'constructor');
+
+        // Initialize Prompt Support View (Phase 2)
+        this.promptSupportView = new PromptSupportView();
+        this.promptSupportView.initialize('prompt-support-container');
+        webviewLogger.info(LogCategory.UI, 'Prompt support view initialized', 'constructor');
 
         // Setup brush callback for range selector
         this.setupRendererCallbacks();
@@ -664,6 +715,105 @@ export class SimpleTimelineApp {
     }
 
     /**
+     * Handle prompt enhancement request from QuickPromptPanel
+     */
+    private handlePromptEnhance(prompt: string, agent: string): void {
+        webviewLogger.debug(LogCategory.UI, 'Prompt enhancement requested', 'handlePromptEnhance', { agent, promptLength: prompt.length });
+
+        // Send to extension for enhancement processing
+        if (window.vscode) {
+            window.vscode.postMessage({
+                type: 'enhancePrompt',
+                prompt,
+                agent
+            });
+        }
+    }
+
+    /**
+     * Update quick prompt panel with enhanced result
+     */
+    updateEnhancedPrompt(enhanced: string, itemsUsed: number): void {
+        this.quickPromptPanel.updateEnhanced(enhanced, itemsUsed);
+    }
+
+    /**
+     * Show AI companion tip
+     */
+    showCompanionTip(tip: { id: string; message: string; priority: 'critical' | 'helpful' | 'informational' }): void {
+        this.aiCompanionDot.showTip(tip);
+    }
+
+    /**
+     * Show error recovery panel
+     */
+    showErrorRecovery(error: { type: string; message: string; line?: number; file?: string }, similarErrors: any[]): void {
+        this.errorRecoveryPanel.showError(error, similarErrors);
+    }
+
+    /**
+     * Show comparison view (Phase 2)
+     */
+    showComparisonView(original: string, enhanced: string, metadata: {
+        itemsUsed: number;
+        stage: number;
+        knowledgeItems: Array<{ type: string; name: string; id: string }>;
+    }): void {
+        this.comparisonView.show(original, enhanced, metadata);
+    }
+
+    /**
+     * Update knowledge preview in Prompt Support tab
+     */
+    updatePromptKnowledgePreview(items: any[]): void {
+        if (this.promptSupportView) {
+            this.promptSupportView.updateKnowledgePreview(items);
+        }
+    }
+
+    /**
+     * Update enhanced prompt in Prompt Support tab
+     */
+    updatePromptEnhancedResult(enhanced: string, itemsUsed: number): void {
+        if (this.promptSupportView) {
+            this.promptSupportView.updateEnhanced(enhanced, itemsUsed);
+        }
+    }
+
+    /**
+     * Handle tab change events
+     */
+    private handleTabChange(event: any): void {
+        const { from, to } = event;
+        webviewLogger.debug(LogCategory.UI, `Tab changed: ${from} → ${to}`, 'handleTabChange');
+
+        // Update timeline tab active state
+        this.isTimelineTabActive = (to === 'timeline');
+
+        // Pause D3 rendering when not on timeline tab (performance optimization)
+        if (to !== 'timeline' && this.renderer) {
+            webviewLogger.debug(LogCategory.VISUALIZATION, 'Pausing timeline rendering (tab switched away)', 'handleTabChange');
+            // D3 renderer doesn't need to animate when hidden
+        }
+
+        // Resume rendering when returning to timeline tab
+        if (to === 'timeline' && this.currentProcessedData) {
+            webviewLogger.debug(LogCategory.VISUALIZATION, 'Resuming timeline rendering (tab switched back)', 'handleTabChange');
+            // Re-render to ensure fresh state
+            this.renderer.resize();
+        }
+
+        // Notify extension of tab change (for analytics/state persistence)
+        if (window.vscode) {
+            window.vscode.postMessage({
+                type: 'tabChanged',
+                from,
+                to
+            });
+        }
+    }
+
+    /**
      * Dispose
      */
     dispose() {
@@ -677,6 +827,9 @@ export class SimpleTimelineApp {
         if (this.renderer) {
             // @ts-ignore - Dispose method may not be in interface but is needed
             this.renderer.dispose();
+        }
+        if (this.tabManager) {
+            this.tabManager.dispose();
         }
     }
 }

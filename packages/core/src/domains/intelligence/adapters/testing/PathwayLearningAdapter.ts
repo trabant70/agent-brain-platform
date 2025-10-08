@@ -6,8 +6,8 @@
  */
 
 import { ITestFailureAdapter } from '../base/IntelligenceAdapter';
-import { LearningPattern, TestFailure } from '../../core/learning/types';
-import { LearningSystem } from '../../core/learning';
+import { LearningPattern, TestFailure } from '../../../knowledge/learning/types';
+import { LearningSystem } from '../../../knowledge/learning';
 
 /**
  * Pathway test failure format (from PathwayReporter)

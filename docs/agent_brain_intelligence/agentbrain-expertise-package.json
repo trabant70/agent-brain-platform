@@ -1,0 +1,373 @@
+{
+  "id": "com.agentbrain.self-improvement",
+  "name": "Agent Brain Self-Improvement Package",
+  "version": "1.0.0",
+  "description": "Meta-expertise for improving Agent Brain using Agent Brain itself",
+  "author": {
+    "name": "Agent Brain Core Team",
+    "role": "Chief Architect",
+    "organization": "Agent Brain Platform",
+    "credentials": ["Platform Creator", "Architecture Expert"]
+  },
+  "domain": "agent-brain-development",
+  "authority": "organizational",
+  "enforcement": "recommended",
+  "scope": {
+    "projects": ["agent-brain-platform"],
+    "languages": ["typescript", "javascript"],
+    "frameworks": ["vscode", "node"]
+  },
+  
+  "rules": [
+    {
+      "id": "honest-enhancement",
+      "name": "No Intelligence Pretense",
+      "category": "architecture",
+      "severity": "error",
+      "description": "Never pretend to have intelligence you don't possess",
+      "condition": {
+        "patterns": ["confidence:", "score:", "0.95", "0.85"],
+        "context": ["enhancement", "scoring"]
+      },
+      "requirement": "Use honest stage numbers and mechanical descriptions instead of arbitrary confidence scores",
+      "rationale": "Trust comes from honesty about capabilities",
+      "examples": {
+        "bad": "confidence: 0.95 // What does this mean?",
+        "good": "stage: 2 // Pattern expansion, no AI"
+      }
+    },
+    {
+      "id": "novice-first-naming",
+      "name": "No Developer Jargon",
+      "category": "ux",
+      "severity": "warning",
+      "description": "Use friendly names that novices understand",
+      "condition": {
+        "patterns": ["ADR", "architectural decision", "abstract"],
+        "context": ["ui", "user-facing"]
+      },
+      "requirement": "Replace technical terms with friendly equivalents",
+      "rationale": "Target users have <6 months coding experience",
+      "autoFix": {
+        "replacements": {
+          "ADRs": "Project Rules",
+          "Patterns": "Code Templates",
+          "Learnings": "Mistakes to Avoid",
+          "Golden Paths": "Step-by-Step Guides"
+        }
+      }
+    },
+    {
+      "id": "single-capability-stage",
+      "name": "One Capability Per Stage",
+      "category": "architecture",
+      "severity": "error",
+      "description": "Each enhancement stage must add exactly ONE capability",
+      "condition": {
+        "patterns": ["class Stage", "extends Stage"],
+        "context": ["enhancement", "stages"]
+      },
+      "requirement": "Create new stage class that adds single capability and chains to previous",
+      "rationale": "Enables independent testing and graceful degradation",
+      "validation": "Count number of distinct enhancements in enhance() method"
+    },
+    {
+      "id": "mechanical-before-semantic",
+      "name": "Context Before Intelligence",
+      "category": "architecture",
+      "severity": "error",
+      "description": "Implement mechanical enhancements (Stage 1-6) before semantic (Stage 7+)",
+      "condition": {
+        "patterns": ["LLM", "semantic", "understanding"],
+        "context": ["enhancement", "early-stage"]
+      },
+      "requirement": "Stages 1-6 must work without any LLM",
+      "rationale": "80% of value comes from mechanical context injection"
+    },
+    {
+      "id": "error-as-learning",
+      "name": "Convert Errors to Learnings",
+      "category": "learning",
+      "severity": "warning",
+      "description": "Every detected error should become a learning opportunity",
+      "condition": {
+        "patterns": ["error detected", "AI mistake", "failed"],
+        "context": ["error-handling"]
+      },
+      "requirement": "Show error recovery UI and offer to create learning",
+      "rationale": "System improves from failures"
+    },
+    {
+      "id": "progressive-disclosure",
+      "name": "Simple First, Complex on Demand",
+      "category": "ux",
+      "severity": "warning",
+      "description": "UI must use progressive disclosure for novice users",
+      "condition": {
+        "patterns": ["render", "panel", "ui", "interface"],
+        "context": ["ui-component"]
+      },
+      "requirement": "Implement essential/common/advanced levels",
+      "rationale": "Prevents overwhelming novice users"
+    },
+    {
+      "id": "visual-knowledge",
+      "name": "Make Knowledge Visible",
+      "category": "ux",
+      "severity": "error",
+      "description": "All knowledge must be visible with checkboxes",
+      "condition": {
+        "patterns": ["knowledge", "context", "hidden"],
+        "context": ["ui", "knowledge-management"]
+      },
+      "requirement": "Show checkboxes for all knowledge items",
+      "rationale": "Users can't trust what they can't see"
+    },
+    {
+      "id": "graceful-degradation",
+      "name": "Fallback on Failure",
+      "category": "reliability",
+      "severity": "error",
+      "description": "Advanced features must degrade to simpler ones",
+      "condition": {
+        "patterns": ["try", "catch", "error", "fail"],
+        "context": ["enhancement", "advanced-feature"]
+      },
+      "requirement": "Implement fallback to lower stage on error",
+      "rationale": "System remains useful even with failures"
+    },
+    {
+      "id": "measurement-over-speculation",
+      "name": "Track Everything",
+      "category": "analytics",
+      "severity": "warning",
+      "description": "Measure actual success instead of guessing",
+      "condition": {
+        "patterns": ["enhance", "improve", "optimize"],
+        "context": ["feature-development"]
+      },
+      "requirement": "Add metrics tracking for feature effectiveness",
+      "rationale": "Data drives decisions, not assumptions"
+    },
+    {
+      "id": "planning-before-coding",
+      "name": "Force Planning First",
+      "category": "process",
+      "severity": "warning",
+      "description": "AI must create plan before implementation",
+      "condition": {
+        "patterns": ["implement", "create", "build", "add feature"],
+        "context": ["ai-task"]
+      },
+      "requirement": "Inject planning template before code generation",
+      "rationale": "Prevents execution myopia in AI agents"
+    }
+  ],
+  
+  "patterns": [
+    {
+      "id": "stage-enhancement",
+      "name": "Stage-Based Enhancement Pattern",
+      "description": "How to add new enhancement capabilities",
+      "template": "class StageN_Capability extends StageNMinus1 {\n  enhance(prompt, context) {\n    // Add ONE capability\n    const enhanced = this.applyCapability(prompt, context);\n    return super.enhance(enhanced, context);\n  }\n}",
+      "when": "Adding new prompt enhancement capability",
+      "benefits": ["Testable", "Composable", "Degradable"]
+    },
+    {
+      "id": "message-handler",
+      "name": "Webview Message Handler Pattern",
+      "description": "Type-safe extension-webview communication",
+      "template": "type Message = { type: 'action', data: any } | { type: 'response', result: any };\n\nasync handle(message: Message) {\n  try {\n    switch(message.type) {\n      case 'action': return await this.process(message.data);\n    }\n  } catch (error) {\n    this.send({ type: 'error', message: String(error) });\n  }\n}",
+      "when": "Implementing extension-webview communication",
+      "benefits": ["Type-safe", "Error-handled", "Testable"]
+    },
+    {
+      "id": "knowledge-checkbox",
+      "name": "Knowledge Item Checkbox Pattern",
+      "description": "User control over knowledge inclusion",
+      "template": "interface KnowledgeItem {\n  state: 'checked' | 'unchecked' | 'locked';\n  toggle(): void {\n    if (this.state === 'locked') return;\n    this.state = this.state === 'checked' ? 'unchecked' : 'checked';\n  }\n}",
+      "when": "Implementing user-controllable knowledge",
+      "benefits": ["Visual", "Direct manipulation", "Clear state"]
+    },
+    {
+      "id": "error-learning-pipeline",
+      "name": "Error to Learning Pipeline",
+      "description": "Convert failures to improvements",
+      "template": "async processError(error) {\n  const pattern = extractPattern(error);\n  const similar = findSimilar(pattern);\n  const action = await showRecoveryUI(error, similar);\n  if (action === 'save') {\n    const learning = createLearning(pattern);\n    await save(learning);\n    applyImmediately(learning);\n  }\n}",
+      "when": "Handling AI-generated errors",
+      "benefits": ["Learning system", "Non-scary", "Immediate value"]
+    },
+    {
+      "id": "progressive-panel",
+      "name": "Progressive Disclosure Panel",
+      "description": "UI that reveals complexity on demand",
+      "template": "render() {\n  let html = this.renderEssential();\n  if (level !== 'essential') html += this.renderCommon();\n  if (level === 'advanced') html += this.renderAdvanced();\n  return html;\n}",
+      "when": "Building UI for novice users",
+      "benefits": ["Not overwhelming", "Scalable complexity", "User control"]
+    }
+  ],
+  
+  "planningTemplates": [
+    {
+      "id": "enhancement-stage",
+      "name": "Enhancement Stage Planning",
+      "triggerPatterns": ["add.*stage", "new.*enhancement", "implement.*stage"],
+      "sections": [
+        {
+          "id": "capability",
+          "title": "Capability Analysis",
+          "required": true,
+          "prompt": "What ONE specific capability will this stage add? How is it mechanical rather than semantic?",
+          "validation": "Must identify single capability"
+        },
+        {
+          "id": "integration",
+          "title": "Stage Integration",
+          "required": true,
+          "prompt": "Which stage number? What stage does it extend? How does it chain?",
+          "validation": "Must specify inheritance chain"
+        },
+        {
+          "id": "testing",
+          "title": "Test Strategy",
+          "required": true,
+          "prompt": "List 3 positive test cases and 2 negative test cases",
+          "validation": "Must have 5 test cases"
+        }
+      ],
+      "completionCriteria": ["Single capability", "Extends previous", "Tests defined"]
+    },
+    {
+      "id": "ui-component",
+      "name": "UI Component Planning",
+      "triggerPatterns": ["add.*panel", "create.*ui", "new.*interface"],
+      "sections": [
+        {
+          "id": "ux-design",
+          "title": "User Experience Design",
+          "required": true,
+          "prompt": "Define: Essential features, Common features, Advanced features",
+          "validation": "Must have 3 levels"
+        },
+        {
+          "id": "guidance",
+          "title": "Guidance Integration",
+          "required": true,
+          "prompt": "List: First-use tip, Error recovery help, Success message",
+          "validation": "Must have contextual help"
+        },
+        {
+          "id": "messages",
+          "title": "Message Handlers",
+          "required": true,
+          "prompt": "Define all webview<->extension messages with types",
+          "validation": "Must be type-safe"
+        }
+      ],
+      "completionCriteria": ["Progressive disclosure", "Guidance integrated", "Type-safe messages"]
+    },
+    {
+      "id": "error-handling",
+      "name": "Error Handling Planning",
+      "triggerPatterns": ["handle.*error", "error.*recovery", "fix.*mistake"],
+      "sections": [
+        {
+          "id": "detection",
+          "title": "Error Detection",
+          "required": true,
+          "prompt": "What types of errors? How to detect? How to avoid false positives?",
+          "validation": "Must identify error types"
+        },
+        {
+          "id": "pattern",
+          "title": "Pattern Extraction",
+          "required": true,
+          "prompt": "What pattern to extract? How to generalize? How to deduplicate?",
+          "validation": "Must define pattern structure"
+        },
+        {
+          "id": "learning",
+          "title": "Learning Creation",
+          "required": true,
+          "prompt": "What to capture? How to validate? How to apply immediately?",
+          "validation": "Must create reusable learning"
+        }
+      ],
+      "completionCriteria": ["Errors detected", "Patterns extracted", "Learnings created"]
+    }
+  ],
+  
+  "validationCriteria": [
+    {
+      "id": "no-confidence-scores",
+      "description": "No arbitrary confidence numbers",
+      "check": "!code.includes('confidence:') || code.includes('// calculated from')",
+      "severity": "error"
+    },
+    {
+      "id": "stages-extend-previous",
+      "description": "Each stage extends the previous one",
+      "check": "className.match(/Stage(\\d+)/) && code.includes(`extends Stage${n-1}`)",
+      "severity": "error"
+    },
+    {
+      "id": "ui-has-progressive",
+      "description": "UI components have progressive disclosure",
+      "check": "code.includes('essential') && code.includes('common') && code.includes('advanced')",
+      "severity": "warning"
+    },
+    {
+      "id": "errors-have-recovery",
+      "description": "Error handlers offer recovery",
+      "check": "code.includes('catch') && code.includes('recovery')",
+      "severity": "warning"
+    },
+    {
+      "id": "knowledge-visible",
+      "description": "Knowledge items have checkboxes",
+      "check": "code.includes('checkbox') || code.includes('checked')",
+      "severity": "error"
+    }
+  ],
+  
+  "examples": [
+    {
+      "id": "good-enhancement-stage",
+      "title": "Proper Enhancement Stage",
+      "description": "Shows single capability addition",
+      "prompt": "Add email validation enhancement to prompts",
+      "good": "class Stage10_EmailValidation extends Stage9_PackageAware {\n  enhance(prompt, context) {\n    if (prompt.includes('email')) {\n      prompt += '\\nEnsure email validation follows RFC 5322';\n    }\n    return super.enhance(prompt, context);\n  }\n}",
+      "bad": "class SuperEnhancer {\n  enhance(prompt) {\n    // Does everything in one class\n    prompt = addContext(prompt);\n    prompt = addPatterns(prompt);\n    prompt = addValidation(prompt);\n    confidence = 0.95;\n    return prompt;\n  }\n}"
+    },
+    {
+      "id": "good-error-handling",
+      "title": "Error as Learning Opportunity",
+      "description": "Shows non-scary error recovery",
+      "prompt": "Handle syntax error in generated code",
+      "good": "showRecoveryUI({\n  title: '🛠️ Let\\'s fix this together',\n  message: 'I noticed a syntax error. Want to save this as a learning?',\n  actions: ['Save Learning', 'Fix Manually', 'Ask AI Again']\n});",
+      "bad": "throw new Error('CRITICAL ERROR: AI FAILED! Syntax error at line 42');"
+    },
+    {
+      "id": "good-progressive-ui",
+      "title": "Progressive Disclosure UI",
+      "description": "Shows levels of complexity",
+      "prompt": "Create settings panel",
+      "good": "render() {\n  return `\n    <div class=\"essential\">Theme: [Light/Dark]</div>\n    ${showMore ? `<div class=\"common\">Font Size: [...]</div>` : ''}\n    ${showAdvanced ? `<div class=\"advanced\">Custom CSS: [...]</div>` : ''}\n  `;\n}",
+      "bad": "render() {\n  // Shows everything at once\n  return `[50 settings all visible immediately]`;\n}"
+    }
+  ],
+  
+  "metadata": {
+    "created": "2025-01-07",
+    "updated": "2025-01-07",
+    "version": "1.0.0",
+    "compatibility": "agentbrain@2.0+",
+    "tags": ["meta", "self-improvement", "dogfooding", "platform-development"],
+    "icon": "🔄"
+  },
+  
+  "conflicts": [],
+  "dependencies": [],
+  
+  "overrides": "supplement"
+}

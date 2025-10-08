@@ -45,6 +45,31 @@
     border-color: var(--vscode-focusBorder);
 }
 
+/* Quick prompt trigger button */
+.quick-prompt-trigger {
+    color: var(--vscode-button-foreground);
+    background: var(--vscode-button-background);
+    padding: 0.25rem 0.75rem;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.9em;
+    font-weight: 500;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.quick-prompt-trigger:hover {
+    background: var(--vscode-button-hoverBackground);
+    border-color: var(--vscode-focusBorder);
+}
+
+/* AI companion slot */
+#ai-companion-slot {
+    display: inline-flex;
+    align-items: center;
+}
+
 /* Floating filter menu - Checkbox-based UI with compact 3-column grid layout */
 .floating-filter-menu {
     position: absolute;

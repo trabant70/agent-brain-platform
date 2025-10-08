@@ -1,0 +1,340 @@
+/**
+ * Prompt Support Tab Styles
+ */
+
+/* Prompt Input Area */
+.prompt-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prompt-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  margin-bottom: 4px;
+}
+
+.prompt-textarea {
+  width: 100%;
+  min-height: 150px;
+  padding: 12px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 4px;
+  font-family: var(--vscode-font-family);
+  font-size: 13px;
+  resize: vertical;
+}
+
+.prompt-textarea:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: -1px;
+}
+
+.prompt-textarea::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+/* Agent Selector Row */
+.agent-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.agent-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  white-space: nowrap;
+}
+
+.agent-select {
+  flex: 1;
+  max-width: 300px;
+  padding: 6px 12px;
+  background: var(--vscode-dropdown-background);
+  color: var(--vscode-dropdown-foreground);
+  border: 1px solid var(--vscode-dropdown-border);
+  border-radius: 4px;
+  font-family: var(--vscode-font-family);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.agent-select:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: -1px;
+}
+
+/* Prompt Actions */
+.prompt-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-family: var(--vscode-font-family);
+  font-weight: 600;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+.btn:active {
+  opacity: 0.8;
+}
+
+.btn-primary {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.btn-primary:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.btn-secondary {
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+}
+
+.btn-secondary:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.btn-success {
+  background: #28a745;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #218838;
+}
+
+/* Knowledge Preview */
+.knowledge-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 100px;
+}
+
+.knowledge-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--vscode-descriptionForeground);
+  font-size: 13px;
+}
+
+.knowledge-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 13px;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--vscode-descriptionForeground);
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Knowledge Item */
+.knowledge-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.knowledge-item:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.knowledge-item-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.knowledge-item-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.knowledge-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.knowledge-item-type {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  text-transform: uppercase;
+}
+
+.knowledge-item-score {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vscode-charts-green);
+  flex-shrink: 0;
+}
+
+/* Enhanced Result */
+.enhanced-result {
+  margin-bottom: 16px;
+}
+
+.enhanced-output {
+  background: var(--vscode-textCodeBlock-background);
+  color: var(--vscode-editor-foreground);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  padding: 16px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
+  margin: 0;
+}
+
+.enhanced-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Prompt History */
+.prompt-history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.history-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--vscode-descriptionForeground);
+  font-size: 13px;
+}
+
+.history-item {
+  padding: 12px;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.history-item:hover {
+  background: var(--vscode-list-hoverBackground);
+  border-color: var(--vscode-focusBorder);
+}
+
+.history-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.history-item-agent {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--vscode-charts-blue);
+  text-transform: uppercase;
+}
+
+.history-item-time {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.history-item-prompt {
+  font-size: 13px;
+  color: var(--vscode-foreground);
+  line-height: 1.4;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .prompt-actions {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .agent-selector-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .agent-select {
+    max-width: 100%;
+  }
+
+  .enhanced-actions {
+    flex-direction: column;
+  }
+}
+
+/* Scrollbar Styling */
+.prompt-history::-webkit-scrollbar,
+.enhanced-output::-webkit-scrollbar {
+  width: 8px;
+}
+
+.prompt-history::-webkit-scrollbar-track,
+.enhanced-output::-webkit-scrollbar-track {
+  background: var(--vscode-scrollbarSlider-background);
+}
+
+.prompt-history::-webkit-scrollbar-thumb,
+.enhanced-output::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+  border-radius: 4px;
+}
+
+.prompt-history::-webkit-scrollbar-thumb:hover,
+.enhanced-output::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-activeBackground);
+}

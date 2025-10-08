@@ -30,6 +30,7 @@ export interface LearningPattern {
   confidenceScore?: number;
   autoFixable?: boolean;
   occurrences?: number;
+  createdAt?: Date;  // Timestamp when pattern was first learned
 }
 
 export interface LearningMetrics {

@@ -130,6 +130,36 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
           await this.loadTimelineForActiveFile(true);
           break;
 
+        // Phase 1: AI Companion message handlers
+        case 'enhancePrompt':
+          await this.handleEnhancePrompt(message.prompt, message.agent);
+          break;
+
+        case 'copyEnhancedPrompt':
+          await this.handleCopyPrompt(message.prompt, message.agent);
+          break;
+
+        case 'startSessionFromPrompt':
+          await this.handleStartSession(message.prompt, message.agent);
+          break;
+
+        case 'saveErrorLearning':
+          await this.handleSaveErrorLearning(message.learnings);
+          break;
+
+        case 'requestErrorFix':
+          await this.handleRequestErrorFix();
+          break;
+
+        case 'suppressTip':
+          await this.handleSuppressTip(message.ruleId);
+          break;
+
+        // Phase 2: ComparisonView message handlers
+        case 'useEnhancedPrompt':
+          await this.handleUseEnhancedPrompt(message.enhanced);
+          break;
+
         default:
       }
     } catch (error) {
@@ -345,6 +375,162 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
     );
 
     return htmlWithWebviewUris;
+  }
+
+  /**
+   * Phase 1: Handle prompt enhancement
+   */
+  private async handleEnhancePrompt(prompt: string, agent: string): Promise<void> {
+    try {
+      // TODO: Integrate with PromptEnhancer when extension.ts wiring is complete
+      // For now, send back a simple enhanced version
+      const enhanced = `${prompt}\n\nContext: Working in ${this.currentRepoPath}`;
+      const itemsUsed = 1;
+
+      this.sendMessage({
+        type: 'enhancedPrompt',
+        enhanced,
+        itemsUsed
+      });
+    } catch (error) {
+      logger.error(LogCategory.WEBVIEW, `Failed to enhance prompt: ${error}`, 'handleEnhancePrompt');
+    }
+  }
+
+  /**
+   * Phase 1: Handle copy enhanced prompt
+   */
+  private async handleCopyPrompt(prompt: string, agent: string): Promise<void> {
+    try {
+      await vscode.env.clipboard.writeText(prompt);
+      vscode.window.showInformationMessage(`Prompt copied to clipboard for ${agent}`);
+    } catch (error) {
+      vscode.window.showErrorMessage(`Failed to copy prompt: ${error}`);
+    }
+  }
+
+  /**
+   * Phase 1: Handle start session from prompt
+   */
+  private async handleStartSession(prompt: string, agent: string): Promise<void> {
+    try {
+      // Copy to clipboard
+      await vscode.env.clipboard.writeText(prompt);
+
+      // Show message with agent-specific guidance
+      const agentCommands: Record<string, string> = {
+        'claude': 'Open Claude and paste the prompt',
+        'copilot': 'Open GitHub Copilot Chat and paste the prompt',
+        'cursor': 'Open Cursor Chat and paste the prompt',
+        'unknown': 'Paste the prompt into your AI assistant'
+      };
+
+      const message = agentCommands[agent] || agentCommands['unknown'];
+      vscode.window.showInformationMessage(`✓ Prompt copied! ${message}`);
+    } catch (error) {
+      vscode.window.showErrorMessage(`Failed to start session: ${error}`);
+    }
+  }
+
+  /**
+   * Phase 1: Handle save error learning
+   */
+  private async handleSaveErrorLearning(learnings: string[]): Promise<void> {
+    try {
+      // TODO: Integrate with LearningStorage when extension.ts wiring is complete
+      logger.info(LogCategory.EXTENSION, `Saved ${learnings.length} error learnings`, 'handleSaveErrorLearning', learnings);
+      vscode.window.showInformationMessage(`✓ Saved ${learnings.length} mistake(s) to avoid`);
+    } catch (error) {
+      logger.error(LogCategory.EXTENSION, `Failed to save error learning: ${error}`, 'handleSaveErrorLearning');
+    }
+  }
+
+  /**
+   * Phase 1: Handle request error fix
+   */
+  private async handleRequestErrorFix(): Promise<void> {
+    try {
+      // Copy diagnostic info to clipboard for AI assistant
+      const editor = vscode.window.activeTextEditor;
+      if (editor) {
+        const diagnostics = vscode.languages.getDiagnostics(editor.document.uri);
+        const errorText = diagnostics
+          .map(d => `${d.message} at line ${d.range.start.line + 1}`)
+          .join('\n');
+
+        await vscode.env.clipboard.writeText(
+          `Please fix these errors:\n\n${errorText}\n\nIn file: ${editor.document.fileName}`
+        );
+
+        vscode.window.showInformationMessage('✓ Error details copied to clipboard. Paste into your AI assistant.');
+      }
+    } catch (error) {
+      logger.error(LogCategory.EXTENSION, `Failed to request error fix: ${error}`, 'handleRequestErrorFix');
+    }
+  }
+
+  /**
+   * Phase 1: Handle suppress tip
+   */
+  private async handleSuppressTip(ruleId: string): Promise<void> {
+    try {
+      // TODO: Integrate with GuidanceEngine when extension.ts wiring is complete
+      logger.info(LogCategory.EXTENSION, `Suppressed tip: ${ruleId}`, 'handleSuppressTip');
+    } catch (error) {
+      logger.error(LogCategory.EXTENSION, `Failed to suppress tip: ${error}`, 'handleSuppressTip');
+    }
+  }
+
+  /**
+   * Phase 2: Handle use enhanced prompt (from ComparisonView)
+   */
+  private async handleUseEnhancedPrompt(enhanced: string): Promise<void> {
+    try {
+      // Copy to clipboard
+      await vscode.env.clipboard.writeText(enhanced);
+
+      // Show success message with guidance
+      vscode.window.showInformationMessage(
+        '✓ Enhanced prompt copied! Paste it into your AI assistant to start working.',
+        'Open Terminal'
+      ).then(selection => {
+        if (selection === 'Open Terminal') {
+          vscode.commands.executeCommand('workbench.action.terminal.new');
+        }
+      });
+
+      logger.info(LogCategory.EXTENSION, 'Enhanced prompt copied from comparison view', 'handleUseEnhancedPrompt');
+    } catch (error) {
+      logger.error(LogCategory.EXTENSION, `Failed to use enhanced prompt: ${error}`, 'handleUseEnhancedPrompt');
+      vscode.window.showErrorMessage(`Failed to copy enhanced prompt: ${error}`);
+    }
+  }
+
+  /**
+   * Add a runtime event to the timeline
+   * Used for real-time session tracking
+   *
+   * @param event - CanonicalEvent to add (e.g., from session finalization)
+   */
+  public addRuntimeEvent(event: CanonicalEvent): void {
+    try {
+      logger.info(LogCategory.EXTENSION, `Adding runtime event to timeline: ${event.type}`, 'addRuntimeEvent', {
+        eventId: event.id,
+        title: event.title
+      });
+
+      // Add event to orchestrator's runtime events
+      this.orchestrator.addRuntimeEvent(event);
+
+      // If webview is visible, refresh to show the new event
+      if (this._view && this.currentRepoPath) {
+        this.loadTimelineForActiveFile(true).catch(error => {
+          logger.error(LogCategory.EXTENSION, `Failed to refresh timeline after adding runtime event: ${error}`, 'addRuntimeEvent');
+        });
+      }
+    } catch (error) {
+      logger.error(LogCategory.EXTENSION, `Failed to add runtime event: ${error}`, 'addRuntimeEvent');
+    }
   }
 
   /**

@@ -4,7 +4,7 @@
  */
 
 import { CanonicalEvent, EventType, Author } from '../../events';
-import { ADR } from '../core/adrs/types';
+import { ADR } from '../../knowledge/adrs/types';
 
 export class ADRConverter {
   /**

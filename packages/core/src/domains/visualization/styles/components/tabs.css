@@ -1,0 +1,161 @@
+/**
+ * Tab Navigation Styles
+ * Multi-tab UI system for Agent Brain Platform
+ */
+
+/* Tab Navigation Bar */
+#tab-navigation {
+  display: flex;
+  gap: 0;
+  background: var(--vscode-editorGroupHeader-tabsBackground);
+  border-bottom: 1px solid var(--vscode-editorGroupHeader-tabsBorder);
+  padding: 0;
+  margin: 0;
+  height: 35px;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Tab Buttons */
+.tab-button {
+  background: var(--vscode-tab-inactiveBackground);
+  color: var(--vscode-tab-inactiveForeground);
+  border: none;
+  border-right: 1px solid var(--vscode-tab-border);
+  padding: 0 16px;
+  font-size: 13px;
+  font-family: var(--vscode-font-family);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.1s ease, color 0.1s ease;
+  white-space: nowrap;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.tab-button:hover {
+  background: var(--vscode-tab-hoverBackground);
+  color: var(--vscode-tab-hoverForeground);
+}
+
+.tab-button.active {
+  background: var(--vscode-tab-activeBackground);
+  color: var(--vscode-tab-activeForeground);
+  border-bottom: 2px solid var(--vscode-tab-activeBorder, var(--vscode-focusBorder));
+}
+
+.tab-button:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: -1px;
+}
+
+/* Tab Content Containers */
+#tab-contents {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+
+.tab-content {
+  display: none;
+  flex: 1;
+  overflow: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.tab-content.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Timeline Tab Specific */
+#tab-timeline {
+  overflow: hidden; /* D3 handles its own scrolling */
+}
+
+#tab-timeline #timeline-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Other Tabs - Allow scrolling */
+#tab-prompt,
+#tab-config,
+#tab-knowledge,
+#tab-support {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px;
+}
+
+/* Tab Content Sections */
+.tab-section {
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.tab-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab-section-description {
+  font-size: 13px;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 12px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .tab-button {
+    min-width: 80px;
+    font-size: 12px;
+    padding: 0 12px;
+  }
+
+  #tab-prompt,
+  #tab-config,
+  #tab-knowledge,
+  #tab-support {
+    padding: 12px;
+  }
+
+  .tab-section {
+    padding: 12px;
+  }
+}
+
+/* Scrollbar Styling for Tab Content */
+.tab-content::-webkit-scrollbar {
+  width: 10px;
+}
+
+.tab-content::-webkit-scrollbar-track {
+  background: var(--vscode-scrollbarSlider-background);
+}
+
+.tab-content::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+  border-radius: 5px;
+}
+
+.tab-content::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-activeBackground);
+}

@@ -1,0 +1,474 @@
+/**
+ * Prompt Panels Styles
+ *
+ * Styles for Quick Prompt Panel, AI Companion Dot, and Error Recovery Panel
+ */
+
+/* ============================================================================
+   Quick Prompt Panel
+   ============================================================================ */
+
+.quick-prompt-panel {
+  position: fixed;
+  right: 20px;
+  top: 80px;
+  width: 500px;
+  max-width: calc(100vw - 40px);
+  max-height: 600px;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  animation: slideInRight 0.3s ease-out;
+  overflow: hidden;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(520px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.panel-header {
+  background: var(--vscode-editorGroupHeader-tabsBackground);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  color: var(--vscode-foreground);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.close-btn:hover {
+  opacity: 1;
+}
+
+.panel-content {
+  padding: 16px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.panel-content label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--vscode-foreground);
+}
+
+.panel-content textarea {
+  width: 100%;
+  padding: 10px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 4px;
+  font-family: var(--vscode-font-family);
+  font-size: 14px;
+  resize: vertical;
+  min-height: 80px;
+  box-sizing: border-box;
+}
+
+.panel-content textarea:focus {
+  outline: none;
+  border-color: var(--vscode-focusBorder);
+}
+
+.knowledge-preview {
+  margin: 16px 0;
+  padding: 12px;
+  background: var(--vscode-textBlockQuote-background);
+  border-left: 3px solid var(--vscode-textBlockQuote-border);
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.knowledge-preview #knowledge-count {
+  font-weight: 600;
+  color: var(--vscode-textLink-foreground);
+}
+
+.knowledge-actions {
+  margin-top: 8px;
+}
+
+.knowledge-actions a {
+  color: var(--vscode-textLink-foreground);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.knowledge-actions a:hover {
+  text-decoration: underline;
+}
+
+.agent-selection {
+  margin: 16px 0;
+}
+
+.radio-group {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-weight: normal;
+  margin-bottom: 0;
+}
+
+.radio-group input[type="radio"] {
+  cursor: pointer;
+}
+
+.actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+.primary-btn {
+  flex: 1;
+  padding: 10px 16px;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.primary-btn:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.secondary-btn {
+  flex: 1;
+  padding: 10px 16px;
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.secondary-btn:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.secondary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ============================================================================
+   AI Companion Dot
+   ============================================================================ */
+
+.ai-companion-dot {
+  position: relative;
+  display: inline-block;
+}
+
+.dot-indicator {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  transition: transform 0.2s;
+}
+
+.dot-indicator:hover {
+  transform: scale(1.1);
+}
+
+/* Pulse animations for different priorities */
+.dot-indicator.pulse-critical {
+  animation: pulseCritical 1.5s infinite;
+}
+
+.dot-indicator.pulse-helpful {
+  animation: pulseHelpful 2s infinite;
+}
+
+.dot-indicator.pulse-informational {
+  animation: pulseInfo 2.5s infinite;
+}
+
+@keyframes pulseCritical {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+}
+
+@keyframes pulseHelpful {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes pulseInfo {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+.tip-popup {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 12px;
+  min-width: 300px;
+  max-width: 400px;
+  background: var(--vscode-editorHoverWidget-background);
+  border: 1px solid var(--vscode-editorHoverWidget-border);
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tip-content {
+  margin-bottom: 12px;
+  line-height: 1.5;
+  color: var(--vscode-foreground);
+}
+
+.tip-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.tip-btn {
+  padding: 6px 12px;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.tip-btn:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.tip-btn.secondary {
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+}
+
+.tip-btn.secondary:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+/* ============================================================================
+   Error Recovery Panel
+   ============================================================================ */
+
+.error-recovery-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  max-width: 90vw;
+  max-height: 80vh;
+  background: var(--vscode-editor-background);
+  border: 2px solid var(--vscode-errorForeground);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  z-index: 10001;
+  animation: zoomIn 0.3s ease-out;
+  overflow: hidden;
+}
+
+@keyframes zoomIn {
+  from {
+    transform: translate(-50%, -50%) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+}
+
+.error-recovery-content {
+  padding: 0;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.error-details {
+  padding: 16px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.error-message {
+  margin: 12px 0;
+  padding: 12px;
+  background: var(--vscode-textCodeBlock-background);
+  border-radius: 4px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 13px;
+  color: var(--vscode-errorForeground);
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+.error-file {
+  margin: 8px 0 0 0;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.similar-errors {
+  padding: 16px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.similar-errors ul {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 0 0;
+}
+
+.similar-errors li {
+  margin: 8px 0;
+}
+
+.similar-errors label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.similar-errors label:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.recovery-actions {
+  padding: 16px;
+}
+
+.action-group {
+  margin-bottom: 20px;
+}
+
+.action-group:last-child {
+  margin-bottom: 0;
+}
+
+.action-group p {
+  margin: 0 0 8px 0;
+  font-weight: 500;
+}
+
+.action-group .actions {
+  margin-top: 8px;
+}
+
+/* ============================================================================
+   Responsive Adjustments
+   ============================================================================ */
+
+@media (max-width: 600px) {
+  .quick-prompt-panel {
+    right: 10px;
+    left: 10px;
+    width: auto;
+    top: 60px;
+  }
+
+  .error-recovery-panel {
+    width: 95vw;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .primary-btn,
+  .secondary-btn {
+    width: 100%;
+  }
+}

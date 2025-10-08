@@ -2,7 +2,7 @@
   "name": "agent-brain-platform",
   "displayName": "Agent Brain Platform",
   "description": "Unified platform for AI-assisted development with timeline visualization, architectural guidance, and pathway testing",
-  "version": "0.1.24",
+  "version": "0.1.31",
   "publisher": "agent-brain-local",
   "icon": "images/timeline_large.png",
   "engines": {
@@ -34,6 +34,71 @@
         "title": "Record Architectural Decision",
         "category": "Timeline",
         "icon": "$(note)"
+      },
+      {
+        "command": "agentBrain.newPrompt",
+        "title": "New Enhanced Prompt",
+        "category": "Agent Brain",
+        "icon": "$(hubot)"
+      },
+      {
+        "command": "agentBrain.endSession",
+        "title": "End Session",
+        "category": "Agent Brain",
+        "icon": "$(stop-circle)"
+      },
+      {
+        "command": "agentBrain.showStatus",
+        "title": "Show Session Status",
+        "category": "Agent Brain",
+        "icon": "$(info)"
+      },
+      {
+        "command": "agentBrain.refreshKnowledge",
+        "title": "Refresh Knowledge Base",
+        "category": "Agent Brain",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "agentBrain.toggleKnowledgeItem",
+        "title": "Toggle Knowledge Item",
+        "category": "Agent Brain"
+      },
+      {
+        "command": "agentBrain.showKnowledgeHealth",
+        "title": "Show Knowledge Health",
+        "category": "Agent Brain",
+        "icon": "$(pulse)"
+      },
+      {
+        "command": "agentBrain.addProjectRule",
+        "title": "Add Project Rule (ADR)",
+        "category": "Agent Brain",
+        "icon": "$(note)"
+      },
+      {
+        "command": "agent-brain.setupProjectProfile",
+        "title": "Setup Project Profile",
+        "category": "Agent Brain",
+        "icon": "$(rocket)"
+      },
+      {
+        "command": "agentBrain.addContextRule",
+        "title": "Add Project Guideline",
+        "category": "Agent Brain",
+        "icon": "$(note)"
+      },
+      {
+        "command": "agentBrain.importPackage",
+        "title": "Import Expertise Package",
+        "category": "Agent Brain",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "agentBrain.exportPackage",
+        "title": "Export Expertise Package",
+        "category": "Agent Brain",
+        "icon": "$(cloud-upload)"
       }
     ],
     "viewsContainers": {
@@ -58,6 +123,11 @@
           "id": "repoTimeline.welcomeView",
           "name": "Getting Started",
           "type": "webview"
+        },
+        {
+          "id": "agentBrain.knowledgeTree",
+          "name": "Knowledge Base",
+          "when": "workspaceFolderCount != 0"
         }
       ],
       "repoTimelinePanel": [
@@ -74,6 +144,11 @@
         "key": "ctrl+shift+t",
         "mac": "cmd+shift+t",
         "when": "!terminalFocus"
+      },
+      {
+        "command": "agentBrain.newPrompt",
+        "key": "ctrl+shift+a",
+        "mac": "cmd+shift+a"
       }
     ],
     "menus": {
@@ -87,6 +162,30 @@
           "command": "repoTimeline.recordADR",
           "when": "view == repoTimeline.evolutionView",
           "group": "navigation"
+        },
+        {
+          "command": "agentBrain.refreshKnowledge",
+          "when": "view == agentBrain.knowledgeTree",
+          "group": "navigation"
+        },
+        {
+          "command": "agentBrain.showKnowledgeHealth",
+          "when": "view == agentBrain.knowledgeTree",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "agentBrain.toggleKnowledgeItem",
+          "when": "view == agentBrain.knowledgeTree && viewItem == adr-item"
+        },
+        {
+          "command": "agentBrain.toggleKnowledgeItem",
+          "when": "view == agentBrain.knowledgeTree && viewItem == pattern-item"
+        },
+        {
+          "command": "agentBrain.toggleKnowledgeItem",
+          "when": "view == agentBrain.knowledgeTree && viewItem == learning-item"
         }
       ],
       "commandPalette": [

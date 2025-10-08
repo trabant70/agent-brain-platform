@@ -16,3 +16,6 @@ export * from './github';
 
 // Intelligence provider (patterns & learnings)
 export * from './intelligence';
+
+// Session provider (Agent Brain sessions)
+export * from './sessions';

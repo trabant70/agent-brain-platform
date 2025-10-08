@@ -28,7 +28,7 @@ import {
   CachedRepoData,
   ProviderContext
 } from '../../events';
-import { ProviderRegistry, GitProvider, GitHubProvider } from '../../providers';
+import { ProviderRegistry, GitProvider, GitHubProvider, SessionEventProvider } from '../../providers';
 import { FilterStateManager } from '../filters/FilterStateManager';
 import { EventMatcher } from './EventMatcher';
 import { logger, LogCategory, LogPathway, createContextLogger } from '../../../infrastructure/logging';
@@ -64,6 +64,9 @@ export class DataOrchestrator {
 
   // Current state
   private currentRepoPath: string = '';
+
+  // Runtime events - added in real-time (e.g., from sessions)
+  private runtimeEvents: CanonicalEvent[] = [];
 
   constructor(options: DataOrchestratorOptions = {}) {
     this.cacheTTL = options.cacheTTL || 300000; // 5 minutes default
@@ -101,6 +104,23 @@ export class DataOrchestrator {
       enabled: true,
       priority: 1
     });
+
+    // Register Session Event provider (always enabled)
+    this.log.info(LogCategory.ORCHESTRATION, 'Registering Session Event provider', 'initialize');
+    try {
+      const sessionProvider = new SessionEventProvider();
+      await this.providerRegistry.registerProvider(sessionProvider, {
+        enabled: true,
+        priority: 2,
+        settings: {
+          storagePath: this.storagePath
+        }
+      });
+      this.log.info(LogCategory.ORCHESTRATION, 'Session Event provider registered successfully', 'initialize');
+    } catch (error) {
+      this.log.error(LogCategory.ORCHESTRATION, `Failed to register Session Event provider: ${error}`, 'initialize');
+      // Continue without session events - not critical
+    }
 
     // Register GitHub provider (feature flag protected)
     const featureFlags = FeatureFlagManager.getInstance();
@@ -156,7 +176,17 @@ export class DataOrchestrator {
 
     // Fetch from providers
     this.log.info(LogCategory.ORCHESTRATION, 'Fetching fresh events from providers', 'getEvents', undefined, LogPathway.DATA_INGESTION);
-    const events = await this.fetchFromProviders(repoPath);
+    const providerEvents = await this.fetchFromProviders(repoPath);
+
+    // Merge provider events with runtime events
+    const events = [...providerEvents, ...this.runtimeEvents];
+
+    // Sort by timestamp (most recent first)
+    events.sort((a, b) => {
+      const timeA = a.timestamp instanceof Date ? a.timestamp.getTime() : new Date(a.timestamp).getTime();
+      const timeB = b.timestamp instanceof Date ? b.timestamp.getTime() : new Date(b.timestamp).getTime();
+      return timeB - timeA;
+    });
 
     // Compute filter options
     const filterOptions = this.computeFilterOptions(events);
@@ -171,7 +201,7 @@ export class DataOrchestrator {
 
     this.currentRepoPath = repoPath;
 
-    this.log.info(LogCategory.ORCHESTRATION, `Cached ${events.length} events`, 'getEvents', undefined, LogPathway.DATA_INGESTION);
+    this.log.info(LogCategory.ORCHESTRATION, `Cached ${events.length} events (${providerEvents.length} from providers + ${this.runtimeEvents.length} runtime)`, 'getEvents', undefined, LogPathway.DATA_INGESTION);
 
     return events;
   }
@@ -670,11 +700,47 @@ export class DataOrchestrator {
   }
 
   /**
+   * Add a runtime event (e.g., from session finalization)
+   * Runtime events are merged with provider events in real-time
+   *
+   * @param event - CanonicalEvent to add
+   */
+  addRuntimeEvent(event: CanonicalEvent): void {
+    this.log.info(
+      LogCategory.ORCHESTRATION,
+      `Adding runtime event: ${event.type} - ${event.title}`,
+      'addRuntimeEvent',
+      { eventId: event.id, type: event.type }
+    );
+
+    // Add to runtime events array
+    this.runtimeEvents.push(event);
+
+    // Invalidate cache to force re-merge with runtime events
+    if (this.currentRepoPath) {
+      this.invalidateCache(this.currentRepoPath);
+    }
+  }
+
+  /**
+   * Clear all runtime events
+   * Useful for testing or resetting state
+   */
+  clearRuntimeEvents(): void {
+    this.log.info(LogCategory.ORCHESTRATION, `Clearing ${this.runtimeEvents.length} runtime events`, 'clearRuntimeEvents');
+    this.runtimeEvents = [];
+    if (this.currentRepoPath) {
+      this.invalidateCache(this.currentRepoPath);
+    }
+  }
+
+  /**
    * Dispose orchestrator resources
    */
   async dispose(): Promise<void> {
     this.log.info(LogCategory.ORCHESTRATION, 'Disposing...', 'dispose');
     this.cache.clear();
+    this.runtimeEvents = [];
     // Provider registry cleanup would go here
   }
 }

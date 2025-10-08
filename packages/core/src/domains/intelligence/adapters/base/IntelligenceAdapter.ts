@@ -4,7 +4,7 @@
  * Intelligence adapters are INPUT mechanisms that feed data into the learning system.
  */
 
-import { LearningPattern, TestFailure } from '../../core/learning/types';
+import { LearningPattern, TestFailure } from '../../../knowledge/learning/types';
 
 export interface IIntelligenceAdapter {
   readonly id: string;

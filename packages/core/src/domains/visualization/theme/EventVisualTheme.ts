@@ -191,7 +191,7 @@ export class EventVisualTheme {
     };
 
     /**
-     * Intelligence events (learnings, patterns, ADRs)
+     * Intelligence events (learnings, patterns, ADRs, Agent Brain sessions)
      * Shape represents event type, semantic colors distinguish intelligence sources
      */
     private static readonly INTELLIGENCE_EVENTS: Record<string, EventTypeVisual> = {
@@ -212,6 +212,12 @@ export class EventVisualTheme {
             semanticColor: '#E67E22',  // Orange - architectural decision
             icon: '📐',
             label: 'ADR Recorded'
+        },
+        'agent-session': {
+            shape: 'star',
+            semanticColor: '#22C55E',  // Green - AI-assisted work completed
+            icon: '🤖',
+            label: 'Agent Brain Session'
         }
     };
 
@@ -563,6 +569,7 @@ export class EventVisualTheme {
         if (normalized === 'learning-stored') return 8;
         if (normalized === 'pattern-detected') return 8;
         if (normalized === 'adr-recorded') return 9;  // ADRs are architectural - very important
+        if (normalized === 'agent-session') return 9;  // Agent Brain sessions - critical milestone
 
         // Default: middle tier
         return 5;

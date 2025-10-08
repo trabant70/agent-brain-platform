@@ -5,7 +5,7 @@
 
 import { Server as SocketIOServer } from 'socket.io';
 import { Server as HTTPServer } from 'http';
-import { LearningPattern, TestFailure, LearningMetrics } from '../../core/learning/types';
+import { LearningPattern, TestFailure, LearningMetrics } from '../../../knowledge/learning/types';
 
 export interface WebSocketEvents {
   // Learning events

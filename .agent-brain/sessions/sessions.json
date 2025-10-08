@@ -1,0 +1,20 @@
+[
+  {
+    "id": "session-1759880000595-cih7v8o",
+    "prompt": "Testing session tracking feature",
+    "agentType": "claude",
+    "startTime": "2025-10-07T23:33:20.595Z",
+    "status": "completed",
+    "activities": [
+      {
+        "id": "act-1759880029223-dlgtixc",
+        "type": "file-create",
+        "timestamp": "2025-10-07T23:33:49.224Z",
+        "metadata": {
+          "filePath": "docs/implementation_analysis/testing_session.md"
+        }
+      }
+    ],
+    "endTime": "2025-10-07T23:35:10.447Z"
+  }
+]

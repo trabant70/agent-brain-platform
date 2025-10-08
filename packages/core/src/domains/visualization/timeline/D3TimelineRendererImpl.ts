@@ -41,31 +41,24 @@ export class D3TimelineRendererImpl extends BaseTimelineRenderer {
             `Element(id=${this.container.id || 'none'}, style.display=${this.container.style.display})` :
             String(this.container);
 
-        console.log(`D3TimelineRendererImpl: [INIT-${Date.now()}] initializeRenderer called`);
-        console.log(`D3TimelineRendererImpl: [INIT-${Date.now()}] container:`, containerInfo);
 
         if (!this.container) {
-            console.error('D3TimelineRendererImpl: Container is required for D3 Timeline Renderer');
             throw new Error('Container is required for D3 Timeline Renderer');
         }
 
         // Check if this is a test container (hidden)
         const isTestContainer = this.container instanceof HTMLElement &&
             this.container.style.display === 'none';
-        console.log(`D3TimelineRendererImpl: [INIT-${Date.now()}] isTestContainer:`, isTestContainer);
 
         // Create container structure for D3 renderer
-        console.log(`D3TimelineRendererImpl: [INIT-${Date.now()}] Setting up container structure...`);
         this.setupContainerStructure();
 
         // Initialize D3 renderer with event handlers
-        console.log('D3TimelineRendererImpl: Initializing D3 renderer...');
         const d3Options = {
             timelineSelector: '#visualization',
             rangeSelector: '#range-selector',
             legendSelector: '#legend-items',
             onEventHover: (event: Event, d: any) => {
-                console.log('D3TimelineRendererImpl: [D3TRI] onEventHover', d?.title || d?.type);
                 // Use PopupController handlers if available, fallback to local handlers
                 if (this.eventHandlers?.onEventHover) {
                     this.eventHandlers.onEventHover(event, d);
@@ -74,7 +67,6 @@ export class D3TimelineRendererImpl extends BaseTimelineRenderer {
                 }
             },
             onEventLeave: (event: Event, d: any) => {
-                console.log('D3TimelineRendererImpl: [D3TRI] onEventLeave', d?.title || d?.type);
                 if (this.eventHandlers?.onEventLeave) {
                     this.eventHandlers.onEventLeave(event, d);
                 } else {
@@ -82,7 +74,6 @@ export class D3TimelineRendererImpl extends BaseTimelineRenderer {
                 }
             },
             onEventClick: (event: Event, d: any) => {
-                console.log('D3TimelineRendererImpl: [D3TRI] onEventClick', d?.title || d?.type);
                 if (this.eventHandlers?.onEventClick) {
                     this.eventHandlers.onEventClick(event, d);
                 } else {
@@ -94,26 +85,15 @@ export class D3TimelineRendererImpl extends BaseTimelineRenderer {
         };
 
         this.d3Renderer = new D3TimelineRenderer(d3Options);
-        console.log('D3TimelineRendererImpl: D3 renderer created successfully');
-        console.log('D3TimelineRendererImpl: initializeRenderer completed');
     }
 
     protected async renderData(data: ProcessedTimelineData): Promise<void> {
         const rendererId = `RENDER-${Date.now()}`;
-        console.log(`D3TimelineRendererImpl: [${rendererId}] renderData called with data:`, data);
-        console.log(`D3TimelineRendererImpl: [${rendererId}] visibleEvents count:`, data.visibleEvents?.length);
-        console.log(`D3TimelineRendererImpl: [${rendererId}] allEvents count:`, data.allEvents?.length);
-        console.log(`D3TimelineRendererImpl: [${rendererId}] visibleDateRange:`, data.visibleDateRange);
-        console.log(`D3TimelineRendererImpl: [${rendererId}] fullDateRange:`, data.fullDateRange);
-        console.log(`D3TimelineRendererImpl: [${rendererId}] impactDomain:`, data.impactDomain);
-        console.log(`D3TimelineRendererImpl: [${rendererId}] summaryStats:`, data.summaryStats);
 
         if (!this.d3Renderer) {
-            console.error('D3TimelineRendererImpl: D3 renderer not initialized');
             throw new Error('D3 renderer not initialized');
         }
 
-        console.log('D3TimelineRendererImpl: d3Renderer exists, proceeding with render...');
 
         // Update current time range
         this.currentTimeRange = data.visibleDateRange;
@@ -123,32 +103,25 @@ export class D3TimelineRendererImpl extends BaseTimelineRenderer {
             // The render() method handles sizing internally (lines 284-285 in TimelineRenderer.ts)
 
             // Render main timeline
-            console.log('D3TimelineRendererImpl: Calling d3Renderer.render...');
             this.d3Renderer.render(
                 data.visibleEvents,
                 data.visibleDateRange,
                 data.impactDomain,
                 this.options.animations !== false
             );
-            console.log('D3TimelineRendererImpl: d3Renderer.render completed');
 
             // Render range selector
-            console.log('D3TimelineRendererImpl: Calling d3Renderer.renderRangeSelector...');
             this.d3Renderer.renderRangeSelector(
                 data.allEvents,
                 data.fullDateRange
             );
-            console.log('D3TimelineRendererImpl: d3Renderer.renderRangeSelector completed');
 
             // Update brush range if set
             if (this.currentBrushRange) {
-                console.log('D3TimelineRendererImpl: Updating brush range...');
                 this.d3Renderer.updateBrushRange(this.currentBrushRange);
             }
 
-            console.log('D3TimelineRendererImpl: renderData completed successfully');
         } catch (error) {
-            console.error('D3TimelineRendererImpl: Error in renderData:', error);
             throw error;
         }
     }
@@ -205,7 +178,6 @@ export class D3TimelineRendererImpl extends BaseTimelineRenderer {
      * Update viewport implementation
      */
     updateViewport(timeRange: [Date, Date]): void {
-        console.log('D3TimelineRendererImpl: Updating viewport to:', timeRange);
 
         if (!this.d3Renderer) {
             throw new Error('D3 renderer not initialized');
@@ -264,7 +236,6 @@ export class D3TimelineRendererImpl extends BaseTimelineRenderer {
 
     // Event handlers that bridge to the abstract interface
     private handleEventHover(event: Event, d: any): void {
-        console.log('D3TimelineRendererImpl: [D3TRI] handleEventHover - emitting hover event');
         const rendererEvent: RendererEvent = {
             type: 'hover',
             event: { type: 'mouseenter', originalEvent: event, data: d },
@@ -281,7 +252,6 @@ export class D3TimelineRendererImpl extends BaseTimelineRenderer {
     }
 
     private handleEventLeave(event: Event, d: any): void {
-        console.log('D3TimelineRendererImpl: [D3TRI] handleEventLeave - emitting leave event');
         const rendererEvent: RendererEvent = {
             type: 'hover',
             event: { type: 'mouseleave', originalEvent: event, data: d },
@@ -297,7 +267,6 @@ export class D3TimelineRendererImpl extends BaseTimelineRenderer {
     }
 
     private handleEventClick(event: Event, d: any): void {
-        console.log('D3TimelineRendererImpl: [D3TRI] handleEventClick - emitting click event');
         const rendererEvent: RendererEvent = {
             type: 'click',
             event: event,
@@ -351,7 +320,6 @@ export class D3TimelineRendererImpl extends BaseTimelineRenderer {
     private setupContainerStructure(): void {
         if (!this.container) return;
 
-        console.log('D3TimelineRendererImpl: Setting up container structure for container:', this.container.id);
 
         // Check if we have the existing timeline.html structure
         const existingVisualization = document.getElementById('visualization');
@@ -359,12 +327,10 @@ export class D3TimelineRendererImpl extends BaseTimelineRenderer {
         const existingLegend = document.getElementById('legend-items');
 
         if (existingVisualization && existingRangeSelector && existingLegend) {
-            console.log('D3TimelineRendererImpl: Using existing HTML template structure');
             // Use the existing HTML template structure - no need to create new DOM
             return;
         }
 
-        console.log('D3TimelineRendererImpl: Creating fallback DOM structure');
 
         // Create the necessary container structure for D3 renderer (fallback only)
         this.container.innerHTML = `

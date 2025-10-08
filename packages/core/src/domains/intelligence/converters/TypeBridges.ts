@@ -8,8 +8,8 @@
  */
 
 import { RuntimePattern } from '../adapters/base/RuntimeTypes';
-import { EnginePattern, EnginePatternCategory, EnginePatternSeverity } from '../core/patterns/types';
-import { LearningPattern } from '../core/learning/types';
+import { EnginePattern, EnginePatternCategory, EnginePatternSeverity } from '../../knowledge/patterns/types';
+import { LearningPattern } from '../../knowledge/learning/types';
 
 export class TypeBridges {
   /**

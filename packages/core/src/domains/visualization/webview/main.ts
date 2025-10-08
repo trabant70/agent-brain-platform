@@ -145,6 +145,51 @@ function setupMessageHandling(): void {
                     handleColorModeChanged(message.mode, message.enabledProviders);
                     break;
 
+                // Phase 1: AI Companion messages
+                case 'enhancedPrompt':
+                    if (window.timelineApp) {
+                        window.timelineApp.updateEnhancedPrompt(message.enhanced, message.itemsUsed);
+                    }
+                    break;
+
+                case 'showTip':  // From GuidanceEngine via TimelineProvider
+                case 'showCompanionTip':
+                    if (window.timelineApp) {
+                        window.timelineApp.showCompanionTip(message.tip);
+                    }
+                    break;
+
+                case 'showError':  // From ErrorDetector via TimelineProvider
+                case 'showErrorRecovery':
+                    if (window.timelineApp) {
+                        window.timelineApp.showErrorRecovery(message.error, message.similarErrors || []);
+                    }
+                    break;
+
+                // Phase 2: Comparison View
+                case 'showComparison':
+                    if (window.timelineApp) {
+                        window.timelineApp.showComparisonView(
+                            message.original,
+                            message.enhanced,
+                            message.metadata
+                        );
+                    }
+                    break;
+
+                // Prompt Support Tab messages
+                case 'knowledgePreview':
+                    if (window.timelineApp) {
+                        window.timelineApp.updatePromptKnowledgePreview(message.items);
+                    }
+                    break;
+
+                case 'promptEnhanced':
+                    if (window.timelineApp) {
+                        window.timelineApp.updatePromptEnhancedResult(message.enhanced, message.itemsUsed);
+                    }
+                    break;
+
                 case 'error':
                     console.error('[Webview] Error from extension:', message.message);
                     showError(message.message);

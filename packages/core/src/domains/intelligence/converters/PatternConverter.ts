@@ -3,7 +3,7 @@
  * Converts between LearningPattern (rich learning type) and RuntimePattern (runtime analysis type)
  */
 
-import { LearningPattern } from '../core/learning/types';
+import { LearningPattern } from '../../knowledge/learning/types';
 import { RuntimePattern } from '../adapters/base/RuntimeTypes';
 
 export class PatternConverter {

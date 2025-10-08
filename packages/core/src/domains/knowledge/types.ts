@@ -23,6 +23,9 @@ export interface Knowledge {
 
   /** Learning knowledge (lessons from experience) */
   learnings: LearningKnowledge[];
+
+  /** Context rules (project-specific guidelines) - Phase 2 */
+  contextRules?: ContextRuleKnowledge[];
 }
 
 /**
@@ -92,6 +95,9 @@ export interface ADRKnowledge {
 
   /** ADRs that this supersedes */
   supersedes?: number[];
+
+  /** Tags for categorization */
+  tags?: string[];
 }
 
 /**
@@ -185,6 +191,36 @@ export interface KnowledgeQueryOptions {
 
   /** Sort order */
   sortBy?: 'relevance' | 'date' | 'name';
+}
+
+/**
+ * Context Rule Knowledge (Phase 2)
+ * Represents project-specific rules and guidelines
+ */
+export interface ContextRuleKnowledge {
+  /** Unique rule identifier */
+  id: string;
+
+  /** The rule or guideline */
+  rule: string;
+
+  /** Source of the rule */
+  source: 'user' | 'learned' | 'inferred';
+
+  /** Confidence in this rule (0.0-1.0) */
+  confidence: number;
+
+  /** How many times this rule has been applied */
+  appliedCount: number;
+
+  /** When this rule was created */
+  createdAt: Date;
+
+  /** When this rule was last applied */
+  lastApplied?: Date;
+
+  /** How relevant this rule is to current context (0.0-1.0) */
+  relevanceScore?: number;
 }
 
 /**

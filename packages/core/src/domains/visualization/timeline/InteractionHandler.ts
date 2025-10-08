@@ -42,77 +42,59 @@ export class InteractionHandler {
     private initialize(selector: string): void {
         const d3 = (window as any).d3;
 
-        console.log(`[InteractionHandler] Initializing with selector: ${selector}`);
 
         if (!d3) {
-            console.error('InteractionHandler: D3.js not loaded');
             return;
         }
 
         // Setup container
         this.container = d3.select(selector);
         if (this.container.empty()) {
-            console.error('InteractionHandler: Container not found:', selector);
             return;
         }
 
         // Log container dimensions for debugging
         const containerNode = this.container.node();
         const rect = containerNode?.getBoundingClientRect();
-        console.log('[InteractionHandler] Container dimensions:', rect);
-        console.log('[InteractionHandler] Container empty?', this.container.empty());
 
         // Create or select SVG
         this.svg = this.container.select('svg#range-svg');
-        console.log('[InteractionHandler] SVG found via select:', !this.svg.empty());
 
         if (this.svg.empty()) {
-            console.log('[InteractionHandler] Creating new SVG element');
             this.svg = this.container.append('svg')
                 .attr('id', 'range-svg')
                 .style('width', '100%')
                 .style('height', '100%')
                 .style('display', 'block');
-            console.log('[InteractionHandler] SVG created');
         } else {
-            console.log('[InteractionHandler] Using existing SVG element');
         }
 
         const svgNode = this.svg.node();
         const svgRect = svgNode?.getBoundingClientRect();
-        console.log('[InteractionHandler] SVG dimensions:', svgRect);
-        console.log('[InteractionHandler] SVG setup complete');
 
         // Create main group
-        console.log('[InteractionHandler] Creating SVG groups...');
         this.rangeGroup = this.svg.append('g')
             .attr('class', 'range-group')
             .attr('transform', `translate(${this.margin.left},${this.margin.top})`);
-        console.log('[InteractionHandler] Range group created');
 
         // Create layers in z-order (first = bottom, last = top)
         this.rangeBarsGroup = this.rangeGroup.append('g')
             .attr('class', 'range-bars-layer');
-        console.log('[InteractionHandler] Bars layer created');
 
         this.rangeAxisGroup = this.rangeGroup.append('g')
             .attr('class', 'range-axis-layer');
-        console.log('[InteractionHandler] Axis layer created');
 
         this.brushGroup = this.rangeGroup.append('g')
             .attr('class', 'brush-layer');
-        console.log('[InteractionHandler] Brush layer created');
 
         // Setup scales
         this.xScale = d3.scaleTime();
         this.yScale = d3.scaleLinear();
-        console.log('[InteractionHandler] Scales initialized');
 
         // Initial resize to set dimensions
         this.resize();
 
         this.isInitialized = true;
-        console.log('[InteractionHandler] Initialization complete');
     }
 
     resize(): void {
@@ -128,7 +110,6 @@ export class InteractionHandler {
         const actualWidth = Math.max(width || 800, 200);
         const actualHeight = Math.max(height || 80, 80);
 
-        console.log('InteractionHandler resize:', { actualWidth, actualHeight });
 
         this.svg
             .attr('width', actualWidth)
@@ -159,11 +140,6 @@ export class InteractionHandler {
 
                             // Trigger callback for all user interactions and end events
                             if (event.sourceEvent || event.type === 'end') {
-                                console.log('InteractionHandler: Brush changed', {
-                                    type: event.type,
-                                    sourceEvent: !!event.sourceEvent,
-                                    dateRange: dateRange
-                                });
                                 this.onBrush(dateRange);
                             }
                         }
@@ -174,42 +150,20 @@ export class InteractionHandler {
 
     render(allEvents: any[], fullDateRange: [Date, Date], currentBrushRange?: [Date, Date]): void {
         if (!this.isInitialized) {
-            console.warn('InteractionHandler: Not initialized yet');
             return;
         }
 
         const d3 = (window as any).d3;
 
-        console.log('[InteractionHandler] render() called', {
-            events: allEvents.length,
-            dateRange: fullDateRange,
-            currentBrushRange: currentBrushRange,
-            innerWidth: this.innerWidth,
-            innerHeight: this.innerHeight
-        });
 
         // Check SVG visibility in DOM
         const svgNode = this.svg.node();
         if (svgNode) {
             const computedStyle = window.getComputedStyle(svgNode);
             const boundingRect = svgNode.getBoundingClientRect();
-            console.log('[InteractionHandler] SVG visibility check:', {
-                display: computedStyle.display,
-                visibility: computedStyle.visibility,
-                opacity: computedStyle.opacity,
-                width: computedStyle.width,
-                height: computedStyle.height,
-                boundingRect: {
-                    x: boundingRect.x,
-                    y: boundingRect.y,
-                    width: boundingRect.width,
-                    height: boundingRect.height
-                }
-            });
         }
 
         if (!d3 || allEvents.length === 0 || !fullDateRange[0] || !fullDateRange[1]) {
-            console.warn('InteractionHandler: Invalid data for rendering');
             return;
         }
 
@@ -223,7 +177,6 @@ export class InteractionHandler {
 
         // Update range labels to show full repository timeline (first to last event)
         this.updateRangeLabels(fullDateRange);
-        console.log('[InteractionHandler] Range labels updated with full date range:', fullDateRange);
 
         // Clear previous content
         this.rangeBarsGroup.selectAll('*').remove();
@@ -231,11 +184,6 @@ export class InteractionHandler {
 
         // Draw histogram bars
         const barWidth = this.innerWidth / histogramData.length;
-        console.log('[InteractionHandler] Drawing histogram bars:', {
-            barCount: histogramData.length,
-            barWidth,
-            maxCount
-        });
 
         const bars = this.rangeBarsGroup.selectAll('.range-bar')
             .data(histogramData)
@@ -249,7 +197,6 @@ export class InteractionHandler {
             .style('fill', '#4a90e2')
             .style('opacity', 0.3);
 
-        console.log('[InteractionHandler] Bars created:', bars.size());
 
         // Store histogram data for hover detection
         (this as any).currentHistogramData = histogramData;
@@ -259,13 +206,6 @@ export class InteractionHandler {
         if (bars.size() > 0) {
             const firstBar = bars.nodes()[0];
             if (firstBar) {
-                console.log('[InteractionHandler] First bar attributes:', {
-                    x: firstBar.getAttribute('x'),
-                    y: firstBar.getAttribute('y'),
-                    width: firstBar.getAttribute('width'),
-                    height: firstBar.getAttribute('height'),
-                    fill: firstBar.getAttribute('fill') || firstBar.style.fill
-                });
             }
         }
 
@@ -306,7 +246,6 @@ export class InteractionHandler {
         }
 
         // Apply brush
-        console.log('[InteractionHandler] Applying brush to brushGroup');
         this.brushGroup.call(this.brush);
 
         // Configure brush to prevent drawing new brush but allow all dragging
@@ -334,28 +273,15 @@ export class InteractionHandler {
                 this.clearHistogramHighlight();
             });
 
-        console.log('[InteractionHandler] Brush configured - overlay disabled, selection + handles interactive');
 
         // Set initial brush selection
-        console.log('[InteractionHandler] Checking initial brush selection:', {
-            hasCurrentBrushRange: !!currentBrushRange,
-            currentBrushRange,
-            hasValidDates: currentBrushRange && currentBrushRange[0] && currentBrushRange[1]
-        });
 
         if (currentBrushRange && currentBrushRange[0] && currentBrushRange[1]) {
             // Use provided range
-            console.log('[InteractionHandler] Brush date range:', {
-                brushStart: currentBrushRange[0].toISOString(),
-                brushEnd: currentBrushRange[1].toISOString(),
-                fullStart: fullDateRange[0].toISOString(),
-                fullEnd: fullDateRange[1].toISOString()
-            });
 
             let x0 = this.xScale(currentBrushRange[0]);
             let x1 = this.xScale(currentBrushRange[1]);
 
-            console.log('[InteractionHandler] Brush pixel coordinates (before clamp):', { x0, x1, innerWidth: this.innerWidth });
 
             // Clamp coordinates to valid range
             x0 = Math.max(0, Math.min(x0, this.innerWidth));
@@ -366,12 +292,9 @@ export class InteractionHandler {
                 x0 = Math.max(0, x1 - 10); // Minimum 10px brush width
             }
 
-            console.log('[InteractionHandler] Brush pixel coordinates (after clamp):', { x0, x1 });
 
             if (!isNaN(x0) && !isNaN(x1)) {
-                console.log('[InteractionHandler] Setting brush to provided range');
                 this.brushGroup.call(this.brush.move, [x0, x1]);
-                console.log('[InteractionHandler] Brush.move called with:', [x0, x1]);
 
                 // On initial render, trigger the callback
                 if (this.isInitialRender) {
@@ -379,17 +302,14 @@ export class InteractionHandler {
                     // Small delay to ensure DOM is ready
                     setTimeout(() => {
                         if (this.onBrush) {
-                            console.log('InteractionHandler: Triggering initial brush callback');
                             this.onBrush(currentBrushRange);
                         }
                     }, 100);
                 }
             } else {
-                console.log('[InteractionHandler] Brush coordinates invalid or out of bounds:', { x0, x1, innerWidth: this.innerWidth });
             }
         } else {
             // Set default brush to rightmost 1/3 of the timeline
-            console.log('[InteractionHandler] No currentBrushRange provided, using default (rightmost 1/3)');
             const timeDiff = fullDateRange[1].getTime() - fullDateRange[0].getTime();
             const startTime = fullDateRange[1].getTime() - (timeDiff / 3);
             const defaultRange: [Date, Date] = [new Date(startTime), fullDateRange[1]];
@@ -397,17 +317,13 @@ export class InteractionHandler {
             const x0 = this.xScale(defaultRange[0]);
             const x1 = this.xScale(defaultRange[1]);
 
-            console.log('[InteractionHandler] Default brush range calculated:', { defaultRange, x0, x1 });
-            console.log('[InteractionHandler] Setting default brush (rightmost 1/3)');
             this.brushGroup.call(this.brush.move, [x0, x1]);
-            console.log('[InteractionHandler] Default brush.move called');
 
             this.isInitialRender = false;
 
             // Trigger callback with initial selection
             setTimeout(() => {
                 if (this.onBrush) {
-                    console.log('InteractionHandler: Triggering initial brush callback');
                     this.onBrush(defaultRange);
                 }
             }, 100);
@@ -482,7 +398,6 @@ export class InteractionHandler {
 
         const tooltip = d3.select('#tooltip');
         if (tooltip.empty()) {
-            console.warn('[InteractionHandler] Tooltip element #tooltip not found');
             return;
         }
 
@@ -500,12 +415,6 @@ export class InteractionHandler {
         const tooltipX = event.clientX;
         const tooltipY = containerRect.top - 5; // 5px above the range panel
 
-        console.log('[InteractionHandler] Showing histogram tooltip:', {
-            date: formatDate(data.date),
-            count: data.count,
-            position: { x: tooltipX, y: tooltipY },
-            containerTop: containerRect.top
-        });
 
         tooltip.html(`
             <div style="font-weight: bold; margin-bottom: 5px;">
