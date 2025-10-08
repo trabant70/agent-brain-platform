@@ -240,8 +240,8 @@ export class ExportPackageCommand extends BaseCommand {
         created: now,
         updated: now,
         version: metadata.version,
-        tags: [],
-        changeLog: []
+        compatibility: '0.1.0',
+        tags: []
       },
       overrides: 'supplement' as any
     };

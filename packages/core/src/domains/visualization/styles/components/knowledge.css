@@ -1,0 +1,162 @@
+/**
+ * Knowledge Management Tab Styles
+ */
+
+.knowledge-content {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.knowledge-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.knowledge-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  margin: 0 0 8px 0;
+}
+
+.knowledge-subtitle {
+  font-size: 14px;
+  color: var(--vscode-descriptionForeground);
+  margin: 0;
+}
+
+.knowledge-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 32px;
+  justify-content: center;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 6px;
+  min-width: 150px;
+}
+
+.stat-icon {
+  font-size: 32px;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--vscode-foreground);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  line-height: 1;
+}
+
+.knowledge-section {
+  margin-bottom: 32px;
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.knowledge-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.knowledge-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.knowledge-item:hover {
+  background: var(--vscode-list-hoverBackground);
+  border-color: var(--vscode-list-hoverBackground);
+}
+
+.knowledge-item.enabled {
+  border-left: 3px solid var(--vscode-terminal-ansiGreen);
+}
+
+.knowledge-item.disabled {
+  opacity: 0.6;
+}
+
+.item-checkbox {
+  flex-shrink: 0;
+  font-size: 16px;
+  line-height: 1;
+  padding-top: 2px;
+}
+
+.checkbox-icon {
+  user-select: none;
+}
+
+.item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--vscode-foreground);
+  margin-bottom: 4px;
+  word-wrap: break-word;
+}
+
+.item-description {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 4px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.item-category {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  padding: 2px 8px;
+  background: var(--vscode-badge-background);
+  border-radius: 3px;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 13px;
+  font-style: italic;
+}

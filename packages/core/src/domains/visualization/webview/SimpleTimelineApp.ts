@@ -13,6 +13,8 @@ import { ErrorRecoveryPanel } from '../ui/ErrorRecoveryPanel';
 import { ComparisonView } from '../ui/ComparisonView';
 import { TabManager } from '../ui/TabManager';
 import { PromptSupportView } from '../ui/PromptSupportView';
+import { SupportView } from '../ui/SupportView';
+import { KnowledgeManagementView } from '../ui/KnowledgeManagementView';
 import { webviewLogger, LogCategory, LogPathway } from './WebviewLogger';
 
 interface CanonicalEvent {
@@ -49,6 +51,8 @@ export class SimpleTimelineApp {
     private comparisonView: ComparisonView;
     private tabManager: TabManager;
     private promptSupportView: PromptSupportView;
+    private supportView: SupportView;
+    private knowledgeManagementView: KnowledgeManagementView;
     private currentEvents: CanonicalEvent[] = [];
     private currentFilterOptions: FilterOptions | null = null;
     private currentAppliedFilters: any = null;  // Current filter state for branch visibility
@@ -125,6 +129,16 @@ export class SimpleTimelineApp {
         this.promptSupportView = new PromptSupportView();
         this.promptSupportView.initialize('prompt-support-container');
         webviewLogger.info(LogCategory.UI, 'Prompt support view initialized', 'constructor');
+
+        // Initialize Support View
+        this.supportView = new SupportView();
+        this.supportView.initialize('support-container');
+        webviewLogger.info(LogCategory.UI, 'Support view initialized', 'constructor');
+
+        // Initialize Knowledge Management View
+        this.knowledgeManagementView = new KnowledgeManagementView();
+        this.knowledgeManagementView.initialize('knowledge-management-container');
+        webviewLogger.info(LogCategory.UI, 'Knowledge management view initialized', 'constructor');
 
         // Setup brush callback for range selector
         this.setupRendererCallbacks();

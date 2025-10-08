@@ -160,6 +160,16 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
           await this.handleUseEnhancedPrompt(message.enhanced);
           break;
 
+        // Phase 4: KnowledgeManagementView message handlers
+        case 'toggleKnowledgeItem':
+          await this.handleToggleKnowledgeItem(message.itemId, message.itemType, message.enabled);
+          break;
+
+        // Phase 5: SupportView message handlers
+        case 'supportAction':
+          await this.handleSupportAction(message.action);
+          break;
+
         default:
       }
     } catch (error) {
@@ -503,6 +513,53 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
     } catch (error) {
       logger.error(LogCategory.EXTENSION, `Failed to use enhanced prompt: ${error}`, 'handleUseEnhancedPrompt');
       vscode.window.showErrorMessage(`Failed to copy enhanced prompt: ${error}`);
+    }
+  }
+
+  /**
+   * Phase 4: Handle knowledge item toggle
+   */
+  private async handleToggleKnowledgeItem(itemId: string, itemType: string, enabled: boolean): Promise<void> {
+    try {
+      // TODO: Integrate with ProjectProfileManager to toggle item enable/disable state
+      logger.info(LogCategory.EXTENSION, `Knowledge item toggled: ${itemType}/${itemId} -> ${enabled}`, 'handleToggleKnowledgeItem');
+
+      // For now, just acknowledge - full integration requires ProjectProfileManager wiring
+      this.sendMessage({
+        type: 'knowledgeItemToggled',
+        itemId,
+        itemType,
+        enabled
+      });
+    } catch (error) {
+      logger.error(LogCategory.EXTENSION, `Failed to toggle knowledge item: ${error}`, 'handleToggleKnowledgeItem');
+    }
+  }
+
+  /**
+   * Phase 5: Handle support actions
+   */
+  private async handleSupportAction(action: string): Promise<void> {
+    try {
+      switch (action) {
+        case 'openDocs':
+          // Open documentation in default browser
+          vscode.env.openExternal(vscode.Uri.parse('https://github.com/your-repo/agent-brain-platform/docs'));
+          break;
+        case 'viewArchitecture':
+          // Open architecture diagram file
+          const docsPath = vscode.Uri.joinPath(this.extensionUri, 'docs', 'agentbrain-complete-diagram.png');
+          await vscode.commands.executeCommand('vscode.open', docsPath);
+          break;
+        case 'reportIssue':
+          // Open GitHub issues
+          vscode.env.openExternal(vscode.Uri.parse('https://github.com/your-repo/agent-brain-platform/issues/new'));
+          break;
+        default:
+          logger.warn(LogCategory.EXTENSION, `Unknown support action: ${action}`, 'handleSupportAction');
+      }
+    } catch (error) {
+      logger.error(LogCategory.EXTENSION, `Failed to handle support action: ${error}`, 'handleSupportAction');
     }
   }
 
