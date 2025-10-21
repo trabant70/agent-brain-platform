@@ -8,42 +8,38 @@
 </head>
 <body>
     <div id="container">
-        <!-- Original Statistics Panel (Restored) -->
-        <div id="stats-bar">
-            <div class="stats-items">
-                <div class="stat-item" data-tooltip="Count of events currently displayed after applying filters"><span class="stat-label">Visible Events:</span><span class="stat-value" id="stat-visible">0</span></div>
-                <div class="stat-item" data-tooltip="Total count of all events in the repository, regardless of filters"><span class="stat-label">Total Events:</span><span class="stat-value" id="stat-total">0</span></div>
-                <div class="stat-item" data-tooltip="Number of unique authors who contributed to the currently visible events"><span class="stat-label">Contributors:</span><span class="stat-value" id="stat-contributors">0</span></div>
-                <div class="stat-item" data-tooltip="Count of branches with visible events (affected by filters)"><span class="stat-label">Active Branches:</span><span class="stat-value" id="stat-branches">0</span></div>
-                <div class="stat-item" data-tooltip="Time span in days between first and last visible event"><span class="stat-label">Window:</span><span class="stat-value" id="stat-window">-</span></div>
-                <div class="stat-item" data-tooltip="Development activity rate: events per day (higher = more frequent commits/changes)"><span class="stat-label">Velocity:</span><span class="stat-value" id="stat-velocity">0/day</span></div>
-            </div>
-            <div class="filters-trigger" id="filters-trigger" tabindex="0" role="button" aria-label="Show control center menu">Control Center</div>
-            <div class="quick-prompt-trigger" id="quick-prompt-trigger" tabindex="0" role="button" aria-label="Create AI prompt">🧠 New AI Prompt</div>
-            <div id="ai-companion-slot"></div>
-        </div>
-
         <!-- Tab Navigation -->
         <div id="tab-navigation">
-            <button class="tab-button active" data-tab="timeline" aria-label="Timeline view" aria-selected="true">📊 Timeline</button>
-            <button class="tab-button" data-tab="prompt" aria-label="Prompt Support view" aria-selected="false">🧠 Prompt Support</button>
-            <button class="tab-button" data-tab="config" aria-label="Configurations view" aria-selected="false">⚙️ Configurations</button>
-            <button class="tab-button" data-tab="knowledge" aria-label="Knowledge Management view" aria-selected="false">📚 Knowledge</button>
-            <button class="tab-button" data-tab="support" aria-label="Support and Help view" aria-selected="false">💡 Support</button>
+            <button class="tab-button active" data-tab="timeline" aria-label="Timeline view" aria-selected="true">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink: 0;">
+                    <path d="M1 3h14v2H1V3zm0 4h14v2H1V7zm0 4h14v2H1v-2z"/>
+                </svg>
+                Timeline
+            </button>
+            <button class="tab-button" data-tab="knowledge" aria-label="Knowledge Management view" aria-selected="false">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink: 0;">
+                    <path d="M3 1h10c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H3c-1.1 0-2-.9-2-2V3c0-1.1.9-2 2-2zm0 2v10h10V3H3zm2 2h6v1H5V5zm0 2h6v1H5V7zm0 2h4v1H5V9z"/>
+                </svg>
+                Knowledge
+            </button>
         </div>
 
         <!-- Tab Contents -->
         <div id="tab-contents">
             <!-- Timeline Tab -->
             <div id="tab-timeline" class="tab-content active" aria-hidden="false">
-                <!-- Containers for UI panels that work with timeline -->
-                <div id="quick-prompt-container"></div>
-                <div id="ai-companion-container"></div>
-                <div id="error-recovery-container"></div>
-                <div id="comparison-container"></div>
-                <div id="celebration-toast-container"></div>
-                <div id="achievement-panel-container"></div>
-                <div id="profile-wizard-container"></div>
+                <!-- Statistics Panel and Control Center -->
+                <div id="stats-bar">
+                    <div class="stats-items">
+                        <div class="stat-item" data-tooltip="Count of events currently displayed after applying filters"><span class="stat-label">Visible Events:</span><span class="stat-value" id="stat-visible">0</span></div>
+                        <div class="stat-item" data-tooltip="Total count of all events in the repository, regardless of filters"><span class="stat-label">Total Events:</span><span class="stat-value" id="stat-total">0</span></div>
+                        <div class="stat-item" data-tooltip="Number of unique authors who contributed to the currently visible events"><span class="stat-label">Contributors:</span><span class="stat-value" id="stat-contributors">0</span></div>
+                        <div class="stat-item" data-tooltip="Count of branches with visible events (affected by filters)"><span class="stat-label">Active Branches:</span><span class="stat-value" id="stat-branches">0</span></div>
+                        <div class="stat-item" data-tooltip="Time span in days between first and last visible event"><span class="stat-label">Window:</span><span class="stat-value" id="stat-window">-</span></div>
+                        <div class="stat-item" data-tooltip="Development activity rate: events per day (higher = more frequent commits/changes)"><span class="stat-label">Velocity:</span><span class="stat-value" id="stat-velocity">0/day</span></div>
+                    </div>
+                    <div class="filters-trigger" id="filters-trigger" tabindex="0" role="button" aria-label="Show control center menu">Control Center</div>
+                </div>
 
                 <div id="timeline-container">
             <!-- Branch Timeline -->
@@ -100,31 +96,92 @@
             </div>
             <!-- End Timeline Tab -->
 
-            <!-- Prompt Support Tab -->
-            <div id="tab-prompt" class="tab-content" aria-hidden="true">
-                <div id="prompt-support-container">
-                    <!-- Content will be populated by PromptSupportView -->
-                </div>
-            </div>
-
-            <!-- Configurations Tab -->
-            <div id="tab-config" class="tab-content" aria-hidden="true">
-                <div id="configuration-container">
-                    <!-- Content will be populated by ConfigurationView -->
-                </div>
-            </div>
-
             <!-- Knowledge Management Tab -->
             <div id="tab-knowledge" class="tab-content" aria-hidden="true">
-                <div id="knowledge-management-container">
-                    <!-- Content will be populated by KnowledgeManagementView -->
-                </div>
-            </div>
+                <div class="knowledge-container">
+                    <!-- Left Panel: Claude.md Files -->
+                    <div class="knowledge-left-panel">
+                        <div class="panel-header">
+                            <h3>📄 Claude.md Files</h3>
+                            <button id="scan-claude-files" class="icon-button" title="Scan for claude.md files">🔍</button>
+                        </div>
+                        <div id="claude-files-accordion" class="accordion">
+                            <div class="empty-state" style="padding: 20px; text-align: center;">
+                                <div style="font-size: 24px; margin-bottom: 8px;">📄</div>
+                                <div style="color: var(--vscode-descriptionForeground);">Click scan to find claude.md files</div>
+                            </div>
+                        </div>
+                    </div>
 
-            <!-- Support Tab -->
-            <div id="tab-support" class="tab-content" aria-hidden="true">
-                <div id="support-container">
-                    <!-- Content will be populated by SupportView -->
+                    <!-- Right Panel: Knowledge Items & Templates -->
+                    <div class="knowledge-right-panel">
+                        <!-- Search & Actions -->
+                        <div class="knowledge-toolbar">
+                            <input type="search" id="knowledge-search" placeholder="Search knowledge items..."/>
+                            <div class="filter-chips" id="knowledge-filter-chips"></div>
+                            <div class="grouping-controls">
+                                <label>Group by:</label>
+                                <button class="group-btn active" data-group="type" title="Group by knowledge type">Type</button>
+                                <button class="group-btn" data-group="scope" title="Group by scope (Personal, Team, etc.)">Scope</button>
+                                <button class="group-btn" data-group="tag" title="Group by tags">Tag</button>
+                            </div>
+                            <button id="refresh-knowledge" class="secondary-button" title="Refresh knowledge data">🔄 Refresh</button>
+                            <button id="add-knowledge-item" class="primary-button">+ Add Item</button>
+                            <button id="import-template" class="secondary-button">📥 Import</button>
+                        </div>
+
+                        <!-- Knowledge Table -->
+                        <div class="knowledge-table-container">
+                            <table id="knowledge-table" class="knowledge-table">
+                                <thead>
+                                    <tr>
+                                        <th class="col-select">
+                                            <input type="checkbox" id="knowledge-select-all"/>
+                                            <button id="toggle-all-sections" class="toggle-all-btn" title="Expand/Collapse all sections">▼</button>
+                                        </th>
+                                        <th class="col-type" data-sort="type">Type</th>
+                                        <th class="col-title" data-sort="title">Title</th>
+                                        <th class="col-scope" data-sort="scope">Scope</th>
+                                        <th class="col-tags">Tags</th>
+                                        <th class="col-source">Source</th>
+                                        <th class="col-actions">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="knowledge-items">
+                                    <tr class="knowledge-empty-state">
+                                        <td colspan="7" style="text-align: center; padding: 40px;">
+                                            <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
+                                            <div style="font-size: 16px; color: var(--vscode-descriptionForeground);">
+                                                Loading knowledge items...
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Template Controls -->
+                        <div class="template-controls">
+                            <div class="template-selection">
+                                <label for="template-selector">Template:</label>
+                                <select id="template-selector">
+                                    <option value="">Select template...</option>
+                                </select>
+                            </div>
+                            <div class="template-actions">
+                                <button id="save-template" class="secondary-button" disabled>💾 Save Template</button>
+                                <button id="apply-selected" class="primary-button" disabled>➕ Apply Selected Items</button>
+                                <button id="apply-template" class="primary-button" disabled>📋 Apply Template</button>
+                                <button id="export-template" class="secondary-button" disabled>📤 Export</button>
+                            </div>
+                        </div>
+
+                        <!-- Status Bar -->
+                        <div class="knowledge-status">
+                            <span id="knowledge-status-text">Ready</span>
+                            <span id="knowledge-item-count">0 items</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

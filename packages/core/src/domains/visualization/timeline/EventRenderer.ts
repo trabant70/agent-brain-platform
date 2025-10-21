@@ -639,20 +639,115 @@ export class EventDetailsPopup {
     private buildOverviewTab(content: any, event: any): void {
         let html = `<div class="popup-section">`;
 
-        if (event.author) {
-            html += `<p><strong>Author:</strong> ${event.author}</p>`;
+        // Knowledge event-specific formatting
+        if (event.type === 'knowledge-applied' || event.type === 'knowledge-removed' || event.type === 'knowledge-created') {
+            html += this.buildKnowledgeEventContent(event);
         }
-
-        if (event.branch) {
-            html += `<p><strong>Branch:</strong> ${event.branch}</p>`;
+        // Session journal event-specific formatting
+        else if (event.type === 'session-journal') {
+            html += this.buildSessionEventContent(event);
         }
+        // Default formatting for other events
+        else {
+            if (event.author) {
+                html += `<p><strong>Author:</strong> ${event.author.name || event.author}</p>`;
+            }
 
-        if (event.description) {
-            html += `<p><strong>Description:</strong> ${event.description}</p>`;
+            if (event.branch) {
+                html += `<p><strong>Branch:</strong> ${event.branch}</p>`;
+            }
+
+            if (event.description) {
+                html += `<p><strong>Description:</strong> ${event.description}</p>`;
+            }
         }
 
         html += `</div>`;
         content.html(html);
+    }
+
+    /**
+     * Build knowledge event-specific content
+     */
+    private buildKnowledgeEventContent(event: any): string {
+        let html = '';
+
+        // Event type label
+        const actionLabel = event.type === 'knowledge-applied' ? 'Applied' :
+                           event.type === 'knowledge-removed' ? 'Removed' : 'Created';
+        html += `<p><strong>Action:</strong> ${actionLabel}</p>`;
+
+        // Actor (user or agent)
+        if (event.author) {
+            const actorName = event.author.name || event.author;
+            html += `<p><strong>Actor:</strong> ${actorName}</p>`;
+        }
+
+        // Knowledge item details from metadata
+        if (event.metadata) {
+            if (event.metadata.knowledgeItemType) {
+                const typeLabel = event.metadata.knowledgeItemType.replace(/-/g, ' ');
+                html += `<p><strong>Type:</strong> ${typeLabel}</p>`;
+            }
+
+            if (event.metadata.targetFile) {
+                html += `<p><strong>Target File:</strong> <code>${event.metadata.targetFile}</code></p>`;
+            }
+        }
+
+        // Description
+        if (event.description) {
+            html += `<p><strong>Description:</strong> ${event.description}</p>`;
+        }
+
+        return html;
+    }
+
+    /**
+     * Build session journal event-specific content
+     */
+    private buildSessionEventContent(event: any): string {
+        let html = '';
+
+        // Actor (always agent for session journals)
+        if (event.author) {
+            html += `<p><strong>Created By:</strong> ${event.author.name || 'Coding Agent'}</p>`;
+        }
+
+        // Summary
+        if (event.metadata && event.metadata.summary) {
+            html += `<p><strong>Summary:</strong> ${event.metadata.summary}</p>`;
+        } else if (event.description) {
+            html += `<p><strong>Summary:</strong> ${event.description}</p>`;
+        }
+
+        // Topics
+        if (event.metadata && event.metadata.topics && event.metadata.topics.length > 0) {
+            const topicTags = event.metadata.topics.map((t: string) =>
+                `<span class="topic-tag">${t}</span>`
+            ).join(' ');
+            html += `<p><strong>Topics:</strong> ${topicTags}</p>`;
+        }
+
+        // Files modified
+        if (event.metadata && event.metadata.filesModified && event.metadata.filesModified.length > 0) {
+            html += `<p><strong>Files Modified:</strong> ${event.metadata.filesModified.length}</p>`;
+            html += `<ul class="file-list">`;
+            event.metadata.filesModified.slice(0, 5).forEach((file: string) => {
+                html += `<li><code>${file}</code></li>`;
+            });
+            if (event.metadata.filesModified.length > 5) {
+                html += `<li><em>+ ${event.metadata.filesModified.length - 5} more...</em></li>`;
+            }
+            html += `</ul>`;
+        }
+
+        // Knowledge items used
+        if (event.metadata && event.metadata.knowledgeItemsUsed && event.metadata.knowledgeItemsUsed.length > 0) {
+            html += `<p><strong>Knowledge Items Used:</strong> ${event.metadata.knowledgeItemsUsed.length}</p>`;
+        }
+
+        return html;
     }
 
     /**

@@ -157,3 +157,107 @@ export interface ProviderConfig {
   priority?: number;
   settings?: Record<string, any>;
 }
+
+/**
+ * ===================================================================
+ * KNOWLEDGE EVENT TYPES
+ * ===================================================================
+ * Data structures for tracking knowledge-related events:
+ * - When users apply/remove knowledge items to guide coding agents
+ * - When coding agents create new knowledge items (learnings, patterns)
+ *
+ * These events are stored in `.agent-brain/events/knowledge-events.json`
+ */
+
+/**
+ * Type of knowledge event operation
+ */
+export type KnowledgeEventOperation = 'apply' | 'remove' | 'create';
+
+/**
+ * Actor who triggered the event
+ */
+export type KnowledgeEventActor = 'user' | 'agent';
+
+/**
+ * Knowledge event record as stored in JSON file
+ *
+ * @example
+ * ```json
+ * {
+ *   "id": "ke-1729518900000",
+ *   "timestamp": "2025-10-21T14:35:00.000Z",
+ *   "type": "apply",
+ *   "knowledgeItemId": "golden-path-oauth",
+ *   "knowledgeItemTitle": "OAuth Golden Path",
+ *   "knowledgeItemType": "golden-path",
+ *   "targetFile": "CLAUDE.md",
+ *   "actor": "user"
+ * }
+ * ```
+ */
+export interface KnowledgeEventRecord {
+    /**
+     * Unique identifier (timestamp-based)
+     * Format: "ke-{milliseconds}"
+     */
+    id: string;
+
+    /**
+     * Event timestamp (ISO 8601 format)
+     */
+    timestamp: string;
+
+    /**
+     * Type of operation performed
+     */
+    type: KnowledgeEventOperation;
+
+    /**
+     * ID of the knowledge item involved
+     */
+    knowledgeItemId: string;
+
+    /**
+     * Title of the knowledge item (denormalized for display)
+     */
+    knowledgeItemTitle: string;
+
+    /**
+     * Type of knowledge item (e.g., "golden-path", "learning", "pattern")
+     */
+    knowledgeItemType: string;
+
+    /**
+     * Target file path where the operation occurred
+     * - For apply/remove: Usually "CLAUDE.md"
+     * - For create: Path to the created .md file
+     */
+    targetFile: string;
+
+    /**
+     * Who triggered the event
+     */
+    actor: KnowledgeEventActor;
+}
+
+/**
+ * Structure of the knowledge-events.json file
+ */
+export interface KnowledgeEventsFile {
+    /**
+     * File format version
+     */
+    version: string;
+
+    /**
+     * Array of knowledge events
+     */
+    events: KnowledgeEventRecord[];
+}
+
+/**
+ * Parameters for recording a new knowledge event
+ * (id and timestamp are auto-generated)
+ */
+export type RecordKnowledgeEventParams = Omit<KnowledgeEventRecord, 'id' | 'timestamp'>;

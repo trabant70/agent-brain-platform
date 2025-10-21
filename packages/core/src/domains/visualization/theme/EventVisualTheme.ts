@@ -193,6 +193,7 @@ export class EventVisualTheme {
     /**
      * Intelligence events (learnings, patterns, ADRs, Agent Brain sessions)
      * Shape represents event type, semantic colors distinguish intelligence sources
+     * NOTE: These are legacy types - kept for backward compatibility
      */
     private static readonly INTELLIGENCE_EVENTS: Record<string, EventTypeVisual> = {
         'learning-stored': {
@@ -218,6 +219,37 @@ export class EventVisualTheme {
             semanticColor: '#22C55E',  // Green - AI-assisted work completed
             icon: '🤖',
             label: 'Agent Brain Session'
+        }
+    };
+
+    /**
+     * Knowledge management events (Phase 2)
+     * Events generated when users or agents interact with the knowledge system
+     */
+    private static readonly KNOWLEDGE_EVENTS: Record<string, EventTypeVisual> = {
+        'knowledge-applied': {
+            shape: 'square',  // Document/file shape
+            semanticColor: '#3b82f6',  // Blue - knowledge/learning
+            icon: '✓',
+            label: 'Knowledge Applied'
+        },
+        'knowledge-removed': {
+            shape: 'cross',  // X for removal
+            semanticColor: '#94a3b8',  // Slate gray - neutral removal
+            icon: '✕',
+            label: 'Knowledge Removed'
+        },
+        'knowledge-created': {
+            shape: 'star',  // Star for new creation
+            semanticColor: '#10b981',  // Emerald green - creation/success
+            icon: '✨',
+            label: 'Knowledge Created'
+        },
+        'session-journal': {
+            shape: 'diamond',  // Diamond for milestone/completion
+            semanticColor: '#8b5cf6',  // Violet - AI/agent work
+            icon: '📝',
+            label: 'Session Journal'
         }
     };
 
@@ -291,6 +323,7 @@ export class EventVisualTheme {
         return (
             this.GIT_EVENTS[normalized] ||
             this.EXTERNAL_EVENTS[normalized] ||
+            this.KNOWLEDGE_EVENTS[normalized] ||
             this.INTELLIGENCE_EVENTS[normalized] ||
             {
                 color: '#6366f1',  // Default indigo
@@ -497,6 +530,7 @@ export class EventVisualTheme {
         return [
             ...Object.keys(this.GIT_EVENTS),
             ...Object.keys(this.EXTERNAL_EVENTS),
+            ...Object.keys(this.KNOWLEDGE_EVENTS),
             ...Object.keys(this.INTELLIGENCE_EVENTS)
         ];
     }
@@ -524,7 +558,12 @@ export class EventVisualTheme {
      */
     static hasEventType(eventType: string): boolean {
         const normalized = eventType.toLowerCase().replace(/_/g, '-');
-        return !!(this.GIT_EVENTS[normalized] || this.EXTERNAL_EVENTS[normalized] || this.INTELLIGENCE_EVENTS[normalized]);
+        return !!(
+            this.GIT_EVENTS[normalized] ||
+            this.EXTERNAL_EVENTS[normalized] ||
+            this.KNOWLEDGE_EVENTS[normalized] ||
+            this.INTELLIGENCE_EVENTS[normalized]
+        );
     }
 
     /**
@@ -565,11 +604,17 @@ export class EventVisualTheme {
         if (normalized === 'deployment') return 10;
         if (normalized === 'ci') return 10;
 
-        // Intelligence events - high visibility
+        // Intelligence events - high visibility (legacy)
         if (normalized === 'learning-stored') return 8;
         if (normalized === 'pattern-detected') return 8;
         if (normalized === 'adr-recorded') return 9;  // ADRs are architectural - very important
         if (normalized === 'agent-session') return 9;  // Agent Brain sessions - critical milestone
+
+        // Knowledge events - high visibility
+        if (normalized === 'knowledge-applied') return 8;  // User action - important
+        if (normalized === 'knowledge-removed') return 8;  // User action - important
+        if (normalized === 'knowledge-created') return 9;  // Agent creation - very important
+        if (normalized === 'session-journal') return 9;  // Session milestone - critical
 
         // Default: middle tier
         return 5;

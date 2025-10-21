@@ -38,6 +38,12 @@ export enum EventType {
   // Agent Brain session events (Phase 1)
   AGENT_SESSION = 'agent-session',
 
+  // Knowledge management events (Phase 2)
+  KNOWLEDGE_APPLIED = 'knowledge-applied',
+  KNOWLEDGE_REMOVED = 'knowledge-removed',
+  KNOWLEDGE_CREATED = 'knowledge-created',
+  SESSION_JOURNAL = 'session-journal',
+
   // Agent events (for future - Phase 9)
   AGENT_TASK_COMPLETED = 'agent-task-completed',
   AGENT_TASK_ABANDONED = 'agent-task-abandoned',

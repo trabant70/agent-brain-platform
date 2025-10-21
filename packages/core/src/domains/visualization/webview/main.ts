@@ -11,40 +11,23 @@ import { webviewLogger, LogLevel, LogCategory, LogPathway } from './WebviewLogge
 
 // Import CSS - webpack will bundle it inline
 import '../styles/timeline.css';
+import '../styles/components/knowledge.css';
 
 // Expose D3 globally
 window.d3 = d3;
 
 // ═══════════════════════════════════════════════════════════════════════════
-// PATHWAY DEBUGGING CONFIGURATION (Build-time)
+// PATHWAY LOGGING CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════════════
 //
-// To debug specific data flows, enable pathway filtering here before building.
-// This filters console output to ONLY logs tagged with selected pathways.
+// Pathway logging is now configured via VSCode settings:
+//   - agentBrain.logging.pathwayMode: 'disabled' | 'filter' | 'exclusive'
+//   - agentBrain.logging.enabledPathways: string[]
+//   - agentBrain.logging.logLevel: 'DEBUG' | 'INFO' | 'WARN' | 'ERROR' | 'NONE'
 //
-// Available Pathways:
-//   LogPathway.DATA_INGESTION  - Provider → Orchestrator → Webview → Render
-//   LogPathway.FILTER_APPLY    - Filter UI → State → Data refresh
-//   LogPathway.STATE_PERSIST   - State save/restore
-//   LogPathway.RENDER_PIPELINE - Data processing → D3 → DOM
-//   LogPathway.USER_INTERACTION- User events → Handlers → UI updates
-//   LogPathway.WEBVIEW_MESSAGING - Extension ↔ Webview messages
-//   LogPathway.CONFIG_SYNC     - Config changes → State → UI
-//   LogPathway.RANGE_SELECTOR  - Time slider interactions
-//   LogPathway.LEGEND          - Legend rendering and categorization
+// Configuration is sent from extension to webview during initialization.
+// Default Agent Brain pathways are enabled by default (see package.json).
 //
-// Usage:
-//   1. Uncomment lines below
-//   2. Set mode: 'exclusive' (strict filtering) or 'filter' (allow NONE pathway too)
-//   3. Add pathways to enablePathways([...])
-//   4. Rebuild: npm run build && npm run package
-//   5. After debugging, comment out and rebuild to restore all logs
-
-// DEBUG CONFIG: Enable pathway filtering
-webviewLogger.setPathwayMode('exclusive');
-webviewLogger.enablePathways([LogPathway.LEGEND]);
-console.log('🔍 DEBUG MODE: LEGEND pathway active');
-
 // ═══════════════════════════════════════════════════════════════════════════
 
 // VSCode API
@@ -98,6 +81,11 @@ function startApplication(): void {
         if (window.vscode) {
             webviewLogger.debug(LogCategory.WEBVIEW, 'Requesting initial data from extension', 'startApplication', undefined, LogPathway.WEBVIEW_MESSAGING);
             window.vscode.postMessage({ type: 'requestData' });
+
+            // Request initial knowledge data
+            webviewLogger.debug(LogCategory.WEBVIEW, 'Requesting initial knowledge data', 'startApplication', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+            window.vscode.postMessage({ type: 'knowledge:load-request' });
+            window.vscode.postMessage({ type: 'knowledge:scan-claude-files' });
         }
     } catch (error) {
         webviewLogger.error(LogCategory.WEBVIEW, 'Failed to start application', 'startApplication', error);
@@ -126,6 +114,10 @@ function setupMessageHandling(): void {
 
         try {
             switch (message.type) {
+                case 'loggingConfig':
+                    handleLoggingConfig(message.config);
+                    break;
+
                 case 'resize':
                     // Extension detected view visibility change (tab switch)
                     if (window.timelineApp) {
@@ -145,50 +137,34 @@ function setupMessageHandling(): void {
                     handleColorModeChanged(message.mode, message.enabledProviders);
                     break;
 
-                // Phase 1: AI Companion messages
-                case 'enhancedPrompt':
-                    if (window.timelineApp) {
-                        window.timelineApp.updateEnhancedPrompt(message.enhanced, message.itemsUsed);
-                    }
+                // Knowledge Management Messages
+                case 'knowledge:loaded':
+                    handleKnowledgeLoaded(message.payload);
                     break;
 
-                case 'showTip':  // From GuidanceEngine via TimelineProvider
-                case 'showCompanionTip':
-                    if (window.timelineApp) {
-                        window.timelineApp.showCompanionTip(message.tip);
-                    }
+                case 'knowledge:claude-files':
+                    handleClaudeMdFiles(message.payload);
                     break;
 
-                case 'showError':  // From ErrorDetector via TimelineProvider
-                case 'showErrorRecovery':
-                    if (window.timelineApp) {
-                        window.timelineApp.showErrorRecovery(message.error, message.similarErrors || []);
-                    }
+                case 'knowledge:item-updated':
+                case 'knowledge:item-deleted':
+                case 'knowledge:template-created':
+                    // Reload knowledge data
+                    requestKnowledgeData();
                     break;
 
-                // Phase 2: Comparison View
-                case 'showComparison':
-                    if (window.timelineApp) {
-                        window.timelineApp.showComparisonView(
-                            message.original,
-                            message.enhanced,
-                            message.metadata
-                        );
-                    }
+                case 'knowledge:success':
+                    showKnowledgeSuccess(message.payload.message);
                     break;
 
-                // Prompt Support Tab messages
-                case 'knowledgePreview':
-                    if (window.timelineApp) {
-                        window.timelineApp.updatePromptKnowledgePreview(message.items);
-                    }
+                case 'knowledge:error':
+                    showKnowledgeError(message.payload.error);
                     break;
 
-                case 'promptEnhanced':
-                    if (window.timelineApp) {
-                        window.timelineApp.updatePromptEnhancedResult(message.enhanced, message.itemsUsed);
-                    }
-                    break;
+                // Note: Legacy AI companion message handlers removed
+                // (enhancedPrompt, showTip, showError, showComparison, knowledgePreview, promptEnhanced)
+                // These features have been replaced by the modern Guidance, Plans, and Knowledge tabs
+                // which use EventBus for real-time updates instead of postMessage handlers
 
                 case 'error':
                     console.error('[Webview] Error from extension:', message.message);
@@ -254,6 +230,59 @@ function handleTimelineData(data: any): void {
 }
 
 /**
+ * Handle logging configuration from extension
+ */
+function handleLoggingConfig(config: any): void {
+    if (!config) return;
+
+    // Apply log level
+    if (config.logLevel && LogLevel[config.logLevel as keyof typeof LogLevel] !== undefined) {
+        webviewLogger.setLogLevel(LogLevel[config.logLevel as keyof typeof LogLevel]);
+    }
+
+    // Apply pathway mode
+    if (config.pathwayMode) {
+        webviewLogger.setPathwayMode(config.pathwayMode);
+    }
+
+    // Apply enabled pathways - map string codes to LogPathway enum values
+    if (config.enabledPathways && Array.isArray(config.enabledPathways)) {
+        const pathwayMap: { [key: string]: LogPathway } = {
+            'INGEST': LogPathway.DATA_INGESTION,
+            'FILTER': LogPathway.FILTER_APPLY,
+            'PERSIST': LogPathway.STATE_PERSIST,
+            'RENDER': LogPathway.RENDER_PIPELINE,
+            'INTERACT': LogPathway.USER_INTERACTION,
+            'MESSAGE': LogPathway.WEBVIEW_MESSAGING,
+            'CONFIG': LogPathway.CONFIG_SYNC,
+            'RANGE': LogPathway.RANGE_SELECTOR,
+            'LEGEND': LogPathway.LEGEND,
+            'KNOWLEDGE': LogPathway.KNOWLEDGE_MANAGEMENT,
+            'GUID_INIT': LogPathway.GUIDANCE_INIT,
+            'VALID': LogPathway.VALIDATION_FLOW,
+            'PLAN': LogPathway.PLAN_MANAGEMENT,
+            'MINI': LogPathway.MINIPLAN_LIFECYCLE,
+            'DIAG': LogPathway.DIAGNOSTICS_FLOW,
+            'GOLD': LogPathway.GOLDEN_PATH_TRACKING,
+            'PROMPT': LogPathway.PROMPT_BUILDING,
+            'EVT_FWD': LogPathway.EVENT_FORWARDING
+        };
+
+        const enabledPathways = config.enabledPathways
+            .map((code: string) => pathwayMap[code])
+            .filter((pathway: LogPathway | undefined) => pathway !== undefined);
+
+        webviewLogger.enablePathways(enabledPathways);
+    }
+
+    console.log('[WebviewLogger] Configuration applied:', {
+        mode: config.pathwayMode,
+        pathways: config.enabledPathways,
+        logLevel: config.logLevel
+    });
+}
+
+/**
  * Handle color mode change
  */
 function handleColorModeChanged(mode: string, enabledProviders?: string[]): void {
@@ -287,6 +316,98 @@ function showError(message: string): void {
                 <p>${message}</p>
             </div>
         `;
+    }
+}
+
+/**
+ * Handle knowledge data loaded from extension
+ */
+function handleKnowledgeLoaded(data: any): void {
+    webviewLogger.info(LogCategory.WEBVIEW, 'Received knowledge data from extension', 'handleKnowledgeLoaded', {
+        itemsCount: data.items?.length || 0,
+        templatesCount: data.templates?.length || 0,
+        items: data.items?.map((i: any) => ({ id: i.id, type: i.type, title: i.title })) || []
+    }, LogPathway.KNOWLEDGE_MANAGEMENT);
+
+    if (window.timelineApp && (window as any).knowledgeController) {
+        webviewLogger.debug(LogCategory.WEBVIEW, 'Passing knowledge data to controller', 'handleKnowledgeLoaded', {
+            hasController: !!(window as any).knowledgeController,
+            itemsToLoad: data.items?.length || 0
+        }, LogPathway.KNOWLEDGE_MANAGEMENT);
+
+        (window as any).knowledgeController.loadData(data);
+
+        webviewLogger.info(LogCategory.UI, 'Knowledge data loaded into controller', 'handleKnowledgeLoaded', {
+            itemsLoaded: data.items?.length || 0,
+            templatesLoaded: data.templates?.length || 0
+        }, LogPathway.KNOWLEDGE_MANAGEMENT);
+    } else {
+        webviewLogger.warn(LogCategory.WEBVIEW, 'Cannot load knowledge data - controller not available', 'handleKnowledgeLoaded', {
+            hasTimelineApp: !!window.timelineApp,
+            hasController: !!(window as any).knowledgeController
+        }, LogPathway.KNOWLEDGE_MANAGEMENT);
+    }
+}
+
+/**
+ * Handle claude.md files from extension
+ */
+function handleClaudeMdFiles(data: any): void {
+    webviewLogger.info(LogCategory.WEBVIEW, 'Received claude.md files from extension', 'handleClaudeMdFiles', {
+        filesCount: data.files?.length || 0,
+        files: data.files?.map((f: any) => ({ path: f.path, contentLength: f.content?.length || 0 })) || []
+    }, LogPathway.KNOWLEDGE_MANAGEMENT);
+
+    if ((window as any).knowledgeController) {
+        webviewLogger.debug(LogCategory.WEBVIEW, 'Passing claude.md files to controller', 'handleClaudeMdFiles', {
+            hasController: !!(window as any).knowledgeController,
+            filesToLoad: data.files?.length || 0
+        }, LogPathway.KNOWLEDGE_MANAGEMENT);
+
+        (window as any).knowledgeController.loadClaudeMdFiles(data.files);
+
+        webviewLogger.info(LogCategory.UI, 'Claude.md files loaded into controller', 'handleClaudeMdFiles', {
+            filesLoaded: data.files?.length || 0
+        }, LogPathway.KNOWLEDGE_MANAGEMENT);
+    } else {
+        webviewLogger.warn(LogCategory.WEBVIEW, 'Cannot load claude.md files - controller not available', 'handleClaudeMdFiles', {
+            hasController: !!(window as any).knowledgeController
+        }, LogPathway.KNOWLEDGE_MANAGEMENT);
+    }
+}
+
+/**
+ * Request knowledge data from extension
+ */
+function requestKnowledgeData(): void {
+    if (window.vscode) {
+        window.vscode.postMessage({ type: 'knowledge:load-request' });
+    }
+}
+
+/**
+ * Show knowledge success message
+ */
+function showKnowledgeSuccess(message: string): void {
+    webviewLogger.info(LogCategory.UI, `Knowledge success: ${message}`, 'showKnowledgeSuccess');
+
+    // Show success notification via KnowledgeViewController
+    const knowledgeController = (window as any).knowledgeController;
+    if (knowledgeController && typeof knowledgeController.handleOperationResult === 'function') {
+        knowledgeController.handleOperationResult('Operation', true, message);
+    }
+}
+
+/**
+ * Show knowledge error message
+ */
+function showKnowledgeError(error: string): void {
+    webviewLogger.error(LogCategory.UI, `Knowledge error: ${error}`, 'showKnowledgeError');
+
+    // Show error notification via KnowledgeViewController
+    const knowledgeController = (window as any).knowledgeController;
+    if (knowledgeController && typeof knowledgeController.handleOperationResult === 'function') {
+        knowledgeController.handleOperationResult('Operation', false, error);
     }
 }
 

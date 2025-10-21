@@ -17,5 +17,8 @@ export * from './github';
 // Intelligence provider (patterns & learnings)
 export * from './intelligence';
 
-// Session provider (Agent Brain sessions)
+// Knowledge event provider (Phase 2)
+export * from './knowledge';
+
+// Session event provider (Phase 2)
 export * from './sessions';

@@ -52,7 +52,17 @@ export enum LogPathway {
     WEBVIEW_MESSAGING = 'MESSAGE',
     CONFIG_SYNC = 'CONFIG',
     RANGE_SELECTOR = 'RANGE',
-    LEGEND = 'LEGEND'
+    LEGEND = 'LEGEND',
+    KNOWLEDGE_MANAGEMENT = 'KNOWLEDGE',
+    // Agent Brain Integration pathways
+    GUIDANCE_INIT = 'GUID_INIT',
+    VALIDATION_FLOW = 'VALID',
+    PLAN_MANAGEMENT = 'PLAN',
+    MINIPLAN_LIFECYCLE = 'MINI',
+    DIAGNOSTICS_FLOW = 'DIAG',
+    GOLDEN_PATH_TRACKING = 'GOLD',
+    PROMPT_BUILDING = 'PROMPT',
+    EVENT_FORWARDING = 'EVT_FWD'
 }
 
 /**
@@ -69,7 +79,7 @@ interface WebviewLoggerConfig {
 /**
  * Webview Logger - Browser console logging with pathway support
  */
-class WebviewLogger {
+export class WebviewLogger {
     private config: WebviewLoggerConfig = {
         level: LogLevel.INFO,
         enabledCategories: new Set(Object.values(LogCategory)),

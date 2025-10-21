@@ -133,6 +133,18 @@ export class D3TimelineRendererImpl extends BaseTimelineRenderer {
 
     protected performResize(): void {
         if (this.d3Renderer) {
+            // Log container dimensions for debugging tab-switch issues
+            const container = document.getElementById('visualization');
+            const rangeSelector = document.getElementById('range-selector');
+            if (container && rangeSelector) {
+                const containerRect = container.getBoundingClientRect();
+                const rangeSelectorRect = rangeSelector.getBoundingClientRect();
+                console.log('[D3TimelineRendererImpl] Performing resize', {
+                    visualization: { width: containerRect.width, height: containerRect.height },
+                    rangeSelector: { width: rangeSelectorRect.width, height: rangeSelectorRect.height }
+                });
+            }
+
             this.d3Renderer.resize();
         }
     }

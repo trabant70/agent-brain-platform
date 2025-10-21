@@ -75,6 +75,8 @@ export class FilterController {
   private gitProviderEnabled: boolean = true; // Default to enabled
   private githubProviderEnabled: boolean = false; // Default to disabled
   private intelligenceProviderEnabled: boolean = false; // Default to disabled (like GitHub)
+  private knowledgeEventsProviderEnabled: boolean = true; // Default to enabled (new feature)
+  private sessionJournalsProviderEnabled: boolean = true; // Default to enabled (new feature)
   private showConnections: boolean = true; // Default to showing connections
 
   // Callbacks
@@ -409,6 +411,14 @@ export class FilterController {
                     <input type="checkbox" id="provider-agent-brain" ${this.intelligenceProviderEnabled ? 'checked' : ''}>
                     <label for="provider-agent-brain">Agent-Brain - Patterns, learnings, and ADRs</label>
                   </div>
+                  <div class="provider-item">
+                    <input type="checkbox" id="provider-knowledge-events" ${this.knowledgeEventsProviderEnabled ? 'checked' : ''}>
+                    <label for="provider-knowledge-events">Knowledge Events - Knowledge apply/remove/create tracking</label>
+                  </div>
+                  <div class="provider-item">
+                    <input type="checkbox" id="provider-session-journals" ${this.sessionJournalsProviderEnabled ? 'checked' : ''}>
+                    <label for="provider-session-journals">Session Journals - Agent coding session logs</label>
+                  </div>
                 </div>
               </div>
 
@@ -624,9 +634,8 @@ export class FilterController {
       agentBrainCheckbox.addEventListener('change', (e) => {
         const isChecked = (e.target as HTMLInputElement).checked;
 
-
         // Update local state
-        // Note: No local boolean needed as this is managed via enabledProviders
+        this.intelligenceProviderEnabled = isChecked;
 
         // Persist to filterState for session persistence
         this.updateEnabledProviders('intelligence', isChecked);
@@ -636,6 +645,58 @@ export class FilterController {
           (window as any).vscode.postMessage({
             type: 'toggleProvider',
             providerId: 'intelligence',
+            enabled: isChecked
+          });
+        }
+
+        // Notify backend to persist the configuration change
+        this.applyFilters();
+      });
+    }
+
+    // Knowledge Events provider toggle
+    const knowledgeEventsCheckbox = this.floatingMenu.querySelector('#provider-knowledge-events') as HTMLInputElement;
+    if (knowledgeEventsCheckbox) {
+      knowledgeEventsCheckbox.addEventListener('change', (e) => {
+        const isChecked = (e.target as HTMLInputElement).checked;
+
+        // Update local state
+        this.knowledgeEventsProviderEnabled = isChecked;
+
+        // Persist to filterState for session persistence
+        this.updateEnabledProviders('knowledge-events', isChecked);
+
+        // Send toggleProvider message to extension
+        if ((window as any).vscode) {
+          (window as any).vscode.postMessage({
+            type: 'toggleProvider',
+            providerId: 'knowledge-events',
+            enabled: isChecked
+          });
+        }
+
+        // Notify backend to persist the configuration change
+        this.applyFilters();
+      });
+    }
+
+    // Session Journals provider toggle
+    const sessionJournalsCheckbox = this.floatingMenu.querySelector('#provider-session-journals') as HTMLInputElement;
+    if (sessionJournalsCheckbox) {
+      sessionJournalsCheckbox.addEventListener('change', (e) => {
+        const isChecked = (e.target as HTMLInputElement).checked;
+
+        // Update local state
+        this.sessionJournalsProviderEnabled = isChecked;
+
+        // Persist to filterState for session persistence
+        this.updateEnabledProviders('session-journals', isChecked);
+
+        // Send toggleProvider message to extension
+        if ((window as any).vscode) {
+          (window as any).vscode.postMessage({
+            type: 'toggleProvider',
+            providerId: 'session-journals',
             enabled: isChecked
           });
         }
@@ -1411,11 +1472,16 @@ export class FilterController {
     this.gitProviderEnabled = enabledProviders.includes('git-local');
     this.githubProviderEnabled = enabledProviders.includes('github');
     this.intelligenceProviderEnabled = enabledProviders.includes('intelligence');
+    this.knowledgeEventsProviderEnabled = enabledProviders.includes('knowledge-events');
+    this.sessionJournalsProviderEnabled = enabledProviders.includes('session-journals');
 
     // Update provider checkboxes in UI
     const gitCheckbox = document.getElementById('provider-git') as HTMLInputElement;
     const githubCheckbox = document.getElementById('provider-github') as HTMLInputElement;
     const intelligenceCheckbox = document.getElementById('provider-agent-brain') as HTMLInputElement;
+    const knowledgeEventsCheckbox = document.getElementById('provider-knowledge-events') as HTMLInputElement;
+    const sessionJournalsCheckbox = document.getElementById('provider-session-journals') as HTMLInputElement;
+
     if (gitCheckbox) {
       gitCheckbox.checked = this.gitProviderEnabled;
     }
@@ -1424,6 +1490,12 @@ export class FilterController {
     }
     if (intelligenceCheckbox) {
       intelligenceCheckbox.checked = this.intelligenceProviderEnabled;
+    }
+    if (knowledgeEventsCheckbox) {
+      knowledgeEventsCheckbox.checked = this.knowledgeEventsProviderEnabled;
+    }
+    if (sessionJournalsCheckbox) {
+      sessionJournalsCheckbox.checked = this.sessionJournalsProviderEnabled;
     }
 
     // Restore show connections toggle (default to true if not set)

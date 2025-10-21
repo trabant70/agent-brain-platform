@@ -106,6 +106,13 @@ export class InteractionHandler {
 
         const { width, height } = containerNode.getBoundingClientRect();
 
+        // VALIDATION: Detect invalid dimensions (hidden container)
+        if (height < 10 || width < 10) {
+            // Silently defer resize until container is properly visible
+            setTimeout(() => this.resize(), 50);
+            return;
+        }
+
         // Use actual dimensions
         const actualWidth = Math.max(width || 800, 200);
         const actualHeight = Math.max(height || 80, 80);
@@ -153,6 +160,10 @@ export class InteractionHandler {
             return;
         }
 
+        // CRITICAL: Resize BEFORE any calculations to ensure fresh dimensions
+        // This updates xScale.range() with current container width/height
+        this.resize();
+
         const d3 = (window as any).d3;
 
 
@@ -167,7 +178,7 @@ export class InteractionHandler {
             return;
         }
 
-        // Set domain for scales
+        // Set domain for scales (range was just updated by resize())
         this.xScale.domain(fullDateRange);
 
         // Create histogram data
@@ -294,6 +305,7 @@ export class InteractionHandler {
 
 
             if (!isNaN(x0) && !isNaN(x1)) {
+                // Initial position with current dimensions
                 this.brushGroup.call(this.brush.move, [x0, x1]);
 
                 // On initial render, trigger the callback
@@ -306,6 +318,27 @@ export class InteractionHandler {
                         }
                     }, 100);
                 }
+
+                // CRITICAL: Re-position brush after layout settles to preserve date selection
+                // This fixes tab-switch resize issues where dimensions change after initial render
+                setTimeout(() => {
+                    // Recalculate pixel positions with (hopefully) stabilized dimensions
+                    const freshX0 = this.xScale(currentBrushRange[0]);
+                    const freshX1 = this.xScale(currentBrushRange[1]);
+
+                    console.log('[InteractionHandler] Re-positioning brush to preserve date selection', {
+                        dateRange: [currentBrushRange[0].toISOString(), currentBrushRange[1].toISOString()],
+                        initialPixels: [x0, x1],
+                        freshPixels: [freshX0, freshX1],
+                        innerWidth: this.innerWidth,
+                        changed: Math.abs(x0 - freshX0) > 1 || Math.abs(x1 - freshX1) > 1
+                    });
+
+                    // Silent move (no event) - just reposition to maintain date selection
+                    if (!isNaN(freshX0) && !isNaN(freshX1)) {
+                        this.brushGroup.call(this.brush.move, [freshX0, freshX1]);
+                    }
+                }, 150);
             } else {
             }
         } else {

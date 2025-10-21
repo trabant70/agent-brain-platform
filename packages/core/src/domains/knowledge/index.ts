@@ -1,26 +1,13 @@
 /**
- * Knowledge Domain
+ * Knowledge Domain - Public API
  *
- * Manages accumulated knowledge from patterns, ADRs, and learnings.
- * This knowledge enhances future prompts but does not generate timeline events.
- *
- * Key Concepts:
- * - Knowledge = accumulated wisdom, not temporal events
- * - Used for prompt enhancement and context awareness
- * - Separate from event timeline (which shows user actions)
+ * Exports all public types and classes for the knowledge management system
  */
 
+// Types
 export * from './types';
-export * from './KnowledgeSystem';
 
-// Re-export intelligence systems from their new home
-export * from './patterns';
-export * from './adrs';
-export * from './learning';
-
-// Phase 2: Project profile and health metrics
-export * from './ProjectProfileManager';
-export * from './KnowledgeHealthMetrics';
-
-// Phase 3: Success pattern detection and learning
-export * from './success';
+// Core classes (will be implemented)
+export { KnowledgeStore } from './KnowledgeStore';
+export { KnowledgeFileSystem } from './KnowledgeFileSystem';
+export { TemplateEngine } from './TemplateEngine';

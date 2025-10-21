@@ -336,3 +336,36 @@
     background: var(--accent-commit);
     color: var(--bg-primary);
 }
+
+/* Knowledge and session event-specific styles */
+.popup-section .topic-tag {
+    display: inline-block;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.85em;
+    margin: 0.15rem;
+    white-space: nowrap;
+}
+
+.popup-section .file-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0;
+}
+
+.popup-section .file-list li {
+    padding: 0.2rem 0;
+    color: var(--text-primary);
+    font-size: 0.9em;
+}
+
+.popup-section .file-list li code {
+    background: var(--bg-tertiary);
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.85em;
+    color: var(--accent-tag);
+}

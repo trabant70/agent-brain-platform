@@ -28,15 +28,29 @@ import {
   CachedRepoData,
   ProviderContext
 } from '../../events';
-import { ProviderRegistry, GitProvider, GitHubProvider, SessionEventProvider } from '../../providers';
+import {
+  ProviderRegistry,
+  GitProvider,
+  GitHubProvider,
+  KnowledgeEventProvider,
+  SessionEventProvider
+} from '../../providers';
 import { FilterStateManager } from '../filters/FilterStateManager';
 import { EventMatcher } from './EventMatcher';
 import { logger, LogCategory, LogPathway, createContextLogger } from '../../../infrastructure/logging';
 import { FeatureFlagManager, Feature } from '../../../infrastructure/config/FeatureFlags';
 
+export interface ProviderSettings {
+  gitLocal: boolean;
+  github: boolean;
+  knowledgeEvents: boolean;
+  sessionJournals: boolean;
+}
+
 export interface DataOrchestratorOptions {
   cacheTTL?: number; // Cache time-to-live in milliseconds
   storagePath?: string; // Path to .agent-brain/ directory for persistent storage
+  providerSettings?: ProviderSettings; // Provider enablement settings
 }
 
 /**
@@ -61,6 +75,7 @@ export class DataOrchestrator {
   // Options
   private cacheTTL: number;
   private storagePath: string;
+  private providerSettings: ProviderSettings;
 
   // Current state
   private currentRepoPath: string = '';
@@ -71,6 +86,7 @@ export class DataOrchestrator {
   constructor(options: DataOrchestratorOptions = {}) {
     this.cacheTTL = options.cacheTTL || 300000; // 5 minutes default
     this.storagePath = options.storagePath || './.agent-brain';
+    this.providerSettings = this.getProviderSettings(options.providerSettings);
     this.providerRegistry = new ProviderRegistry();
     this.filterStateManager = new FilterStateManager();
     this.eventMatcher = new EventMatcher();
@@ -78,61 +94,56 @@ export class DataOrchestrator {
       LogCategory.ORCHESTRATION,
       'DataOrchestrator constructed with simplified architecture',
       'constructor',
-      { cacheTTL: this.cacheTTL, storagePath: this.storagePath },
+      {
+        cacheTTL: this.cacheTTL,
+        storagePath: this.storagePath,
+        providerSettings: this.providerSettings
+      },
       LogPathway.DATA_INGESTION
     );
   }
 
   /**
    * Initialize orchestrator and register providers
+   * Only registers providers that are enabled in settings
    */
   async initialize(): Promise<void> {
     this.log.info(
       LogCategory.ORCHESTRATION,
       'Initializing DataOrchestrator',
       'initialize',
-      undefined,
+      { providerSettings: this.providerSettings },
       LogPathway.DATA_INGESTION
     );
 
     // Ensure storage directory exists
     await this.ensureStorageDirectory();
 
-    // Register Git provider (always enabled)
-    const gitProvider = new GitProvider();
-    await this.providerRegistry.registerProvider(gitProvider, {
-      enabled: true,
-      priority: 1
-    });
-
-    // Register Session Event provider (always enabled)
-    this.log.info(LogCategory.ORCHESTRATION, 'Registering Session Event provider', 'initialize');
-    try {
-      const sessionProvider = new SessionEventProvider();
-      await this.providerRegistry.registerProvider(sessionProvider, {
-        enabled: true,
-        priority: 2,
-        settings: {
-          storagePath: this.storagePath
-        }
-      });
-      this.log.info(LogCategory.ORCHESTRATION, 'Session Event provider registered successfully', 'initialize');
-    } catch (error) {
-      this.log.error(LogCategory.ORCHESTRATION, `Failed to register Session Event provider: ${error}`, 'initialize');
-      // Continue without session events - not critical
+    // Register Git Local provider (conditionally)
+    if (this.providerSettings.gitLocal) {
+      this.log.info(LogCategory.ORCHESTRATION, 'Registering Git Local provider', 'initialize');
+      try {
+        const gitProvider = new GitProvider();
+        await this.providerRegistry.registerProvider(gitProvider, {
+          enabled: true,
+          priority: 1
+        });
+        this.log.info(LogCategory.ORCHESTRATION, 'Git Local provider registered successfully', 'initialize');
+      } catch (error) {
+        this.log.error(LogCategory.ORCHESTRATION, `Failed to register Git Local provider: ${error}`, 'initialize');
+        // Continue without git - not critical
+      }
+    } else {
+      this.log.info(LogCategory.ORCHESTRATION, 'Git Local provider disabled by settings', 'initialize');
     }
 
-    // Register GitHub provider (feature flag protected)
-    const featureFlags = FeatureFlagManager.getInstance();
-    const githubEnabled = await featureFlags.isFeatureEnabled(Feature.GITHUB_PROVIDER);
-
-    if (githubEnabled) {
-      this.log.info(LogCategory.ORCHESTRATION, 'GitHub provider feature is enabled', 'initialize');
-
+    // Register GitHub provider (conditionally)
+    if (this.providerSettings.github) {
+      this.log.info(LogCategory.ORCHESTRATION, 'Registering GitHub provider', 'initialize');
       try {
         const githubProvider = new GitHubProvider();
         await this.providerRegistry.registerProvider(githubProvider, {
-          enabled: false, // Disabled by default - user can enable in UI
+          enabled: true,
           priority: 2
         });
         this.log.info(LogCategory.ORCHESTRATION, 'GitHub provider registered successfully', 'initialize');
@@ -141,7 +152,49 @@ export class DataOrchestrator {
         // Continue without GitHub provider
       }
     } else {
-      this.log.info(LogCategory.ORCHESTRATION, 'GitHub provider feature is disabled', 'initialize');
+      this.log.info(LogCategory.ORCHESTRATION, 'GitHub provider disabled by settings', 'initialize');
+    }
+
+    // Register Knowledge Event provider (conditionally)
+    if (this.providerSettings.knowledgeEvents) {
+      this.log.info(LogCategory.ORCHESTRATION, 'Registering Knowledge Event provider', 'initialize');
+      try {
+        const knowledgeProvider = new KnowledgeEventProvider();
+        await this.providerRegistry.registerProvider(knowledgeProvider, {
+          enabled: true,
+          priority: 3,
+          settings: {
+            workspaceRoot: this.storagePath
+          }
+        });
+        this.log.info(LogCategory.ORCHESTRATION, 'Knowledge Event provider registered successfully', 'initialize');
+      } catch (error) {
+        this.log.error(LogCategory.ORCHESTRATION, `Failed to register Knowledge Event provider: ${error}`, 'initialize');
+        // Continue without knowledge events - not critical
+      }
+    } else {
+      this.log.info(LogCategory.ORCHESTRATION, 'Knowledge Event provider disabled by settings', 'initialize');
+    }
+
+    // Register Session Event provider (conditionally)
+    if (this.providerSettings.sessionJournals) {
+      this.log.info(LogCategory.ORCHESTRATION, 'Registering Session Event provider', 'initialize');
+      try {
+        const sessionProvider = new SessionEventProvider();
+        await this.providerRegistry.registerProvider(sessionProvider, {
+          enabled: true,
+          priority: 4,
+          settings: {
+            workspaceRoot: this.storagePath
+          }
+        });
+        this.log.info(LogCategory.ORCHESTRATION, 'Session Event provider registered successfully', 'initialize');
+      } catch (error) {
+        this.log.error(LogCategory.ORCHESTRATION, `Failed to register Session Event provider: ${error}`, 'initialize');
+        // Continue without session events - not critical
+      }
+    } else {
+      this.log.info(LogCategory.ORCHESTRATION, 'Session Event provider disabled by settings', 'initialize');
     }
 
     // Intelligence provider removed - patterns/ADRs/learnings are now knowledge-only
@@ -152,7 +205,7 @@ export class DataOrchestrator {
       LogCategory.ORCHESTRATION,
       'Initialization complete',
       'initialize',
-      undefined,
+      { registeredProviders: this.providerRegistry.getEnabledProviders().map(p => p.id) },
       LogPathway.DATA_INGESTION
     );
   }
@@ -732,6 +785,29 @@ export class DataOrchestrator {
     if (this.currentRepoPath) {
       this.invalidateCache(this.currentRepoPath);
     }
+  }
+
+  /**
+   * Get provider settings with defaults
+   * Merges provided settings with defaults
+   * @private
+   */
+  private getProviderSettings(settings?: Partial<ProviderSettings>): ProviderSettings {
+    // Default settings match VSCode package.json defaults
+    const defaults: ProviderSettings = {
+      gitLocal: true,        // Core functionality
+      github: false,         // Requires authentication
+      knowledgeEvents: true, // New feature we want users to see
+      sessionJournals: true  // New feature we want users to see
+    };
+
+    // Merge provided settings with defaults
+    return {
+      gitLocal: settings?.gitLocal ?? defaults.gitLocal,
+      github: settings?.github ?? defaults.github,
+      knowledgeEvents: settings?.knowledgeEvents ?? defaults.knowledgeEvents,
+      sessionJournals: settings?.sessionJournals ?? defaults.sessionJournals
+    };
   }
 
   /**

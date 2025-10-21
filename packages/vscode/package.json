@@ -2,7 +2,7 @@
   "name": "agent-brain-platform",
   "displayName": "Agent Brain Platform",
   "description": "Unified platform for AI-assisted development with timeline visualization, architectural guidance, and pathway testing",
-  "version": "0.1.36",
+  "version": "0.2.22",
   "publisher": "agent-brain-local",
   "icon": "images/timeline_large.png",
   "engines": {
@@ -28,77 +28,6 @@
         "title": "Refresh Timeline Data",
         "category": "Timeline",
         "icon": "$(refresh)"
-      },
-      {
-        "command": "repoTimeline.recordADR",
-        "title": "Record Architectural Decision",
-        "category": "Timeline",
-        "icon": "$(note)"
-      },
-      {
-        "command": "agentBrain.newPrompt",
-        "title": "New Enhanced Prompt",
-        "category": "Agent Brain",
-        "icon": "$(hubot)"
-      },
-      {
-        "command": "agentBrain.endSession",
-        "title": "End Session",
-        "category": "Agent Brain",
-        "icon": "$(stop-circle)"
-      },
-      {
-        "command": "agentBrain.showStatus",
-        "title": "Show Session Status",
-        "category": "Agent Brain",
-        "icon": "$(info)"
-      },
-      {
-        "command": "agentBrain.refreshKnowledge",
-        "title": "Refresh Knowledge Base",
-        "category": "Agent Brain",
-        "icon": "$(refresh)"
-      },
-      {
-        "command": "agentBrain.toggleKnowledgeItem",
-        "title": "Toggle Knowledge Item",
-        "category": "Agent Brain"
-      },
-      {
-        "command": "agentBrain.showKnowledgeHealth",
-        "title": "Show Knowledge Health",
-        "category": "Agent Brain",
-        "icon": "$(pulse)"
-      },
-      {
-        "command": "agentBrain.addProjectRule",
-        "title": "Add Project Rule (ADR)",
-        "category": "Agent Brain",
-        "icon": "$(note)"
-      },
-      {
-        "command": "agent-brain.setupProjectProfile",
-        "title": "Setup Project Profile",
-        "category": "Agent Brain",
-        "icon": "$(rocket)"
-      },
-      {
-        "command": "agentBrain.addContextRule",
-        "title": "Add Project Guideline",
-        "category": "Agent Brain",
-        "icon": "$(note)"
-      },
-      {
-        "command": "agentBrain.importPackage",
-        "title": "Import Expertise Package",
-        "category": "Agent Brain",
-        "icon": "$(cloud-download)"
-      },
-      {
-        "command": "agentBrain.exportPackage",
-        "title": "Export Expertise Package",
-        "category": "Agent Brain",
-        "icon": "$(cloud-upload)"
       }
     ],
     "viewsContainers": {
@@ -123,11 +52,6 @@
           "id": "repoTimeline.welcomeView",
           "name": "Getting Started",
           "type": "webview"
-        },
-        {
-          "id": "agentBrain.knowledgeTree",
-          "name": "Knowledge Base",
-          "when": "workspaceFolderCount != 0"
         }
       ],
       "repoTimelinePanel": [
@@ -144,11 +68,6 @@
         "key": "ctrl+shift+t",
         "mac": "cmd+shift+t",
         "when": "!terminalFocus"
-      },
-      {
-        "command": "agentBrain.newPrompt",
-        "key": "ctrl+shift+a",
-        "mac": "cmd+shift+a"
       }
     ],
     "menus": {
@@ -157,43 +76,93 @@
           "command": "repoTimeline.refreshData",
           "when": "view == repoTimeline.evolutionView",
           "group": "navigation"
-        },
-        {
-          "command": "repoTimeline.recordADR",
-          "when": "view == repoTimeline.evolutionView",
-          "group": "navigation"
-        },
-        {
-          "command": "agentBrain.refreshKnowledge",
-          "when": "view == agentBrain.knowledgeTree",
-          "group": "navigation"
-        },
-        {
-          "command": "agentBrain.showKnowledgeHealth",
-          "when": "view == agentBrain.knowledgeTree",
-          "group": "navigation"
-        }
-      ],
-      "view/item/context": [
-        {
-          "command": "agentBrain.toggleKnowledgeItem",
-          "when": "view == agentBrain.knowledgeTree && viewItem == adr-item"
-        },
-        {
-          "command": "agentBrain.toggleKnowledgeItem",
-          "when": "view == agentBrain.knowledgeTree && viewItem == pattern-item"
-        },
-        {
-          "command": "agentBrain.toggleKnowledgeItem",
-          "when": "view == agentBrain.knowledgeTree && viewItem == learning-item"
-        }
-      ],
-      "commandPalette": [
-        {
-          "command": "repoTimeline.recordADR",
-          "when": "workspaceFolderCount > 0"
         }
       ]
+    },
+    "configuration": {
+      "title": "Agent Brain Platform",
+      "properties": {
+        "agentBrain.logging.pathwayMode": {
+          "type": "string",
+          "enum": [
+            "disabled",
+            "filter",
+            "exclusive"
+          ],
+          "default": "exclusive",
+          "description": "Pathway logging mode: 'disabled' shows all logs, 'filter' adds pathway tags, 'exclusive' only shows enabled pathways"
+        },
+        "agentBrain.logging.enabledPathways": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "INGEST",
+              "FILTER",
+              "PERSIST",
+              "RENDER",
+              "INTERACT",
+              "MESSAGE",
+              "CONFIG",
+              "RANGE",
+              "LEGEND",
+              "KNOWLEDGE",
+              "GUID_INIT",
+              "VALID",
+              "PLAN",
+              "MINI",
+              "DIAG",
+              "GOLD",
+              "PROMPT",
+              "EVT_FWD"
+            ]
+          },
+          "default": [
+            "GUID_INIT",
+            "VALID",
+            "PLAN",
+            "MINI",
+            "DIAG",
+            "GOLD",
+            "PROMPT",
+            "EVT_FWD",
+            "KNOWLEDGE"
+          ],
+          "description": "List of pathways to track. Agent Brain pathways: GUID_INIT (Guidance Init), VALID (Validation), PLAN (Plan Management), MINI (MiniPlan Lifecycle), DIAG (Diagnostics), GOLD (Golden Path), PROMPT (Prompt Building), EVT_FWD (Event Forwarding), KNOWLEDGE (Knowledge Management)"
+        },
+        "agentBrain.logging.logLevel": {
+          "type": "string",
+          "enum": [
+            "DEBUG",
+            "INFO",
+            "WARN",
+            "ERROR",
+            "NONE"
+          ],
+          "default": "INFO",
+          "description": "Minimum log level to display in webview console"
+        },
+        "agentBrain.providers.gitLocal.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable local git repository event provider (commits, branches, tags). Core timeline functionality."
+        },
+        "agentBrain.providers.github.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable GitHub API event provider (PRs, issues, releases). Requires authentication. Disabled by default."
+        },
+        "agentBrain.providers.knowledgeEvents.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable knowledge management event provider. Shows when knowledge items are applied/removed/created."
+        },
+        "agentBrain.providers.sessionJournals.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable agent session journal event provider. Shows session journals created by coding agents."
+        }
+      }
     }
   },
   "scripts": {

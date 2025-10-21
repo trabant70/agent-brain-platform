@@ -6,7 +6,7 @@
 
 import { EventEmitter } from 'events';
 
-export type TabId = 'timeline' | 'prompt' | 'config' | 'knowledge' | 'support';
+export type TabId = 'timeline' | 'knowledge';
 
 export interface TabChangeEvent {
   from: TabId | null;
@@ -25,7 +25,6 @@ export class TabManager extends EventEmitter {
    */
   initialize(): void {
     if (this.initialized) {
-      console.warn('[TabManager] Already initialized');
       return;
     }
 
@@ -52,15 +51,17 @@ export class TabManager extends EventEmitter {
       }
     });
 
-    // Restore saved tab from localStorage
+    // Restore saved tab from localStorage, or default to 'timeline'
     const savedTab = this.loadSavedTab();
     if (savedTab && this.tabButtons.has(savedTab)) {
       this.activeTab = savedTab;
-      this.updateUI();
+    } else {
+      // No saved state - default to timeline
+      this.activeTab = 'timeline';
     }
+    this.updateUI();
 
     this.initialized = true;
-    console.log('[TabManager] Initialized with tabs:', Array.from(this.tabButtons.keys()));
   }
 
   /**
@@ -68,12 +69,10 @@ export class TabManager extends EventEmitter {
    */
   switchTab(tabId: TabId): void {
     if (!this.initialized) {
-      console.error('[TabManager] Not initialized');
       return;
     }
 
     if (!this.tabButtons.has(tabId)) {
-      console.error(`[TabManager] Unknown tab: ${tabId}`);
       return;
     }
 
@@ -98,8 +97,6 @@ export class TabManager extends EventEmitter {
       timestamp: new Date()
     };
     this.emit('tab:changed', event);
-
-    console.log(`[TabManager] Switched from ${previousTab} to ${tabId}`);
   }
 
   /**
@@ -150,7 +147,7 @@ export class TabManager extends EventEmitter {
     try {
       localStorage.setItem('agentbrain.activeTab', this.activeTab);
     } catch (error) {
-      console.warn('[TabManager] Failed to save active tab:', error);
+      // Silently fail
     }
   }
 
@@ -164,7 +161,7 @@ export class TabManager extends EventEmitter {
         return saved as TabId;
       }
     } catch (error) {
-      console.warn('[TabManager] Failed to load saved tab:', error);
+      // Silently fail
     }
     return null;
   }
@@ -173,7 +170,7 @@ export class TabManager extends EventEmitter {
    * Validate tab ID
    */
   private isValidTabId(id: string): id is TabId {
-    return ['timeline', 'prompt', 'config', 'knowledge', 'support'].includes(id);
+    return ['timeline', 'guidance', 'plans', 'config', 'knowledge', 'support'].includes(id);
   }
 
   /**

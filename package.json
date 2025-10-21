@@ -26,6 +26,7 @@
     "dev": "lerna run dev --parallel"
   },
   "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^18.19.0",
     "lerna": "^8.2.4",
     "typescript": "^5.3.3"

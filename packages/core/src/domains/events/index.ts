@@ -11,11 +11,18 @@ export { ImpactMetrics } from './ImpactMetrics';
 export { VisualizationHints } from './VisualizationHints';
 export { EventSource } from './EventSource';
 export { CanonicalEvent } from './CanonicalEvent';
+export { KnowledgeEventStorage } from './KnowledgeEventStorage';
 export {
   FilterOptions,
   FilterState,
   CachedRepoData,
   ProviderContext,
   ProviderCapabilities,
-  ProviderConfig
+  ProviderConfig,
+  // Knowledge Event Types
+  KnowledgeEventOperation,
+  KnowledgeEventActor,
+  KnowledgeEventRecord,
+  KnowledgeEventsFile,
+  RecordKnowledgeEventParams
 } from './types';

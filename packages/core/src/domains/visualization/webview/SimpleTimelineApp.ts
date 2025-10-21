@@ -1,20 +1,15 @@
 /**
- * SimpleTimelineApp - Clean Implementation for v0.3.0
+ * SimpleTimelineApp - Clean Implementation
  *
  * Works directly with CanonicalEvent[] from backend
+ * Handles timeline rendering for Git and GitHub events
  * No legacy transformation layers, no old state management
  */
 
 import { D3TimelineRendererImpl } from '../timeline/D3TimelineRendererImpl';
 import { UIControllerManager } from '../ui/UIControllerManager';
-import { QuickPromptPanel } from '../ui/QuickPromptPanel';
-import { AICompanionDot } from '../ui/AICompanionDot';
-import { ErrorRecoveryPanel } from '../ui/ErrorRecoveryPanel';
-import { ComparisonView } from '../ui/ComparisonView';
 import { TabManager } from '../ui/TabManager';
-import { PromptSupportView } from '../ui/PromptSupportView';
-import { SupportView } from '../ui/SupportView';
-import { KnowledgeManagementView } from '../ui/KnowledgeManagementView';
+import { KnowledgeViewController } from '../ui/KnowledgeViewController';
 import { webviewLogger, LogCategory, LogPathway } from './WebviewLogger';
 
 interface CanonicalEvent {
@@ -45,14 +40,8 @@ interface FilterOptions {
 export class SimpleTimelineApp {
     private renderer: D3TimelineRendererImpl;
     private uiManager: UIControllerManager;
-    private quickPromptPanel: QuickPromptPanel;
-    private aiCompanionDot: AICompanionDot;
-    private errorRecoveryPanel: ErrorRecoveryPanel;
-    private comparisonView: ComparisonView;
     private tabManager: TabManager;
-    private promptSupportView: PromptSupportView;
-    private supportView: SupportView;
-    private knowledgeManagementView: KnowledgeManagementView;
+    private knowledgeController: KnowledgeViewController;
     private currentEvents: CanonicalEvent[] = [];
     private currentFilterOptions: FilterOptions | null = null;
     private currentAppliedFilters: any = null;  // Current filter state for branch visibility
@@ -92,28 +81,6 @@ export class SimpleTimelineApp {
             this.connectFilterCallbacks();
         });
 
-        // Initialize new Phase 1 UI components
-        this.quickPromptPanel = new QuickPromptPanel((prompt: string, agent: string) => this.handlePromptEnhance(prompt, agent));
-        this.aiCompanionDot = new AICompanionDot();
-        this.errorRecoveryPanel = new ErrorRecoveryPanel();
-
-        // Initialize Phase 2 UI components
-        this.comparisonView = new ComparisonView();
-
-        // Initialize with container IDs from timeline.html
-        this.quickPromptPanel.initialize('quick-prompt-container');
-        this.aiCompanionDot.initialize('ai-companion-slot');
-        this.errorRecoveryPanel.initialize('error-recovery-container');
-        this.comparisonView.initialize('comparison-container');
-
-        // Setup quick prompt trigger button
-        const quickPromptTrigger = document.getElementById('quick-prompt-trigger');
-        quickPromptTrigger?.addEventListener('click', () => {
-            this.quickPromptPanel.show();
-        });
-
-        webviewLogger.info(LogCategory.UI, 'Phase 1 AI companion components initialized', 'constructor');
-
         // Initialize tab manager
         this.tabManager = new TabManager();
         this.tabManager.initialize();
@@ -125,20 +92,19 @@ export class SimpleTimelineApp {
 
         webviewLogger.info(LogCategory.UI, 'Tab manager initialized', 'constructor');
 
-        // Initialize Prompt Support View (Phase 2)
-        this.promptSupportView = new PromptSupportView();
-        this.promptSupportView.initialize('prompt-support-container');
-        webviewLogger.info(LogCategory.UI, 'Prompt support view initialized', 'constructor');
+        // Initialize knowledge controller
+        this.knowledgeController = new KnowledgeViewController();
+        this.knowledgeController.initialize((message) => {
+            // Forward knowledge messages to extension
+            if (window.vscode) {
+                window.vscode.postMessage(message);
+            }
+        });
 
-        // Initialize Support View
-        this.supportView = new SupportView();
-        this.supportView.initialize('support-container');
-        webviewLogger.info(LogCategory.UI, 'Support view initialized', 'constructor');
+        // Make knowledge controller globally accessible for onclick handlers
+        (window as any).knowledgeController = this.knowledgeController;
 
-        // Initialize Knowledge Management View
-        this.knowledgeManagementView = new KnowledgeManagementView();
-        this.knowledgeManagementView.initialize('knowledge-management-container');
-        webviewLogger.info(LogCategory.UI, 'Knowledge management view initialized', 'constructor');
+        webviewLogger.info(LogCategory.UI, 'Knowledge controller initialized', 'constructor');
 
         // Setup brush callback for range selector
         this.setupRendererCallbacks();
@@ -672,29 +638,66 @@ export class SimpleTimelineApp {
             return;
         }
 
-        // Get container dimensions
-        const rect = this.container.getBoundingClientRect();
+        // Check if Timeline tab is currently active
+        const isTimelineActive = this.tabManager && this.tabManager.getActiveTab() === 'timeline';
+
         webviewLogger.debug(
             LogCategory.VISUALIZATION,
-            'Container dimensions updated',
+            'Resize context',
             'SimpleTimelineApp.handleResize',
-            { width: rect.width, height: rect.height },
+            {
+                isTimelineActive,
+                hasData: !!this.currentProcessedData,
+                containerWidth: this.container.getBoundingClientRect().width,
+                containerHeight: this.container.getBoundingClientRect().height
+            },
             LogPathway.RENDER_PIPELINE
         );
 
-        // Trigger renderer resize
-        this.renderer.resize();
-
-        // Re-render with current data if available
-        if (this.currentProcessedData) {
-            webviewLogger.debug(
+        if (isTimelineActive && this.currentProcessedData) {
+            // Timeline is active - use robust restoration logic
+            // This is critical when returning from window focus loss (Terminal, etc.)
+            webviewLogger.info(
                 LogCategory.VISUALIZATION,
-                'Re-rendering after resize',
+                'Timeline active - using robust resize with RAF',
                 'SimpleTimelineApp.handleResize',
                 undefined,
                 LogPathway.RENDER_PIPELINE
             );
-            this.renderer.update(this.currentProcessedData);
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    webviewLogger.debug(LogCategory.VISUALIZATION, 'RAF #1-2 complete - first resize', 'handleResize');
+                    this.renderer.resize();
+
+                    setTimeout(() => {
+                        webviewLogger.debug(LogCategory.VISUALIZATION, 'Second resize and full render', 'handleResize');
+                        this.renderer.resize();
+                        this.renderer.render(this.currentProcessedData); // Full render for brush recalculation
+
+                        setTimeout(() => {
+                            webviewLogger.debug(LogCategory.VISUALIZATION, 'Final safety resize', 'handleResize');
+                            this.renderer.resize();
+                        }, 100);
+                    }, 100);
+                });
+            });
+        } else {
+            // Other tab active or no data - simple resize
+            const rect = this.container.getBoundingClientRect();
+            webviewLogger.debug(
+                LogCategory.VISUALIZATION,
+                'Simple resize (non-timeline tab or no data)',
+                'SimpleTimelineApp.handleResize',
+                { width: rect.width, height: rect.height },
+                LogPathway.RENDER_PIPELINE
+            );
+
+            this.renderer.resize();
+
+            if (this.currentProcessedData) {
+                this.renderer.update(this.currentProcessedData);
+            }
         }
     }
 
@@ -729,72 +732,6 @@ export class SimpleTimelineApp {
     }
 
     /**
-     * Handle prompt enhancement request from QuickPromptPanel
-     */
-    private handlePromptEnhance(prompt: string, agent: string): void {
-        webviewLogger.debug(LogCategory.UI, 'Prompt enhancement requested', 'handlePromptEnhance', { agent, promptLength: prompt.length });
-
-        // Send to extension for enhancement processing
-        if (window.vscode) {
-            window.vscode.postMessage({
-                type: 'enhancePrompt',
-                prompt,
-                agent
-            });
-        }
-    }
-
-    /**
-     * Update quick prompt panel with enhanced result
-     */
-    updateEnhancedPrompt(enhanced: string, itemsUsed: number): void {
-        this.quickPromptPanel.updateEnhanced(enhanced, itemsUsed);
-    }
-
-    /**
-     * Show AI companion tip
-     */
-    showCompanionTip(tip: { id: string; message: string; priority: 'critical' | 'helpful' | 'informational' }): void {
-        this.aiCompanionDot.showTip(tip);
-    }
-
-    /**
-     * Show error recovery panel
-     */
-    showErrorRecovery(error: { type: string; message: string; line?: number; file?: string }, similarErrors: any[]): void {
-        this.errorRecoveryPanel.showError(error, similarErrors);
-    }
-
-    /**
-     * Show comparison view (Phase 2)
-     */
-    showComparisonView(original: string, enhanced: string, metadata: {
-        itemsUsed: number;
-        stage: number;
-        knowledgeItems: Array<{ type: string; name: string; id: string }>;
-    }): void {
-        this.comparisonView.show(original, enhanced, metadata);
-    }
-
-    /**
-     * Update knowledge preview in Prompt Support tab
-     */
-    updatePromptKnowledgePreview(items: any[]): void {
-        if (this.promptSupportView) {
-            this.promptSupportView.updateKnowledgePreview(items);
-        }
-    }
-
-    /**
-     * Update enhanced prompt in Prompt Support tab
-     */
-    updatePromptEnhancedResult(enhanced: string, itemsUsed: number): void {
-        if (this.promptSupportView) {
-            this.promptSupportView.updateEnhanced(enhanced, itemsUsed);
-        }
-    }
-
-    /**
      * Handle tab change events
      */
     private handleTabChange(event: any): void {
@@ -813,8 +750,50 @@ export class SimpleTimelineApp {
         // Resume rendering when returning to timeline tab
         if (to === 'timeline' && this.currentProcessedData) {
             webviewLogger.debug(LogCategory.VISUALIZATION, 'Resuming timeline rendering (tab switched back)', 'handleTabChange');
-            // Re-render to ensure fresh state
-            this.renderer.resize();
+
+            // Use double-RAF to ensure CSS layout has fully settled
+            // RAF 1: Browser paints the active tab
+            // RAF 2: Layout calculations are complete
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    webviewLogger.debug(LogCategory.VISUALIZATION, 'RAF cycle complete - performing resize', 'handleTabChange');
+
+                    // First resize with fresh dimensions
+                    this.renderer.resize();
+
+                    // Delayed full re-render to ensure brush dimensions are perfect
+                    setTimeout(() => {
+                        webviewLogger.debug(LogCategory.VISUALIZATION, 'Second resize and render', 'handleTabChange');
+                        this.renderer.resize(); // Second resize before render
+
+                        // Force a complete re-render with current data
+                        if (this.currentProcessedData) {
+                            this.renderer.render(this.currentProcessedData);
+                        }
+
+                        // THIRD resize after render completes (catches any layout shifts from render)
+                        setTimeout(() => {
+                            webviewLogger.debug(LogCategory.VISUALIZATION, 'Final safety resize', 'handleTabChange');
+                            this.renderer.resize();
+                        }, 100);
+                    }, 100); // Increased from 50ms to allow full reflow
+                });
+            });
+        }
+
+        // Load knowledge data when Knowledge tab is activated (if not already loaded)
+        if (to === 'knowledge') {
+            webviewLogger.debug(LogCategory.UI, 'Knowledge tab activated', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+            // Only request data if the controller doesn't have any items yet
+            // This preserves data when switching between tabs
+            const hasData = this.knowledgeController && (this.knowledgeController as any).state?.items?.length > 0;
+            if (!hasData && window.vscode) {
+                webviewLogger.debug(LogCategory.UI, 'No knowledge data loaded yet - requesting', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+                window.vscode.postMessage({ type: 'knowledge:load-request' });
+                window.vscode.postMessage({ type: 'knowledge:scan-claude-files' });
+            } else {
+                webviewLogger.debug(LogCategory.UI, 'Knowledge data already loaded - using cached data', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+            }
         }
 
         // Notify extension of tab change (for analytics/state persistence)

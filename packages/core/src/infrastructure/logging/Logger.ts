@@ -42,7 +42,18 @@ export enum LogPathway {
     WEBVIEW_MESSAGING = 'MESSAGE',  // Extension ↔ Webview postMessage communication
     CONFIG_SYNC = 'CONFIG',         // Configuration changes → State → UI updates
     RANGE_SELECTOR = 'RANGE',       // Time slider/brush interactions → Viewport updates
-    LEGEND = 'LEGEND'               // Legend rendering → Event categorization → Tab display
+    LEGEND = 'LEGEND',              // Legend rendering → Event categorization → Tab display
+    KNOWLEDGE_MANAGEMENT = 'KNOWLEDGE', // Knowledge base CRUD operations → UI updates
+
+    // Agent Brain Integration Pathways
+    GUIDANCE_INIT = 'GUIDANCE_INIT',       // AgentBrainCore init → Bridge setup → Webview ready
+    VALIDATION_FLOW = 'VALIDATION',        // UI → WebviewClient → Bridge → ValidationEngine → Results → UI
+    PLAN_MANAGEMENT = 'PLAN_MGMT',         // Plan CRUD → State sync → Hierarchy update → UI render
+    MINIPLAN_LIFECYCLE = 'MINIPLAN',       // MiniPlan create → Tasks → Validations → Evidence → Complete
+    DIAGNOSTICS_FLOW = 'DIAGNOSTICS',      // Failure → DiagnosticsProvider → Remediation → UI display
+    GOLDEN_PATH_TRACKING = 'GOLDEN_PATH',  // Step navigation → Validation check → Compliance → UI update
+    PROMPT_BUILDING = 'PROMPT_BUILD',      // Results → PromptBuilder → Template render → Copy/Export
+    EVENT_FORWARDING = 'EVENT_FWD'         // Backend event → Bridge → WebviewClient → UI handler
 }
 
 interface LogEntry {

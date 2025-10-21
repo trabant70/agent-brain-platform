@@ -1,7 +1,7 @@
 /**
- * Session Provider Module
+ * Session Event Provider Module
  *
- * Exports Agent Brain session event provider for timeline integration.
+ * Exports session event provider for timeline integration.
  */
 
 export * from './SessionEventProvider';

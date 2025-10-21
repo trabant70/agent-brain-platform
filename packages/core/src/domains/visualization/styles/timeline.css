@@ -16,11 +16,5 @@
 @import url('./components/tooltip.css');
 @import url('./components/popup.css');
 @import url('./components/range-selector.css');
-@import url('./components/prompt-panels.css');
-@import url('./components/prompt-support.css');
-@import url('./components/comparison-view.css');
-@import url('./components/celebration.css');
-@import url('./components/profile-wizard.css');
-@import url('./components/support.css');
-@import url('./components/knowledge.css');
+@import url('./components/modal.css');
 @import url('./themes/cosmic.css');

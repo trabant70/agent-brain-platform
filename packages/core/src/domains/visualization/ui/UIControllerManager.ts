@@ -5,21 +5,17 @@
  * Orchestrates:
  * - FilterController: Filter management
  * - PopupController: Event popup management
- * - ThemeController: Theme switching
  * - ContextController: Context information display
  */
 
 import { FilterController, FilterState, AvailableOptions, CrossProviderFilterState } from './FilterController';
 import { PopupController, EventInteractionHandlers } from './PopupController';
-import { ThemeController, ThemeDefinition } from './ThemeController';
 import { ContextController, ContextInfo } from './ContextController';
 
 export interface UIControllerOptions {
     colorMap?: { [key: string]: string };
-    defaultTheme?: string;
     onFilterUpdate?: (filterType: string, values: string[]) => void;
     onEventAction?: (action: string, event: any) => void;
-    onThemeChange?: (theme: string) => void;
 }
 
 /**
@@ -28,7 +24,6 @@ export interface UIControllerOptions {
 export class UIControllerManager {
     private filterController: FilterController;
     private popupController: PopupController;
-    private themeController: ThemeController;
     private contextController: ContextController;
 
     constructor(options: UIControllerOptions = {}) {
@@ -41,11 +36,6 @@ export class UIControllerManager {
         this.popupController = new PopupController({
             // PopupController is now a pure UI component
             // No application action callbacks - TimelineApp handles file actions
-        });
-
-        this.themeController = new ThemeController({
-            defaultTheme: options.defaultTheme,
-            onThemeChange: options.onThemeChange
         });
 
         this.contextController = new ContextController();
@@ -104,15 +94,6 @@ export class UIControllerManager {
         this.contextController.updateContextInfo(data);
     }
 
-
-
-    /**
-     * Switch theme
-     */
-    switchTheme(themeId: string): void {
-        this.themeController.switchTheme(themeId);
-    }
-
     /**
      * Reset all filters
      */
@@ -153,13 +134,6 @@ export class UIControllerManager {
      */
     getFilterState(): CrossProviderFilterState {
         return this.filterController.getFilterState();
-    }
-
-    /**
-     * Get current theme
-     */
-    getCurrentTheme(): string {
-        return this.themeController.getCurrentTheme();
     }
 
     /**
@@ -209,13 +183,6 @@ export class UIControllerManager {
      */
     switchPopupTab(tabName: string): void {
         this.popupController.switchPopupTab(tabName);
-    }
-
-    /**
-     * Add custom theme
-     */
-    addTheme(theme: ThemeDefinition): void {
-        this.themeController.addTheme(theme);
     }
 
     /**
@@ -269,13 +236,11 @@ export class UIControllerManager {
      */
     getDebugInfo(): {
         filters: CrossProviderFilterState;
-        theme: string;
         context: ContextInfo;
         popup: any;
     } {
         return {
             filters: this.getFilterState(),
-            theme: this.getCurrentTheme(),
             context: this.getCurrentContext(),
             popup: this.getPopupStats()
         };

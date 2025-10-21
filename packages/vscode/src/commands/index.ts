@@ -1,14 +1,5 @@
-/**
- * Commands Module
- *
- * Exports all Agent Brain commands for registration in the extension.
- */
+// Commands index
+// Old knowledge management commands removed
+// New simple knowledge management will have different commands based on new approach
 
-export * from './BaseCommand';
-export * from './PromptCommand';
-export * from './EndSessionCommand';
-export * from './ShowStatusCommand';
-export * from './setupProjectProfile';
-export * from './AddContextRuleCommand'; // Phase 2
-export * from './ImportPackageCommand'; // Phase 3
-export * from './ExportPackageCommand'; // Phase 3
+export {};
