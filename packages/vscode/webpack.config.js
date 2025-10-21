@@ -141,6 +141,10 @@ const webviewConfig = {
         {
           from: path.resolve(__dirname, '../../docs/agentbrain-complete-diagram.svg'),
           to: path.resolve(__dirname, 'dist/webview/assets/agentbrain-complete-diagram.svg')
+        },
+        {
+          from: path.resolve(__dirname, '../../docs/agentbrain-complete-diagram-dark.svg'),
+          to: path.resolve(__dirname, 'dist/webview/assets/agentbrain-complete-diagram-dark.svg')
         }
       ]
     })

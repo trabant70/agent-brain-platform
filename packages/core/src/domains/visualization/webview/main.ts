@@ -65,6 +65,48 @@ function initializeWebview(): void {
 }
 
 /**
+ * Update architecture diagram based on theme
+ */
+function updateArchitectureDiagram(): void {
+    const diagram = document.getElementById('architecture-diagram') as HTMLImageElement;
+    if (!diagram) return;
+
+    // VSCode adds 'vscode-light', 'vscode-dark', or 'vscode-high-contrast' class to body
+    const isDark = document.body.classList.contains('vscode-dark') ||
+                   document.body.classList.contains('vscode-high-contrast');
+
+    const currentSrc = diagram.getAttribute('src') || '';
+    const expectedSuffix = isDark ? '-dark.svg' : '.svg';
+
+    // Only update if needed (avoid unnecessary reloads)
+    if (!currentSrc.endsWith(expectedSuffix)) {
+        const baseSrc = isDark
+            ? 'assets/agentbrain-complete-diagram-dark.svg'
+            : 'assets/agentbrain-complete-diagram.svg';
+        diagram.setAttribute('src', baseSrc);
+        webviewLogger.debug(LogCategory.WEBVIEW, `Updated diagram to ${isDark ? 'dark' : 'light'} theme`, 'updateArchitectureDiagram');
+    }
+}
+
+/**
+ * Setup theme observer to detect VSCode theme changes
+ */
+function setupThemeObserver(): void {
+    // Initial update
+    updateArchitectureDiagram();
+
+    // Watch for theme changes (VSCode changes body class)
+    const observer = new MutationObserver(() => {
+        updateArchitectureDiagram();
+    });
+
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class']
+    });
+}
+
+/**
  * Start the application
  */
 function startApplication(): void {
@@ -77,6 +119,7 @@ function startApplication(): void {
         webviewLogger.info(LogCategory.WEBVIEW, 'Starting timeline application', 'startApplication');
         window.timelineApp = new SimpleTimelineApp('visualization');
         setupResizeObserver();
+        setupThemeObserver();
 
         if (window.vscode) {
             webviewLogger.debug(LogCategory.WEBVIEW, 'Requesting initial data from extension', 'startApplication', undefined, LogPathway.WEBVIEW_MESSAGING);
