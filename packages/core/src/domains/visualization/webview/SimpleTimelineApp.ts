@@ -108,6 +108,15 @@ export class SimpleTimelineApp {
 
         webviewLogger.info(LogCategory.UI, 'Knowledge controller initialized', 'constructor');
 
+        // If knowledge tab is already active (restored from localStorage), request initial data
+        if (this.tabManager.getActiveTab() === 'knowledge') {
+            webviewLogger.info(LogCategory.UI, 'Knowledge tab is active on initialization - requesting data', 'constructor', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+            if (window.vscode) {
+                window.vscode.postMessage({ type: 'knowledge:load-request' });
+                window.vscode.postMessage({ type: 'knowledge:scan-claude-files' });
+            }
+        }
+
         // Initialize session controller
         this.sessionController = new SessionViewController();
         this.sessionController.initialize((message) => {
@@ -121,6 +130,12 @@ export class SimpleTimelineApp {
         (window as any).sessionController = this.sessionController;
 
         webviewLogger.info(LogCategory.UI, 'Session controller initialized', 'constructor', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+
+        // If sessions tab is already active (restored from localStorage), request initial data
+        if (this.tabManager.getActiveTab() === 'sessions') {
+            webviewLogger.info(LogCategory.UI, 'Sessions tab is active on initialization - requesting data', 'constructor', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+            this.sessionController.requestInitialLoad();
+        }
 
         // Setup brush callback for range selector
         this.setupRendererCallbacks();

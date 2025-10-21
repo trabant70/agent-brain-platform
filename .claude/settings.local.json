@@ -128,7 +128,8 @@
       "Bash(code --install-extension \"C:\\projects\\agent-brain-platform\\packages\\vscode\\agent-brain-platform-0.2.14.vsix\" --force)",
       "Bash(code --install-extension \"agent-brain-platform-0.2.15.vsix\" --force)",
       "Bash(code --install-extension \"agent-brain-platform-0.2.16.vsix\" --force)",
-      "Bash(code --install-extension \"agent-brain-platform-0.2.17.vsix\" --force)"
+      "Bash(code --install-extension \"agent-brain-platform-0.2.17.vsix\" --force)",
+      "Bash(code --install-extension:*)"
     ],
     "deny": [],
     "ask": []

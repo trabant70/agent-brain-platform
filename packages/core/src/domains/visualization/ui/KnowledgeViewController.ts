@@ -40,6 +40,8 @@ export class KnowledgeViewController {
   private notifications: NotificationManager;
   private isInitialLoad: boolean = true;
   private expandedAccordions: Set<string> = new Set(); // Track which claude.md files are expanded
+  private accordionScrollPositions: Map<string, number> = new Map(); // Track scroll positions for each file
+  private selectedClaudeFile: string | null = null; // Track which claude.md file is selected for applying knowledge
 
   constructor() {
     this.state = {
@@ -137,8 +139,14 @@ export class KnowledgeViewController {
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
 
+    // Save scroll positions before re-rendering
+    this.saveAccordionScrollPositions();
+
     this.state.claudeMdFiles = files;
     this.renderClaudeMdAccordion();
+
+    // Restore scroll positions after rendering
+    this.restoreAccordionScrollPositions();
 
     webviewLogger.info(
       LogCategory.UI,
@@ -289,6 +297,9 @@ export class KnowledgeViewController {
         tbody.appendChild(row);
       }
     }
+
+    // Update sort indicators after rendering
+    this.updateSortIndicators();
 
     webviewLogger.info(
       LogCategory.UI,
@@ -451,16 +462,25 @@ export class KnowledgeViewController {
       return;
     }
 
+    // Auto-select first file if none selected
+    if (!this.selectedClaudeFile && this.state.claudeMdFiles.length > 0) {
+      this.selectedClaudeFile = this.state.claudeMdFiles[0].path;
+    }
+
     for (const file of this.state.claudeMdFiles) {
       const accordionItem = document.createElement('div');
       // Check if this accordion was previously expanded
       const isExpanded = this.expandedAccordions.has(file.path);
-      accordionItem.className = `accordion-item ab-collapsible ${isExpanded ? '' : 'collapsed'}`;
+      const isSelected = this.selectedClaudeFile === file.path;
+      accordionItem.className = `accordion-item ab-collapsible ${isExpanded ? 'expanded' : 'collapsed'} ${isSelected ? 'selected' : ''}`;
       accordionItem.dataset.filePath = file.path;
 
       const header = document.createElement('div');
       header.className = 'accordion-header ab-collapsible-header';
       header.innerHTML = `
+        <span class="file-selector" data-file-path="${file.path}" title="Select this file as target for applying knowledge items">
+          <input type="radio" name="selected-claude-file" ${isSelected ? 'checked' : ''}>
+        </span>
         <span class="accordion-icon ab-collapsible-icon">▼</span>
         <span class="accordion-title ab-collapsible-title">📄 ${this.escapeHtml(file.relativePath)}</span>
         ${file.hasConflicts ? '<span class="conflict-badge ab-badge-error">⚠️ Conflicts</span>' : ''}
@@ -468,7 +488,7 @@ export class KnowledgeViewController {
       `;
 
       const content = document.createElement('div');
-      content.className = 'accordion-content ab-collapsible-body scrollable';
+      content.className = 'accordion-content ab-collapsible-body';
 
       // Build content HTML
       let contentHTML = '';
@@ -561,16 +581,61 @@ export class KnowledgeViewController {
 
       content.innerHTML = contentHTML;
 
+      // Add event listener for file selection radio button
+      const fileSelector = header.querySelector('.file-selector');
+      if (fileSelector) {
+        fileSelector.addEventListener('click', (e) => {
+          e.stopPropagation(); // Don't trigger accordion toggle
+          this.selectedClaudeFile = file.path;
+
+          // Update all accordion items
+          const allItems = document.querySelectorAll('.accordion-item');
+          allItems.forEach(item => {
+            const itemPath = (item as HTMLElement).dataset.filePath;
+            if (itemPath === file.path) {
+              item.classList.add('selected');
+            } else {
+              item.classList.remove('selected');
+            }
+          });
+
+          webviewLogger.info(
+            LogCategory.UI,
+            'Selected claude.md file for applying knowledge',
+            'renderClaudeMdAccordion',
+            { selectedFile: file.path },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+
+          this.notifications.show({
+            type: 'info',
+            message: `Selected ${file.relativePath} as target for knowledge items`,
+            duration: 2000
+          });
+        });
+      }
+
       // Add event listener to accordion header
-      header.addEventListener('click', () => {
-        // Toggle both classes for compatibility
-        accordionItem.classList.toggle('active');
-        accordionItem.classList.toggle('collapsed');
+      header.addEventListener('click', (e) => {
+        // Don't toggle if clicking on the radio button
+        if ((e.target as HTMLElement).closest('.file-selector')) {
+          return;
+        }
+        const wasExpanded = accordionItem.classList.contains('expanded');
+
+        // Toggle between expanded and collapsed
+        if (wasExpanded) {
+          accordionItem.classList.remove('expanded');
+          accordionItem.classList.add('collapsed');
+        } else {
+          accordionItem.classList.remove('collapsed');
+          accordionItem.classList.add('expanded');
+        }
 
         // Track expansion state
         const filePath = accordionItem.dataset.filePath;
         if (filePath) {
-          if (accordionItem.classList.contains('collapsed')) {
+          if (wasExpanded) {
             this.expandedAccordions.delete(filePath);
           } else {
             this.expandedAccordions.add(filePath);
@@ -642,6 +707,14 @@ export class KnowledgeViewController {
           });
         }
       }
+
+      // Track scroll position when user scrolls
+      content.addEventListener('scroll', () => {
+        const filePath = accordionItem.dataset.filePath;
+        if (filePath) {
+          this.accordionScrollPositions.set(filePath, content.scrollTop);
+        }
+      });
 
       accordionItem.appendChild(header);
       accordionItem.appendChild(content);
@@ -845,6 +918,17 @@ export class KnowledgeViewController {
           this.changeGrouping(groupBy);
         }
       }
+    });
+
+    // Column header sorting
+    const sortableHeaders = document.querySelectorAll('.knowledge-table th[data-sort]');
+    sortableHeaders.forEach(header => {
+      header.addEventListener('click', () => {
+        const sortColumn = header.getAttribute('data-sort') as 'title' | 'type' | 'scope';
+        if (sortColumn) {
+          this.handleSort(sortColumn);
+        }
+      });
     });
 
     // Resizable divider
@@ -1106,6 +1190,63 @@ export class KnowledgeViewController {
     activeBtn?.classList.add('active');
 
     this.renderKnowledgeTable();
+  }
+
+  /**
+   * Handle column sort click
+   */
+  handleSort(column: 'title' | 'type' | 'scope'): void {
+    webviewLogger.debug(
+      LogCategory.UI,
+      'Sort column clicked',
+      'handleSort',
+      { column },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    // Toggle direction if same column, otherwise reset to ascending
+    if (this.state.sortBy === column) {
+      this.state.sortDirection = this.state.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.state.sortBy = column;
+      this.state.sortDirection = 'asc';
+    }
+
+    this.renderKnowledgeTable();
+    this.updateSortIndicators();
+
+    webviewLogger.debug(
+      LogCategory.UI,
+      'Sort applied',
+      'handleSort',
+      { sortBy: this.state.sortBy, sortDirection: this.state.sortDirection },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+  }
+
+  /**
+   * Update sort indicators in table headers
+   */
+  private updateSortIndicators(): void {
+    const headers = document.querySelectorAll('.knowledge-table th[data-sort]');
+    headers.forEach(header => {
+      const sortColumn = header.getAttribute('data-sort');
+
+      // Remove all sorting classes
+      header.classList.remove('sorted-asc', 'sorted-desc', 'sortable');
+
+      // Add sortable class for cursor styling
+      header.classList.add('sortable');
+
+      // Add appropriate class if this is the active sort column
+      if (sortColumn === this.state.sortBy) {
+        if (this.state.sortDirection === 'asc') {
+          header.classList.add('sorted-asc');
+        } else {
+          header.classList.add('sorted-desc');
+        }
+      }
+    });
   }
 
   /**
@@ -1767,14 +1908,27 @@ export class KnowledgeViewController {
       return;
     }
 
+    if (!this.selectedClaudeFile) {
+      this.notifications.show({
+        type: 'warning',
+        message: 'Please select a claude.md file first (click the radio button next to the file name)'
+      });
+      return;
+    }
+
+    const fileName = this.selectedClaudeFile.split(/[/\\]/).pop() || 'claude.md';
+
     this.sendMessage({
       type: 'knowledge:apply-selected-items',
-      payload: { itemIds: selectedIds }
+      payload: {
+        itemIds: selectedIds,
+        claudeFilePath: this.selectedClaudeFile
+      }
     });
 
     this.notifications.show({
       type: 'info',
-      message: `Applying ${selectedIds.length} selected item(s) to focused claude.md...`
+      message: `Applying ${selectedIds.length} selected item(s) to ${fileName}...`
     });
   }
 
@@ -1793,17 +1947,30 @@ export class KnowledgeViewController {
       return;
     }
 
+    if (!this.selectedClaudeFile) {
+      this.notifications.show({
+        type: 'warning',
+        message: 'Please select a claude.md file first (click the radio button next to the file name)'
+      });
+      return;
+    }
+
     const template = this.state.templates.find(t => t.id === templateId);
     const templateName = template?.name || 'template';
+    const fileName = this.selectedClaudeFile.split(/[/\\]/).pop() || 'claude.md';
 
     this.sendMessage({
       type: 'knowledge:apply-template',
-      payload: { templateId, replaceExisting: true }
+      payload: {
+        templateId,
+        replaceExisting: true,
+        claudeFilePath: this.selectedClaudeFile
+      }
     });
 
     this.notifications.show({
       type: 'info',
-      message: `Applying template "${templateName}" to focused claude.md...`
+      message: `Applying template "${templateName}" to ${fileName}...`
     });
   }
 
@@ -2020,6 +2187,59 @@ export class KnowledgeViewController {
     this.sendMessage({
       type: 'knowledge:scan-claude-files'
     });
+  }
+
+  /**
+   * Save scroll positions of all accordion content areas
+   */
+  private saveAccordionScrollPositions(): void {
+    const accordionItems = document.querySelectorAll('.accordion-item');
+    accordionItems.forEach((item) => {
+      const filePath = (item as HTMLElement).dataset.filePath;
+      const content = item.querySelector('.accordion-content');
+
+      if (filePath && content) {
+        const scrollTop = content.scrollTop;
+        if (scrollTop > 0) {
+          this.accordionScrollPositions.set(filePath, scrollTop);
+          webviewLogger.debug(
+            LogCategory.UI,
+            'Saved scroll position for accordion',
+            'saveAccordionScrollPositions',
+            { filePath, scrollTop },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+        }
+      }
+    });
+  }
+
+  /**
+   * Restore scroll positions of all accordion content areas
+   */
+  private restoreAccordionScrollPositions(): void {
+    // Use setTimeout to ensure DOM is fully updated
+    setTimeout(() => {
+      const accordionItems = document.querySelectorAll('.accordion-item');
+      accordionItems.forEach((item) => {
+        const filePath = (item as HTMLElement).dataset.filePath;
+        const content = item.querySelector('.accordion-content');
+
+        if (filePath && content) {
+          const savedScrollTop = this.accordionScrollPositions.get(filePath);
+          if (savedScrollTop !== undefined && savedScrollTop > 0) {
+            content.scrollTop = savedScrollTop;
+            webviewLogger.debug(
+              LogCategory.UI,
+              'Restored scroll position for accordion',
+              'restoreAccordionScrollPositions',
+              { filePath, scrollTop: savedScrollTop },
+              LogPathway.KNOWLEDGE_MANAGEMENT
+            );
+          }
+        }
+      });
+    }, 0);
   }
 
   /**

@@ -190,6 +190,25 @@ export class SessionViewController {
   }
 
   /**
+   * Request initial data load (called when tab first becomes visible)
+   */
+  requestInitialLoad(): void {
+    webviewLogger.debug(
+      LogCategory.UI,
+      'Requesting initial session data load',
+      'requestInitialLoad',
+      undefined,
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    if (this.sendMessage) {
+      this.sendMessage({
+        type: 'sessions:load-all'
+      });
+    }
+  }
+
+  /**
    * Load session data
    */
   loadData(sessions: SessionJournal[]): void {
@@ -202,9 +221,7 @@ export class SessionViewController {
     );
 
     this.state.sessions = sessions;
-    this.applyFiltersAndSort();
-    this.renderTable();
-    this.updateStatusBar();
+    this.applyFiltersAndSort(); // This now automatically renders table and updates status
 
     webviewLogger.info(
       LogCategory.UI,
@@ -294,6 +311,10 @@ export class SessionViewController {
       },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
+
+    // Automatically re-render table and update status after filtering/sorting
+    this.renderTable();
+    this.updateStatusBar();
   }
 
   /**
@@ -327,17 +348,31 @@ export class SessionViewController {
   private updateSortIndicators(): void {
     const headers = document.querySelectorAll('.sessions-table th.sortable');
     headers.forEach(header => {
-      const indicator = header.querySelector('.sort-indicator');
       const sortColumn = header.getAttribute('data-sort');
 
-      if (indicator && sortColumn === this.state.sortConfig.column) {
-        indicator.textContent = this.state.sortConfig.direction === 'asc' ? '▲' : '▼';
-        header.classList.add('sorted');
-      } else if (indicator) {
-        indicator.textContent = '';
-        header.classList.remove('sorted');
+      // Remove all sorting classes
+      header.classList.remove('sorted-asc', 'sorted-desc');
+
+      // Add appropriate class if this is the active sort column
+      if (sortColumn === this.state.sortConfig.column) {
+        if (this.state.sortConfig.direction === 'asc') {
+          header.classList.add('sorted-asc');
+        } else {
+          header.classList.add('sorted-desc');
+        }
       }
     });
+
+    webviewLogger.debug(
+      LogCategory.UI,
+      'Sort indicators updated',
+      'updateSortIndicators',
+      {
+        column: this.state.sortConfig.column,
+        direction: this.state.sortConfig.direction
+      },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
   }
 
   /**
@@ -412,6 +447,16 @@ export class SessionViewController {
     row.className = 'session-row';
     row.dataset.sessionId = session.id;
 
+    // Make entire row clickable
+    row.style.cursor = 'pointer';
+    row.addEventListener('click', (e) => {
+      // Don't trigger if clicking on topic badges (they have their own click handlers)
+      const target = e.target as HTMLElement;
+      if (!target.classList.contains('topic-badge')) {
+        this.showSessionDetail(session);
+      }
+    });
+
     // Date column
     const dateCell = document.createElement('td');
     dateCell.className = 'col-date';
@@ -419,14 +464,11 @@ export class SessionViewController {
     dateCell.textContent = date.toISOString().split('T')[0];  // YYYY-MM-DD
     row.appendChild(dateCell);
 
-    // Title column (clickable)
+    // Title column
     const titleCell = document.createElement('td');
-    titleCell.className = 'col-title session-title-link';
+    titleCell.className = 'col-title session-title';
     titleCell.textContent = session.title;
-    titleCell.style.cursor = 'pointer';
-    titleCell.addEventListener('click', () => {
-      this.showSessionDetail(session);
-    });
+    titleCell.style.fontWeight = '600';
     row.appendChild(titleCell);
 
     // Duration column
@@ -561,103 +603,101 @@ export class SessionViewController {
 
     const modal = new ModalDialog();
 
-    // Build modal content
-    const content = document.createElement('div');
-    content.className = 'session-detail-modal';
-    content.innerHTML = `
-      <div class="session-detail-header">
-        <h2>${this.escapeHtml(session.title)}</h2>
-        <div class="session-meta">
-          <span class="meta-item">📅 ${new Date(session.startTime).toLocaleString()}</span>
-          <span class="meta-item">⏱️ ${this.formatDuration(session.startTime, session.endTime)}</span>
+    // Build header HTML for fixed title section
+    const titleHtml = `
+      <div style="margin-bottom: 8px;">
+        <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">${this.escapeHtml(session.title)}</div>
+        <div style="display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--vscode-descriptionForeground);">
+          <span>📅 ${new Date(session.startTime).toLocaleString()}</span>
+          <span>⏱️ ${this.formatDuration(session.startTime, session.endTime)}</span>
           ${session.filesModified && session.filesModified.length > 0
-            ? `<span class="meta-item">📁 ${session.filesModified.length} files</span>`
+            ? `<span>📁 ${session.filesModified.length} files</span>`
             : ''}
         </div>
       </div>
+    `;
 
-      ${session.summary ? `
-        <div class="session-summary">
-          <h3>Summary</h3>
-          <p>${this.escapeHtml(session.summary)}</p>
-        </div>
-      ` : ''}
-
-      ${session.topics && session.topics.length > 0 ? `
-        <div class="session-topics">
-          <h3>Topics</h3>
-          <div class="topic-list">
-            ${session.topics.map(t => `<span class="topic-badge">${this.escapeHtml(t)}</span>`).join('')}
+    // Build scrollable content
+    const content = document.createElement('div');
+    content.className = 'session-detail-modal';
+    content.innerHTML = `
+      <div style="padding: 20px; padding-left: 24px;">
+        ${session.summary ? `
+          <div class="session-summary" style="margin-bottom: 20px;">
+            <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Summary</h3>
+            <p style="margin: 0; line-height: 1.5;">${this.escapeHtml(session.summary)}</p>
           </div>
-        </div>
-      ` : ''}
+        ` : ''}
 
-      ${session.tags && session.tags.length > 0 ? `
-        <div class="session-tags">
-          <h3>Tags</h3>
-          <div class="tag-list">
-            ${session.tags.map(t => `<span class="tag-badge">${this.escapeHtml(t)}</span>`).join('')}
+        ${session.topics && session.topics.length > 0 ? `
+          <div class="session-topics" style="margin-bottom: 20px;">
+            <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Topics</h3>
+            <div class="topic-list" style="display: flex; flex-wrap: wrap; gap: 4px;">
+              ${session.topics.map(t => `<span class="topic-badge" style="display: inline-block; padding: 2px 8px; background: rgba(0, 212, 255, 0.15); color: var(--sessions-accent); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 3px; font-size: 11px;">${this.escapeHtml(t)}</span>`).join('')}
+            </div>
           </div>
+        ` : ''}
+
+        ${session.tags && session.tags.length > 0 ? `
+          <div class="session-tags" style="margin-bottom: 20px;">
+            <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Tags</h3>
+            <div class="tag-list" style="display: flex; flex-wrap: wrap; gap: 4px;">
+              ${session.tags.map(t => `<span class="tag-badge" style="display: inline-block; padding: 2px 8px; background: rgba(0, 255, 136, 0.15); color: var(--sessions-secondary); border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 3px; font-size: 11px;">${this.escapeHtml(t)}</span>`).join('')}
+            </div>
+          </div>
+        ` : ''}
+
+        ${session.filesModified && session.filesModified.length > 0 ? `
+          <div class="session-files" style="margin-bottom: 20px;">
+            <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Files Modified</h3>
+            <ul class="file-list" style="list-style: none; padding: 0; margin: 0;">
+              ${session.filesModified.map(f => `<li style="padding: 4px 0; font-family: var(--vscode-editor-font-family); font-size: 12px;"><code style="background: rgba(0, 212, 255, 0.05); padding: 2px 6px; border-radius: 3px;">${this.escapeHtml(f)}</code></li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+
+        ${session.knowledgeItemsUsed && session.knowledgeItemsUsed.length > 0 ? `
+          <div class="session-knowledge" style="margin-bottom: 20px;">
+            <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Knowledge Items Used</h3>
+            <ul class="knowledge-list" style="list-style: none; padding: 0; margin: 0;">
+              ${session.knowledgeItemsUsed.map(k => `<li style="padding: 4px 0; font-size: 12px;">${this.escapeHtml(k)}</li>`).join('')}
+            </ul>
+          </div>
+        ` : ''}
+
+        <div class="session-content">
+          <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Session Notes</h3>
+          <div class="markdown-content" style="line-height: 1.6; font-size: 13px;">${this.renderMarkdown(session.content)}</div>
         </div>
-      ` : ''}
-
-      ${session.filesModified && session.filesModified.length > 0 ? `
-        <div class="session-files">
-          <h3>Files Modified</h3>
-          <ul class="file-list">
-            ${session.filesModified.map(f => `<li><code>${this.escapeHtml(f)}</code></li>`).join('')}
-          </ul>
-        </div>
-      ` : ''}
-
-      ${session.knowledgeItemsUsed && session.knowledgeItemsUsed.length > 0 ? `
-        <div class="session-knowledge">
-          <h3>Knowledge Items Used</h3>
-          <ul class="knowledge-list">
-            ${session.knowledgeItemsUsed.map(k => `<li>${this.escapeHtml(k)}</li>`).join('')}
-          </ul>
-        </div>
-      ` : ''}
-
-      <div class="session-content">
-        <h3>Session Notes</h3>
-        <div class="markdown-content">${this.renderMarkdown(session.content)}</div>
-      </div>
-
-      <div class="session-actions">
-        <button id="open-session-file" class="primary-button ab-btn-primary">📂 Open File</button>
-        <button id="copy-session-path" class="secondary-button ab-btn-secondary">📋 Copy Path</button>
       </div>
     `;
 
-    // Add event listeners for actions
-    setTimeout(() => {
-      const openFileBtn = document.getElementById('open-session-file');
-      if (openFileBtn) {
-        openFileBtn.addEventListener('click', () => {
-          if (this.sendMessage) {
-            this.sendMessage({
-              type: 'sessions:open-file',
-              payload: { filePath: session.filePath }
-            });
-          }
-          modal.close();
-        });
-      }
-
-      const copyPathBtn = document.getElementById('copy-session-path');
-      if (copyPathBtn) {
-        copyPathBtn.addEventListener('click', () => {
-          navigator.clipboard.writeText(session.filePath);
-          webviewLogger.info(LogCategory.UI, 'Session file path copied to clipboard', 'showSessionDetail');
-        });
-      }
-    }, 0);
-
     await modal.show({
-      title: '', // Title is in content
+      title: titleHtml,
       content: content.outerHTML,
-      buttons: [{ label: 'Close', primary: false }],
+      buttons: [
+        {
+          label: '📂 Open File',
+          primary: true,
+          onClick: () => {
+            if (this.sendMessage) {
+              this.sendMessage({
+                type: 'sessions:open-file',
+                payload: { filePath: session.filePath }
+              });
+            }
+          }
+        },
+        {
+          label: '📋 Copy Path',
+          primary: false,
+          onClick: () => {
+            navigator.clipboard.writeText(session.filePath);
+            webviewLogger.info(LogCategory.UI, 'Session file path copied to clipboard', 'showSessionDetail');
+          }
+        },
+        { label: 'Close', primary: false }
+      ],
       width: '800px'
     });
   }

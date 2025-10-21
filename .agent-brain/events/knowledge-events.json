@@ -140,6 +140,206 @@
       "knowledgeItemType": "learning",
       "targetFile": "CLAUDE.md",
       "actor": "user"
+    },
+    {
+      "id": "ke-1761072453943",
+      "timestamp": "2025-10-21T18:47:33.943Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761072459571",
+      "timestamp": "2025-10-21T18:47:39.571Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761072744785",
+      "timestamp": "2025-10-21T18:52:24.785Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761072744786",
+      "timestamp": "2025-10-21T18:52:24.786Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-55dfcbaae5a1",
+      "knowledgeItemTitle": "Provider Toggle Error Fix - Registration vs Enablement",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761072744787",
+      "timestamp": "2025-10-21T18:52:24.787Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-b2a2fab73238",
+      "knowledgeItemTitle": "Control Panel Redesign - Dropdown Implementation",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761072753495",
+      "timestamp": "2025-10-21T18:52:33.495Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-b2a2fab73238",
+      "knowledgeItemTitle": "Control Panel Redesign - Dropdown Implementation",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761072756446",
+      "timestamp": "2025-10-21T18:52:36.446Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-55dfcbaae5a1",
+      "knowledgeItemTitle": "Provider Toggle Error Fix - Registration vs Enablement",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761072758656",
+      "timestamp": "2025-10-21T18:52:38.656Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761072807003",
+      "timestamp": "2025-10-21T18:53:27.003Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761072807004",
+      "timestamp": "2025-10-21T18:53:27.004Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-55dfcbaae5a1",
+      "knowledgeItemTitle": "Provider Toggle Error Fix - Registration vs Enablement",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761072818120",
+      "timestamp": "2025-10-21T18:53:38.120Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-b2a2fab73238",
+      "knowledgeItemTitle": "Control Panel Redesign - Dropdown Implementation",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761072884824",
+      "timestamp": "2025-10-21T18:54:44.824Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761072886619",
+      "timestamp": "2025-10-21T18:54:46.619Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-55dfcbaae5a1",
+      "knowledgeItemTitle": "Provider Toggle Error Fix - Registration vs Enablement",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761072888702",
+      "timestamp": "2025-10-21T18:54:48.702Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-b2a2fab73238",
+      "knowledgeItemTitle": "Control Panel Redesign - Dropdown Implementation",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761073184752",
+      "timestamp": "2025-10-21T18:59:44.752Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-b2a2fab73238",
+      "knowledgeItemTitle": "Control Panel Redesign - Dropdown Implementation",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761073190413",
+      "timestamp": "2025-10-21T18:59:50.413Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761073190414",
+      "timestamp": "2025-10-21T18:59:50.414Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-55dfcbaae5a1",
+      "knowledgeItemTitle": "Provider Toggle Error Fix - Registration vs Enablement",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761073214826",
+      "timestamp": "2025-10-21T19:00:14.826Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761073216873",
+      "timestamp": "2025-10-21T19:00:16.873Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-55dfcbaae5a1",
+      "knowledgeItemTitle": "Provider Toggle Error Fix - Registration vs Enablement",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761073222456",
+      "timestamp": "2025-10-21T19:00:22.456Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-b2a2fab73238",
+      "knowledgeItemTitle": "Control Panel Redesign - Dropdown Implementation",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
     }
   ]
 }

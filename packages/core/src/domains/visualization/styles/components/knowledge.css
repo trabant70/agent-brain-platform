@@ -43,23 +43,84 @@
 }
 
 /* Accordion Styles - Uses Unified Design System */
+/* Container uses flexbox to stack items vertically */
 #claude-files-accordion {
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   flex: 1;
+  overflow: hidden; /* Container itself doesn't scroll */
+  min-height: 0; /* Important for flex children */
 }
 
 /* Accordion items - inherits .ab-collapsible base styles and adds specific behavior */
 .accordion-item {
   /* Inherits from .ab-collapsible when both classes are present */
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  transition: background-color 0.2s ease;
+}
+
+/* Selected file for applying knowledge */
+.accordion-item.selected {
+  background: rgba(0, 212, 255, 0.08);
+  border-left: 3px solid var(--knowledge-accent);
+}
+
+/* Collapsed items only show header (minimal space) */
+.accordion-item.collapsed {
+  flex: 0 0 auto; /* Don't grow, don't shrink, auto height */
+}
+
+/* Expanded items take all available space */
+.accordion-item.expanded {
+  flex: 1 1 0; /* Grow to fill space, shrink if needed, 0 base */
+  min-height: 0; /* Important for overflow to work */
 }
 
 .accordion-header {
   /* Inherits from .ab-collapsible-header when both classes are present */
+  flex-shrink: 0; /* Header never shrinks */
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* File selector radio button */
+.file-selector {
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  border-radius: 3px;
+}
+
+.file-selector:hover {
+  background: rgba(0, 212, 255, 0.15);
+}
+
+.file-selector input[type="radio"] {
+  cursor: pointer;
+  margin: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--knowledge-accent);
 }
 
 .accordion-icon {
   /* Inherits from .ab-collapsible-icon when both classes are present */
   font-size: 16px; /* Slightly larger for file icons */
+  transition: transform 0.2s ease;
+}
+
+/* Rotate icon when expanded */
+.accordion-item.expanded .accordion-icon {
+  transform: rotate(0deg);
+}
+
+.accordion-item.collapsed .accordion-icon {
+  transform: rotate(-90deg);
 }
 
 .accordion-title {
@@ -81,15 +142,17 @@
 
 /* Accordion content - collapsed by default */
 .accordion-content {
-  max-height: 0;
+  display: none; /* Hidden when collapsed */
   overflow: hidden;
-  transition: max-height var(--ab-transition-slow, 0.3s) var(--ab-ease-decelerate, ease);
 }
 
-/* Expanded state - when NOT collapsed */
-.accordion-item:not(.collapsed) .accordion-content {
-  max-height: 600px;
-  overflow-y: auto;
+/* Expanded state - content visible and scrollable */
+.accordion-item.expanded .accordion-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0; /* Fill available space */
+  min-height: 0; /* Important for overflow */
+  overflow-y: auto; /* Content scrolls */
   overflow-x: hidden;
   padding: 8px 12px;
   border-top: 1px solid var(--vscode-panel-border);
@@ -326,10 +389,39 @@
   cursor: pointer;
   user-select: none;
   transition: background-color 0.15s ease, color 0.15s ease;
+  position: relative;
 }
 
 .knowledge-table th[data-sort]:hover {
   background: rgba(0, 212, 255, 0.1);
+  color: var(--knowledge-accent);
+}
+
+/* Sort indicator (arrow) */
+.knowledge-table th.sortable::after {
+  content: '';
+  display: inline-block;
+  margin-left: 6px;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.knowledge-table th.sorted-asc::after,
+.knowledge-table th.sorted-desc::after {
+  opacity: 1;
+}
+
+.knowledge-table th.sorted-asc::after {
+  content: '▲';
+  font-size: 10px;
+  color: var(--knowledge-accent);
+}
+
+.knowledge-table th.sorted-desc::after {
+  content: '▼';
+  font-size: 10px;
   color: var(--knowledge-accent);
 }
 

@@ -1063,37 +1063,47 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
     }
 
     try {
-      // Find claude.md file - check active editor first, then search workspace
-      let claudeMdPath: string | undefined;
+      // Find claude.md file - use payload path if provided, otherwise check active editor, then search workspace
+      let claudeMdPath: string | undefined = payload.claudeFilePath;
 
-      // Check if active editor has claude.md open
-      const activeEditor = vscode.window.activeTextEditor;
-      if (activeEditor && activeEditor.document.fileName.toLowerCase().endsWith('claude.md')) {
-        claudeMdPath = activeEditor.document.fileName;
+      if (!claudeMdPath) {
+        // Check if active editor has claude.md open
+        const activeEditor = vscode.window.activeTextEditor;
+        if (activeEditor && activeEditor.document.fileName.toLowerCase().endsWith('claude.md')) {
+          claudeMdPath = activeEditor.document.fileName;
+          logger.debug(
+            LogCategory.EXTENSION,
+            'Using claude.md from active editor',
+            'TimelineProvider.handleApplyTemplate',
+            { claudeMdPath },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+        } else {
+          // Search workspace for claude.md (case-insensitive)
+          const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+          if (workspaceRoot) {
+            const claudeMdFiles = await this.knowledgeManager.scanClaudeMdFiles();
+            if (claudeMdFiles.length > 0) {
+              // Use the first claude.md found (typically the root one)
+              claudeMdPath = claudeMdFiles[0].path;
+              logger.debug(
+                LogCategory.EXTENSION,
+                'Found claude.md in workspace',
+                'TimelineProvider.handleApplyTemplate',
+                { claudeMdPath, totalFound: claudeMdFiles.length },
+                LogPathway.KNOWLEDGE_MANAGEMENT
+              );
+            }
+          }
+        }
+      } else {
         logger.debug(
           LogCategory.EXTENSION,
-          'Using claude.md from active editor',
+          'Using claude.md from webview selection',
           'TimelineProvider.handleApplyTemplate',
           { claudeMdPath },
           LogPathway.KNOWLEDGE_MANAGEMENT
         );
-      } else {
-        // Search workspace for claude.md (case-insensitive)
-        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-        if (workspaceRoot) {
-          const claudeMdFiles = await this.knowledgeManager.scanClaudeMdFiles();
-          if (claudeMdFiles.length > 0) {
-            // Use the first claude.md found (typically the root one)
-            claudeMdPath = claudeMdFiles[0].path;
-            logger.debug(
-              LogCategory.EXTENSION,
-              'Found claude.md in workspace',
-              'TimelineProvider.handleApplyTemplate',
-              { claudeMdPath, totalFound: claudeMdFiles.length },
-              LogPathway.KNOWLEDGE_MANAGEMENT
-            );
-          }
-        }
       }
 
       // If still no claude.md found, show error
@@ -1176,22 +1186,32 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
     }
 
     try {
-      // Find claude.md file - check active editor first, then search workspace
-      let claudeMdPath: string | undefined;
+      // Find claude.md file - use payload path if provided, otherwise check active editor, then search workspace
+      let claudeMdPath: string | undefined = payload.claudeFilePath;
 
-      // Check if active editor has claude.md open
-      const activeEditor = vscode.window.activeTextEditor;
-      if (activeEditor && activeEditor.document.fileName.toLowerCase().endsWith('claude.md')) {
-        claudeMdPath = activeEditor.document.fileName;
-      } else {
-        // Search workspace for claude.md
-        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-        if (workspaceRoot) {
-          const claudeMdFiles = await this.knowledgeManager.scanClaudeMdFiles();
-          if (claudeMdFiles.length > 0) {
-            claudeMdPath = claudeMdFiles[0].path;
+      if (!claudeMdPath) {
+        // Check if active editor has claude.md open
+        const activeEditor = vscode.window.activeTextEditor;
+        if (activeEditor && activeEditor.document.fileName.toLowerCase().endsWith('claude.md')) {
+          claudeMdPath = activeEditor.document.fileName;
+        } else {
+          // Search workspace for claude.md
+          const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+          if (workspaceRoot) {
+            const claudeMdFiles = await this.knowledgeManager.scanClaudeMdFiles();
+            if (claudeMdFiles.length > 0) {
+              claudeMdPath = claudeMdFiles[0].path;
+            }
           }
         }
+      } else {
+        logger.debug(
+          LogCategory.EXTENSION,
+          'Using claude.md from webview selection',
+          'TimelineProvider.handleApplySelectedItems',
+          { claudeMdPath },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
       }
 
       // If still no claude.md found, show error

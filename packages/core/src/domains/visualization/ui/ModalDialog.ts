@@ -37,6 +37,19 @@ export interface ModalFormOptions {
     cancelText?: string;
 }
 
+export interface ModalButton {
+    label: string;
+    primary?: boolean;
+    onClick?: () => void;
+}
+
+export interface ModalShowOptions {
+    title?: string;
+    content: string | HTMLElement;
+    buttons?: ModalButton[];
+    width?: string;
+}
+
 export class ModalDialog {
     private overlay: HTMLElement | null = null;
     private modal: HTMLElement | null = null;
@@ -102,6 +115,28 @@ export class ModalDialog {
             this.createConfirmModal(title, message);
             this.attachEventListeners();
         });
+    }
+
+    /**
+     * Show a custom modal with HTML content
+     */
+    async show(options: ModalShowOptions): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.resolve = resolve;
+            this.reject = reject;
+
+            this.createOverlay();
+            this.createCustomModal(options);
+            this.attachEventListeners();
+        });
+    }
+
+    /**
+     * Close the modal programmatically
+     */
+    close(): void {
+        this.resolve?.(undefined);
+        this.cleanup();
     }
 
     /**
@@ -382,6 +417,91 @@ export class ModalDialog {
         document.getElementById('modal-cancel')?.addEventListener('click', () => {
             this.resolve?.(false);
             this.cleanup();
+        });
+    }
+
+    /**
+     * Create custom modal with HTML content
+     */
+    private createCustomModal(options: ModalShowOptions): void {
+        this.modal = document.createElement('div');
+        this.modal.className = 'modal-dialog modal-custom';
+
+        const width = options.width || '600px';
+        this.modal.style.cssText = `
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 6px;
+            min-width: 400px;
+            max-width: ${width};
+            width: ${width};
+            max-height: 85vh;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            animation: slideIn 0.2s ease-out;
+            display: flex;
+            flex-direction: column;
+        `;
+
+        // Create title section if provided
+        let titleHtml = '';
+        if (options.title) {
+            titleHtml = `
+                <div style="padding: 16px 20px; border-bottom: 1px solid var(--vscode-panel-border); background: rgba(0, 212, 255, 0.05);">
+                    <div style="font-size: 16px; font-weight: 600; color: var(--vscode-foreground);">
+                        ${options.title}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Create buttons section
+        const defaultButtons: ModalButton[] = options.buttons || [{ label: 'Close', primary: false }];
+        const buttonsHtml = defaultButtons.map((btn, index) => {
+            const isPrimary = btn.primary !== false; // Default to primary for first button
+            const buttonStyle = isPrimary
+                ? 'padding: 8px 16px; background: var(--vscode-button-background); border: none; color: var(--vscode-button-foreground); border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500;'
+                : 'padding: 8px 16px; background: transparent; border: 1px solid var(--vscode-button-border); color: var(--vscode-button-foreground); border-radius: 4px; cursor: pointer; font-size: 13px;';
+
+            return `<button class="modal-custom-btn" data-index="${index}" style="${buttonStyle}">${btn.label}</button>`;
+        }).join('');
+
+        // Build modal structure
+        this.modal.innerHTML = `
+            ${titleHtml}
+            <div class="modal-custom-content" style="flex: 1; overflow-y: auto; padding: 0;">
+                ${typeof options.content === 'string' ? options.content : ''}
+            </div>
+            ${buttonsHtml ? `
+                <div style="display: flex; justify-content: flex-end; gap: 8px; padding: 16px 20px; border-top: 1px solid var(--vscode-panel-border); background: rgba(0, 212, 255, 0.03);">
+                    ${buttonsHtml}
+                </div>
+            ` : ''}
+        `;
+
+        this.overlay?.appendChild(this.modal);
+
+        // If content is an HTMLElement, append it
+        if (typeof options.content !== 'string') {
+            const contentContainer = this.modal.querySelector('.modal-custom-content');
+            if (contentContainer) {
+                contentContainer.innerHTML = '';
+                contentContainer.appendChild(options.content);
+            }
+        }
+
+        // Wire up button clicks
+        const btnElements = this.modal.querySelectorAll('.modal-custom-btn');
+        btnElements.forEach((btnEl, index) => {
+            btnEl.addEventListener('click', () => {
+                const button = defaultButtons[index];
+                if (button.onClick) {
+                    button.onClick();
+                }
+                // Always close after button click
+                this.resolve?.(undefined);
+                this.cleanup();
+            });
         });
     }
 
