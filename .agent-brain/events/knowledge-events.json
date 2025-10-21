@@ -440,6 +440,146 @@
       "knowledgeItemType": "custom",
       "targetFile": "CLAUDE.md",
       "actor": "user"
+    },
+    {
+      "id": "ke-1761082336420",
+      "timestamp": "2025-10-21T21:32:16.420Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761082340614",
+      "timestamp": "2025-10-21T21:32:20.614Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761082364422",
+      "timestamp": "2025-10-21T21:32:44.422Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-8ce8f8c2089b",
+      "knowledgeItemTitle": "Template Application Bug - Items Not Visible After Apply",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761082364423",
+      "timestamp": "2025-10-21T21:32:44.423Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-def68865bd5d",
+      "knowledgeItemTitle": "Date Serialization Bug in postMessage Communication",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761082364424",
+      "timestamp": "2025-10-21T21:32:44.424Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-48ef3ef70fed",
+      "knowledgeItemTitle": "Knowledge Tab Diagnostic Logging Implementation",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761082373574",
+      "timestamp": "2025-10-21T21:32:53.574Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-8ce8f8c2089b",
+      "knowledgeItemTitle": "Template Application Bug - Items Not Visible After Apply",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761082373576",
+      "timestamp": "2025-10-21T21:32:53.576Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-def68865bd5d",
+      "knowledgeItemTitle": "Date Serialization Bug in postMessage Communication",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761082373577",
+      "timestamp": "2025-10-21T21:32:53.577Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-48ef3ef70fed",
+      "knowledgeItemTitle": "Knowledge Tab Diagnostic Logging Implementation",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761082373578",
+      "timestamp": "2025-10-21T21:32:53.578Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-75004e6aa34a",
+      "knowledgeItemTitle": "VSCode Extension to Webview Data Flow",
+      "knowledgeItemType": "golden-path",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761082383477",
+      "timestamp": "2025-10-21T21:33:03.477Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-75004e6aa34a",
+      "knowledgeItemTitle": "VSCode Extension to Webview Data Flow",
+      "knowledgeItemType": "golden-path",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761082387642",
+      "timestamp": "2025-10-21T21:33:07.642Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-48ef3ef70fed",
+      "knowledgeItemTitle": "Knowledge Tab Diagnostic Logging Implementation",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761082391290",
+      "timestamp": "2025-10-21T21:33:11.290Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-def68865bd5d",
+      "knowledgeItemTitle": "Date Serialization Bug in postMessage Communication",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761082399495",
+      "timestamp": "2025-10-21T21:33:19.495Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-48ef3ef70fed",
+      "knowledgeItemTitle": "Knowledge Tab Diagnostic Logging Implementation",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761082403084",
+      "timestamp": "2025-10-21T21:33:23.084Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-def68865bd5d",
+      "knowledgeItemTitle": "Date Serialization Bug in postMessage Communication",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
     }
   ]
 }

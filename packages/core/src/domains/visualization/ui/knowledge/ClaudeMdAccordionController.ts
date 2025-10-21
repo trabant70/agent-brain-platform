@@ -26,6 +26,7 @@ export class ClaudeMdAccordionController {
   private callbacks: AccordionControllerCallbacks;
   private expandedAccordions: Set<string> = new Set();
   private accordionScrollPositions: Map<string, number> = new Map();
+  private scrollToBottom: Set<string> = new Set(); // Track files that should scroll to bottom
   private selectedClaudeFile: string | null = null;
 
   constructor(callbacks: AccordionControllerCallbacks) {
@@ -59,6 +60,14 @@ export class ClaudeMdAccordionController {
       const filePath = (accordion.parentElement as HTMLElement)?.dataset.filePath;
       if (filePath) {
         this.accordionScrollPositions.set(filePath, accordion.scrollTop);
+
+        // Check if user is scrolled near the bottom (within 50px)
+        const isNearBottom = accordion.scrollTop + accordion.clientHeight >= accordion.scrollHeight - 50;
+        if (isNearBottom) {
+          this.scrollToBottom.add(filePath);
+        } else {
+          this.scrollToBottom.delete(filePath);
+        }
       }
     });
   }
@@ -76,7 +85,12 @@ export class ClaudeMdAccordionController {
         if (accordionItem) {
           const content = accordionItem.querySelector('.accordion-content');
           if (content) {
-            content.scrollTop = scrollTop;
+            // If this file was scrolled to bottom, scroll to new bottom instead of saved position
+            if (this.scrollToBottom.has(filePath)) {
+              content.scrollTop = content.scrollHeight;
+            } else {
+              content.scrollTop = scrollTop;
+            }
           }
         }
       });
@@ -304,6 +318,14 @@ export class ClaudeMdAccordionController {
         const filePath = accordionItem.dataset.filePath;
         if (filePath) {
           this.accordionScrollPositions.set(filePath, content.scrollTop);
+
+          // Check if user is scrolled near the bottom (within 50px)
+          const isNearBottom = content.scrollTop + content.clientHeight >= content.scrollHeight - 50;
+          if (isNearBottom) {
+            this.scrollToBottom.add(filePath);
+          } else {
+            this.scrollToBottom.delete(filePath);
+          }
         }
       });
 
