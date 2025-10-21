@@ -426,7 +426,7 @@ export class SessionViewController {
     // Render each session row
     this.state.filteredSessions.forEach(session => {
       const row = this.createSessionRow(session);
-      tableBody.appendChild(row);
+      tableBody!.appendChild(row);
     });
 
     this.updateSortIndicators();
