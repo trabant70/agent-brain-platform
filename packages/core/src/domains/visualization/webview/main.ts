@@ -75,15 +75,21 @@ function updateArchitectureDiagram(): void {
     const isDark = document.body.classList.contains('vscode-dark') ||
                    document.body.classList.contains('vscode-high-contrast');
 
+    // Get the webview URIs that were injected by the provider
+    const lightSrc = diagram.getAttribute('data-light-src');
+    const darkSrc = diagram.getAttribute('data-dark-src');
+
+    if (!lightSrc || !darkSrc) {
+        webviewLogger.warn(LogCategory.WEBVIEW, 'Architecture diagram data attributes not found', 'updateArchitectureDiagram');
+        return;
+    }
+
+    const targetSrc = isDark ? darkSrc : lightSrc;
     const currentSrc = diagram.getAttribute('src') || '';
-    const expectedSuffix = isDark ? '-dark.svg' : '.svg';
 
     // Only update if needed (avoid unnecessary reloads)
-    if (!currentSrc.endsWith(expectedSuffix)) {
-        const baseSrc = isDark
-            ? 'assets/agentbrain-complete-diagram-dark.svg'
-            : 'assets/agentbrain-complete-diagram.svg';
-        diagram.setAttribute('src', baseSrc);
+    if (currentSrc !== targetSrc) {
+        diagram.setAttribute('src', targetSrc);
         webviewLogger.debug(LogCategory.WEBVIEW, `Updated diagram to ${isDark ? 'dark' : 'light'} theme`, 'updateArchitectureDiagram');
     }
 }

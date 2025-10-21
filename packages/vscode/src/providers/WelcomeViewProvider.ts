@@ -101,15 +101,25 @@ export class WelcomeViewProvider implements vscode.WebviewViewProvider {
     </div>
 
     <h2>Agent Brain Platform</h2>
-    <p><strong>Your Second Brain for Software Development</strong> - Visualize repository evolution, manage knowledge, and track coding sessions in one unified platform.</p>
+    <p><strong>Transform AI Coding Agents into Senior Developers</strong> - Give coding agents institutional memory, enforce standards, inject expert solutions, and maintain a complete audit trail of their work.</p>
 
     <div class="info-section">
-        <p><strong>✨ What You Get:</strong></p>
+        <p><strong>🎯 Core Benefits:</strong></p>
         <ul class="feature-list">
-            <li><strong>Timeline:</strong> Visual git history with events, filtering, and statistics</li>
-            <li><strong>Knowledge:</strong> Capture ADRs, patterns, learnings, and best practices</li>
-            <li><strong>Sessions:</strong> Track multi-prompt coding sessions and insights</li>
-            <li><strong>Architecture:</strong> Visual system diagram with theme support</li>
+            <li><strong>Overcome Amnesia:</strong> Agents remember project context across sessions</li>
+            <li><strong>Prevent Overeagerness:</strong> Enforce standards before agents write code</li>
+            <li><strong>Apply Senior Solutions:</strong> Inject expert patterns and best practices</li>
+            <li><strong>Clear Audit Trail:</strong> See exactly what agents did on the timeline</li>
+        </ul>
+    </div>
+
+    <div class="info-section">
+        <p><strong>✨ Platform Features:</strong></p>
+        <ul class="feature-list">
+            <li><strong>Timeline:</strong> Visual audit trail of all agent and developer work</li>
+            <li><strong>Knowledge:</strong> Capture standards, patterns, and solutions</li>
+            <li><strong>Sessions:</strong> Track multi-prompt agent sessions with full context</li>
+            <li><strong>Guidance:</strong> Inject knowledge into claude.md for agent compliance</li>
         </ul>
     </div>
 
@@ -130,7 +140,6 @@ export class WelcomeViewProvider implements vscode.WebviewViewProvider {
             <li>Click <strong>"+ Add Item"</strong></li>
             <li>Choose type: Golden Path, ADR, Pattern, Learning, etc.</li>
             <li>Write in markdown, save to <code>.agent-brain/</code></li>
-            <li>Knowledge items appear on timeline automatically!</li>
         </ul>
     </div>
 

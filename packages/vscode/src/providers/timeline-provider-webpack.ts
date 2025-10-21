@@ -425,6 +425,20 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
       }
     );
 
+    // Special handling for architecture diagram - inject both theme URIs as data attributes
+    // This allows the webview to switch between light/dark without reconstructing URIs
+    const lightDiagramUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'assets', 'agentbrain-complete-diagram.svg')
+    );
+    const darkDiagramUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'assets', 'agentbrain-complete-diagram-dark.svg')
+    );
+
+    htmlWithWebviewUris = htmlWithWebviewUris.replace(
+      /id="architecture-diagram"/,
+      `id="architecture-diagram" data-light-src="${lightDiagramUri}" data-dark-src="${darkDiagramUri}"`
+    );
+
     return htmlWithWebviewUris;
   }
 
