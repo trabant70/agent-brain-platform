@@ -16,10 +16,10 @@ export async function activate(context: vscode.ExtensionContext) {
     outputChannel.appendLine('🚀 Activating Repository Timeline Extension...');
 
     try {
-        // Determine storage location for data
-        const storagePath = getStoragePath(context);
-        log.info(LogCategory.EXTENSION, `Storage path: ${storagePath}`, 'activate');
-        outputChannel.appendLine(`📂 Storage path: ${storagePath}`);
+        // Get workspace root (single source of truth for paths)
+        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '.';
+        log.info(LogCategory.EXTENSION, `Workspace root: ${workspaceRoot}`, 'activate');
+        outputChannel.appendLine(`📂 Workspace root: ${workspaceRoot}`);
 
         // Register the welcome view for the activity bar sidebar
         log.debug(LogCategory.EXTENSION, 'Creating welcome view provider', 'registration');
@@ -41,8 +41,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
         timelineProvider = new TimelineProvider(
             context.extensionUri,
-            storagePath,
-            undefined // No AgentBrainCore - using simple approach now
+            workspaceRoot
         );
         const timelineView = vscode.window.registerWebviewViewProvider(
             TimelineProvider.viewType,
@@ -96,8 +95,7 @@ export async function activate(context: vscode.ExtensionContext) {
         log.debug(LogCategory.EXTENSION, 'Initializing Knowledge Manager', 'knowledge');
         outputChannel.appendLine('📚 Initializing Knowledge Manager...');
 
-        const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-        if (workspaceRoot) {
+        if (workspaceRoot && workspaceRoot !== '.') {
             knowledgeManager = new KnowledgeManager(workspaceRoot, context);
             await knowledgeManager.initialize();
 
@@ -177,21 +175,5 @@ export function deactivate() {
     outputChannel.appendLine('✅ Extension deactivated successfully');
 }
 
-/**
- * Determine storage path for data
- *
- * Priority:
- * 1. Workspace folder (preferred) - .agent-brain/ in workspace root
- * 2. Global storage (fallback) - VSCode extension storage directory
- */
-function getStoragePath(context: vscode.ExtensionContext): string {
-    // Try workspace first (preferred for team sharing)
-    const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-
-    if (workspaceRoot) {
-        return path.join(workspaceRoot, '.agent-brain');
-    }
-
-    // Fallback to global storage (when no workspace is open)
-    return path.join(context.globalStorageUri.fsPath, 'agent-brain');
-}
+// getStoragePath function removed - workspaceRoot is now the single source of truth
+// Storage path is derived internally by DataOrchestrator as: workspaceRoot + '/.agent-brain'

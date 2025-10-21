@@ -38,6 +38,8 @@ export class KnowledgeViewController {
   private state: KnowledgeViewState;
   private messageHandler: ((message: any) => void) | null = null;
   private notifications: NotificationManager;
+  private isInitialLoad: boolean = true;
+  private expandedAccordions: Set<string> = new Set(); // Track which claude.md files are expanded
 
   constructor() {
     this.state = {
@@ -233,6 +235,16 @@ export class KnowledgeViewController {
 
     // Group by selected dimension
     const groups = this.groupItems(items, this.state.groupBy);
+
+    // On initial load, collapse all sections
+    if (this.isInitialLoad && groups.size > 0) {
+      this.state.collapsedSections.clear();
+      for (const groupKey of groups.keys()) {
+        this.state.collapsedSections.add(groupKey);
+      }
+      this.updateToggleAllButton(true);
+      this.isInitialLoad = false;
+    }
 
     webviewLogger.debug(
       LogCategory.UI,
@@ -441,35 +453,67 @@ export class KnowledgeViewController {
 
     for (const file of this.state.claudeMdFiles) {
       const accordionItem = document.createElement('div');
-      accordionItem.className = 'accordion-item';
+      // Check if this accordion was previously expanded
+      const isExpanded = this.expandedAccordions.has(file.path);
+      accordionItem.className = `accordion-item ab-collapsible ${isExpanded ? '' : 'collapsed'}`;
+      accordionItem.dataset.filePath = file.path;
 
       const header = document.createElement('div');
-      header.className = 'accordion-header';
+      header.className = 'accordion-header ab-collapsible-header';
       header.innerHTML = `
-        <span class="accordion-icon">📄</span>
-        <span class="accordion-title">${this.escapeHtml(file.relativePath)}</span>
-        ${file.hasConflicts ? '<span class="conflict-badge">⚠️ Conflicts</span>' : ''}
-        ${file.templates.length > 0 ? `<span class="template-count">${file.templates.length} template${file.templates.length !== 1 ? 's' : ''}</span>` : ''}
+        <span class="accordion-icon ab-collapsible-icon">▼</span>
+        <span class="accordion-title ab-collapsible-title">📄 ${this.escapeHtml(file.relativePath)}</span>
+        ${file.hasConflicts ? '<span class="conflict-badge ab-badge-error">⚠️ Conflicts</span>' : ''}
+        ${file.templates.length > 0 ? `<span class="template-count ab-collapsible-badge">${file.templates.length}</span>` : ''}
       `;
 
       const content = document.createElement('div');
-      content.className = 'accordion-content';
+      content.className = 'accordion-content ab-collapsible-body scrollable';
 
       // Build content HTML
       let contentHTML = '';
 
-      // Show markdown content
+      // Add edit controls at the top
+      contentHTML += `
+        <div class="claude-md-controls">
+          <button class="edit-claude-btn ab-btn-secondary" data-file-path="${file.path}" title="Edit claude.md content">
+            ✏️ Edit Content
+          </button>
+        </div>
+      `;
+
+      // Show markdown content (read-only by default)
       if (file.content && file.content.trim().length > 0) {
         const renderedMarkdown = this.renderMarkdown(file.content);
         contentHTML += `
-          <div class="claude-md-content">
-            ${renderedMarkdown}
+          <div class="claude-md-content" data-file-path="${file.path}">
+            <div class="claude-md-display">
+              ${renderedMarkdown}
+            </div>
+            <div class="claude-md-editor" style="display: none;">
+              <textarea class="claude-md-textarea">${this.escapeHtml(file.content)}</textarea>
+              <div class="claude-md-editor-actions">
+                <button class="save-claude-btn ab-btn-primary" data-file-path="${file.path}">💾 Save</button>
+                <button class="cancel-claude-btn ab-btn-secondary" data-file-path="${file.path}">✖ Cancel</button>
+              </div>
+            </div>
           </div>
         `;
       } else {
         contentHTML += `
-          <div style="padding: 12px; color: var(--vscode-descriptionForeground); font-style: italic;">
-            File is empty
+          <div class="claude-md-content" data-file-path="${file.path}">
+            <div class="claude-md-display">
+              <div style="padding: 12px; color: var(--vscode-descriptionForeground); font-style: italic;">
+                File is empty
+              </div>
+            </div>
+            <div class="claude-md-editor" style="display: none;">
+              <textarea class="claude-md-textarea"></textarea>
+              <div class="claude-md-editor-actions">
+                <button class="save-claude-btn ab-btn-primary" data-file-path="${file.path}">💾 Save</button>
+                <button class="cancel-claude-btn ab-btn-secondary" data-file-path="${file.path}">✖ Cancel</button>
+              </div>
+            </div>
           </div>
         `;
       }
@@ -519,7 +563,19 @@ export class KnowledgeViewController {
 
       // Add event listener to accordion header
       header.addEventListener('click', () => {
+        // Toggle both classes for compatibility
         accordionItem.classList.toggle('active');
+        accordionItem.classList.toggle('collapsed');
+
+        // Track expansion state
+        const filePath = accordionItem.dataset.filePath;
+        if (filePath) {
+          if (accordionItem.classList.contains('collapsed')) {
+            this.expandedAccordions.delete(filePath);
+          } else {
+            this.expandedAccordions.add(filePath);
+          }
+        }
       });
 
       // Add event listeners to all remove template buttons in this content
@@ -543,6 +599,49 @@ export class KnowledgeViewController {
           }
         });
       });
+
+      // Add event listeners for edit/save/cancel buttons
+      const editBtn = content.querySelector('.edit-claude-btn') as HTMLButtonElement;
+      const saveBtn = content.querySelector('.save-claude-btn') as HTMLButtonElement;
+      const cancelBtn = content.querySelector('.cancel-claude-btn') as HTMLButtonElement;
+      const displayDiv = content.querySelector('.claude-md-display') as HTMLElement;
+      const editorDiv = content.querySelector('.claude-md-editor') as HTMLElement;
+      const textarea = content.querySelector('.claude-md-textarea') as HTMLTextAreaElement;
+
+      if (editBtn && displayDiv && editorDiv && textarea) {
+        editBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          displayDiv.style.display = 'none';
+          editorDiv.style.display = 'block';
+          editBtn.style.display = 'none';
+          textarea.focus();
+        });
+
+        if (saveBtn) {
+          saveBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const filePath = saveBtn.getAttribute('data-file-path');
+            const newContent = textarea.value;
+            if (filePath) {
+              this.saveClaudeMdContent(filePath, newContent);
+            }
+          });
+        }
+
+        if (cancelBtn) {
+          cancelBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            displayDiv.style.display = 'block';
+            editorDiv.style.display = 'none';
+            editBtn.style.display = '';
+            // Reset textarea to original content
+            const fileData = this.state.claudeMdFiles.find(f => f.path === file.path);
+            if (fileData && textarea) {
+              textarea.value = fileData.content;
+            }
+          });
+        }
+      }
 
       accordionItem.appendChild(header);
       accordionItem.appendChild(content);
@@ -747,6 +846,83 @@ export class KnowledgeViewController {
         }
       }
     });
+
+    // Resizable divider
+    this.setupResizer();
+  }
+
+  /**
+   * Setup resizable divider between panels
+   */
+  private setupResizer(): void {
+    const resizer = document.getElementById('knowledge-resizer');
+    const leftPanel = document.querySelector('.knowledge-left-panel') as HTMLElement;
+    const container = document.querySelector('.knowledge-container') as HTMLElement;
+
+    if (!resizer || !leftPanel || !container) return;
+
+    let isResizing = false;
+    let startX = 0;
+    let startWidth = 0;
+
+    const minWidth = 250; // Match CSS min-width
+    const maxWidth = 800; // Match CSS max-width
+
+    resizer.addEventListener('mousedown', (e: MouseEvent) => {
+      isResizing = true;
+      startX = e.clientX;
+      startWidth = leftPanel.offsetWidth;
+
+      // Prevent text selection during drag
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = 'col-resize';
+
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e: MouseEvent) => {
+      if (!isResizing) return;
+
+      const delta = e.clientX - startX;
+      let newWidth = startWidth + delta;
+
+      // Enforce min/max constraints
+      newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+
+      // Update left panel width
+      leftPanel.style.flex = `0 0 ${newWidth}px`;
+
+      e.preventDefault();
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isResizing) {
+        isResizing = false;
+        document.body.style.userSelect = '';
+        document.body.style.cursor = '';
+
+        // Save preference to localStorage
+        const finalWidth = leftPanel.offsetWidth;
+        try {
+          localStorage.setItem('knowledge-left-panel-width', finalWidth.toString());
+        } catch (err) {
+          // Ignore localStorage errors
+        }
+      }
+    });
+
+    // Restore saved width on initialization
+    try {
+      const savedWidth = localStorage.getItem('knowledge-left-panel-width');
+      if (savedWidth) {
+        const width = parseInt(savedWidth, 10);
+        if (width >= minWidth && width <= maxWidth) {
+          leftPanel.style.flex = `0 0 ${width}px`;
+        }
+      }
+    } catch (err) {
+      // Ignore localStorage errors
+    }
   }
 
   /**
@@ -912,7 +1088,15 @@ export class KnowledgeViewController {
     }
 
     this.state.groupBy = groupBy;
-    this.state.collapsedSections.clear(); // Clear collapsed state when changing grouping
+
+    // Collapse all sections when changing grouping
+    const items = this.getFilteredItems();
+    const groups = this.groupItems(items, groupBy);
+    this.state.collapsedSections.clear();
+    for (const groupKey of groups.keys()) {
+      this.state.collapsedSections.add(groupKey);
+    }
+    this.updateToggleAllButton(true);
 
     // Update active button visual
     document.querySelectorAll('.group-btn').forEach(btn => {
@@ -1800,6 +1984,21 @@ export class KnowledgeViewController {
         message: `Removing template "${templateName}" from claude.md...`
       });
     }
+  }
+
+  /**
+   * Save updated claude.md content
+   */
+  saveClaudeMdContent(filePath: string, content: string): void {
+    this.sendMessage({
+      type: 'knowledge:update-claude-file',
+      payload: { filePath, content }
+    });
+
+    this.notifications.show({
+      type: 'info',
+      message: 'Saving changes to claude.md...'
+    });
   }
 
   /**

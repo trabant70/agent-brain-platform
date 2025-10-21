@@ -14,13 +14,19 @@
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink: 0;">
                     <path d="M1 3h14v2H1V3zm0 4h14v2H1V7zm0 4h14v2H1v-2z"/>
                 </svg>
-                Timeline
+                AB Timeline
             </button>
             <button class="tab-button" data-tab="knowledge" aria-label="Knowledge Management view" aria-selected="false">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink: 0;">
                     <path d="M3 1h10c1.1 0 2 .9 2 2v10c0 1.1-.9 2-2 2H3c-1.1 0-2-.9-2-2V3c0-1.1.9-2 2-2zm0 2v10h10V3H3zm2 2h6v1H5V5zm0 2h6v1H5V7zm0 2h4v1H5V9z"/>
                 </svg>
-                Knowledge
+                AB Knowledge
+            </button>
+            <button class="tab-button" data-tab="sessions" aria-label="Session History view" aria-selected="false">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink: 0;">
+                    <path d="M8 1C6.34 1 5 2.34 5 4v1H4c-.55 0-1 .45-1 1v8c0 .55.45 1 1 1h8c.55 0 1-.45 1-1V6c0-.55-.45-1-1-1h-1V4c0-1.66-1.34-3-3-3zm0 1c1.11 0 2 .89 2 2v1H6V4c0-1.11.89-2 2-2zM4 7h8v7H4V7zm3 2v3h2V9H7z"/>
+                </svg>
+                AB Sessions
             </button>
         </div>
 
@@ -113,21 +119,24 @@
                         </div>
                     </div>
 
+                    <!-- Resizable Divider -->
+                    <div class="knowledge-resizer" id="knowledge-resizer" title="Drag to resize panels"></div>
+
                     <!-- Right Panel: Knowledge Items & Templates -->
                     <div class="knowledge-right-panel">
                         <!-- Search & Actions -->
                         <div class="knowledge-toolbar">
                             <input type="search" id="knowledge-search" placeholder="Search knowledge items..."/>
                             <div class="filter-chips" id="knowledge-filter-chips"></div>
-                            <div class="grouping-controls">
+                            <div class="grouping-controls ab-toggle-group">
                                 <label>Group by:</label>
-                                <button class="group-btn active" data-group="type" title="Group by knowledge type">Type</button>
-                                <button class="group-btn" data-group="scope" title="Group by scope (Personal, Team, etc.)">Scope</button>
-                                <button class="group-btn" data-group="tag" title="Group by tags">Tag</button>
+                                <button class="group-btn ab-toggle-btn active" data-group="type" title="Group by knowledge type">Type</button>
+                                <button class="group-btn ab-toggle-btn" data-group="scope" title="Group by scope (Personal, Team, etc.)">Scope</button>
+                                <button class="group-btn ab-toggle-btn" data-group="tag" title="Group by tags">Tag</button>
                             </div>
-                            <button id="refresh-knowledge" class="secondary-button" title="Refresh knowledge data">🔄 Refresh</button>
-                            <button id="add-knowledge-item" class="primary-button">+ Add Item</button>
-                            <button id="import-template" class="secondary-button">📥 Import</button>
+                            <button id="refresh-knowledge" class="secondary-button ab-btn-secondary" title="Refresh knowledge data">🔄 Refresh</button>
+                            <button id="add-knowledge-item" class="primary-button ab-btn-primary">+ Add Item</button>
+                            <button id="import-template" class="secondary-button ab-btn-secondary">📥 Import</button>
                         </div>
 
                         <!-- Knowledge Table -->
@@ -137,7 +146,7 @@
                                     <tr>
                                         <th class="col-select">
                                             <input type="checkbox" id="knowledge-select-all"/>
-                                            <button id="toggle-all-sections" class="toggle-all-btn" title="Expand/Collapse all sections">▼</button>
+                                            <button id="toggle-all-sections" class="toggle-all-btn" title="Expand all sections">▶</button>
                                         </th>
                                         <th class="col-type" data-sort="type">Type</th>
                                         <th class="col-title" data-sort="title">Title</th>
@@ -169,10 +178,10 @@
                                 </select>
                             </div>
                             <div class="template-actions">
-                                <button id="save-template" class="secondary-button" disabled>💾 Save Template</button>
-                                <button id="apply-selected" class="primary-button" disabled>➕ Apply Selected Items</button>
-                                <button id="apply-template" class="primary-button" disabled>📋 Apply Template</button>
-                                <button id="export-template" class="secondary-button" disabled>📤 Export</button>
+                                <button id="save-template" class="secondary-button ab-btn-secondary" disabled>💾 Save Template</button>
+                                <button id="apply-selected" class="primary-button ab-btn-primary" disabled>➕ Apply Selected Items</button>
+                                <button id="apply-template" class="primary-button ab-btn-primary" disabled>📋 Apply Template</button>
+                                <button id="export-template" class="secondary-button ab-btn-secondary" disabled>📤 Export</button>
                             </div>
                         </div>
 
@@ -184,6 +193,69 @@
                     </div>
                 </div>
             </div>
+            <!-- End Knowledge Tab -->
+
+            <!-- Session History Tab -->
+            <div id="tab-sessions" class="tab-content" aria-hidden="true">
+                <div class="sessions-container">
+                    <!-- Toolbar -->
+                    <div class="sessions-toolbar">
+                        <input type="search" id="sessions-search" placeholder="Search sessions by title, summary, or topics..."/>
+                        <div class="filter-chips" id="sessions-filter-chips"></div>
+                        <button id="refresh-sessions" class="secondary-button ab-btn-secondary" title="Refresh session data">🔄 Refresh</button>
+                        <button id="export-sessions" class="secondary-button ab-btn-secondary" title="Export sessions to JSON">📤 Export</button>
+                    </div>
+
+                    <!-- Sessions Table -->
+                    <div class="sessions-table-container">
+                        <table id="sessions-table" class="sessions-table">
+                            <thead>
+                                <tr>
+                                    <th class="col-date sortable" data-sort="date">
+                                        <span>Date</span>
+                                        <span class="sort-indicator"></span>
+                                    </th>
+                                    <th class="col-title sortable" data-sort="title">
+                                        <span>Title</span>
+                                        <span class="sort-indicator"></span>
+                                    </th>
+                                    <th class="col-duration sortable" data-sort="duration">
+                                        <span>Duration</span>
+                                        <span class="sort-indicator"></span>
+                                    </th>
+                                    <th class="col-topics">Topics</th>
+                                    <th class="col-files sortable" data-sort="files">
+                                        <span>Files</span>
+                                        <span class="sort-indicator"></span>
+                                    </th>
+                                    <th class="col-summary">Summary</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sessions-table-body">
+                                <!-- Will be populated by SessionViewController -->
+                                <tr class="empty-state-row">
+                                    <td colspan="6">
+                                        <div class="empty-state">
+                                            <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
+                                            <div style="font-weight: 600; margin-bottom: 8px;">No Session Journals Found</div>
+                                            <div style="color: var(--vscode-descriptionForeground);">
+                                                Session journals are created by coding agents to track work across multiple prompts.
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Status Bar -->
+                    <div class="sessions-status">
+                        <span id="sessions-status-text">Ready</span>
+                        <span id="sessions-count">0 sessions</span>
+                    </div>
+                </div>
+            </div>
+            <!-- End Sessions Tab -->
         </div>
         <!-- End Tab Contents -->
     </div>

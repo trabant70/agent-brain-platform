@@ -638,7 +638,7 @@ export class TemplateEngine {
 
       // Step 3: Check for template conflict
       const templateName = options.templateNameOverride || parsed.name;
-      const existingTemplate = this.store.getTemplates().find(t => t.name === templateName);
+      const existingTemplate = this.store.getAllTemplates().find((t: any) => t.name === templateName);
 
       if (existingTemplate) {
         const conflict: ConflictInfo = {
@@ -882,8 +882,8 @@ export class TemplateEngine {
     conflict?: ConflictInfo;
   } {
     // Check if item already exists (match by title + type)
-    const existing = this.store.getItems().find(
-      item => item.title === parsedItem.title && item.type === parsedItem.type
+    const existing = this.store.getAllItems().find(
+      (item: any) => item.title === parsedItem.title && item.type === parsedItem.type
     );
 
     if (existing) {

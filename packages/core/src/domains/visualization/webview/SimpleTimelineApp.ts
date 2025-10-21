@@ -10,6 +10,7 @@ import { D3TimelineRendererImpl } from '../timeline/D3TimelineRendererImpl';
 import { UIControllerManager } from '../ui/UIControllerManager';
 import { TabManager } from '../ui/TabManager';
 import { KnowledgeViewController } from '../ui/KnowledgeViewController';
+import { SessionViewController } from '../ui/SessionViewController';
 import { webviewLogger, LogCategory, LogPathway } from './WebviewLogger';
 
 interface CanonicalEvent {
@@ -42,6 +43,7 @@ export class SimpleTimelineApp {
     private uiManager: UIControllerManager;
     private tabManager: TabManager;
     private knowledgeController: KnowledgeViewController;
+    private sessionController: SessionViewController;
     private currentEvents: CanonicalEvent[] = [];
     private currentFilterOptions: FilterOptions | null = null;
     private currentAppliedFilters: any = null;  // Current filter state for branch visibility
@@ -105,6 +107,20 @@ export class SimpleTimelineApp {
         (window as any).knowledgeController = this.knowledgeController;
 
         webviewLogger.info(LogCategory.UI, 'Knowledge controller initialized', 'constructor');
+
+        // Initialize session controller
+        this.sessionController = new SessionViewController();
+        this.sessionController.initialize((message) => {
+            // Forward session messages to extension
+            if (window.vscode) {
+                window.vscode.postMessage(message);
+            }
+        });
+
+        // Make session controller globally accessible for onclick handlers
+        (window as any).sessionController = this.sessionController;
+
+        webviewLogger.info(LogCategory.UI, 'Session controller initialized', 'constructor', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
 
         // Setup brush callback for range selector
         this.setupRendererCallbacks();
@@ -793,6 +809,20 @@ export class SimpleTimelineApp {
                 window.vscode.postMessage({ type: 'knowledge:scan-claude-files' });
             } else {
                 webviewLogger.debug(LogCategory.UI, 'Knowledge data already loaded - using cached data', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+            }
+        }
+
+        // Load session data when Sessions tab is activated (if not already loaded)
+        if (to === 'sessions') {
+            webviewLogger.debug(LogCategory.UI, 'Sessions tab activated', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+            // Only request data if the controller doesn't have any sessions yet
+            // This preserves data when switching between tabs
+            const hasData = this.sessionController && (this.sessionController as any).state?.sessions?.length > 0;
+            if (!hasData && window.vscode) {
+                webviewLogger.debug(LogCategory.UI, 'No session data loaded yet - requesting', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+                window.vscode.postMessage({ type: 'sessions:load-all' });
+            } else {
+                webviewLogger.debug(LogCategory.UI, 'Session data already loaded - using cached data', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
             }
         }
 

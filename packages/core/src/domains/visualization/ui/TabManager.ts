@@ -6,7 +6,7 @@
 
 import { EventEmitter } from 'events';
 
-export type TabId = 'timeline' | 'knowledge';
+export type TabId = 'timeline' | 'knowledge' | 'sessions';
 
 export interface TabChangeEvent {
   from: TabId | null;
@@ -170,7 +170,7 @@ export class TabManager extends EventEmitter {
    * Validate tab ID
    */
   private isValidTabId(id: string): id is TabId {
-    return ['timeline', 'guidance', 'plans', 'config', 'knowledge', 'support'].includes(id);
+    return ['timeline', 'knowledge', 'sessions'].includes(id);
   }
 
   /**

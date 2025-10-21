@@ -232,6 +232,10 @@ export class LegendRenderer {
         const gitEventTypes = normalizedEventTypes.filter(item => !this.isIntelligenceEvent(item));
         const intelligenceEventTypes = normalizedEventTypes.filter(item => this.isIntelligenceEvent(item));
 
+        // Sort by providerId to group similar providers together
+        gitEventTypes.sort((a, b) => (a.providerId || '').localeCompare(b.providerId || ''));
+        intelligenceEventTypes.sort((a, b) => (a.providerId || '').localeCompare(b.providerId || ''));
+
         // Determine which tabs should be visible
         const showGitTab = this.enabledProviders.includes('git-local') ||
                           this.enabledProviders.includes('github');

@@ -156,10 +156,11 @@
 }
 
 /* ============================================ */
-/* FILTER SECTIONS (Collapsible) */
+/* FILTER SECTIONS (Collapsible) - Uses Unified Design System */
 /* ============================================ */
 
 .filter-section {
+  /* Uses .ab-collapsible base styles */
   margin-bottom: 12px;
   border: 1px solid var(--vscode-panel-border);
   border-left: 3px solid rgba(0, 212, 255, 0.4);
@@ -176,6 +177,7 @@
 
 /* Section Header (Clickable) */
 .section-header {
+  /* Uses .ab-collapsible-header base styles */
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -196,6 +198,7 @@
 }
 
 .section-title {
+  /* Uses .ab-collapsible-title base styles */
   display: flex;
   align-items: center;
   gap: 8px;
@@ -205,6 +208,7 @@
 }
 
 .section-count {
+  /* Uses .ab-collapsible-badge base styles */
   background: rgba(0, 212, 255, 0.2);
   color: var(--knowledge-accent, #00d4ff);
   padding: 2px 8px;
@@ -216,6 +220,7 @@
 }
 
 .collapse-icon {
+  /* Uses .ab-collapsible-icon base styles */
   transition: transform 0.2s ease;
   font-size: 12px;
   color: var(--vscode-descriptionForeground);
@@ -249,10 +254,11 @@
 }
 
 /* ============================================ */
-/* CHECKBOX LISTS (Filter Items) */
+/* CHECKBOX LISTS (Filter Items) - Uses Unified Design System */
 /* ============================================ */
 
 .checkbox-list {
+  /* Uses .ab-collapsible-body base styles */
   padding: 8px;
   max-height: 250px;
   overflow-y: auto;

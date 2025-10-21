@@ -49,7 +49,7 @@ export interface ProviderSettings {
 
 export interface DataOrchestratorOptions {
   cacheTTL?: number; // Cache time-to-live in milliseconds
-  storagePath?: string; // Path to .agent-brain/ directory for persistent storage
+  workspaceRoot: string; // REQUIRED: Workspace root directory (NOT .agent-brain subdirectory)
   providerSettings?: ProviderSettings; // Provider enablement settings
 }
 
@@ -74,7 +74,8 @@ export class DataOrchestrator {
 
   // Options
   private cacheTTL: number;
-  private storagePath: string;
+  private workspaceRoot: string; // Workspace root directory (single source of truth)
+  private storagePath: string; // Derived: workspaceRoot + '/.agent-brain'
   private providerSettings: ProviderSettings;
 
   // Current state
@@ -83,9 +84,24 @@ export class DataOrchestrator {
   // Runtime events - added in real-time (e.g., from sessions)
   private runtimeEvents: CanonicalEvent[] = [];
 
-  constructor(options: DataOrchestratorOptions = {}) {
+  constructor(options: DataOrchestratorOptions) {
+    // Validate required workspaceRoot
+    if (!options.workspaceRoot) {
+      throw new Error('DataOrchestrator requires workspaceRoot in options');
+    }
+
+    // Validate workspaceRoot doesn't end with .agent-brain (prevent double-nesting)
+    if (options.workspaceRoot.endsWith('.agent-brain')) {
+      throw new Error(
+        `workspaceRoot should not end with .agent-brain. ` +
+        `Received: ${options.workspaceRoot}. ` +
+        `Expected workspace root directory (e.g., /workspace).`
+      );
+    }
+
     this.cacheTTL = options.cacheTTL || 300000; // 5 minutes default
-    this.storagePath = options.storagePath || './.agent-brain';
+    this.workspaceRoot = options.workspaceRoot;
+    this.storagePath = path.join(this.workspaceRoot, '.agent-brain'); // Derive from workspaceRoot
     this.providerSettings = this.getProviderSettings(options.providerSettings);
     this.providerRegistry = new ProviderRegistry();
     this.filterStateManager = new FilterStateManager();
@@ -96,6 +112,7 @@ export class DataOrchestrator {
       'constructor',
       {
         cacheTTL: this.cacheTTL,
+        workspaceRoot: this.workspaceRoot,
         storagePath: this.storagePath,
         providerSettings: this.providerSettings
       },
@@ -156,17 +173,20 @@ export class DataOrchestrator {
       this.log.info(LogCategory.ORCHESTRATION, 'Registering Knowledge Event provider', 'initialize');
       try {
         const knowledgeProvider = new KnowledgeEventProvider();
-        // IMPORTANT: storagePath is already './.agent-brain', so we need the parent directory
-        // KnowledgeEventStorage will add '.agent-brain/events' to the workspace root
-        const workspaceRoot = this.storagePath.replace(/\/?\.agent-brain\/?$/, '') || '.';
+        // Pass workspaceRoot directly - no derivation needed
         await this.providerRegistry.registerProvider(knowledgeProvider, {
           enabled: true,
           priority: 3,
           settings: {
-            workspaceRoot: workspaceRoot
+            workspaceRoot: this.workspaceRoot
           }
         });
-        this.log.info(LogCategory.ORCHESTRATION, `Knowledge Event provider registered successfully (workspaceRoot: ${workspaceRoot})`, 'initialize');
+        this.log.info(
+          LogCategory.ORCHESTRATION,
+          `Knowledge Event provider registered successfully`,
+          'initialize',
+          { workspaceRoot: this.workspaceRoot }
+        );
       } catch (error) {
         this.log.error(LogCategory.ORCHESTRATION, `Failed to register Knowledge Event provider: ${error}`, 'initialize');
         // Continue without knowledge events - not critical
@@ -180,17 +200,20 @@ export class DataOrchestrator {
       this.log.info(LogCategory.ORCHESTRATION, 'Registering Session Event provider', 'initialize');
       try {
         const sessionProvider = new SessionEventProvider();
-        // IMPORTANT: storagePath is already './.agent-brain', so we need the parent directory
-        // SessionFileSystem will add '.agent-brain/sessions' to the workspace root
-        const workspaceRoot = this.storagePath.replace(/\/?\.agent-brain\/?$/, '') || '.';
+        // Pass workspaceRoot directly - no derivation needed
         await this.providerRegistry.registerProvider(sessionProvider, {
           enabled: true,
           priority: 4,
           settings: {
-            workspaceRoot: workspaceRoot
+            workspaceRoot: this.workspaceRoot
           }
         });
-        this.log.info(LogCategory.ORCHESTRATION, `Session Event provider registered successfully (workspaceRoot: ${workspaceRoot})`, 'initialize');
+        this.log.info(
+          LogCategory.ORCHESTRATION,
+          `Session Event provider registered successfully`,
+          'initialize',
+          { workspaceRoot: this.workspaceRoot }
+        );
       } catch (error) {
         this.log.error(LogCategory.ORCHESTRATION, `Failed to register Session Event provider: ${error}`, 'initialize');
         // Continue without session events - not critical

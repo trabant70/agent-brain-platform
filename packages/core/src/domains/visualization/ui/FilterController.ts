@@ -74,6 +74,7 @@ export class FilterController {
   private currentColorMode: 'semantic' | 'sync-state' = 'semantic';
   private gitProviderEnabled: boolean = true; // Default to enabled
   private githubProviderEnabled: boolean = false; // Default to disabled
+  private intelligenceProviderEnabled: boolean = false; // Default to disabled (deferred to Phase 2+)
   private knowledgeEventsProviderEnabled: boolean = true; // Default to enabled (AB-Knowledge Events)
   private sessionJournalsProviderEnabled: boolean = true; // Default to enabled (AB-Sessions)
   private showConnections: boolean = true; // Default to showing connections
@@ -359,11 +360,6 @@ export class FilterController {
             <div class="checkbox-list" id="providers-list"></div>
           </div>
         </div>
-
-            <!-- Active Filters -->
-            <div class="active-filters-section">
-              <div class="active-filters-badges" id="active-filters"></div>
-            </div>
           </div>
 
           <!-- CONFIGURATION TAB -->

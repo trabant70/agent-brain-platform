@@ -10,20 +10,20 @@
 }
 
 .knowledge-container {
-  display: grid;
-  grid-template-columns: 1fr 2fr;
-  gap: 16px;
+  display: flex;
   height: 100%;
   padding: 16px;
   overflow: hidden;
+  gap: 0;
 }
 
 /* Left Panel - Claude.md Files */
 .knowledge-left-panel {
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--vscode-panel-border);
-  padding-right: 16px;
+  flex: 0 0 400px; /* Default width: 400px, can shrink/grow */
+  min-width: 250px; /* Minimum width */
+  max-width: 800px; /* Maximum width */
   overflow: hidden;
 }
 
@@ -42,79 +42,55 @@
   font-weight: 600;
 }
 
-/* Accordion Styles */
+/* Accordion Styles - Uses Unified Design System */
 #claude-files-accordion {
   overflow-y: auto;
   flex: 1;
 }
 
+/* Accordion items - inherits .ab-collapsible base styles and adds specific behavior */
 .accordion-item {
-  border: 0.5px solid var(--vscode-panel-border);
-  border-left: 3px solid rgba(0, 212, 255, 0.4);
-  margin-bottom: 6px;
-  border-radius: 6px;
-  background: var(--vscode-sideBar-background);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  transition: box-shadow 0.2s ease, border-color 0.2s ease, border-left-color 0.2s ease;
-}
-
-.accordion-item:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  border-color: var(--knowledge-accent);
-  border-left-color: var(--knowledge-accent);
+  /* Inherits from .ab-collapsible when both classes are present */
 }
 
 .accordion-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  cursor: pointer;
-  user-select: none;
-  transition: background-color 0.15s ease;
-  border-radius: 6px 6px 0 0;
-}
-
-.accordion-header:hover {
-  background: rgba(0, 212, 255, 0.08);
+  /* Inherits from .ab-collapsible-header when both classes are present */
 }
 
 .accordion-icon {
-  font-size: 16px;
+  /* Inherits from .ab-collapsible-icon when both classes are present */
+  font-size: 16px; /* Slightly larger for file icons */
 }
 
 .accordion-title {
-  flex: 1;
-  font-size: 13px;
+  /* Inherits from .ab-collapsible-title when both classes are present */
 }
 
 .conflict-badge {
-  font-size: 11px;
-  padding: 2px 6px;
+  /* Uses .ab-badge-error base styles */
+  font-size: var(--ab-text-xs);
+  padding: 2px var(--ab-space-2);
   background: var(--vscode-errorForeground);
   color: var(--vscode-editor-background);
-  border-radius: 3px;
+  border-radius: var(--ab-radius-sm);
 }
 
 .template-count {
-  font-size: 11px;
-  padding: 3px 8px;
-  background: rgba(0, 212, 255, 0.15);
-  color: var(--knowledge-accent);
-  border-radius: 12px;
-  font-weight: 600;
-  border: 1px solid rgba(0, 212, 255, 0.3);
+  /* Inherits from .ab-collapsible-badge when both classes are present */
 }
 
+/* Accordion content - collapsed by default */
 .accordion-content {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease;
+  transition: max-height var(--ab-transition-slow, 0.3s) var(--ab-ease-decelerate, ease);
 }
 
-.accordion-item.active .accordion-content {
-  max-height: 10000px;
-  overflow: visible;
+/* Expanded state - when NOT collapsed */
+.accordion-item:not(.collapsed) .accordion-content {
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 8px 12px;
   border-top: 1px solid var(--vscode-panel-border);
 }
@@ -167,11 +143,91 @@
   box-shadow: 0 2px 8px rgba(0, 212, 255, 0.3);
 }
 
+/* Claude.md Edit Controls */
+.claude-md-controls {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.edit-claude-btn {
+  font-size: 12px;
+  padding: 4px 12px;
+}
+
+.claude-md-content {
+  margin-top: 8px;
+}
+
+.claude-md-display {
+  padding: 8px 0;
+}
+
+.claude-md-editor {
+  padding: 8px 0;
+}
+
+.claude-md-textarea {
+  width: 100%;
+  min-height: 300px;
+  padding: 12px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 4px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.claude-md-textarea:focus {
+  outline: none;
+  border-color: var(--knowledge-accent);
+  box-shadow: 0 0 0 1px var(--knowledge-accent);
+}
+
+.claude-md-editor-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+
+.save-claude-btn,
+.cancel-claude-btn {
+  font-size: 12px;
+  padding: 6px 14px;
+}
+
+/* Resizable Divider */
+.knowledge-resizer {
+  width: 4px;
+  background: var(--vscode-panel-border);
+  cursor: col-resize;
+  position: relative;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease;
+}
+
+.knowledge-resizer:hover {
+  background: var(--knowledge-accent);
+}
+
+.knowledge-resizer:active {
+  background: var(--knowledge-accent);
+}
+
 /* Right Panel - Knowledge Items */
 .knowledge-right-panel {
   display: flex;
   flex-direction: column;
+  flex: 1; /* Take remaining space */
+  min-width: 400px; /* Minimum width for right panel */
   overflow: hidden;
+  padding-left: 16px;
 }
 
 .knowledge-toolbar {
@@ -182,48 +238,20 @@
   flex-wrap: wrap;
 }
 
-/* Grouping Controls */
+/* Grouping Controls - Uses Unified Design System */
 .grouping-controls {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 4px;
-  border-radius: 6px;
-  background: rgba(0, 212, 255, 0.05);
-  border: 1px solid rgba(0, 212, 255, 0.15);
+  /* Uses .ab-toggle-group base styles */
 }
 
 .grouping-controls label {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--ab-text-sm);
+  font-weight: var(--ab-font-semibold);
   color: var(--vscode-descriptionForeground);
-  margin-right: 4px;
+  margin-right: var(--ab-space-1);
 }
 
 .group-btn {
-  padding: 4px 12px;
-  background: transparent;
-  color: var(--vscode-foreground);
-  border: 1px solid transparent;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  user-select: none;
-}
-
-.group-btn:hover {
-  background: rgba(0, 212, 255, 0.1);
-  border-color: rgba(0, 212, 255, 0.3);
-}
-
-.group-btn.active {
-  background: var(--knowledge-accent);
-  color: var(--vscode-editor-background);
-  border-color: var(--knowledge-accent);
-  font-weight: 600;
-  box-shadow: 0 2px 4px rgba(0, 212, 255, 0.3);
+  /* Uses .ab-toggle-btn base styles */
 }
 
 #knowledge-search {
@@ -391,16 +419,23 @@
   text-align: center;
 }
 
-/* Type Headers */
+/* Type Headers - Uses Unified Design System */
 .knowledge-type-header {
-  background: linear-gradient(to right, rgba(0, 212, 255, 0.15), rgba(0, 212, 255, 0.05));
+  /* Uses .ab-collapsible-header base styles */
+  background: rgba(0, 212, 255, 0.15);
   font-weight: 600;
   border-left: 4px solid var(--knowledge-accent);
+  border-top: 1px solid rgba(0, 212, 255, 0.3);
+  border-right: 1px solid rgba(0, 212, 255, 0.3);
+  border-bottom: 1px solid rgba(0, 212, 255, 0.3);
   transition: background-color 0.2s ease;
 }
 
 .knowledge-type-header:hover {
-  background: linear-gradient(to right, rgba(0, 212, 255, 0.25), rgba(0, 212, 255, 0.1));
+  background: rgba(0, 212, 255, 0.25);
+  border-top-color: var(--knowledge-accent);
+  border-right-color: var(--knowledge-accent);
+  border-bottom-color: var(--knowledge-accent);
 }
 
 .knowledge-type-header td {
@@ -411,6 +446,7 @@
 }
 
 .collapse-icon {
+  /* Uses .ab-collapsible-icon base styles */
   display: inline-block;
   margin-right: 6px;
   font-size: 10px;
@@ -527,72 +563,17 @@
   color: var(--vscode-descriptionForeground);
 }
 
-/* Buttons */
+/* Buttons - Uses Unified Design System */
 .primary-button {
-  padding: 6px 16px;
-  background: var(--knowledge-accent);
-  color: var(--vscode-editor-background);
-  border: 1px solid var(--knowledge-accent);
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 212, 255, 0.2);
-}
-
-.primary-button:hover {
-  background: #00b8e6;
-  border-color: #00b8e6;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
-}
-
-.primary-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
+  /* Uses .ab-btn-primary base styles */
 }
 
 .secondary-button {
-  padding: 6px 16px;
-  background: rgba(0, 212, 255, 0.1);
-  color: var(--knowledge-accent);
-  border: 1px solid rgba(0, 212, 255, 0.3);
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: all 0.2s ease;
-}
-
-.secondary-button:hover {
-  background: rgba(0, 212, 255, 0.2);
-  border-color: var(--knowledge-accent);
-  transform: translateY(-1px);
-}
-
-.secondary-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
+  /* Uses .ab-btn-secondary base styles */
 }
 
 .icon-button {
-  padding: 4px 8px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  opacity: 0.7;
-}
-
-.icon-button:hover {
-  opacity: 1;
-  background: var(--vscode-toolbar-hoverBackground);
-  border-radius: 4px;
+  /* Uses .ab-btn-icon base styles */
 }
 
 /* Scrollbars */
@@ -799,15 +780,25 @@
 /* Responsive */
 @media (max-width: 1200px) {
   .knowledge-container {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    flex-direction: column;
   }
 
   .knowledge-left-panel {
-    border-right: none;
-    border-bottom: 1px solid var(--vscode-panel-border);
-    padding-right: 0;
-    padding-bottom: 16px;
+    flex: 0 0 300px !important; /* Fixed height in vertical layout */
+    min-width: unset;
+    max-width: unset;
     max-height: 300px;
+    border-bottom: 1px solid var(--vscode-panel-border);
+    padding-bottom: 16px;
+  }
+
+  .knowledge-resizer {
+    display: none; /* Hide resizer in vertical layout */
+  }
+
+  .knowledge-right-panel {
+    min-width: unset;
+    padding-left: 0;
+    padding-top: 16px;
   }
 }

@@ -391,9 +391,19 @@ export class KnowledgeManager {
       // Remove from store
       this.store.deleteItem(id);
 
+      // Record knowledge event
+      await this.eventStorage.recordEvent({
+        type: 'remove',
+        knowledgeItemId: item.id,
+        knowledgeItemTitle: item.title,
+        knowledgeItemType: item.type,
+        targetFile: item.relativePath,
+        actor: 'user' // User initiated deletion
+      });
+
       logger.info(
         LogCategory.EXTENSION,
-        'Knowledge item deleted',
+        'Knowledge item deleted and event recorded',
         'KnowledgeManager.deleteItem',
         { itemId: id, path: item.path },
         LogPathway.KNOWLEDGE_MANAGEMENT
@@ -578,6 +588,54 @@ export class KnowledgeManager {
         }
       });
 
+      // Record knowledge events for each applied item in the template
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Recording apply events for template items',
+        'KnowledgeManager.applyTemplate',
+        { templateId: template.id, itemIdsCount: template.itemIds?.length || 0, hasItemIds: !!template.itemIds },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      if (template && template.itemIds) {
+        for (const itemId of template.itemIds) {
+          const item = this.store.getItem(itemId);
+          if (item) {
+            logger.debug(
+              LogCategory.EXTENSION,
+              'Recording apply event for item',
+              'KnowledgeManager.applyTemplate',
+              { itemId: item.id, itemTitle: item.title },
+              LogPathway.KNOWLEDGE_MANAGEMENT
+            );
+            await this.eventStorage.recordEvent({
+              type: 'apply',
+              knowledgeItemId: item.id,
+              knowledgeItemTitle: item.title,
+              knowledgeItemType: item.type,
+              targetFile: 'CLAUDE.md',
+              actor: 'user' // User initiated this action
+            });
+          } else {
+            logger.warn(
+              LogCategory.EXTENSION,
+              'Item not found in store when recording apply event',
+              'KnowledgeManager.applyTemplate',
+              { itemId },
+              LogPathway.KNOWLEDGE_MANAGEMENT
+            );
+          }
+        }
+      } else {
+        logger.warn(
+          LogCategory.EXTENSION,
+          'No itemIds found on template, skipping event recording',
+          'KnowledgeManager.applyTemplate',
+          { templateId: template?.id, hasTemplate: !!template, hasItemIds: !!template?.itemIds },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+      }
+
       const action = result.wasReplaced ? 'updated in' : 'applied to';
       vscode.window.showInformationMessage(`Template "${template.name}" ${action} ${claudeMdPath.split(/[/\\]/).pop()}`);
 
@@ -699,10 +757,27 @@ export class KnowledgeManager {
       );
 
       // Record knowledge events for each removed item in the template
-      if (template && template.knowledgeItemIds) {
-        for (const itemId of template.knowledgeItemIds) {
+      // Note: template might be undefined if this is an individual item marker (not a template)
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Recording remove events for template items',
+        'KnowledgeManager.removeTemplate',
+        { templateId, itemIdsCount: template?.itemIds?.length || 0, hasItemIds: !!template?.itemIds, templateFound: !!template },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      if (template && template.itemIds) {
+        // This is an actual template - record remove event for each item in the template
+        for (const itemId of template.itemIds) {
           const item = this.store.getItem(itemId);
           if (item) {
+            logger.debug(
+              LogCategory.EXTENSION,
+              'Recording remove event for item in template',
+              'KnowledgeManager.removeTemplate',
+              { itemId: item.id, itemTitle: item.title },
+              LogPathway.KNOWLEDGE_MANAGEMENT
+            );
             await this.eventStorage.recordEvent({
               type: 'remove',
               knowledgeItemId: item.id,
@@ -711,7 +786,43 @@ export class KnowledgeManager {
               targetFile: 'CLAUDE.md',
               actor: 'user' // User initiated this action
             });
+          } else {
+            logger.warn(
+              LogCategory.EXTENSION,
+              'Item not found in store when recording remove event',
+              'KnowledgeManager.removeTemplate',
+              { itemId },
+              LogPathway.KNOWLEDGE_MANAGEMENT
+            );
           }
+        }
+      } else {
+        // Template not found - might be an individual item marker (applied via "Apply Selected Items")
+        const item = this.store.getItem(templateId);
+        if (item) {
+          logger.debug(
+            LogCategory.EXTENSION,
+            'Marker is for individual item, not template - recording single remove event',
+            'KnowledgeManager.removeTemplate',
+            { itemId: item.id, itemTitle: item.title },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+          await this.eventStorage.recordEvent({
+            type: 'remove',
+            knowledgeItemId: item.id,
+            knowledgeItemTitle: item.title,
+            knowledgeItemType: item.type,
+            targetFile: 'CLAUDE.md',
+            actor: 'user' // User initiated this action
+          });
+        } else {
+          logger.warn(
+            LogCategory.EXTENSION,
+            'Neither template nor item found with this ID - content removed but no event recorded',
+            'KnowledgeManager.removeTemplate',
+            { templateId, hasTemplate: !!template, hasItemIds: !!template?.itemIds },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
         }
       }
 
@@ -1065,6 +1176,44 @@ export class KnowledgeManager {
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
       return [];
+    }
+  }
+
+  /**
+   * Update claude.md file content
+   */
+  async updateClaudeMdContent(filePath: string, content: string): Promise<void> {
+    logger.info(
+      LogCategory.EXTENSION,
+      'Updating claude.md file content',
+      'KnowledgeManager.updateClaudeMdContent',
+      { filePath, contentLength: content.length },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    try {
+      const fileUri = vscode.Uri.file(filePath);
+      const encoder = new TextEncoder();
+      const contentBytes = encoder.encode(content);
+
+      await vscode.workspace.fs.writeFile(fileUri, contentBytes);
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'Claude.md file updated successfully',
+        'KnowledgeManager.updateClaudeMdContent',
+        { filePath },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+    } catch (error) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to update claude.md file',
+        'KnowledgeManager.updateClaudeMdContent',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+      throw error;
     }
   }
 

@@ -1,0 +1,608 @@
+/**
+ * Session History Tab Styles
+ * Integrated with timeline design system
+ */
+
+/* Variables for consistency with timeline */
+:root {
+  --sessions-accent: #00d4ff;
+  --sessions-secondary: #00ff88;
+}
+
+/* Main Container */
+.sessions-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px;
+  overflow: hidden;
+}
+
+/* Toolbar */
+.sessions-toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+#sessions-search {
+  flex: 0 1 400px;
+  min-width: 250px;
+  max-width: 400px;
+  padding: 6px 12px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+#sessions-search:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+}
+
+/* Filter Chips - Uses Unified Design System */
+.sessions-toolbar .filter-chips {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.sessions-toolbar .filter-chip {
+  font-size: 11px;
+  padding: 2px 8px 2px 6px;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sessions-toolbar .filter-chip-remove {
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 12px;
+  color: var(--vscode-badge-foreground);
+  opacity: 0.8;
+  transition: opacity 0.15s ease;
+}
+
+.sessions-toolbar .filter-chip-remove:hover {
+  opacity: 1;
+}
+
+/* Sessions Table Container */
+.sessions-table-container {
+  flex: 1;
+  overflow-y: auto;
+  border: 0.5px solid var(--vscode-panel-border);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Sessions Table */
+.sessions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.sessions-table thead {
+  position: sticky;
+  top: 0;
+  background: var(--vscode-editor-lineHighlightBackground);
+  z-index: 10;
+}
+
+.sessions-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 2px solid var(--vscode-panel-border);
+  white-space: nowrap;
+}
+
+/* Sortable Column Headers */
+.sessions-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  position: relative;
+}
+
+.sessions-table th.sortable:hover {
+  background: rgba(0, 212, 255, 0.1);
+  color: var(--sessions-accent);
+}
+
+.sessions-table th.sortable span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Sort Indicator */
+.sort-indicator {
+  display: inline-block;
+  width: 12px;
+  font-size: 10px;
+  color: var(--sessions-accent);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.sessions-table th.sortable.sorted-asc .sort-indicator,
+.sessions-table th.sortable.sorted-desc .sort-indicator {
+  opacity: 1;
+}
+
+.sessions-table th.sortable.sorted-asc .sort-indicator::after {
+  content: '▲';
+}
+
+.sessions-table th.sortable.sorted-desc .sort-indicator::after {
+  content: '▼';
+}
+
+/* Table Body */
+.sessions-table tbody tr {
+  border-bottom: 1px solid var(--vscode-panel-border);
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+}
+
+/* Alternating row colors (zebra striping) */
+.sessions-table tbody tr:nth-child(even) {
+  background: rgba(0, 212, 255, 0.02);
+}
+
+.sessions-table tbody tr:nth-child(odd) {
+  background: rgba(0, 255, 136, 0.02);
+}
+
+.sessions-table tbody tr:hover {
+  background: var(--vscode-list-hoverBackground) !important;
+}
+
+.sessions-table tbody tr:active {
+  background: var(--vscode-list-activeSelectionBackground) !important;
+}
+
+.sessions-table td {
+  padding: 10px 12px;
+  vertical-align: top;
+}
+
+/* Column Widths */
+.col-date {
+  width: 120px;
+}
+
+.col-title {
+  min-width: 200px;
+  max-width: 300px;
+}
+
+.col-duration {
+  width: 100px;
+}
+
+.col-topics {
+  width: 250px;
+}
+
+.col-files {
+  width: 80px;
+  text-align: center;
+}
+
+.col-summary {
+  min-width: 250px;
+}
+
+/* Session Title */
+.session-title {
+  font-weight: 600;
+  color: var(--vscode-editor-foreground);
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* Session Metadata */
+.session-date {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  font-family: var(--vscode-editor-font-family);
+}
+
+.session-duration {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  font-family: var(--vscode-editor-font-family);
+}
+
+.session-file-count {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Topic Badges */
+.topic-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  margin: 2px 4px 2px 0;
+  background: rgba(0, 212, 255, 0.15);
+  color: var(--sessions-accent);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.topic-badge:hover {
+  background: rgba(0, 212, 255, 0.25);
+  border-color: var(--sessions-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 212, 255, 0.2);
+}
+
+.topic-badge:active {
+  transform: translateY(0);
+}
+
+/* Session Summary */
+.session-summary {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* Empty State */
+.sessions-table .empty-state-row td {
+  padding: 60px 20px;
+}
+
+.sessions-table .empty-state {
+  text-align: center;
+  color: var(--vscode-descriptionForeground);
+}
+
+.sessions-table .empty-state > div:first-child {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.sessions-table .empty-state > div:nth-child(2) {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--vscode-editor-foreground);
+}
+
+.sessions-table .empty-state > div:nth-child(3) {
+  font-size: 13px;
+  color: var(--vscode-descriptionForeground);
+}
+
+/* Status Bar */
+.sessions-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  margin-top: 8px;
+  border-top: 1px solid var(--vscode-panel-border);
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
+
+#sessions-status-text {
+  font-weight: 500;
+}
+
+#sessions-count {
+  font-weight: 600;
+  color: var(--sessions-accent);
+}
+
+/* Session Detail Modal */
+.session-detail-modal {
+  padding: 0;
+}
+
+.session-detail-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  background: rgba(0, 212, 255, 0.05);
+}
+
+.session-detail-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: var(--vscode-editor-foreground);
+}
+
+.session-detail-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.session-detail-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.session-detail-meta-label {
+  font-weight: 600;
+  color: var(--sessions-accent);
+}
+
+.session-detail-content {
+  padding: 20px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* Session Detail Sections */
+.session-detail-section {
+  margin-bottom: 20px;
+}
+
+.session-detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.session-detail-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  color: var(--vscode-editor-foreground);
+}
+
+.session-detail-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.session-detail-files-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.session-detail-file-item {
+  padding: 6px 10px;
+  margin-bottom: 4px;
+  background: rgba(0, 212, 255, 0.05);
+  border-left: 3px solid rgba(0, 212, 255, 0.3);
+  border-radius: 3px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 12px;
+  color: var(--vscode-editor-foreground);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.session-detail-file-item:hover {
+  background: rgba(0, 212, 255, 0.1);
+  border-left-color: var(--sessions-accent);
+  transform: translateX(2px);
+}
+
+.session-detail-file-item:active {
+  transform: translateX(0);
+}
+
+/* Session Body Content (Markdown Rendering) */
+.session-detail-body {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--vscode-editor-foreground);
+}
+
+.session-detail-body h1 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 16px 0 8px 0;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  padding-bottom: 4px;
+}
+
+.session-detail-body h2 {
+  font-size: 1.3em;
+  font-weight: 600;
+  margin: 14px 0 6px 0;
+}
+
+.session-detail-body h3 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin: 12px 0 6px 0;
+}
+
+.session-detail-body h4,
+.session-detail-body h5,
+.session-detail-body h6 {
+  font-size: 1em;
+  font-weight: 600;
+  margin: 10px 0 6px 0;
+}
+
+.session-detail-body p {
+  margin: 8px 0;
+}
+
+.session-detail-body strong {
+  font-weight: 600;
+}
+
+.session-detail-body em {
+  font-style: italic;
+}
+
+.session-detail-body code {
+  background: var(--vscode-textCodeBlock-background);
+  color: var(--vscode-textPreformat-foreground);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 0.9em;
+}
+
+.session-detail-body pre {
+  background: var(--vscode-textCodeBlock-background);
+  padding: 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin: 8px 0;
+}
+
+.session-detail-body pre code {
+  background: none;
+  padding: 0;
+}
+
+.session-detail-body a {
+  color: var(--vscode-textLink-foreground);
+  text-decoration: none;
+}
+
+.session-detail-body a:hover {
+  text-decoration: underline;
+}
+
+.session-detail-body ul,
+.session-detail-body ol {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.session-detail-body li {
+  margin: 4px 0;
+}
+
+.session-detail-body blockquote {
+  border-left: 3px solid var(--vscode-textBlockQuote-border);
+  background: var(--vscode-textBlockQuote-background);
+  padding: 8px 12px;
+  margin: 8px 0;
+}
+
+.session-detail-body hr {
+  border: none;
+  border-top: 1px solid var(--vscode-panel-border);
+  margin: 16px 0;
+}
+
+/* Session Detail Actions */
+.session-detail-actions {
+  display: flex;
+  gap: 8px;
+  padding: 16px 20px;
+  border-top: 1px solid var(--vscode-panel-border);
+  background: rgba(0, 212, 255, 0.03);
+  justify-content: flex-end;
+}
+
+.session-action-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.session-action-btn:hover {
+  background: var(--sessions-accent);
+  color: var(--vscode-editor-background);
+  border-color: var(--sessions-accent);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 212, 255, 0.3);
+}
+
+.session-action-btn:active {
+  transform: translateY(0);
+}
+
+/* Scrollbars */
+.sessions-table-container::-webkit-scrollbar,
+.session-detail-content::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.sessions-table-container::-webkit-scrollbar-track,
+.session-detail-content::-webkit-scrollbar-track {
+  background: var(--vscode-scrollbarSlider-background);
+}
+
+.sessions-table-container::-webkit-scrollbar-thumb,
+.session-detail-content::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-activeBackground);
+  border-radius: 5px;
+}
+
+.sessions-table-container::-webkit-scrollbar-thumb:hover,
+.session-detail-content::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .sessions-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #sessions-search {
+    flex: 1;
+    max-width: none;
+  }
+
+  .col-summary {
+    display: none;
+  }
+
+  .col-topics {
+    width: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .col-duration,
+  .col-files {
+    display: none;
+  }
+
+  .col-topics {
+    width: 100px;
+  }
+}

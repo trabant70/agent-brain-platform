@@ -3,6 +3,10 @@
  * Stage 2: Extracted from embedded styles
  */
 
+/* Import Design System */
+@import './design-tokens.css';
+@import './ab-components.css';
+
 * {
     margin: 0;
     padding: 0;

@@ -1,0 +1,311 @@
+/**
+ * Agent Brain Platform - Unified Component Library
+ * Version: 1.0
+ *
+ * Reusable component patterns for consistent UI.
+ * Depends on: design-tokens.css
+ */
+
+/* ============================================ */
+/* COLLAPSIBLE SECTIONS */
+/* ============================================ */
+
+.ab-collapsible {
+  border: var(--ab-border-base) solid var(--vscode-panel-border);
+  border-left: var(--ab-border-accent) solid rgba(0, 212, 255, 0.4);
+  border-radius: var(--ab-radius-lg);
+  background: var(--vscode-sideBar-background);
+  margin-bottom: var(--ab-space-2);
+  box-shadow: var(--ab-shadow-md);
+  transition: all var(--ab-transition-base) var(--ab-ease-standard);
+}
+
+.ab-collapsible:hover {
+  border-left-color: var(--ab-accent-primary);
+  box-shadow: var(--ab-shadow-lg);
+}
+
+.ab-collapsible-header {
+  display: flex;
+  align-items: center;
+  gap: var(--ab-space-2);
+  padding: var(--ab-space-2) var(--ab-space-3);
+  cursor: pointer;
+  user-select: none;
+  background: var(--ab-gray-50);
+  border-radius: var(--ab-radius-lg) var(--ab-radius-lg) 0 0;
+  transition: background-color var(--ab-transition-fast) var(--ab-ease-standard);
+}
+
+.ab-collapsible-header:hover {
+  background: var(--ab-gray-100);
+}
+
+.ab-collapsible.collapsed .ab-collapsible-header {
+  border-radius: var(--ab-radius-lg);
+}
+
+.ab-collapsible-icon {
+  font-size: var(--ab-text-xs);
+  color: var(--ab-accent-primary);
+  transition: transform var(--ab-transition-base) var(--ab-ease-standard);
+  width: 12px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.ab-collapsible.collapsed .ab-collapsible-icon {
+  transform: rotate(-90deg);
+}
+
+.ab-collapsible-title {
+  flex: 1;
+  font-weight: var(--ab-font-semibold);
+  font-size: var(--ab-text-md);
+  color: var(--vscode-foreground);
+}
+
+.ab-collapsible-badge {
+  background: rgba(0, 212, 255, 0.2);
+  color: var(--ab-accent-primary);
+  padding: 2px var(--ab-space-2);
+  border-radius: var(--ab-radius-full);
+  font-size: var(--ab-text-xs);
+  font-weight: var(--ab-font-bold);
+  margin-left: auto;
+  margin-right: var(--ab-space-2);
+  border: var(--ab-border-base) solid rgba(0, 212, 255, 0.3);
+}
+
+.ab-collapsible-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height var(--ab-transition-slow) var(--ab-ease-decelerate);
+}
+
+.ab-collapsible:not(.collapsed) .ab-collapsible-body {
+  max-height: 10000px;
+  padding: var(--ab-space-2) var(--ab-space-3);
+  border-top: var(--ab-border-base) solid var(--vscode-panel-border);
+}
+
+/* Scrollable variant for long content - only when expanded */
+.ab-collapsible:not(.collapsed) .ab-collapsible-body.scrollable {
+  max-height: 600px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ============================================ */
+/* BUTTONS */
+/* ============================================ */
+
+/* Primary Button */
+.ab-btn-primary {
+  padding: 6px var(--ab-space-4);
+  background: var(--ab-accent-primary);
+  color: var(--vscode-editor-background);
+  border: var(--ab-border-base) solid var(--ab-accent-primary);
+  border-radius: var(--ab-radius-lg);
+  font-size: var(--ab-text-md);
+  font-weight: var(--ab-font-semibold);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--ab-transition-base) var(--ab-ease-standard);
+  box-shadow: var(--ab-shadow-accent-sm);
+}
+
+.ab-btn-primary:hover {
+  background: var(--ab-accent-hover);
+  border-color: var(--ab-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--ab-shadow-accent-md);
+}
+
+.ab-btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0, 212, 255, 0.2);
+}
+
+.ab-btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Secondary Button */
+.ab-btn-secondary {
+  padding: 6px var(--ab-space-4);
+  background: var(--ab-gray-100);
+  color: var(--ab-accent-primary);
+  border: var(--ab-border-base) solid rgba(0, 212, 255, 0.3);
+  border-radius: var(--ab-radius-lg);
+  font-size: var(--ab-text-md);
+  font-weight: var(--ab-font-semibold);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--ab-transition-base) var(--ab-ease-standard);
+}
+
+.ab-btn-secondary:hover {
+  background: var(--ab-gray-200);
+  border-color: var(--ab-accent-primary);
+  transform: translateY(-1px);
+}
+
+.ab-btn-secondary:active {
+  transform: translateY(0);
+}
+
+.ab-btn-secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Icon Button */
+.ab-btn-icon {
+  padding: var(--ab-space-1) var(--ab-space-2);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: var(--ab-text-md);
+  opacity: 0.7;
+  transition: all var(--ab-transition-base) var(--ab-ease-standard);
+  border-radius: var(--ab-radius-md);
+}
+
+.ab-btn-icon:hover {
+  opacity: 1;
+  background: var(--vscode-toolbar-hoverBackground);
+}
+
+.ab-btn-icon:active {
+  opacity: 0.9;
+}
+
+/* ============================================ */
+/* TOGGLE/SEGMENTED CONTROLS */
+/* ============================================ */
+
+.ab-toggle-group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ab-space-1);
+  padding: var(--ab-space-1);
+  border-radius: var(--ab-radius-lg);
+  background: var(--ab-gray-50);
+  border: var(--ab-border-base) solid rgba(0, 212, 255, 0.15);
+}
+
+.ab-toggle-btn {
+  padding: var(--ab-space-1) var(--ab-space-3);
+  background: transparent;
+  color: var(--vscode-foreground);
+  border: var(--ab-border-base) solid transparent;
+  border-radius: var(--ab-radius-md);
+  font-size: var(--ab-text-base);
+  font-weight: var(--ab-font-medium);
+  cursor: pointer;
+  transition: all var(--ab-transition-base) var(--ab-ease-standard);
+  user-select: none;
+}
+
+.ab-toggle-btn:hover {
+  background: var(--ab-gray-100);
+  border-color: rgba(0, 212, 255, 0.3);
+}
+
+.ab-toggle-btn.active {
+  background: var(--ab-accent-primary);
+  color: var(--vscode-editor-background);
+  border-color: var(--ab-accent-primary);
+  font-weight: var(--ab-font-semibold);
+  box-shadow: 0 2px 4px rgba(0, 212, 255, 0.3);
+}
+
+/* ============================================ */
+/* BADGES */
+/* ============================================ */
+
+.ab-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--ab-space-2);
+  border-radius: var(--ab-radius-sm);
+  font-size: var(--ab-text-xs);
+  font-weight: var(--ab-font-medium);
+}
+
+.ab-badge-primary {
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+}
+
+.ab-badge-count {
+  background: rgba(0, 212, 255, 0.2);
+  color: var(--ab-accent-primary);
+  font-weight: var(--ab-font-bold);
+  border-radius: var(--ab-radius-full);
+  border: var(--ab-border-base) solid rgba(0, 212, 255, 0.3);
+}
+
+.ab-badge-success {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--ab-success);
+  border: var(--ab-border-base) solid rgba(16, 185, 129, 0.3);
+}
+
+.ab-badge-warning {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--ab-warning);
+  border: var(--ab-border-base) solid rgba(245, 158, 11, 0.3);
+}
+
+.ab-badge-error {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--ab-error);
+  border: var(--ab-border-base) solid rgba(239, 68, 68, 0.3);
+}
+
+/* ============================================ */
+/* SCROLLBARS (Unified) */
+/* ============================================ */
+
+.ab-scrollable::-webkit-scrollbar,
+.ab-collapsible-body::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.ab-scrollable::-webkit-scrollbar-track,
+.ab-collapsible-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ab-scrollable::-webkit-scrollbar-thumb,
+.ab-collapsible-body::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-background);
+  border-radius: var(--ab-radius-md);
+}
+
+.ab-scrollable::-webkit-scrollbar-thumb:hover,
+.ab-collapsible-body::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+}
+
+/* ============================================ */
+/* UTILITIES */
+/* ============================================ */
+
+.ab-divider {
+  height: var(--ab-border-base);
+  background: var(--vscode-panel-border);
+  margin: var(--ab-space-4) 0;
+}
+
+.ab-divider-vertical {
+  width: var(--ab-border-base);
+  background: var(--vscode-panel-border);
+  height: 100%;
+}

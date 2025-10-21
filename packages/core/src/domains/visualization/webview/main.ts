@@ -161,6 +161,15 @@ function setupMessageHandling(): void {
                     showKnowledgeError(message.payload.error);
                     break;
 
+                // Session History Messages
+                case 'sessions:loaded':
+                    handleSessionsLoaded(message.payload);
+                    break;
+
+                case 'sessions:error':
+                    showSessionsError(message.payload.error);
+                    break;
+
                 // Note: Legacy AI companion message handlers removed
                 // (enhancedPrompt, showTip, showError, showComparison, knowledgePreview, promptEnhanced)
                 // These features have been replaced by the modern Guidance, Plans, and Knowledge tabs
@@ -409,6 +418,55 @@ function showKnowledgeError(error: string): void {
     if (knowledgeController && typeof knowledgeController.handleOperationResult === 'function') {
         knowledgeController.handleOperationResult('Operation', false, error);
     }
+}
+
+/**
+ * Handle sessions loaded from extension
+ */
+function handleSessionsLoaded(data: any): void {
+    webviewLogger.info(
+        LogCategory.WEBVIEW,
+        'Received sessions data from extension',
+        'handleSessionsLoaded',
+        { sessionsCount: data.sessions?.length || 0 },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    if ((window as any).sessionController) {
+        webviewLogger.debug(
+            LogCategory.WEBVIEW,
+            'Passing sessions data to controller',
+            'handleSessionsLoaded',
+            { hasController: !!(window as any).sessionController, sessionsToLoad: data.sessions?.length || 0 },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
+        (window as any).sessionController.loadData(data.sessions);
+
+        webviewLogger.info(
+            LogCategory.UI,
+            'Sessions loaded into controller',
+            'handleSessionsLoaded',
+            { sessionsLoaded: data.sessions?.length || 0 },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+    } else {
+        webviewLogger.warn(
+            LogCategory.WEBVIEW,
+            'Cannot load sessions - controller not available',
+            'handleSessionsLoaded',
+            { hasController: !!(window as any).sessionController },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+    }
+}
+
+/**
+ * Show sessions error message
+ */
+function showSessionsError(error: string): void {
+    webviewLogger.error(LogCategory.UI, `Sessions error: ${error}`, 'showSessionsError');
+    console.error('[Sessions] Error:', error);
 }
 
 // Initialize

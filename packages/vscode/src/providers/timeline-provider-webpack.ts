@@ -25,10 +25,10 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
   private isWebviewReady: boolean = false;
   private knowledgeManager: any = null;  // KnowledgeManager instance
 
-  constructor(extensionUri: vscode.Uri, storagePath?: string) {
+  constructor(extensionUri: vscode.Uri, workspaceRoot: string) {
     this.extensionUri = extensionUri;
     this.orchestrator = new DataOrchestrator({
-      storagePath: storagePath || './.agent-brain',
+      workspaceRoot: workspaceRoot,
       providerSettings: this.getProviderSettings()
     });
   }
@@ -353,6 +353,10 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
           await this.sendClaudeMdFiles();
           break;
 
+        case 'knowledge:update-claude-file':
+          await this.handleUpdateClaudeFile(message.payload);
+          break;
+
         case 'knowledge:create-item':
           await this.handleCreateKnowledgeItem(message.payload);
           break;
@@ -399,6 +403,14 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
 
         // Note: knowledge:showEditDialog removed - edit is now handled entirely in webview
         // using ModalDialog (similar to create), which provides better UX
+
+        case 'sessions:load-all':
+          await this.handleLoadSessions();
+          break;
+
+        case 'sessions:open-file':
+          await this.handleOpenSessionFile(message.payload);
+          break;
 
         default:
           logger.warn(
@@ -824,6 +836,63 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
   }
 
   /**
+   * Handle update claude.md file content
+   */
+  private async handleUpdateClaudeFile(payload: { filePath: string; content: string }): Promise<void> {
+    logger.debug(
+      LogCategory.EXTENSION,
+      'Updating claude.md file content',
+      'TimelineProvider.handleUpdateClaudeFile',
+      { filePath: payload.filePath, contentLength: payload.content.length },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    if (!this.knowledgeManager) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Cannot update claude.md - knowledge manager not available',
+        'TimelineProvider.handleUpdateClaudeFile',
+        {},
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+      return;
+    }
+
+    try {
+      await this.knowledgeManager.updateClaudeMdContent(payload.filePath, payload.content);
+
+      // Re-send updated claude.md files to webview
+      await this.sendClaudeMdFiles();
+
+      this._view?.webview.postMessage({
+        type: 'knowledge:success',
+        payload: { message: 'Claude.md file updated successfully' }
+      });
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'Claude.md file updated successfully',
+        'TimelineProvider.handleUpdateClaudeFile',
+        { filePath: payload.filePath },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+    } catch (error) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to update claude.md file',
+        'TimelineProvider.handleUpdateClaudeFile',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      this._view?.webview.postMessage({
+        type: 'knowledge:error',
+        payload: { message: 'Failed to update claude.md file' }
+      });
+    }
+  }
+
+  /**
    * Handle create knowledge item
    */
   private async handleCreateKnowledgeItem(payload: any): Promise<void> {
@@ -835,11 +904,30 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
       await this.knowledgeManager.createItem(payload);
       await this.sendKnowledgeData();
 
+      // Refresh timeline to show new knowledge event
+      await this.loadTimelineForActiveFile(true);
+
       this._view?.webview.postMessage({
         type: 'knowledge:success',
         payload: { message: 'Knowledge item created successfully' }
       });
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'Knowledge item created successfully - timeline refreshed',
+        'TimelineProvider.handleCreateKnowledgeItem',
+        { type: payload.type, title: payload.title },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
     } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to create knowledge item',
+        'TimelineProvider.handleCreateKnowledgeItem',
+        { error },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
       this._view?.webview.postMessage({
         type: 'knowledge:error',
         payload: { error: error.message }
@@ -883,11 +971,30 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
       await this.knowledgeManager.deleteItem(payload.id);
       await this.sendKnowledgeData();
 
+      // Refresh timeline to show deletion event
+      await this.loadTimelineForActiveFile(true);
+
       this._view?.webview.postMessage({
         type: 'knowledge:success',
         payload: { message: 'Knowledge item deleted successfully' }
       });
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'Knowledge item deleted successfully - timeline refreshed',
+        'TimelineProvider.handleDeleteKnowledgeItem',
+        { itemId: payload.id },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
     } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to delete knowledge item',
+        'TimelineProvider.handleDeleteKnowledgeItem',
+        { itemId: payload.id, error },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
       this._view?.webview.postMessage({
         type: 'knowledge:error',
         payload: { error: error.message }
@@ -1034,9 +1141,12 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
         payload: { message: `Template "${templateName}" ${action} ${claudeMdPath.split(/[/\\]/).pop()}` }
       });
 
+      // Refresh timeline to show new knowledge events
+      await this.loadTimelineForActiveFile(true);
+
       logger.info(
         LogCategory.EXTENSION,
-        'Template applied successfully',
+        'Template applied successfully - timeline refreshed',
         'TimelineProvider.handleApplyTemplate',
         { templateId: payload.templateId, templateName, wasReplaced: result?.wasReplaced, claudeMdPath },
         LogPathway.KNOWLEDGE_MANAGEMENT
@@ -1113,9 +1223,12 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
         }
       });
 
+      // Refresh timeline to show new knowledge events
+      await this.loadTimelineForActiveFile(true);
+
       logger.info(
         LogCategory.EXTENSION,
-        'Selected items applied successfully',
+        'Selected items applied successfully - timeline refreshed',
         'TimelineProvider.handleApplySelectedItems',
         { itemCount: payload.itemIds.length, claudeMdPath },
         LogPathway.KNOWLEDGE_MANAGEMENT
@@ -1147,7 +1260,26 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
     try {
       await this.knowledgeManager.removeTemplate(payload.templateId, payload.claudeMdPath);
       await this.sendClaudeMdFiles();
+
+      // Refresh timeline to show new knowledge events
+      await this.loadTimelineForActiveFile(true);
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'Template removed successfully - timeline refreshed',
+        'TimelineProvider.handleRemoveTemplate',
+        { templateId: payload.templateId, claudeMdPath: payload.claudeMdPath },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
     } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to remove template',
+        'TimelineProvider.handleRemoveTemplate',
+        { templateId: payload.templateId, error },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
       this._view?.webview.postMessage({
         type: 'knowledge:error',
         payload: { error: error.message }
@@ -1374,6 +1506,117 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
     } catch (error: any) {
       logger.error(LogCategory.EXTENSION, 'Failed to edit knowledge item', 'showEditKnowledgeItemDialog', error);
       vscode.window.showErrorMessage(`Failed to edit knowledge item: ${error.message}`);
+    }
+  }
+
+  /**
+   * Handle load all sessions request
+   */
+  private async handleLoadSessions(): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Loading all sessions',
+        'TimelineProvider.handleLoadSessions',
+        undefined,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      // Get workspace root
+      const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+      if (!workspaceRoot) {
+        logger.warn(
+          LogCategory.EXTENSION,
+          'No workspace folder found',
+          'TimelineProvider.handleLoadSessions'
+        );
+        this.sendMessage({
+          type: 'sessions:loaded',
+          payload: { sessions: [] }
+        });
+        return;
+      }
+
+      // Load sessions using SessionFileSystem
+      const { SessionFileSystem } = await import('../../../core/src/domains/sessions/SessionFileSystem');
+      const sessionFS = new SessionFileSystem(workspaceRoot);
+      const sessions = await sessionFS.loadAllSessions();
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'Sessions loaded successfully',
+        'TimelineProvider.handleLoadSessions',
+        { count: sessions.length },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      // Send sessions to webview
+      this.sendMessage({
+        type: 'sessions:loaded',
+        payload: { sessions }
+      });
+
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to load sessions',
+        'TimelineProvider.handleLoadSessions',
+        { error: error.message }
+      );
+
+      this.sendMessage({
+        type: 'sessions:error',
+        payload: { error: error.message }
+      });
+    }
+  }
+
+  /**
+   * Handle open session file request
+   */
+  private async handleOpenSessionFile(payload: any): Promise<void> {
+    try {
+      const { filePath } = payload;
+
+      if (!filePath) {
+        logger.warn(
+          LogCategory.EXTENSION,
+          'No file path provided',
+          'TimelineProvider.handleOpenSessionFile'
+        );
+        return;
+      }
+
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Opening session file',
+        'TimelineProvider.handleOpenSessionFile',
+        { filePath },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      // Open the file in the editor
+      const uri = vscode.Uri.file(filePath);
+      const document = await vscode.workspace.openTextDocument(uri);
+      await vscode.window.showTextDocument(document);
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'Session file opened successfully',
+        'TimelineProvider.handleOpenSessionFile',
+        { filePath },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to open session file',
+        'TimelineProvider.handleOpenSessionFile',
+        { error: error.message }
+      );
+
+      vscode.window.showErrorMessage(`Failed to open session file: ${error.message}`);
     }
   }
 
