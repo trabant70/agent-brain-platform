@@ -28,6 +28,12 @@
                 </svg>
                 AB Sessions
             </button>
+            <button class="tab-button" data-tab="support" aria-label="Support and Architecture view" aria-selected="false">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink: 0;">
+                    <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm0 1a6 6 0 110 12A6 6 0 018 2zm0 2a1 1 0 00-1 1v3a1 1 0 102 0V5a1 1 0 00-1-1zm0 6a1 1 0 100 2 1 1 0 000-2z"/>
+                </svg>
+                AB Support
+            </button>
         </div>
 
         <!-- Tab Contents -->
@@ -268,6 +274,16 @@
                 </div>
             </div>
             <!-- End Sessions Tab -->
+
+            <!-- AB Support Tab -->
+            <div id="tab-support" class="tab-content" aria-hidden="true">
+                <div class="support-container" style="padding: 20px; height: 100%; overflow: auto;">
+                    <div class="support-diagram" style="max-width: 1400px; margin: 0 auto;">
+                        <img id="architecture-diagram" src="assets/agentbrain-complete-diagram.svg" alt="Agent Brain Architecture Diagram" style="width: 100%; height: auto; display: block;" />
+                    </div>
+                </div>
+            </div>
+            <!-- End AB Support Tab -->
         </div>
         <!-- End Tab Contents -->
     </div>

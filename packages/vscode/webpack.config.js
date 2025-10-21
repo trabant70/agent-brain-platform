@@ -1,6 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = !isProduction;
@@ -134,6 +135,14 @@ const webviewConfig = {
         minifyCSS: true,
         minifyURLs: true
       } : false
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, '../../docs/agentbrain-complete-diagram.svg'),
+          to: path.resolve(__dirname, 'dist/webview/assets/agentbrain-complete-diagram.svg')
+        }
+      ]
     })
   ],
   optimization: {
