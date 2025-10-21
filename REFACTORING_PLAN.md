@@ -86,15 +86,17 @@ ui/knowledge/
 
 **Tasks:**
 
-### 2.1 Extract Utilities (Foundation)
-- [ ] Create `ui/knowledge/utils/MarkdownRenderer.ts`
-  - [ ] Extract `renderMarkdown()` method (62 lines)
-  - [ ] Extract `escapeHtml()` method
-  - [ ] Add unit tests
-- [ ] Create `ui/knowledge/utils/KnowledgeFilters.ts`
-  - [ ] Extract `getFilteredItems()` method (94 lines)
-  - [ ] Extract filtering logic
-  - [ ] Add unit tests
+### 2.1 Extract Utilities (Foundation) ✅ COMPLETE
+- [x] Create `ui/knowledge/utils/MarkdownRenderer.ts`
+  - [x] Extract `renderMarkdown()` method (67 lines → 84 lines standalone)
+  - [x] Extract `escapeHtml()` method
+  - [ ] Add unit tests (deferred - future enhancement)
+- [x] Create `ui/knowledge/utils/KnowledgeFilters.ts`
+  - [x] Extract `getFilteredItems()` method (62 lines → 92 lines standalone)
+  - [x] Extract filtering logic
+  - [ ] Add unit tests (deferred - future enhancement)
+- [x] Update KnowledgeViewController to use utilities (2,361 → 2,240 lines, -121)
+- [x] Build and verify (commit 2d57de6)
 
 ### 2.2 Extract HTML Templates
 - [ ] Create `ui/knowledge/templates/table-templates.ts`
@@ -298,10 +300,17 @@ services/
   - Updated exports to use ui/FilterController.ts
   - Build verified, committed (729abda), pushed to origin
   - **Net reduction: 1,531 lines of dead code**
-- [ ] Phase 2: KnowledgeViewController Decomposition (HIGH PRIORITY)
+- [ ] **Phase 2: KnowledgeViewController Decomposition (HIGH PRIORITY)** - 🚧 IN PROGRESS
+  - [x] **Phase 2.1:** Extract utilities (MarkdownRenderer, KnowledgeFilters) ✅
+    - Created ui/knowledge/utils/ directory
+    - KnowledgeViewController: 2,361 → 2,240 lines (-121)
+    - Committed (2d57de6), pushed to origin
+  - [ ] **Phase 2.2:** Extract HTML templates (table, form, accordion)
+  - [ ] **Phase 2.3:** Extract controller classes
+  - [ ] **Phase 2.4:** Refactor main controller as orchestrator
 - [ ] Phase 3: TimelineProvider Decomposition (MEDIUM PRIORITY)
 - [ ] Phase 4: KnowledgeManager Decomposition (MEDIUM PRIORITY)
 
-**Current Phase:** Phase 1 - COMPLETE ✅
-**Next Phase:** Phase 2 - KnowledgeViewController Decomposition
-**Status:** Ready to begin
+**Current Phase:** Phase 2.1 - COMPLETE ✅
+**Next Step:** Phase 2.2 - Extract HTML Templates
+**Status:** Utilities extracted, ready for template extraction
