@@ -401,7 +401,7 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
     // Convert script src paths to webview URIs with cache-busting version parameter
     // The bundled HTML has paths like: <script defer src="vendors.js"></script>
     // We transform to: <script defer src="vscode-webview://...vendors.js?v=0-1-5"></script>
-    const htmlWithWebviewUris = htmlWithCSP.replace(
+    let htmlWithWebviewUris = htmlWithCSP.replace(
       /src="([^"]+\.js)"/g,
       (match, scriptPath) => {
         const scriptUri = webview.asWebviewUri(
@@ -409,6 +409,19 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
         );
         // Add version as query parameter for cache busting
         return `src="${scriptUri}?v=${cacheBuster}"`;
+      }
+    );
+
+    // Convert asset paths (images, SVGs, etc.) to webview URIs
+    // The bundled HTML has paths like: <img src="assets/diagram.svg">
+    // We transform to: <img src="vscode-webview://...assets/diagram.svg">
+    htmlWithWebviewUris = htmlWithWebviewUris.replace(
+      /src="(assets\/[^"]+)"/g,
+      (match, assetPath) => {
+        const assetUri = webview.asWebviewUri(
+          vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', assetPath)
+        );
+        return `src="${assetUri}"`;
       }
     );
 
