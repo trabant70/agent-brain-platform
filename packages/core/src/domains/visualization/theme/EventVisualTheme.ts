@@ -191,38 +191,6 @@ export class EventVisualTheme {
     };
 
     /**
-     * Intelligence events (learnings, patterns, ADRs, Agent Brain sessions)
-     * Shape represents event type, semantic colors distinguish intelligence sources
-     * NOTE: These are legacy types - kept for backward compatibility
-     */
-    private static readonly INTELLIGENCE_EVENTS: Record<string, EventTypeVisual> = {
-        'learning-stored': {
-            shape: 'circle',
-            semanticColor: '#9B59B6',  // Purple - learning/knowledge
-            icon: '🧠',
-            label: 'Learning Stored'
-        },
-        'pattern-detected': {
-            shape: 'diamond',
-            semanticColor: '#3498DB',  // Blue - pattern/analysis
-            icon: '🔍',
-            label: 'Pattern Detected'
-        },
-        'adr-recorded': {
-            shape: 'square',
-            semanticColor: '#E67E22',  // Orange - architectural decision
-            icon: '📐',
-            label: 'ADR Recorded'
-        },
-        'agent-session': {
-            shape: 'star',
-            semanticColor: '#22C55E',  // Green - AI-assisted work completed
-            icon: '🤖',
-            label: 'Agent Brain Session'
-        }
-    };
-
-    /**
      * Knowledge management events (Phase 2)
      * Events generated when users or agents interact with the knowledge system
      */
@@ -324,7 +292,6 @@ export class EventVisualTheme {
             this.GIT_EVENTS[normalized] ||
             this.EXTERNAL_EVENTS[normalized] ||
             this.KNOWLEDGE_EVENTS[normalized] ||
-            this.INTELLIGENCE_EVENTS[normalized] ||
             {
                 color: '#6366f1',  // Default indigo
                 shape: 'circle' as const,
@@ -530,8 +497,7 @@ export class EventVisualTheme {
         return [
             ...Object.keys(this.GIT_EVENTS),
             ...Object.keys(this.EXTERNAL_EVENTS),
-            ...Object.keys(this.KNOWLEDGE_EVENTS),
-            ...Object.keys(this.INTELLIGENCE_EVENTS)
+            ...Object.keys(this.KNOWLEDGE_EVENTS)
         ];
     }
 
@@ -561,8 +527,7 @@ export class EventVisualTheme {
         return !!(
             this.GIT_EVENTS[normalized] ||
             this.EXTERNAL_EVENTS[normalized] ||
-            this.KNOWLEDGE_EVENTS[normalized] ||
-            this.INTELLIGENCE_EVENTS[normalized]
+            this.KNOWLEDGE_EVENTS[normalized]
         );
     }
 

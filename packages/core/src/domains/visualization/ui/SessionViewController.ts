@@ -397,7 +397,7 @@ export class SessionViewController {
     );
 
     // Clear existing content
-    this.tableBody.innerHTML = '';
+    this.tableBody!.innerHTML = '';
 
     // Show empty state if no sessions
     if (this.state.filteredSessions.length === 0) {
@@ -418,14 +418,14 @@ export class SessionViewController {
           </div>
         </td>
       `;
-      this.tableBody.appendChild(emptyRow);
+      this.tableBody!.appendChild(emptyRow);
       return;
     }
 
     // Render each session row
     this.state.filteredSessions.forEach(session => {
       const row = this.createSessionRow(session);
-      this.tableBody.appendChild(row);
+      this.tableBody!.appendChild(row);
     });
 
     this.updateSortIndicators();

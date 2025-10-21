@@ -30,11 +30,6 @@ export enum EventType {
   BUILD_FAILED = 'build-failed',
   TEST_RUN = 'test-run',
 
-  // Intelligence events
-  LEARNING_STORED = 'learning-stored',
-  PATTERN_DETECTED = 'pattern-detected',
-  ADR_RECORDED = 'adr-recorded',
-
   // Agent Brain session events (Phase 1)
   AGENT_SESSION = 'agent-session',
 
@@ -43,10 +38,6 @@ export enum EventType {
   KNOWLEDGE_REMOVED = 'knowledge-removed',
   KNOWLEDGE_CREATED = 'knowledge-created',
   SESSION_JOURNAL = 'session-journal',
-
-  // Agent events (for future - Phase 9)
-  AGENT_TASK_COMPLETED = 'agent-task-completed',
-  AGENT_TASK_ABANDONED = 'agent-task-abandoned',
 
   // Custom
   CUSTOM = 'custom'
