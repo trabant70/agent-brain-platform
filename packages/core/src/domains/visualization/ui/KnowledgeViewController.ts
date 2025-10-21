@@ -20,6 +20,16 @@ import { NotificationManager } from './NotificationManager';
 import { webviewLogger, LogCategory, LogPathway } from '../webview/WebviewLogger';
 import { MarkdownRenderer } from './knowledge/utils/MarkdownRenderer';
 import { KnowledgeFilters } from './knowledge/utils/KnowledgeFilters';
+import { TableTemplates } from './knowledge/templates/table-templates';
+import { AccordionTemplates } from './knowledge/templates/accordion-templates';
+import {
+  TYPE_OPTIONS,
+  SCOPE_OPTIONS,
+  TYPE_DISPLAY_TO_VALUE,
+  SCOPE_DISPLAY_TO_VALUE,
+  TYPE_VALUE_TO_DISPLAY,
+  SCOPE_VALUE_TO_DISPLAY
+} from './knowledge/templates/form-constants';
 
 export interface KnowledgeViewState {
   items: KnowledgeItem[];
@@ -230,16 +240,7 @@ export class KnowledgeViewController {
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
 
-      tbody.innerHTML = `
-        <tr class="knowledge-empty-state">
-          <td colspan="7" style="text-align: center; padding: 40px;">
-            <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
-            <div style="font-size: 14px; color: var(--vscode-descriptionForeground);">
-              ${this.state.searchQuery ? 'No knowledge items match your search' : 'No knowledge items yet. Click "+ Add Item" to create your first item.'}
-            </div>
-          </td>
-        </tr>
-      `;
+      tbody.innerHTML = TableTemplates.emptyState(!!this.state.searchQuery);
       return;
     }
 
@@ -281,12 +282,7 @@ export class KnowledgeViewController {
       headerRow.className = 'knowledge-type-header';
       headerRow.dataset.type = groupKey;
       headerRow.style.cursor = 'pointer';
-      headerRow.innerHTML = `
-        <td colspan="7">
-          <span class="collapse-icon">${isCollapsed ? '▶' : '▼'}</span>
-          ${icon} ${label} (${groupItems.length})
-        </td>
-      `;
+      headerRow.innerHTML = TableTemplates.groupHeader(groupKey, icon, label, groupItems.length, isCollapsed);
       tbody.appendChild(headerRow);
 
       // Items (hidden if collapsed)
@@ -324,50 +320,7 @@ export class KnowledgeViewController {
     row.dataset.itemId = item.id;
 
     const isSelected = this.state.selectedItems.has(item.id);
-    const validClass = item.valid ? '' : 'invalid';
-
-    row.innerHTML = `
-      <td class="col-select">
-        <input type="checkbox"
-               class="item-checkbox"
-               data-item-id="${item.id}"
-               ${isSelected ? 'checked' : ''}>
-      </td>
-      <td class="col-type ${validClass}">
-        <span class="type-badge" data-type="${item.type}">
-          ${getKnowledgeTypeIcon(item.type)} ${getKnowledgeTypeLabel(item.type)}
-        </span>
-      </td>
-      <td class="col-title ${validClass}">
-        <div class="item-title">${this.escapeHtml(item.title)}</div>
-        ${!item.valid ? `<div class="item-error">${this.escapeHtml(item.parseError || 'Parse error')}</div>` : ''}
-      </td>
-      <td class="col-scope">
-        <span class="scope-badge" data-scope="${item.scope}">
-          ${getKnowledgeScopeLabel(item.scope)}
-        </span>
-      </td>
-      <td class="col-tags">
-        ${item.tags.map(tag => `<span class="tag-badge">${this.escapeHtml(tag)}</span>`).join(' ')}
-      </td>
-      <td class="col-source">
-        ${item.source ? this.escapeHtml(item.source) : '-'}
-      </td>
-      <td class="col-actions">
-        <button class="icon-button edit-btn" data-item-id="${item.id}" title="Edit">
-          <svg width="16" height="16" viewBox="0 0 16 16" class="action-icon">
-            <path d="M11.5 1.5l3 3-8.5 8.5H3v-3l8.5-8.5z M10 3l2 2" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-            <line x1="2" y1="14" x2="14" y2="14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-          </svg>
-        </button>
-        <button class="icon-button delete-btn" data-item-id="${item.id}" title="Delete">
-          <svg width="16" height="16" viewBox="0 0 16 16" class="action-icon">
-            <path d="M3 4h10M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1M6 7v5M8 7v5M10 7v5" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
-            <path d="M4 4l.5 9a1 1 0 001 1h5a1 1 0 001-1l.5-9" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </td>
-    `;
+    row.innerHTML = TableTemplates.itemRow(item, isSelected);
 
     // Add event listeners to buttons (safer than inline onclick)
     const editBtn = row.querySelector('.edit-btn') as HTMLButtonElement;
@@ -461,12 +414,7 @@ export class KnowledgeViewController {
     container.innerHTML = '';
 
     if (this.state.claudeMdFiles.length === 0) {
-      container.innerHTML = `
-        <div class="empty-state" style="padding: 20px; text-align: center;">
-          <div style="font-size: 24px; margin-bottom: 8px;">📄</div>
-          <div style="color: var(--vscode-descriptionForeground);">No claude.md files found</div>
-        </div>
-      `;
+      container.innerHTML = AccordionTemplates.emptyState();
       return;
     }
 
@@ -485,15 +433,7 @@ export class KnowledgeViewController {
 
       const header = document.createElement('div');
       header.className = 'accordion-header ab-collapsible-header';
-      header.innerHTML = `
-        <span class="file-selector" data-file-path="${file.path}" title="Select this file as target for applying knowledge items">
-          <input type="radio" name="selected-claude-file" ${isSelected ? 'checked' : ''}>
-        </span>
-        <span class="accordion-icon ab-collapsible-icon">▼</span>
-        <span class="accordion-title ab-collapsible-title">📄 ${this.escapeHtml(file.relativePath)}</span>
-        ${file.hasConflicts ? '<span class="conflict-badge ab-badge-error">⚠️ Conflicts</span>' : ''}
-        ${file.templates.length > 0 ? `<span class="template-count ab-collapsible-badge">${file.templates.length}</span>` : ''}
-      `;
+      header.innerHTML = AccordionTemplates.accordionHeader(file, isSelected);
 
       const content = document.createElement('div');
       content.className = 'accordion-content ab-collapsible-body';
@@ -501,54 +441,11 @@ export class KnowledgeViewController {
       // Build content HTML
       let contentHTML = '';
 
-      // Add edit controls at the top
-      contentHTML += `
-        <div class="claude-md-controls">
-          <button class="edit-claude-btn ab-btn-secondary" data-file-path="${file.path}" title="Edit claude.md content">
-            <svg width="14" height="14" viewBox="0 0 16 16" class="action-icon" style="margin-right: 4px; opacity: 1;">
-              <path d="M11.5 1.5l3 3-8.5 8.5H3v-3l8.5-8.5z M10 3l2 2" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-              <line x1="2" y1="14" x2="14" y2="14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-            </svg>
-            Edit Content
-          </button>
-        </div>
-      `;
-
-      // Show markdown content (read-only by default)
-      if (file.content && file.content.trim().length > 0) {
-        const renderedMarkdown = MarkdownRenderer.render(file.content);
-        contentHTML += `
-          <div class="claude-md-content" data-file-path="${file.path}">
-            <div class="claude-md-display">
-              ${renderedMarkdown}
-            </div>
-            <div class="claude-md-editor" style="display: none;">
-              <textarea class="claude-md-textarea">${this.escapeHtml(file.content)}</textarea>
-              <div class="claude-md-editor-actions">
-                <button class="save-claude-btn ab-btn-primary" data-file-path="${file.path}">💾 Save</button>
-                <button class="cancel-claude-btn ab-btn-secondary" data-file-path="${file.path}">✖ Cancel</button>
-              </div>
-            </div>
-          </div>
-        `;
-      } else {
-        contentHTML += `
-          <div class="claude-md-content" data-file-path="${file.path}">
-            <div class="claude-md-display">
-              <div style="padding: 12px; color: var(--vscode-descriptionForeground); font-style: italic;">
-                File is empty
-              </div>
-            </div>
-            <div class="claude-md-editor" style="display: none;">
-              <textarea class="claude-md-textarea"></textarea>
-              <div class="claude-md-editor-actions">
-                <button class="save-claude-btn ab-btn-primary" data-file-path="${file.path}">💾 Save</button>
-                <button class="cancel-claude-btn ab-btn-secondary" data-file-path="${file.path}">✖ Cancel</button>
-              </div>
-            </div>
-          </div>
-        `;
-      }
+      // Add Claude.md content section with edit controls
+      const renderedMarkdown = (file.content && file.content.trim().length > 0)
+        ? MarkdownRenderer.render(file.content)
+        : null;
+      contentHTML += AccordionTemplates.claudeMdContent(file, renderedMarkdown);
 
       // Show templates section if any
       if (file.templates.length > 0) {
@@ -570,19 +467,19 @@ export class KnowledgeViewController {
             <div class="template-header">
               <div class="template-info">
                 <div class="template-name-label">Template:</div>
-                <div class="template-name-value">${this.escapeHtml(template.templateName)}</div>
+                <div class="template-name-value">${MarkdownRenderer.escapeHtml(template.templateName)}</div>
                 ${isDuplicate ? '<div class="duplicate-badge">Duplicate</div>' : ''}
               </div>
               <button class="remove-template-btn"
                       data-template-id="${template.templateId}"
                       data-file-path="${file.path}"
                       data-template-index="${idx}"
-                      title="Remove template '${this.escapeHtml(template.templateName)}'">
+                      title="Remove template '${MarkdownRenderer.escapeHtml(template.templateName)}'">
                 Remove
               </button>
             </div>
             <div class="template-meta">
-              <span class="template-id" title="Template ID">ID: ${this.escapeHtml(template.templateId.substring(0, 20))}...</span>
+              <span class="template-id" title="Template ID">ID: ${MarkdownRenderer.escapeHtml(template.templateId.substring(0, 20))}...</span>
               <span class="template-lines">Lines ${template.startLine}-${template.endLine}</span>
             </div>
           </div>
@@ -1294,34 +1191,14 @@ export class KnowledgeViewController {
           label: 'Type',
           type: 'select',
           required: true,
-          options: [
-            '📋 ADR',
-            '🎯 Golden Path',
-            '🔧 Design Pattern',
-            '⚠️ Anti-Pattern',
-            '📏 Standard',
-            '📝 Convention',
-            '✅ Checklist',
-            '💡 Tip',
-            '📝 Snippet',
-            '⚙️ Configuration',
-            '🔗 API Reference',
-            '📚 Learning',
-            '🔍 Troubleshooting',
-            '⚠️ Gotcha',
-            '📄 Template',
-            '📖 Guideline',
-            '🔄 Workflow',
-            '📦 Runbook',
-            '📦 Custom'
-          ]
+          options: TYPE_OPTIONS
         },
         {
           name: 'scope',
           label: 'Scope',
           type: 'select',
           required: true,
-          options: ['👤 Personal', '👥 Team', '📁 Project', '🏢 Organization', '🌐 Public']
+          options: SCOPE_OPTIONS
         },
         {
           name: 'title',
@@ -1351,37 +1228,6 @@ export class KnowledgeViewController {
       return; // User cancelled
     }
 
-    // Parse type from display string
-    const typeMap: Record<string, string> = {
-      '📋 ADR': 'adr',
-      '🎯 Golden Path': 'golden-path',
-      '🔧 Design Pattern': 'design-pattern',
-      '⚠️ Anti-Pattern': 'anti-pattern',
-      '📏 Standard': 'standard',
-      '📝 Convention': 'convention',
-      '✅ Checklist': 'checklist',
-      '💡 Tip': 'tip',
-      '📝 Snippet': 'snippet',
-      '⚙️ Configuration': 'configuration',
-      '🔗 API Reference': 'api-reference',
-      '📚 Learning': 'learning',
-      '🔍 Troubleshooting': 'troubleshooting',
-      '⚠️ Gotcha': 'gotcha',
-      '📄 Template': 'template',
-      '📖 Guideline': 'guideline',
-      '🔄 Workflow': 'workflow',
-      '📦 Runbook': 'runbook',
-      '📦 Custom': 'custom'
-    };
-
-    const scopeMap: Record<string, string> = {
-      '👤 Personal': 'personal',
-      '👥 Team': 'team',
-      '📁 Project': 'project',
-      '🏢 Organization': 'organization',
-      '🌐 Public': 'public'
-    };
-
     // Parse tags from comma-separated string
     const tags = result.tags ? result.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t) : [];
 
@@ -1389,8 +1235,8 @@ export class KnowledgeViewController {
     this.sendMessage({
       type: 'knowledge:create-item',
       payload: {
-        type: typeMap[result.type] || 'custom',
-        scope: scopeMap[result.scope] || 'personal',
+        type: TYPE_DISPLAY_TO_VALUE[result.type] || 'custom',
+        scope: SCOPE_DISPLAY_TO_VALUE[result.scope] || 'personal',
         title: result.title,
         body: result.body || '',
         tags
@@ -1479,37 +1325,6 @@ export class KnowledgeViewController {
 
     const modal = new ModalDialog();
 
-    // Map internal type values to display strings
-    const typeDisplayMap: Record<string, string> = {
-      'adr': '📋 ADR',
-      'golden-path': '🎯 Golden Path',
-      'design-pattern': '🔧 Design Pattern',
-      'anti-pattern': '⚠️ Anti-Pattern',
-      'standard': '📏 Standard',
-      'convention': '📝 Convention',
-      'checklist': '✅ Checklist',
-      'tip': '💡 Tip',
-      'snippet': '📝 Snippet',
-      'configuration': '⚙️ Configuration',
-      'api-reference': '🔗 API Reference',
-      'learning': '📚 Learning',
-      'troubleshooting': '🔍 Troubleshooting',
-      'gotcha': '⚠️ Gotcha',
-      'template': '📄 Template',
-      'guideline': '📖 Guideline',
-      'workflow': '🔄 Workflow',
-      'runbook': '📦 Runbook',
-      'custom': '📦 Custom'
-    };
-
-    const scopeDisplayMap: Record<string, string> = {
-      'personal': '👤 Personal',
-      'team': '👥 Team',
-      'project': '📁 Project',
-      'organization': '🏢 Organization',
-      'public': '🌐 Public'
-    };
-
     const result = await modal.showForm({
       title: `Edit Knowledge Item: ${item.title}`,
       submitText: 'Save',
@@ -1520,36 +1335,16 @@ export class KnowledgeViewController {
           label: 'Type',
           type: 'select',
           required: true,
-          options: [
-            '📋 ADR',
-            '🎯 Golden Path',
-            '🔧 Design Pattern',
-            '⚠️ Anti-Pattern',
-            '📏 Standard',
-            '📝 Convention',
-            '✅ Checklist',
-            '💡 Tip',
-            '📝 Snippet',
-            '⚙️ Configuration',
-            '🔗 API Reference',
-            '📚 Learning',
-            '🔍 Troubleshooting',
-            '⚠️ Gotcha',
-            '📄 Template',
-            '📖 Guideline',
-            '🔄 Workflow',
-            '📦 Runbook',
-            '📦 Custom'
-          ],
-          defaultValue: typeDisplayMap[item.type] || '📦 Custom'
+          options: TYPE_OPTIONS,
+          defaultValue: TYPE_VALUE_TO_DISPLAY[item.type] || '📦 Custom'
         },
         {
           name: 'scope',
           label: 'Scope',
           type: 'select',
           required: true,
-          options: ['👤 Personal', '👥 Team', '📁 Project', '🏢 Organization', '🌐 Public'],
-          defaultValue: scopeDisplayMap[item.scope] || '👤 Personal'
+          options: SCOPE_OPTIONS,
+          defaultValue: SCOPE_VALUE_TO_DISPLAY[item.scope] || '👤 Personal'
         },
         {
           name: 'title',
@@ -1597,37 +1392,6 @@ export class KnowledgeViewController {
       return; // User cancelled
     }
 
-    // Parse type from display string
-    const typeMap: Record<string, string> = {
-      '📋 ADR': 'adr',
-      '🎯 Golden Path': 'golden-path',
-      '🔧 Design Pattern': 'design-pattern',
-      '⚠️ Anti-Pattern': 'anti-pattern',
-      '📏 Standard': 'standard',
-      '📝 Convention': 'convention',
-      '✅ Checklist': 'checklist',
-      '💡 Tip': 'tip',
-      '📝 Snippet': 'snippet',
-      '⚙️ Configuration': 'configuration',
-      '🔗 API Reference': 'api-reference',
-      '📚 Learning': 'learning',
-      '🔍 Troubleshooting': 'troubleshooting',
-      '⚠️ Gotcha': 'gotcha',
-      '📄 Template': 'template',
-      '📖 Guideline': 'guideline',
-      '🔄 Workflow': 'workflow',
-      '📦 Runbook': 'runbook',
-      '📦 Custom': 'custom'
-    };
-
-    const scopeMap: Record<string, string> = {
-      '👤 Personal': 'personal',
-      '👥 Team': 'team',
-      '📁 Project': 'project',
-      '🏢 Organization': 'organization',
-      '🌐 Public': 'public'
-    };
-
     // Parse tags from comma-separated string
     const tags = result.tags ? result.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t) : [];
 
@@ -1645,8 +1409,8 @@ export class KnowledgeViewController {
       payload: {
         id: item.id,
         updates: {
-          type: typeMap[result.type] || 'custom',
-          scope: scopeMap[result.scope] || 'personal',
+          type: TYPE_DISPLAY_TO_VALUE[result.type] || 'custom',
+          scope: SCOPE_DISPLAY_TO_VALUE[result.scope] || 'personal',
           title: result.title,
           body: result.body || '',
           tags,

@@ -75,7 +75,7 @@ export class MarkdownRenderer {
    * @param text - Text to escape
    * @returns Escaped HTML string
    */
-  private static escapeHtml(text: string): string {
+  static escapeHtml(text: string): string {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;

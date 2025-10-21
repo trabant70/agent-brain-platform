@@ -98,17 +98,24 @@ ui/knowledge/
 - [x] Update KnowledgeViewController to use utilities (2,361 → 2,240 lines, -121)
 - [x] Build and verify (commit 2d57de6)
 
-### 2.2 Extract HTML Templates
-- [ ] Create `ui/knowledge/templates/table-templates.ts`
-  - [ ] Extract table HTML from `renderKnowledgeTable()`
-  - [ ] Extract row HTML from `createItemRow()`
-  - [ ] Use template literal functions
-- [ ] Create `ui/knowledge/templates/form-templates.ts`
-  - [ ] Extract edit form HTML from `showEditForm()`
-  - [ ] Extract create form HTML from `createNewItem()`
-  - [ ] Extract delete confirmation HTML
-- [ ] Create `ui/knowledge/templates/accordion-templates.ts`
-  - [ ] Extract accordion HTML from `renderClaudeMdAccordion()`
+### 2.2 Extract HTML Templates ✅ COMPLETE
+- [x] Create `ui/knowledge/templates/table-templates.ts` (90 lines)
+  - [x] Extract table empty state from `renderKnowledgeTable()`
+  - [x] Extract group header template from `renderKnowledgeTable()`
+  - [x] Extract row HTML from `createItemRow()`
+  - [x] Use template literal functions with proper escaping
+- [x] Create `ui/knowledge/templates/form-constants.ts` (114 lines)
+  - [x] Extract TYPE_OPTIONS and SCOPE_OPTIONS arrays
+  - [x] Extract TYPE_DISPLAY_TO_VALUE and SCOPE_DISPLAY_TO_VALUE mappings
+  - [x] Extract TYPE_VALUE_TO_DISPLAY and SCOPE_VALUE_TO_DISPLAY mappings
+  - [x] Used by both `createNewItem()` and `showEditForm()`
+  - Note: Forms use ModalDialog utility, so extracted constants instead of templates
+- [x] Create `ui/knowledge/templates/accordion-templates.ts` (98 lines)
+  - [x] Extract accordion empty state
+  - [x] Extract accordion header template
+  - [x] Extract Claude.md content template with edit controls
+- [x] Update KnowledgeViewController to use templates (2,240 → 2,004 lines, -236)
+- [x] Build and verify (webpack compiled successfully)
 
 ### 2.3 Extract Table Controller
 - [ ] Create `ui/knowledge/KnowledgeTableController.ts`
@@ -305,12 +312,17 @@ services/
     - Created ui/knowledge/utils/ directory
     - KnowledgeViewController: 2,361 → 2,240 lines (-121)
     - Committed (2d57de6), pushed to origin
-  - [ ] **Phase 2.2:** Extract HTML templates (table, form, accordion)
+  - [x] **Phase 2.2:** Extract HTML templates (table, form constants, accordion) ✅
+    - Created ui/knowledge/templates/ directory
+    - Created 3 template files: table-templates.ts (90), form-constants.ts (114), accordion-templates.ts (98)
+    - KnowledgeViewController: 2,240 → 2,004 lines (-236)
+    - Build verified (webpack compiled successfully)
+    - **Phase 2.1 + 2.2 total reduction: 357 lines (15% reduction from 2,361 → 2,004)**
   - [ ] **Phase 2.3:** Extract controller classes
   - [ ] **Phase 2.4:** Refactor main controller as orchestrator
 - [ ] Phase 3: TimelineProvider Decomposition (MEDIUM PRIORITY)
 - [ ] Phase 4: KnowledgeManager Decomposition (MEDIUM PRIORITY)
 
-**Current Phase:** Phase 2.1 - COMPLETE ✅
-**Next Step:** Phase 2.2 - Extract HTML Templates
-**Status:** Utilities extracted, ready for template extraction
+**Current Phase:** Phase 2.2 - COMPLETE ✅
+**Next Step:** Phase 2.3 - Extract Controller Classes
+**Status:** Templates and utilities extracted, KnowledgeViewController reduced by 15%, ready for controller extraction
