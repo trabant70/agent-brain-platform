@@ -26,7 +26,6 @@ export class ClaudeMdAccordionController {
   private callbacks: AccordionControllerCallbacks;
   private expandedAccordions: Set<string> = new Set();
   private accordionScrollPositions: Map<string, number> = new Map();
-  private scrollToBottom: Set<string> = new Set(); // Track files that should scroll to bottom
   private selectedClaudeFile: string | null = null;
 
   constructor(callbacks: AccordionControllerCallbacks) {
@@ -55,18 +54,22 @@ export class ClaudeMdAccordionController {
    * Save accordion scroll positions before re-render
    */
   saveScrollPositions(): void {
-    const accordions = document.querySelectorAll('.accordion-content');
-    accordions.forEach(accordion => {
-      const filePath = (accordion.parentElement as HTMLElement)?.dataset.filePath;
-      if (filePath) {
-        this.accordionScrollPositions.set(filePath, accordion.scrollTop);
+    const accordionItems = document.querySelectorAll('.accordion-item');
+    accordionItems.forEach((item) => {
+      const filePath = (item as HTMLElement).dataset.filePath;
+      const content = item.querySelector('.accordion-content');
 
-        // Check if user is scrolled near the bottom (within 50px)
-        const isNearBottom = accordion.scrollTop + accordion.clientHeight >= accordion.scrollHeight - 50;
-        if (isNearBottom) {
-          this.scrollToBottom.add(filePath);
-        } else {
-          this.scrollToBottom.delete(filePath);
+      if (filePath && content) {
+        const scrollTop = content.scrollTop;
+        if (scrollTop > 0) {
+          this.accordionScrollPositions.set(filePath, scrollTop);
+          webviewLogger.debug(
+            LogCategory.UI,
+            'Saved scroll position for accordion',
+            'ClaudeMdAccordionController.saveScrollPositions',
+            { filePath, scrollTop },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
         }
       }
     });
@@ -76,25 +79,28 @@ export class ClaudeMdAccordionController {
    * Restore accordion scroll positions after re-render
    */
   restoreScrollPositions(): void {
-    // Wait for next frame to ensure DOM has updated
-    requestAnimationFrame(() => {
-      this.accordionScrollPositions.forEach((scrollTop, filePath) => {
-        const accordionItem = document.querySelector(
-          `.accordion-item[data-file-path="${filePath}"]`
-        );
-        if (accordionItem) {
-          const content = accordionItem.querySelector('.accordion-content');
-          if (content) {
-            // If this file was scrolled to bottom, scroll to new bottom instead of saved position
-            if (this.scrollToBottom.has(filePath)) {
-              content.scrollTop = content.scrollHeight;
-            } else {
-              content.scrollTop = scrollTop;
-            }
+    // Use setTimeout to ensure DOM is fully updated
+    setTimeout(() => {
+      const accordionItems = document.querySelectorAll('.accordion-item');
+      accordionItems.forEach((item) => {
+        const filePath = (item as HTMLElement).dataset.filePath;
+        const content = item.querySelector('.accordion-content');
+
+        if (filePath && content) {
+          const savedScrollTop = this.accordionScrollPositions.get(filePath);
+          if (savedScrollTop !== undefined && savedScrollTop > 0) {
+            content.scrollTop = savedScrollTop;
+            webviewLogger.debug(
+              LogCategory.UI,
+              'Restored scroll position for accordion',
+              'ClaudeMdAccordionController.restoreScrollPositions',
+              { filePath, scrollTop: savedScrollTop },
+              LogPathway.KNOWLEDGE_MANAGEMENT
+            );
           }
         }
       });
-    });
+    }, 0);
   }
 
   /**
@@ -309,22 +315,6 @@ export class ClaudeMdAccordionController {
           });
         }
       }
-
-      // Track scroll position when user scrolls
-      content.addEventListener('scroll', () => {
-        const filePath = accordionItem.dataset.filePath;
-        if (filePath) {
-          this.accordionScrollPositions.set(filePath, content.scrollTop);
-
-          // Check if user is scrolled near the bottom (within 50px)
-          const isNearBottom = content.scrollTop + content.clientHeight >= content.scrollHeight - 50;
-          if (isNearBottom) {
-            this.scrollToBottom.add(filePath);
-          } else {
-            this.scrollToBottom.delete(filePath);
-          }
-        }
-      });
 
       accordionItem.appendChild(header);
       accordionItem.appendChild(content);
