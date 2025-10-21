@@ -100,44 +100,53 @@ export class WelcomeViewProvider implements vscode.WebviewViewProvider {
         <img src="${iconUri}" alt="AB Timeline Logo" />
     </div>
 
-    <h2>AB Timeline</h2>
-    <p><strong>Agent Brain Timeline</strong> - Transform your repository's evolution into an interactive visual timeline. See commits, branches, merges, and releases unfold over time.</p>
+    <h2>Agent Brain Platform</h2>
+    <p><strong>Your Second Brain for Software Development</strong> - Visualize repository evolution, manage knowledge, and track coding sessions in one unified platform.</p>
 
     <div class="info-section">
         <p><strong>✨ What You Get:</strong></p>
         <ul class="feature-list">
-            <li>Visual git history with smart event markers</li>
-            <li>Zoom, pan, and brush selection</li>
-            <li>Dual color modes for different perspectives</li>
-            <li>Powerful filtering by branch, author, or type</li>
-            <li>Repository statistics and velocity metrics</li>
-            <li>Handles thousands of events smoothly</li>
+            <li><strong>Timeline:</strong> Visual git history with events, filtering, and statistics</li>
+            <li><strong>Knowledge:</strong> Capture ADRs, patterns, learnings, and best practices</li>
+            <li><strong>Sessions:</strong> Track multi-prompt coding sessions and insights</li>
+            <li><strong>Architecture:</strong> Visual system diagram with theme support</li>
         </ul>
     </div>
 
     <div class="info-section">
         <p><strong>🚀 Get Started:</strong></p>
-        <p style="margin-bottom: 8px;">Open your timeline with:</p>
+        <p style="margin-bottom: 8px;">Open Agent Brain with:</p>
         <ul class="feature-list">
             <li><kbd>Ctrl+Shift+T</kbd> (Mac: <kbd>Cmd+Shift+T</kbd>)</li>
             <li>Command Palette → "Show Repository Timeline"</li>
         </ul>
-        <p style="margin-top: 8px; font-size: 12px;">AB Timeline opens in the bottom panel for your repository.</p>
+        <p style="margin-top: 8px; font-size: 12px;">Opens in the bottom panel with 4 tabs: Timeline, Knowledge, Sessions, Support</p>
     </div>
 
     <div class="info-section">
-        <p><strong>📖 How to Use:</strong></p>
+        <p><strong>📚 Create Knowledge:</strong></p>
         <ul class="feature-list">
-            <li>Scroll to navigate through time</li>
-            <li>Hover over events for details</li>
-            <li>Use Controls panel to filter events</li>
-            <li>Toggle color modes for insights</li>
-            <li>Select time ranges with the brush</li>
+            <li>Switch to <strong>AB Knowledge</strong> tab</li>
+            <li>Click <strong>"+ Add Item"</strong></li>
+            <li>Choose type: Golden Path, ADR, Pattern, Learning, etc.</li>
+            <li>Write in markdown, save to <code>.agent-brain/</code></li>
+            <li>Knowledge items appear on timeline automatically!</li>
+        </ul>
+    </div>
+
+    <div class="info-section">
+        <p><strong>📖 Quick Tips:</strong></p>
+        <ul class="feature-list">
+            <li>Hover events for details, click for full popup</li>
+            <li>Use <strong>Controls</strong> button to filter timeline</li>
+            <li>Save knowledge templates for reuse</li>
+            <li>Session journals go in <code>.agent-brain/sessions/</code></li>
+            <li>Check <strong>AB Support</strong> tab for architecture</li>
         </ul>
     </div>
 
     <p style="margin-top: 24px; text-align: center; font-size: 11px; color: var(--vscode-descriptionForeground);">
-        AB Timeline • Agent Brain Timeline • v0.4.7
+        Agent Brain Platform • Transform development with visual intelligence 🧠✨
     </p>
 </body>
 </html>`;

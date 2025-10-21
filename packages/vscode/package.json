@@ -2,9 +2,13 @@
   "name": "agent-brain-platform",
   "displayName": "Agent Brain Platform",
   "description": "Unified platform for AI-assisted development with timeline visualization, architectural guidance, and pathway testing",
-  "version": "0.2.73",
+  "version": "0.2.74",
   "publisher": "agent-brain-local",
   "icon": "images/timeline_large.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/trabant70/agent-brain-platform.git"
+  },
   "engines": {
     "vscode": "^1.80.0"
   },
