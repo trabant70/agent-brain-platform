@@ -104,9 +104,6 @@ export class ClaudeMdAccordionController {
     const container = document.getElementById('claude-files-accordion');
     if (!container) return;
 
-    // Save scroll positions before re-rendering
-    this.saveScrollPositions();
-
     container.innerHTML = '';
 
     if (this.state.claudeMdFiles.length === 0) {
@@ -333,8 +330,5 @@ export class ClaudeMdAccordionController {
       accordionItem.appendChild(content);
       container.appendChild(accordionItem);
     }
-
-    // Restore scroll positions after rendering
-    this.restoreScrollPositions();
   }
 }
