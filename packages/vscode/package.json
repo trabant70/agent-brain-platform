@@ -2,7 +2,7 @@
   "name": "agent-brain-platform",
   "displayName": "Agent Brain Platform",
   "description": "Unified platform for AI-assisted development with timeline visualization, architectural guidance, and pathway testing",
-  "version": "0.2.22",
+  "version": "0.2.31",
   "publisher": "agent-brain-local",
   "icon": "images/timeline_large.png",
   "engines": {

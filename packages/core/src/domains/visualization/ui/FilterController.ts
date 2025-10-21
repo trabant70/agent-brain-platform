@@ -64,9 +64,9 @@ export class FilterController {
   };
 
   // UI elements
-  private floatingMenu: HTMLElement | null = null;
+  private controlPanel: HTMLElement | null = null;
   private searchInput: HTMLInputElement | null = null;
-  private isMenuOpen = false;
+  private isPanelOpen = false;
   private activeTab: string = 'filter';
 
   // Configuration state (stored in filterState for persistence)
@@ -74,10 +74,10 @@ export class FilterController {
   private currentColorMode: 'semantic' | 'sync-state' = 'semantic';
   private gitProviderEnabled: boolean = true; // Default to enabled
   private githubProviderEnabled: boolean = false; // Default to disabled
-  private intelligenceProviderEnabled: boolean = false; // Default to disabled (like GitHub)
-  private knowledgeEventsProviderEnabled: boolean = true; // Default to enabled (new feature)
-  private sessionJournalsProviderEnabled: boolean = true; // Default to enabled (new feature)
+  private knowledgeEventsProviderEnabled: boolean = true; // Default to enabled (AB-Knowledge Events)
+  private sessionJournalsProviderEnabled: boolean = true; // Default to enabled (AB-Sessions)
   private showConnections: boolean = true; // Default to showing connections
+  private collapsedSections: Set<string> = new Set(); // Default: all sections EXPANDED (empty set)
 
   // Callbacks
   private onFilterUpdate?: (filters: FilterState) => void;
@@ -100,7 +100,7 @@ export class FilterController {
       undefined,
       LogPathway.FILTER_APPLY
     );
-    this.createFloatingMenu();
+    this.createControlPanel();
     this.setupClickBehavior();
     logger.debug(
       LogCategory.FILTERING,
@@ -245,7 +245,7 @@ export class FilterController {
     }
 
     // Uncheck all filter checkboxes (but NOT provider checkboxes in Configuration tab)
-    this.floatingMenu?.querySelectorAll('input[type="checkbox"]:not(#provider-git):not(#provider-github)').forEach((cb) => {
+    this.controlPanel?.querySelectorAll('input[type="checkbox"]:not(#provider-git):not(#provider-github)').forEach((cb) => {
       (cb as HTMLInputElement).checked = false;
     });
 
@@ -258,52 +258,51 @@ export class FilterController {
   }
 
   /**
-   * Setup click behavior for floating menu
+   * Setup click behavior for control panel
    */
   private setupClickBehavior(): void {
-    const filtersTrigger = document.getElementById('filters-trigger');
-    if (!filtersTrigger) {
+    const controlsTrigger = document.getElementById('controls-trigger');
+    if (!controlsTrigger) {
       return;
     }
 
-    // Toggle menu on click
-    filtersTrigger.addEventListener('click', (e) => {
+    // Toggle panel on click
+    controlsTrigger.addEventListener('click', (e) => {
       e.stopPropagation();
-      this.toggleFloatingMenu();
+      this.toggleControlPanel();
     });
 
-    // Close menu when clicking outside
+    // Close panel when clicking outside
     document.addEventListener('click', (e) => {
-      if (this.isMenuOpen && this.floatingMenu && !this.floatingMenu.contains(e.target as Node)) {
-        this.hideFloatingMenu();
+      if (this.isPanelOpen && this.controlPanel && !this.controlPanel.contains(e.target as Node)) {
+        this.hideControlPanel();
       }
     });
   }
 
   // ==========================================
-  // PRIVATE: FLOATING MENU
+  // PRIVATE: CONTROL PANEL
   // ==========================================
 
   /**
-   * Create floating menu structure
+   * Create control panel structure (dropdown from top)
    */
-  private createFloatingMenu(): void {
-    this.floatingMenu = document.createElement('div');
-    this.floatingMenu.className = 'floating-filter-menu';
-    this.floatingMenu.innerHTML = `
-      <div class="floating-menu-content">
+  private createControlPanel(): void {
+    this.controlPanel = document.createElement('div');
+    this.controlPanel.className = 'control-panel';
+    this.controlPanel.innerHTML = `
+      <div class="control-panel-content">
         <!-- Tab Navigation -->
         <div class="tab-navigation">
           <div class="tab-buttons">
             <button class="tab-btn active" data-tab="filter">Filter</button>
             <button class="tab-btn" data-tab="configuration">Configuration</button>
-            <button class="tab-btn" data-tab="support">Support</button>
           </div>
-          <button class="close-menu-btn" title="Close">×</button>
+          <button class="close-panel-btn" title="Close">×</button>
         </div>
 
         <!-- Tab Panels -->
-        <div class="tab-content">
+        <div class="tab-panels-container">
           <!-- FILTER TAB -->
           <div class="tab-panel active" data-tab="filter">
             <div class="filter-header">
@@ -372,11 +371,11 @@ export class FilterController {
             <!-- Config Sections Grid (3 columns) -->
             <div class="filter-sections-grid">
               <!-- Display Modes Column -->
-              <div class="filter-section">
-                <div class="section-header">
+              <div class="filter-section config-section">
+                <div class="section-header config-section-header">
                   <span class="section-title">Display Modes</span>
                 </div>
-                <div class="checkbox-list">
+                <div class="checkbox-list config-options">
                   <p class="config-section-description">Color represents:</p>
                   <div class="display-mode-item">
                     <input type="radio" id="mode-semantic" name="color-mode" value="semantic" checked>
@@ -391,11 +390,11 @@ export class FilterController {
               </div>
 
               <!-- Data Sources Column -->
-              <div class="filter-section">
-                <div class="section-header">
+              <div class="filter-section config-section">
+                <div class="section-header config-section-header">
                   <span class="section-title">Data Sources</span>
                 </div>
-                <div class="checkbox-list">
+                <div class="checkbox-list config-options">
                   <div class="provider-item">
                     <input type="checkbox" id="provider-git" ${this.gitProviderEnabled ? 'checked' : ''}>
                     <label for="provider-git">Git - Local repository commits, branches, and tags</label>
@@ -408,43 +407,24 @@ export class FilterController {
                     Enabling GitHub API will prompt for authentication.
                   </p>
                   <div class="provider-item">
-                    <input type="checkbox" id="provider-agent-brain" ${this.intelligenceProviderEnabled ? 'checked' : ''}>
-                    <label for="provider-agent-brain">Agent-Brain - Patterns, learnings, and ADRs</label>
+                    <input type="checkbox" id="provider-ab-knowledge" ${this.knowledgeEventsProviderEnabled ? 'checked' : ''}>
+                    <label for="provider-ab-knowledge">AB-Knowledge Events</label>
                   </div>
                   <div class="provider-item">
-                    <input type="checkbox" id="provider-knowledge-events" ${this.knowledgeEventsProviderEnabled ? 'checked' : ''}>
-                    <label for="provider-knowledge-events">Knowledge Events - Knowledge apply/remove/create tracking</label>
-                  </div>
-                  <div class="provider-item">
-                    <input type="checkbox" id="provider-session-journals" ${this.sessionJournalsProviderEnabled ? 'checked' : ''}>
-                    <label for="provider-session-journals">Session Journals - Agent coding session logs</label>
+                    <input type="checkbox" id="provider-ab-sessions" ${this.sessionJournalsProviderEnabled ? 'checked' : ''}>
+                    <label for="provider-ab-sessions">AB-Sessions</label>
                   </div>
                 </div>
               </div>
 
               <!-- Reserved Column -->
-              <div class="filter-section">
-                <div class="section-header">
+              <div class="filter-section config-section">
+                <div class="section-header config-section-header">
                   <span class="section-title">Reserved</span>
                 </div>
-                <div class="checkbox-list">
+                <div class="checkbox-list config-options">
                   <p class="config-hint" style="color: #666;">Future configuration options</p>
                 </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- SUPPORT TAB -->
-          <div class="tab-panel" data-tab="support">
-            <div class="support-section">
-              <h4 class="support-section-title">Support & Resources</h4>
-              <div id="support-content" class="support-content">
-                <p class="support-loading">Loading support resources...</p>
-              </div>
-              <div class="support-links">
-                <a href="#" class="support-link" data-action="open-docs">📖 Documentation</a>
-                <a href="#" class="support-link" data-action="open-github">🐛 Report Issue</a>
-                <a href="#" class="support-link" data-action="refresh-support">🔄 Refresh</a>
               </div>
             </div>
           </div>
@@ -452,32 +432,29 @@ export class FilterController {
       </div>
     `;
 
-    document.body.appendChild(this.floatingMenu);
+    document.body.appendChild(this.controlPanel);
 
     // Setup event listeners
-    this.setupMenuBehavior();
+    this.setupPanelBehavior();
   }
 
   /**
-   * Setup menu behavior
+   * Setup panel behavior
    */
-  private setupMenuBehavior(): void {
-    if (!this.floatingMenu) return;
+  private setupPanelBehavior(): void {
+    if (!this.controlPanel) return;
 
-    // Stop clicks inside menu from propagating (prevents outside-click close)
-    this.floatingMenu.addEventListener('click', (e) => {
+    // Stop clicks inside panel from propagating (prevents outside-click close)
+    this.controlPanel.addEventListener('click', (e) => {
       e.stopPropagation();
     });
 
-    // Enable dragging
-    this.enableMenuDragging();
-
     // Close button
-    const closeBtn = this.floatingMenu.querySelector('.close-menu-btn');
-    closeBtn?.addEventListener('click', () => this.hideFloatingMenu());
+    const closeBtn = this.controlPanel.querySelector('.close-panel-btn');
+    closeBtn?.addEventListener('click', () => this.hideControlPanel());
 
     // Tab switching
-    this.floatingMenu.querySelectorAll('.tab-btn').forEach(btn => {
+    this.controlPanel.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const tabName = btn.getAttribute('data-tab');
         if (tabName) {
@@ -487,7 +464,7 @@ export class FilterController {
     });
 
     // Color mode toggles
-    const modeRadios = this.floatingMenu.querySelectorAll('input[name="color-mode"]');
+    const modeRadios = this.controlPanel.querySelectorAll('input[name="color-mode"]');
     modeRadios.forEach(radio => {
       radio.addEventListener('change', (e) => {
         const mode = (e.target as HTMLInputElement).value as 'semantic' | 'sync-state';
@@ -568,7 +545,7 @@ export class FilterController {
     };
 
     // Provider toggles
-    const gitCheckbox = this.floatingMenu.querySelector('#provider-git') as HTMLInputElement;
+    const gitCheckbox = this.controlPanel.querySelector('#provider-git') as HTMLInputElement;
     if (gitCheckbox) {
       gitCheckbox.addEventListener('change', (e) => {
         const isChecked = (e.target as HTMLInputElement).checked;
@@ -599,7 +576,7 @@ export class FilterController {
     }
 
     // GitHub provider toggle
-    const githubCheckbox = this.floatingMenu.querySelector('#provider-github') as HTMLInputElement;
+    const githubCheckbox = this.controlPanel.querySelector('#provider-github') as HTMLInputElement;
     if (githubCheckbox) {
       githubCheckbox.addEventListener('change', (e) => {
         const isChecked = (e.target as HTMLInputElement).checked;
@@ -628,34 +605,8 @@ export class FilterController {
       });
     }
 
-    // Agent-Brain provider toggle
-    const agentBrainCheckbox = this.floatingMenu.querySelector('#provider-agent-brain') as HTMLInputElement;
-    if (agentBrainCheckbox) {
-      agentBrainCheckbox.addEventListener('change', (e) => {
-        const isChecked = (e.target as HTMLInputElement).checked;
-
-        // Update local state
-        this.intelligenceProviderEnabled = isChecked;
-
-        // Persist to filterState for session persistence
-        this.updateEnabledProviders('intelligence', isChecked);
-
-        // Send toggleProvider message to extension
-        if ((window as any).vscode) {
-          (window as any).vscode.postMessage({
-            type: 'toggleProvider',
-            providerId: 'intelligence',
-            enabled: isChecked
-          });
-        }
-
-        // Notify backend to persist the configuration change
-        this.applyFilters();
-      });
-    }
-
-    // Knowledge Events provider toggle
-    const knowledgeEventsCheckbox = this.floatingMenu.querySelector('#provider-knowledge-events') as HTMLInputElement;
+    // AB-Knowledge Events provider toggle
+    const knowledgeEventsCheckbox = this.controlPanel.querySelector('#provider-ab-knowledge') as HTMLInputElement;
     if (knowledgeEventsCheckbox) {
       knowledgeEventsCheckbox.addEventListener('change', (e) => {
         const isChecked = (e.target as HTMLInputElement).checked;
@@ -680,8 +631,8 @@ export class FilterController {
       });
     }
 
-    // Session Journals provider toggle
-    const sessionJournalsCheckbox = this.floatingMenu.querySelector('#provider-session-journals') as HTMLInputElement;
+    // AB-Sessions provider toggle
+    const sessionJournalsCheckbox = this.controlPanel.querySelector('#provider-ab-sessions') as HTMLInputElement;
     if (sessionJournalsCheckbox) {
       sessionJournalsCheckbox.addEventListener('change', (e) => {
         const isChecked = (e.target as HTMLInputElement).checked;
@@ -710,7 +661,7 @@ export class FilterController {
     updateSyncModeAvailability();
 
     // Show connections toggle (now in Filter tab)
-    const connectionsCheckbox = this.floatingMenu.querySelector('#show-connections-filter') as HTMLInputElement;
+    const connectionsCheckbox = this.controlPanel.querySelector('#show-connections-filter') as HTMLInputElement;
     if (connectionsCheckbox) {
       connectionsCheckbox.addEventListener('change', (e) => {
         const isChecked = (e.target as HTMLInputElement).checked;
@@ -733,11 +684,11 @@ export class FilterController {
     }
 
     // Clear All button
-    const clearBtn = this.floatingMenu.querySelector('.clear-filters-btn');
+    const clearBtn = this.controlPanel.querySelector('.clear-filters-btn');
     clearBtn?.addEventListener('click', () => this.clearAllFilters());
 
     // Search input
-    this.searchInput = this.floatingMenu.querySelector('#filter-search');
+    this.searchInput = this.controlPanel.querySelector('#filter-search');
     if (this.searchInput) {
       let searchTimeout: NodeJS.Timeout;
       this.searchInput.addEventListener('input', (e) => {
@@ -751,7 +702,7 @@ export class FilterController {
     }
 
     // Collapsible sections
-    this.floatingMenu.querySelectorAll('.section-header.collapsible').forEach(header => {
+    this.controlPanel.querySelectorAll('.section-header.collapsible').forEach(header => {
       header.addEventListener('click', () => {
         const list = header.nextElementSibling;
         header.classList.toggle('collapsed');
@@ -764,12 +715,12 @@ export class FilterController {
    * Switch between tabs
    */
   private switchTab(tabName: string): void {
-    if (!this.floatingMenu) return;
+    if (!this.controlPanel) return;
 
     this.activeTab = tabName;
 
     // Update tab buttons
-    this.floatingMenu.querySelectorAll('.tab-btn').forEach(btn => {
+    this.controlPanel.querySelectorAll('.tab-btn').forEach(btn => {
       if (btn.getAttribute('data-tab') === tabName) {
         btn.classList.add('active');
       } else {
@@ -778,7 +729,7 @@ export class FilterController {
     });
 
     // Update tab panels
-    this.floatingMenu.querySelectorAll('.tab-panel').forEach(panel => {
+    this.controlPanel.querySelectorAll('.tab-panel').forEach(panel => {
       if (panel.getAttribute('data-tab') === tabName) {
         panel.classList.add('active');
       } else {
@@ -788,103 +739,32 @@ export class FilterController {
   }
 
   /**
-   * Enable dragging for the filter menu
+   * Toggle control panel (dropdown from top)
    */
-  private enableMenuDragging(): void {
-    if (!this.floatingMenu) return;
-
-    const tabNavigation = this.floatingMenu.querySelector('.tab-navigation');
-    if (!tabNavigation) return;
-
-    let isDragging = false;
-    let startX = 0;
-    let startY = 0;
-    let initialLeft = 0;
-    let initialTop = 0;
-
-    const onMouseDown = (e: MouseEvent) => {
-      // Don't drag if clicking on buttons
-      if ((e.target as HTMLElement).closest('button')) return;
-
-      isDragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
-
-      const rect = this.floatingMenu!.getBoundingClientRect();
-      initialLeft = rect.left;
-      initialTop = rect.top;
-
-      this.floatingMenu!.style.cursor = 'grabbing';
-      (tabNavigation as HTMLElement).style.cursor = 'grabbing';
-      e.preventDefault();
-    };
-
-    const onMouseMove = (e: MouseEvent) => {
-      if (!isDragging) return;
-
-      const deltaX = e.clientX - startX;
-      const deltaY = e.clientY - startY;
-
-      this.floatingMenu!.style.left = `${initialLeft + deltaX}px`;
-      this.floatingMenu!.style.top = `${initialTop + deltaY}px`;
-      this.floatingMenu!.style.right = 'auto';
-      this.floatingMenu!.style.bottom = 'auto';
-    };
-
-    const onMouseUp = () => {
-      if (isDragging) {
-        isDragging = false;
-        this.floatingMenu!.style.cursor = '';
-        (tabNavigation as HTMLElement).style.cursor = 'grab';
-      }
-    };
-
-    tabNavigation.addEventListener('mousedown', onMouseDown as EventListener);
-    document.addEventListener('mousemove', onMouseMove as EventListener);
-    document.addEventListener('mouseup', onMouseUp as EventListener);
-
-    // Make tab navigation cursor indicate draggability
-    (tabNavigation as HTMLElement).style.cursor = 'grab';
-  }
-
-  /**
-   * Toggle floating menu
-   */
-  private toggleFloatingMenu(): void {
-    if (this.isMenuOpen) {
-      this.hideFloatingMenu();
+  private toggleControlPanel(): void {
+    if (this.isPanelOpen) {
+      this.hideControlPanel();
     } else {
-      this.showFloatingMenu();
+      this.showControlPanel();
     }
   }
 
   /**
-   * Show floating menu
+   * Show control panel (dropdown from top)
    */
-  private showFloatingMenu(): void {
-    if (!this.floatingMenu) return;
-
-    const trigger = document.getElementById('filters-trigger');
-    if (!trigger) return;
-
-    // Position menu below trigger, aligned to the right edge
-    const rect = trigger.getBoundingClientRect();
-    const menuWidth = this.floatingMenu.offsetWidth || 380; // Use min-width as fallback
-
-    this.floatingMenu.style.top = `${rect.bottom + 5}px`;
-    this.floatingMenu.style.left = `${rect.right - menuWidth}px`;
-
-    this.floatingMenu.classList.add('visible');
-    this.isMenuOpen = true;
+  private showControlPanel(): void {
+    if (!this.controlPanel) return;
+    this.controlPanel.classList.add('open');
+    this.isPanelOpen = true;
   }
 
   /**
-   * Hide floating menu
+   * Hide control panel
    */
-  private hideFloatingMenu(): void {
-    if (!this.floatingMenu) return;
-    this.floatingMenu.classList.remove('visible');
-    this.isMenuOpen = false;
+  private hideControlPanel(): void {
+    if (!this.controlPanel) return;
+    this.controlPanel.classList.remove('open');
+    this.isPanelOpen = false;
   }
 
   // ==========================================
@@ -901,10 +781,67 @@ export class FilterController {
     this.buildProvidersList();
     this.updateSectionCounts();
     this.updateActiveFilterBadges();
+
+    // Apply collapsed state to sections (default: all collapsed)
+    this.applyCollapsedState();
   }
 
   /**
-   * Build event types checkbox list
+   * Apply collapsed state to filter sections based on collapsedSections set
+   */
+  private applyCollapsedState(): void {
+    this.collapsedSections.forEach(sectionId => {
+      const header = this.controlPanel?.querySelector(`[data-section="${sectionId}"]`);
+      if (header) {
+        const section = header.closest('.filter-section');
+        if (section) {
+          section.classList.add('collapsed');
+        }
+      }
+    });
+  }
+
+  /**
+   * Get provider group for an event type
+   */
+  private getProviderGroup(eventType: string): { id: string, label: string } {
+    const normalized = eventType.toLowerCase().replace(/_/g, '-');
+
+    // Git local events
+    const gitEvents = ['commit', 'branch', 'tag', 'merge'];
+    if (gitEvents.includes(normalized)) {
+      return { id: 'git-local', label: 'Git Events' };
+    }
+
+    // GitHub API events
+    const githubEvents = ['pr-opened', 'pr-closed', 'pr-merged', 'pr-reviewed',
+                          'issue-opened', 'issue-closed', 'release'];
+    if (githubEvents.includes(normalized) || normalized.startsWith('pr-') || normalized.startsWith('issue-')) {
+      return { id: 'github', label: 'GitHub Events' };
+    }
+
+    // Knowledge events
+    if (normalized.startsWith('knowledge-')) {
+      return { id: 'knowledge-events', label: 'AB-Knowledge Events' };
+    }
+
+    // Session events
+    if (normalized.startsWith('session-')) {
+      return { id: 'session-journals', label: 'AB-Sessions' };
+    }
+
+    // Intelligence events (legacy)
+    if (normalized.includes('intelligence') || normalized.includes('learning') ||
+        normalized.includes('pattern') || normalized.includes('adr')) {
+      return { id: 'intelligence', label: 'Agent-Brain Intelligence' };
+    }
+
+    // Default fallback
+    return { id: 'other', label: 'Other Events' };
+  }
+
+  /**
+   * Build event types checkbox list grouped by provider
    */
   private buildEventTypesList(): void {
     const container = document.getElementById('event-types-list');
@@ -912,37 +849,79 @@ export class FilterController {
 
     container.innerHTML = '';
 
-    // Sort event types by z-index (ascending: low impact to high impact)
-    const sortedEventTypes = [...this.availableOptions.eventTypes].sort((a, b) => {
-      const zIndexA = EventVisualTheme.getEventZIndex(a);
-      const zIndexB = EventVisualTheme.getEventZIndex(b);
-      return zIndexA - zIndexB;
+    // Group event types by provider
+    const grouped = new Map<string, { label: string, types: string[] }>();
+
+    this.availableOptions.eventTypes.forEach(type => {
+      const group = this.getProviderGroup(type);
+
+      if (!grouped.has(group.id)) {
+        grouped.set(group.id, { label: group.label, types: [] });
+      }
+      grouped.get(group.id)!.types.push(type);
     });
 
-    sortedEventTypes.forEach(type => {
-      const count = this.eventCounts.byType.get(type) || 0;
-      const color = this.getEventTypeColor(type);
-      const visual = EventVisualTheme.getEventVisual(type);
-      const icon = visual.icon || '●';
+    // Define provider order
+    const providerOrder = ['git-local', 'github', 'knowledge-events', 'session-journals', 'intelligence', 'other'];
 
-      // Check if this type is selected (or if no filter = all selected)
-      const isChecked = !this.filterState.selectedEventTypes ||
-                        this.filterState.selectedEventTypes.includes(type as any);
+    // Render each provider group
+    providerOrder.forEach(providerId => {
+      const group = grouped.get(providerId);
+      if (!group || group.types.length === 0) return;
 
-      const item = document.createElement('label');
-      item.className = 'checkbox-item';
-      item.innerHTML = `
-        <input type="checkbox" value="${type}" data-filter-type="eventType" ${isChecked ? 'checked' : ''}>
-        <span class="event-type-shape" style="color: ${color}">${icon}</span>
-        <span class="checkbox-label">${this.formatEventType(type)}</span>
-        <span class="checkbox-count">(${count})</span>
+      // Create provider section
+      const section = document.createElement('div');
+      section.className = 'filter-provider-section';
+
+      // Section header with count
+      const header = document.createElement('div');
+      header.className = 'filter-provider-header';
+      const totalCount = group.types.reduce((sum, type) => sum + (this.eventCounts.byType.get(type) || 0), 0);
+      header.innerHTML = `
+        <span class="filter-provider-label">${group.label}</span>
+        <span class="filter-provider-count">${group.types.length} types (${totalCount} events)</span>
       `;
+      section.appendChild(header);
 
-      // Add change listener
-      const checkbox = item.querySelector('input') as HTMLInputElement;
-      checkbox.addEventListener('change', () => this.onEventTypeChange(type, checkbox.checked));
+      // Scrollable content container
+      const content = document.createElement('div');
+      content.className = 'filter-provider-content';
 
-      container.appendChild(item);
+      // Sort types within group by z-index
+      const sortedTypes = [...group.types].sort((a, b) => {
+        const zIndexA = EventVisualTheme.getEventZIndex(a);
+        const zIndexB = EventVisualTheme.getEventZIndex(b);
+        return zIndexA - zIndexB;
+      });
+
+      sortedTypes.forEach(type => {
+        const count = this.eventCounts.byType.get(type) || 0;
+        const color = this.getEventTypeColor(type);
+        const visual = EventVisualTheme.getEventVisual(type);
+        const icon = visual.icon || '●';
+
+        // Check if this type is selected (or if no filter = all selected)
+        const isChecked = !this.filterState.selectedEventTypes ||
+                          this.filterState.selectedEventTypes.includes(type as any);
+
+        const item = document.createElement('label');
+        item.className = 'checkbox-item';
+        item.innerHTML = `
+          <input type="checkbox" value="${type}" data-filter-type="eventType" ${isChecked ? 'checked' : ''}>
+          <span class="event-type-shape" style="color: ${color}">${icon}</span>
+          <span class="checkbox-label">${this.formatEventType(type)}</span>
+          <span class="checkbox-count">(${count})</span>
+        `;
+
+        // Add change listener
+        const checkbox = item.querySelector('input') as HTMLInputElement;
+        checkbox.addEventListener('change', () => this.onEventTypeChange(type, checkbox.checked));
+
+        content.appendChild(item);
+      });
+
+      section.appendChild(content);
+      container.appendChild(section);
     });
   }
 
@@ -1228,7 +1207,7 @@ export class FilterController {
    * Update count for a section showing "selected/total"
    */
   private updateSectionCount(section: string, selected: number, total: number): void {
-    const header = this.floatingMenu?.querySelector(`[data-section="${section}"]`);
+    const header = this.controlPanel?.querySelector(`[data-section="${section}"]`);
     const countSpan = header?.querySelector('.section-count');
     if (countSpan) {
       countSpan.textContent = total > 0 ? `${selected}/${total}` : '0';
@@ -1239,7 +1218,7 @@ export class FilterController {
    * Update active filter badges
    */
   private updateActiveFilterBadges(): void {
-    const container = this.floatingMenu?.querySelector('#active-filter-badges');
+    const container = this.controlPanel?.querySelector('#active-filter-badges');
     if (!container) return;
 
     container.innerHTML = '';
@@ -1305,7 +1284,7 @@ export class FilterController {
   private createBadge(category: string, value: string, onRemove: () => void): string {
     const id = `badge-${Math.random().toString(36).substr(2, 9)}`;
     setTimeout(() => {
-      const badge = this.floatingMenu?.querySelector(`#${id} .filter-badge-remove`);
+      const badge = this.controlPanel?.querySelector(`#${id} .filter-badge-remove`);
       if (badge) {
         badge.addEventListener('click', onRemove);
       }
@@ -1323,7 +1302,7 @@ export class FilterController {
    * Update summary - show "filtered/total" format
    */
   private updateSummary(): void {
-    const summary = this.floatingMenu?.querySelector('#result-summary');
+    const summary = this.controlPanel?.querySelector('#result-summary');
     if (summary) {
       summary.textContent = `${this.eventCounts.filtered}/${this.eventCounts.total}`;
     }
@@ -1335,7 +1314,7 @@ export class FilterController {
   private updateCheckboxCounts(): void {
     // Update event type counts
     this.eventCounts.byType.forEach((count, type) => {
-      const item = this.floatingMenu?.querySelector(`input[value="${type}"][data-filter-type="eventType"]`)?.parentElement;
+      const item = this.controlPanel?.querySelector(`input[value="${type}"][data-filter-type="eventType"]`)?.parentElement;
       const countSpan = item?.querySelector('.checkbox-count');
       if (countSpan) {
         countSpan.textContent = `(${count})`;
@@ -1344,7 +1323,7 @@ export class FilterController {
 
     // Update branch counts
     this.eventCounts.byBranch.forEach((count, branch) => {
-      const item = this.floatingMenu?.querySelector(`input[value="${branch}"][data-filter-type="branch"]`)?.parentElement;
+      const item = this.controlPanel?.querySelector(`input[value="${branch}"][data-filter-type="branch"]`)?.parentElement;
       const countSpan = item?.querySelector('.checkbox-count');
       if (countSpan) {
         countSpan.textContent = `(${count})`;
@@ -1353,7 +1332,7 @@ export class FilterController {
 
     // Update author counts
     this.eventCounts.byAuthor.forEach((count, author) => {
-      const item = this.floatingMenu?.querySelector(`input[value="${author}"][data-filter-type="author"]`)?.parentElement;
+      const item = this.controlPanel?.querySelector(`input[value="${author}"][data-filter-type="author"]`)?.parentElement;
       const countSpan = item?.querySelector('.checkbox-count');
       if (countSpan) {
         countSpan.textContent = `(${count})`;

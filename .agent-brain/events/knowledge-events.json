@@ -1,0 +1,65 @@
+{
+  "version": "1.0",
+  "events": [
+    {
+      "id": "ke-1729000000000",
+      "timestamp": "2025-10-15T10:00:00.000Z",
+      "type": "create",
+      "knowledgeItemId": "css-class-conflict-control-panel",
+      "knowledgeItemTitle": "CSS Class Name Conflicts Break Component Visibility",
+      "knowledgeItemType": "learning",
+      "targetFile": ".agent-brain/learnings/css-class-conflict-control-panel.md",
+      "actor": "agent"
+    },
+    {
+      "id": "ke-1729100000000",
+      "timestamp": "2025-10-16T14:30:00.000Z",
+      "type": "apply",
+      "knowledgeItemId": "dropdown-panel-implementation",
+      "knowledgeItemTitle": "Dropdown Panel Implementation Pattern",
+      "knowledgeItemType": "design-pattern",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1729200000000",
+      "timestamp": "2025-10-17T09:15:00.000Z",
+      "type": "create",
+      "knowledgeItemId": "provider-registration-toggle-error",
+      "knowledgeItemTitle": "Provider Must Be Registered Before Toggle",
+      "knowledgeItemType": "learning",
+      "targetFile": ".agent-brain/learnings/provider-registration-toggle-error.md",
+      "actor": "agent"
+    },
+    {
+      "id": "ke-1729300000000",
+      "timestamp": "2025-10-18T16:45:00.000Z",
+      "type": "remove",
+      "knowledgeItemId": "dropdown-panel-implementation",
+      "knowledgeItemTitle": "Dropdown Panel Implementation Pattern",
+      "knowledgeItemType": "design-pattern",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1729400000000",
+      "timestamp": "2025-10-19T11:20:00.000Z",
+      "type": "apply",
+      "knowledgeItemId": "css-class-conflict-control-panel",
+      "knowledgeItemTitle": "CSS Class Name Conflicts Break Component Visibility",
+      "knowledgeItemType": "learning",
+      "targetFile": "packages/core/src/domains/visualization/ui/FilterController.ts",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761038113983",
+      "timestamp": "2025-10-21T09:15:13.983Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-c4a78babac0b",
+      "knowledgeItemTitle": "Creating Test Data for Knowledge and Session Events",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    }
+  ]
+}

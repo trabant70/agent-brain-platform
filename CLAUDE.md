@@ -448,593 +448,168 @@ npm test -- data-ingestion.pathway.test.ts
 - Uses HTML comment markers for injection/removal tracking
 - Supports versioning and conflict detection
 
-<!-- Agent-Brain Template: test [id: template-1760954445858-01ugn9x] Start -->
-
-# test
-
-## 🎨 Template UX Improvements with ModalDialog and NotificationManager
-
-**Tags:** ux, templates, modal, notifications, user-feedback
-
-# Template UX Improvements with ModalDialog and NotificationManager
-
-## Context
-
-The Knowledge Management system's template functionality originally used basic browser dialogs (`prompt()`, `alert()`, `confirm()`) which:
-- Don't work in sandboxed VSCode webviews
-- Provide no visual feedback for operations
-- Offer poor UX with no styling or validation
-- Block the UI with synchronous dialogs
-
-## Problem
-
-Original template methods:
-```typescript
-// ❌ Uses prompt() - doesn't work in webview
-saveAsTemplate(): void {
-  const name = prompt('Template name:');
-  if (!name) return;
-  // Send message, no feedback on success/error
-}
-
-// ❌ Uses alert() for validation
-applyTemplateToFocused(): void {
-  if (!templateId) {
-    alert('Please select a template');  // Blocks UI
-    return;
-  }
-}
-
-// ❌ Uses confirm() - basic browser dialog
-removeTemplate(templateId: string): void {
-  if (confirm('Remove this template?')) {  // No context
-    // Send message, no feedback
-  }
-}
-```
-
-**Issues**:
-1. Browser dialogs don't work in sandboxed webviews
-2. No validation feedback
-3. No success/error notifications
-4. Poor UX with ugly, unstyled dialogs
-5. No context in confirmation messages
-
-## Solution: ModalDialog + NotificationManager Pattern
-
-### 1. Import Required Components
-
-```typescript
-import { ModalDialog } from './ModalDialog';
-import { NotificationManager } from './NotificationManager';
-```
-
-### 2. Add NotificationManager Instance
-
-```typescript
-export class KnowledgeViewController {
-  private notifications: NotificationManager;
-
-  constructor() {
-    // ... other initialization
-    this.notifications = new NotificationManager();
-  }
-}
-```
-
-### 3. Update Template Methods
-
-#### Save as Template - Use ModalDialog.prompt()
-
-```typescript
-async saveAsTemplate(): Promise<void> {
-  const selectedIds = Array.from(this.state.selectedItems);
-
-  // Validation with warning notification
-  if (selectedIds.length === 0) {
-    this.notifications.show({
-      type: 'warning',
-      message: 'Please select at least one knowledge item to create a template'
-    });
-    return;
-  }
-
-  // Modal prompt with validation
-  const modal = new ModalDialog();
-  const name = await modal.prompt('Template name:', {
-    required: true,
-    placeholder: 'e.g., "API Design Checklist"'
-  });
-
-  if (!name) return; // User cancelled
-
-  // Send message
-  this.sendMessage({
-    type: 'knowledge:create-template',
-    payload: { name, itemIds: selectedIds }
-  });
-
-  // Show progress notification
-  this.notifications.show({
-    type: 'info',
-    message: `Creating template "${name}" with ${selectedIds.length} item(s)...`
-  });
-}
-```
-
-#### Apply Template - Use NotificationManager
-
-```typescript
-applyTemplateToFocused(): void {
-  const selector = document.getElementById('template-selector') as HTMLSelectElement;
-  const templateId = selector?.value;
-
-  // Validation with notification instead of alert
-  if (!templateId) {
-    this.notifications.show({
-      type: 'warning',
-      message: 'Please select a template from the dropdown'
-    });
-    return;
-  }
-
-  const template = this.state.templates.find(t => t.id === templateId);
-  const templateName = template?.name || 'template';
-
-  this.sendMessage({
-    type: 'knowledge:apply-template',
-    payload: { templateId }
-  });
-
-  // Show progress feedback
-  this.notifications.show({
-    type: 'info',
-    message: `Applying template "${templateName}" to focused claude.md...`
-  });
-}
-```
-
-#### Export Template - Use NotificationManager
-
-```typescript
-exportTemplate(): void {
-  const selector = document.getElementById('template-selector') as HTMLSelectElement;
-  const templateId = selector?.value;
-
-  if (!templateId) {
-    this.notifications.show({
-      type: 'warning',
-      message: 'Please select a template from the dropdown'
-    });
-    return;
-  }
-
-  const template = this.state.templates.find(t => t.id === templateId);
-  const templateName = template?.name || 'template';
-
-  this.sendMessage({
-    type: 'knowledge:export-template',
-    payload: { templateId }
-  });
-
-  this.notifications.show({
-    type: 'info',
-    message: `Exporting template "${templateName}"...`
-  });
-}
-```
-
-#### Remove Template - Use ModalDialog.confirm()
-
-```typescript
-async removeTemplate(templateId: string, claudeMdPath: string): Promise<void> {
-  const template = this.state.templates.find(t => t.id === templateId);
-  const templateName = template?.name || 'this template';
-
-  // Contextual confirmation dialog
-  const modal = new ModalDialog();
-  const confirmed = await modal.confirm(
-    `Remove template "${templateName}" from claude.md?`,
-    'Confirm Removal'
-  );
-
-  if (confirmed) {
-    this.sendMessage({
-      type: 'knowledge:remove-template',
-      payload: { templateId, claudeMdPath }
-    });
-
-    this.notifications.show({
-      type: 'info',
-      message: `Removing template "${templateName}" from claude.md...`
-    });
-  }
-}
-```
-
-### 4. Add Operation Result Handler
-
-Handle success/error responses from extension:
-
-```typescript
-/**
- * Handle operation results (success/error notifications)
- * Called by parent when extension sends operation results
- */
-handleOperationResult(operation: string, success: boolean, message?: string): void {
-  if (success) {
-    this.notifications.show({
-      type: 'success',
-      message: message || `${operation} completed successfully`
-    });
-  } else {
-    this.notifications.show({
-      type: 'error',
-      message: message || `${operation} failed`,
-      duration: 6000 // Show errors longer
-    });
-  }
-}
-```
-
-### 5. Add Notification Styles (base.css)
-
-```css
-/* Notification Container */
-#notification-container,
-.notification-container {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  z-index: 10001;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  max-width: 400px;
-  pointer-events: none;
-}
-
-/* Individual Notification */
-.notification {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: var(--vscode-notifications-background);
-  border: 1px solid var(--vscode-notifications-border);
-  border-radius: 4px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  pointer-events: auto;
-  cursor: pointer;
-  min-width: 300px;
-  max-width: 400px;
-}
-
-/* Notification Types */
-.notification-success {
-  border-left: 3px solid var(--vscode-testing-iconPassed);
-}
-
-.notification-error {
-  border-left: 3px solid var(--vscode-testing-iconFailed);
-}
-
-.notification-warning {
-  border-left: 3px solid var(--vscode-statusBarItem-warningBackground);
-}
-
-.notification-info {
-  border-left: 3px solid var(--vscode-statusBarItem-activeBackground);
-}
-```
-
-## Benefits
-
-### ✅ Better UX
-- Professional, styled dialogs matching VSCode theme
-- Clear, contextual confirmation messages
-- Placeholder text guides users
-- Required field validation
-
-### ✅ Visual Feedback
-- Toast notifications for all operations
-- Progress indicators ("Creating template...")
-- Success/error feedback
-- Longer duration for errors (6s vs 4s)
-
-### ✅ Non-Blocking
-- Async dialogs don't block UI
-- User can interact with other elements
-- Auto-dismiss notifications
-
-### ✅ Webview Compatible
-- No reliance on browser APIs
-- Works in sandboxed VSCode webviews
-- Uses VSCode CSS variables for theming
-
-### ✅ Contextual Information
-- Template names shown in notifications
-- Item counts displayed
-- Specific error messages
-
-## Usage Examples
-
-### User Flow: Create Template
-
-1. User selects 3 knowledge items
-2. Clicks "Save as Template"
-3. Modal appears with placeholder: "e.g., 'API Design Checklist'"
-4. User types "Frontend Standards"
-5. Clicks OK
-6. Toast appears: "Creating template 'Frontend Standards' with 3 item(s)..."
-7. Extension processes
-8. Toast appears: "Template 'Frontend Standards' created successfully" ✓
-
-### User Flow: Apply Template (Error)
-
-1. User clicks "Apply Template" without selecting one
-2. Warning toast appears: "Please select a template from the dropdown" ⚠
-3. User selects "Frontend Standards"
-4. Clicks "Apply Template"
-5. Info toast: "Applying template 'Frontend Standards' to focused claude.md..."
-6. Extension fails (no focused claude.md)
-7. Error toast (6s): "Failed to apply template: No claude.md file is focused" ✗
-
-## Testing Checklist
-
-- ✅ Save template with no items selected → Warning notification
-- ✅ Save template with valid name → Success notification
-- ✅ Save template and cancel → No notification
-- ✅ Apply template without selection → Warning notification
-- ✅ Apply template successfully → Success notification
-- ✅ Export template → Progress + success notifications
-- ✅ Remove template and confirm → Success notification
-- ✅ Remove template and cancel → No notification
-- ✅ All modals styled with VSCode theme
-- ✅ Notifications auto-dismiss after 4s (6s for errors)
-- ✅ Click notification to dismiss manually
-
-## Related Patterns
-
-- **ModalDialog Component** - Reusable modal system
-- **NotificationManager** - Toast notification system
-- **VSCode Theme Integration** - Using CSS variables
-- **Async/Await Pattern** - Non-blocking user interactions
-
-## File Locations
-
-**Controller**: `packages/core/src/domains/visualization/ui/KnowledgeViewController.ts`
-- Lines 18-19: Imports
-- Line 38: NotificationManager instance
-- Line 53: Constructor initialization
-- Lines 784-899: Updated template methods
-- Lines 936-949: handleOperationResult() method
-
-**Styles**: `packages/core/src/domains/visualization/styles/base.css`
-- Lines 165-306: Notification system styles
-
-**Components**:
-- `packages/core/src/domains/visualization/ui/ModalDialog.ts` (482 lines)
-- `packages/core/src/domains/visualization/ui/NotificationManager.ts` (231 lines)
-
-## Impact
-
-**Before**: Template operations had no feedback, used broken browser dialogs, poor UX
-**After**: Professional modals, toast notifications, contextual feedback, excellent UX
-
-**Build**: ✅ Success (agent-brain-platform-0.2.1.vsix, 603.17 KB)
-
+## Session Journals
+
+**IMPORTANT**: Create session journals for multi-prompt coding sessions to capture decisions, context, and learnings.
+
+### When to Create
+- Multi-file changes (3+ files)
+- Architectural decisions
+- Bug investigations
+- Feature implementations
+- Refactoring work
+
+### Quick Format
+```markdown
+---
+id: session-YYYY-MM-DD-###
+title: Brief Descriptive Title
+startTime: YYYY-MM-DDTHH:MM:SS.SSSZ
+endTime: YYYY-MM-DDTHH:MM:SS.SSSZ
+summary: One-sentence overview of what was accomplished
+tags: tag1, tag2, tag3
+topics: topic1, topic2
+filesModified:
+  - path/to/file1.ts
+  - path/to/file2.ts
 ---
 
-## 🎨 Simple Markdown Renderer for Webview
-
-**Tags:** markdown, rendering, webview, ui
-
-# Simple Markdown Renderer for Webview
+# [Title]
 
 ## Context
-Need to display markdown content (claude.md files) in the VSCode webview without adding external dependencies like `marked.js` or `markdown-it`.
+Why was this work needed?
+
+## Approach
+High-level strategy and key decisions
+
+## Key Changes
+- Specific change 1
+- Specific change 2
+
+## Outcomes
+- ✅ What was achieved
+- ⚠️ Known issues
+- 📝 Follow-up needed
+```
+
+### Best Practices
+- **Be specific**: "Implemented 3-track offset for session bars" > "Updated timeline"
+- **Capture decisions**: Document the "why" behind choices
+- **Create knowledge items**: Extract reusable patterns/learnings
+- **Use accurate timestamps**: Critical for timeline visualization
+- **Keep concise**: Focus on decisions and outcomes, not line-by-line details
+
+### File Location
+Save in: `.agent-brain/sessions/YYYY-MM/session-YYYY-MM-DD-descriptive-slug.md`
+
+### Full Guide
+See: `.agent-brain/golden-paths/session-journal-writing-guide.md`
+
+**Timeline Integration:**
+- Sessions appear as events (📝) on timeline
+- Filterable by time, topics, tags
+- Popup shows duration, files modified, and session notes
+- Use timestamps for accurate positioning
+
+<!-- Agent-Brain Template: Creating Test Data for Knowledge and Session Events [id: knowledge-c4a78babac0b] Start -->
+
+## 💡 Creating Test Data for Knowledge and Session Events
+
+**Source:** timeline-event-testing
+**Tags:** testing, test-data, providers, timeline
+
+# Creating Test Data for Knowledge and Session Events
 
 ## Problem
-- Claude.md files contain markdown that needs to be rendered as HTML
-- Don't want to add large dependencies (bundle size matters)
-- Need XSS protection (user content security)
-- Need consistent styling with VSCode theme
+Knowledge events and session journal events weren't showing in timeline because no test data existed.
 
-## Solution: Regex-Based Markdown Renderer
+## Knowledge Events Test Data
 
-Implement a simple, lightweight markdown renderer using regex replacements:
+**Location**: `.agent-brain/events/knowledge-events.json`
 
-```typescript
-private renderMarkdown(markdown: string): string {
-  let html = markdown;
-
-  // 1. Escape HTML first (XSS protection)
-  html = this.escapeHtml(html);
-
-  // 2. Headers (h1-h6)
-  html = html.replace(/^######\s+(.+)$/gm, '<h6>$1</h6>');
-  html = html.replace(/^#####\s+(.+)$/gm, '<h5>$1</h5>');
-  html = html.replace(/^####\s+(.+)$/gm, '<h4>$1</h4>');
-  html = html.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
-  html = html.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
-  html = html.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
-
-  // 3. Bold/Italic
-  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-
-  // 4. Inline code
-  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-  // 5. Code blocks
-  html = html.replace(/```(\w+)?\n([\s\S]+?)```/g, '<pre><code>$2</code></pre>');
-
-  // 6. Links
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-
-  // 7. Lists
-  html = html.replace(/^\s*[-*+]\s+(.+)$/gm, '<li>$1</li>');
-  html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
-
-  // 8. Line breaks
-  html = html.replace(/\n\n/g, '</p><p>');
-  html = '<p>' + html + '</p>';
-
-  return html;
+**Format**:
+```json
+{
+  "version": "1.0",
+  "events": [
+    {
+      "id": "ke-1729000000000",
+      "timestamp": "2025-10-15T10:00:00.000Z",
+      "type": "create",
+      "knowledgeItemId": "learning-id",
+      "knowledgeItemTitle": "Learning Title",
+      "knowledgeItemType": "learning",
+      "targetFile": ".agent-brain/learnings/file.md",
+      "actor": "agent"
+    }
+  ]
 }
 ```
 
-## Key Features
+**Event Types**:
+- `create` - Agent or user created new knowledge item
+- `apply` - User applied knowledge item to file (injected into claude.md)
+- `remove` - User removed knowledge item from file
 
-### 1. XSS Protection
-```typescript
-// Always escape HTML FIRST before any transformations
-html = this.escapeHtml(html);
+**Actor Types**:
+- `agent` - Created by coding agent
+- `user` - Created or applied by user
+
+## Session Journal Test Data
+
+**Location**: `.agent-brain/sessions/YYYY-MM/session-YYYY-MM-DD-title.md`
+
+**Format**:
+```markdown
+---
+id: session-2025-10-15-001
+title: Session Title
+startTime: 2025-10-15T09:00:00.000Z
+endTime: 2025-10-15T12:30:00.000Z
+agent: Claude Code
+promptCount: 24
+status: completed
+tags: tag1, tag2
+---
+
+# Session Title
+
+## Session Summary
+What was accomplished...
+
+## Key Changes
+- Change 1
+- Change 2
+
+## Files Modified
+- file1.ts
+- file2.ts
 ```
 
-This prevents malicious HTML injection.
+## Timeline Event Types
+Knowledge and session events appear on timeline as:
+- **KNOWLEDGE_CREATED** - Green diamond
+- **KNOWLEDGE_APPLIED** - Blue diamond
+- **KNOWLEDGE_REMOVED** - Red diamond
+- **SESSION_JOURNAL** - Purple square
 
-### 2. Progressive Enhancement
-Process elements in order from most specific to least:
-1. Headers (most specific: `######` before `#`)
-2. Bold before italic (avoid conflicts)
-3. Inline code before blocks
-4. Complex structures before simple
+## Filtering
+Events appear in:
+- **Event Types** filter section (knowledge-created, knowledge-applied, session-journal)
+- **Data Sources** section (AB-Knowledge Events, AB-Sessions checkboxes)
 
-### 3. VSCode Theme Integration
-Use VSCode CSS variables for styling:
-
-```css
-.claude-md-content code {
-  background: var(--vscode-textCodeBlock-background);
-  color: var(--vscode-textPreformat-foreground);
-  font-family: var(--vscode-editor-font-family);
-}
-
-.claude-md-content a {
-  color: var(--vscode-textLink-foreground);
-}
-
-.claude-md-content blockquote {
-  border-left: 3px solid var(--vscode-textBlockQuote-border);
-  background: var(--vscode-textBlockQuote-background);
-}
-```
-
-### 4. Supported Markdown Features
-
-| Feature | Syntax | HTML Output |
-|---------|--------|-------------|
-| Headers | `# H1` through `###### H6` | `<h1>` through `<h6>` |
-| Bold | `**text**` or `__text__` | `<strong>` |
-| Italic | `*text*` or `_text_` | `<em>` |
-| Inline Code | `` `code` `` | `<code>` |
-| Code Blocks | ` ```lang\ncode\n``` ` | `<pre><code>` |
-| Links | `[text](url)` | `<a href>` |
-| Lists | `- item` or `* item` | `<ul><li>` |
-| Blockquotes | `> quote` | `<blockquote>` |
-| Horizontal Rules | `---` or `***` | `<hr>` |
-
-## Benefits
-
-✅ **Lightweight**: ~50 lines of code, no dependencies
-✅ **Fast**: Simple regex operations, no parsing overhead
-✅ **Secure**: HTML escaping prevents XSS
-✅ **Theme-Aware**: Uses VSCode CSS variables
-✅ **Maintainable**: Easy to understand and extend
-
-## Limitations
-
-⚠️ **Not Full Spec**: Doesn't support all CommonMark features
-⚠️ **No Nested Lists**: Simple list handling only
-⚠️ **No Tables**: Would require more complex parsing
-⚠️ **No HTML Pass-Through**: All HTML is escaped (security feature!)
-
-## When to Use
-
-✅ **Good for:**
-- Displaying user-generated markdown
-- Documentation viewers
-- Comment/description rendering
-- Small to medium markdown files
-
-❌ **Not good for:**
-- Full markdown editors
-- Complex nested structures
-- HTML-in-markdown content
-- Performance-critical rendering of huge files
-
-## Extension Points
-
-To add more features:
-
-```typescript
-// Tables
-html = html.replace(/\|(.+)\|/g, (match) => {
-  // Parse table syntax...
-});
-
-// Task lists
-html = html.replace(/- \[ \] (.+)/g, '<li><input type="checkbox"> $1</li>');
-html = html.replace(/- \[x\] (.+)/g, '<li><input type="checkbox" checked> $1</li>');
-
-// Strikethrough
-html = html.replace(/~~(.+?)~~/g, '<del>$1</del>');
-```
-
-## Testing Checklist
-
-Test with:
-- ✅ Headers at all levels
-- ✅ Bold and italic text
-- ✅ Inline and block code
-- ✅ Links (internal and external)
-- ✅ Unordered and ordered lists
-- ✅ Blockquotes
-- ✅ Mixed content (bold in headers, links in lists, etc.)
-- ✅ Malicious HTML (should be escaped)
-- ✅ Empty/whitespace-only content
-
-## Performance
-
-- **Rendering 1KB markdown**: < 1ms
-- **Rendering 10KB markdown**: < 5ms
-- **Rendering 100KB markdown**: < 50ms
-
-Good enough for real-time rendering on user interaction.
-
-## Alternative: Full-Featured Renderer
-
-If you need more features, consider:
-
-```typescript
-// Option 1: marked.js (18KB gzipped)
-import { marked } from 'marked';
-html = marked.parse(markdown);
-
-// Option 2: markdown-it (30KB gzipped)
-import MarkdownIt from 'markdown-it';
-const md = new MarkdownIt();
-html = md.render(markdown);
-```
-
-But for most use cases, the simple renderer is sufficient!
-
-## Location
-
-**File**: `packages/core/src/domains/visualization/ui/KnowledgeViewController.ts`
-**Method**: `renderMarkdown()`
-**Lines**: 877-938
-
-**Styles**: `packages/core/src/domains/visualization/styles/components/knowledge.css`
-**Section**: `.claude-md-content`
+## Testing
+1. Create test data files
+2. Restart extension or refresh timeline
+3. Check event counts in filter panel
+4. Verify events appear on timeline
+5. Test filtering by event type
+6. Test toggling providers
 
 ## Related
+- `KnowledgeEventProvider.ts`
+- `SessionEventProvider.ts`
+- `KnowledgeEventStorage.ts`
+- `SessionFileSystem.ts`
 
-- VSCode Extension to Webview Data Flow (golden-path)
-- Knowledge Tab Implementation (learning)
-
----
-
-<!-- Agent-Brain Template: test [id: template-1760954445858-01ugn9x] End -->
+<!-- Agent-Brain Template: Creating Test Data for Knowledge and Session Events [id: knowledge-c4a78babac0b] End -->

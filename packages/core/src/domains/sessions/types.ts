@@ -58,10 +58,16 @@ export interface SessionJournal {
     title: string;
 
     /**
-     * Session date (YYYY-MM-DD format)
-     * Used for timeline visualization
+     * Session start time (ISO 8601 timestamp)
+     * Used for timeline visualization - bar start position
      */
-    date: string;
+    startTime: string;
+
+    /**
+     * Session end time (ISO 8601 timestamp)
+     * Used for timeline visualization - bar end position
+     */
+    endTime: string;
 
     /**
      * Brief summary of the session (1-2 sentences)
@@ -108,9 +114,9 @@ export interface SessionJournal {
 
 /**
  * Parameters for creating a new session journal
- * (id, date, and filePath are auto-generated)
+ * (id and filePath are auto-generated)
  */
-export type CreateSessionParams = Omit<SessionJournal, 'id' | 'date' | 'filePath'>;
+export type CreateSessionParams = Omit<SessionJournal, 'id' | 'filePath'>;
 
 /**
  * Month directory metadata
@@ -148,9 +154,9 @@ export interface SessionFileMetadata {
     title: string;
 
     /**
-     * Session date
+     * Session start time (ISO 8601 timestamp)
      */
-    date: string;
+    startTime: string;
 
     /**
      * File path

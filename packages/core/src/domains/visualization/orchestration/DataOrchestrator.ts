@@ -137,22 +137,18 @@ export class DataOrchestrator {
       this.log.info(LogCategory.ORCHESTRATION, 'Git Local provider disabled by settings', 'initialize');
     }
 
-    // Register GitHub provider (conditionally)
-    if (this.providerSettings.github) {
-      this.log.info(LogCategory.ORCHESTRATION, 'Registering GitHub provider', 'initialize');
-      try {
-        const githubProvider = new GitHubProvider();
-        await this.providerRegistry.registerProvider(githubProvider, {
-          enabled: true,
-          priority: 2
-        });
-        this.log.info(LogCategory.ORCHESTRATION, 'GitHub provider registered successfully', 'initialize');
-      } catch (error) {
-        this.log.error(LogCategory.ORCHESTRATION, `Failed to register GitHub provider: ${error}`, 'initialize');
-        // Continue without GitHub provider
-      }
-    } else {
-      this.log.info(LogCategory.ORCHESTRATION, 'GitHub provider disabled by settings', 'initialize');
+    // Register GitHub provider (always register, but set enabled based on settings)
+    this.log.info(LogCategory.ORCHESTRATION, `Registering GitHub provider (enabled: ${this.providerSettings.github})`, 'initialize');
+    try {
+      const githubProvider = new GitHubProvider();
+      await this.providerRegistry.registerProvider(githubProvider, {
+        enabled: this.providerSettings.github,
+        priority: 2
+      });
+      this.log.info(LogCategory.ORCHESTRATION, `GitHub provider registered successfully (enabled: ${this.providerSettings.github})`, 'initialize');
+    } catch (error) {
+      this.log.error(LogCategory.ORCHESTRATION, `Failed to register GitHub provider: ${error}`, 'initialize');
+      // Continue without GitHub provider
     }
 
     // Register Knowledge Event provider (conditionally)
@@ -160,14 +156,17 @@ export class DataOrchestrator {
       this.log.info(LogCategory.ORCHESTRATION, 'Registering Knowledge Event provider', 'initialize');
       try {
         const knowledgeProvider = new KnowledgeEventProvider();
+        // IMPORTANT: storagePath is already './.agent-brain', so we need the parent directory
+        // KnowledgeEventStorage will add '.agent-brain/events' to the workspace root
+        const workspaceRoot = this.storagePath.replace(/\/?\.agent-brain\/?$/, '') || '.';
         await this.providerRegistry.registerProvider(knowledgeProvider, {
           enabled: true,
           priority: 3,
           settings: {
-            workspaceRoot: this.storagePath
+            workspaceRoot: workspaceRoot
           }
         });
-        this.log.info(LogCategory.ORCHESTRATION, 'Knowledge Event provider registered successfully', 'initialize');
+        this.log.info(LogCategory.ORCHESTRATION, `Knowledge Event provider registered successfully (workspaceRoot: ${workspaceRoot})`, 'initialize');
       } catch (error) {
         this.log.error(LogCategory.ORCHESTRATION, `Failed to register Knowledge Event provider: ${error}`, 'initialize');
         // Continue without knowledge events - not critical
@@ -181,14 +180,17 @@ export class DataOrchestrator {
       this.log.info(LogCategory.ORCHESTRATION, 'Registering Session Event provider', 'initialize');
       try {
         const sessionProvider = new SessionEventProvider();
+        // IMPORTANT: storagePath is already './.agent-brain', so we need the parent directory
+        // SessionFileSystem will add '.agent-brain/sessions' to the workspace root
+        const workspaceRoot = this.storagePath.replace(/\/?\.agent-brain\/?$/, '') || '.';
         await this.providerRegistry.registerProvider(sessionProvider, {
           enabled: true,
           priority: 4,
           settings: {
-            workspaceRoot: this.storagePath
+            workspaceRoot: workspaceRoot
           }
         });
-        this.log.info(LogCategory.ORCHESTRATION, 'Session Event provider registered successfully', 'initialize');
+        this.log.info(LogCategory.ORCHESTRATION, `Session Event provider registered successfully (workspaceRoot: ${workspaceRoot})`, 'initialize');
       } catch (error) {
         this.log.error(LogCategory.ORCHESTRATION, `Failed to register Session Event provider: ${error}`, 'initialize');
         // Continue without session events - not critical

@@ -369,3 +369,45 @@
     font-size: 0.85em;
     color: var(--accent-tag);
 }
+
+/* Session journal content styles */
+.popup-section .session-content {
+    margin-top: 1rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.popup-section .session-content h4 {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.9em;
+    color: var(--text-secondary);
+    font-weight: 600;
+}
+
+.popup-section .session-notes {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 0.75rem;
+    margin: 0;
+    font-size: 0.85em;
+    line-height: 1.5;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.popup-section .content-note {
+    margin-top: 0.5rem;
+    font-size: 0.8em;
+    color: var(--text-muted);
+}
+
+.popup-section .content-note code {
+    background: var(--bg-tertiary);
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    font-size: 0.85em;
+}

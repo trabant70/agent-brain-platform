@@ -200,8 +200,8 @@ export class SessionFileSystem {
                 allSessions.push(...sessions);
             }
 
-            // Sort by date (newest first)
-            allSessions.sort((a, b) => b.date.localeCompare(a.date));
+            // Sort by startTime (newest first)
+            allSessions.sort((a, b) => b.startTime.localeCompare(a.startTime));
 
             logger.debug(
                 LogCategory.DATA,
@@ -254,7 +254,7 @@ export class SessionFileSystem {
                         metadata.push({
                             id: data.id || this.generateIdFromPath(filePath),
                             title: data.title || path.basename(file, '.md'),
-                            date: data.date || monthDir.month + '-01',
+                            startTime: data.startTime || monthDir.month + '-01T00:00:00.000Z',
                             filePath,
                             fileSize: stats.size,
                             lastModified: stats.mtime
@@ -301,7 +301,11 @@ export class SessionFileSystem {
         // Extract fields from frontmatter
         const id = data.id || this.generateIdFromPath(filePath);
         const title = data.title || this.extractTitleFromBody(body) || path.basename(filePath, '.md');
-        const date = data.date || this.extractDateFromPath(filePath);
+
+        // Parse start and end times
+        const startTime = data.startTime || this.extractDateFromPath(filePath) + 'T00:00:00.000Z';
+        const endTime = data.endTime || this.getDefaultEndTime(startTime);
+
         const summary = data.summary;
         const tags = this.parseTags(data.tags);
         const topics = this.parseArray(data.topics);
@@ -311,7 +315,8 @@ export class SessionFileSystem {
         return {
             id,
             title,
-            date,
+            startTime,
+            endTime,
             summary,
             tags,
             topics,
@@ -472,6 +477,18 @@ export class SessionFileSystem {
         );
 
         return monthDir;
+    }
+
+    /**
+     * Get default end time (startTime + 1 hour) for sessions without endTime
+     * @param startTime ISO 8601 timestamp string
+     * @returns ISO 8601 timestamp string (startTime + 1 hour)
+     * @private
+     */
+    private getDefaultEndTime(startTime: string): string {
+        const start = new Date(startTime);
+        const end = new Date(start.getTime() + 60 * 60 * 1000); // +1 hour
+        return end.toISOString();
     }
 
     /**

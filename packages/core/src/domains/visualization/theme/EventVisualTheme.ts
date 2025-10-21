@@ -229,13 +229,13 @@ export class EventVisualTheme {
     private static readonly KNOWLEDGE_EVENTS: Record<string, EventTypeVisual> = {
         'knowledge-applied': {
             shape: 'square',  // Document/file shape
-            semanticColor: '#3b82f6',  // Blue - knowledge/learning
+            semanticColor: '#06b6d4',  // Bright cyan - clearly visible on dark backgrounds
             icon: '✓',
             label: 'Knowledge Applied'
         },
         'knowledge-removed': {
             shape: 'cross',  // X for removal
-            semanticColor: '#94a3b8',  // Slate gray - neutral removal
+            semanticColor: '#f97316',  // Bright orange - clearly visible, indicates removal action
             icon: '✕',
             label: 'Knowledge Removed'
         },

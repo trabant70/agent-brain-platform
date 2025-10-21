@@ -202,6 +202,11 @@ export class SessionEventProvider implements IDataProvider {
       linesRemoved: 0
     };
 
+    // Parse timestamps and calculate duration
+    const startTime = new Date(session.startTime);
+    const endTime = new Date(session.endTime);
+    const duration = endTime.getTime() - startTime.getTime();
+
     // Build canonical event
     const event: CanonicalEvent = {
       // Identity
@@ -210,8 +215,8 @@ export class SessionEventProvider implements IDataProvider {
       providerId: this.id,
       type: EventType.SESSION_JOURNAL,
 
-      // Temporal
-      timestamp: new Date(session.date),
+      // Temporal - use startTime as primary timestamp
+      timestamp: startTime,
 
       // Content
       title: session.title,
@@ -241,7 +246,14 @@ export class SessionEventProvider implements IDataProvider {
         topics: session.topics,
         filesModified: session.filesModified,
         knowledgeItemsUsed: session.knowledgeItemsUsed,
-        filePath: session.filePath
+        filePath: session.filePath,
+        // Session-specific temporal data for timeline bar rendering
+        startTime: session.startTime,  // ISO string
+        endTime: session.endTime,      // ISO string
+        duration: duration,             // milliseconds
+        durationFormatted: this.formatDuration(duration),
+        // Full content for popup display
+        content: session.content        // Markdown body
       },
 
       // Labels
@@ -261,5 +273,24 @@ export class SessionEventProvider implements IDataProvider {
     }
 
     return content.substring(0, maxLength).trim() + '...';
+  }
+
+  /**
+   * Format duration in milliseconds to human-readable string
+   * @private
+   */
+  private formatDuration(ms: number): string {
+    const hours = Math.floor(ms / (1000 * 60 * 60));
+    const minutes = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (hours > 0 && minutes > 0) {
+      return `${hours}h ${minutes}m`;
+    } else if (hours > 0) {
+      return `${hours}h`;
+    } else if (minutes > 0) {
+      return `${minutes}m`;
+    } else {
+      return '< 1m';
+    }
   }
 }

@@ -785,10 +785,13 @@ export class TimelineRenderer {
                 let safeY = y !== undefined && !isNaN(y) ?
                     y + this.yScale.bandwidth() / 2 : 0;
 
-                // Offset intelligence events above branch lanes with staggered tracks
+                // Offset non-git events above branch lanes with staggered tracks
+                // Applies to: intelligence, knowledge-events, session-journals
                 // Trust the providerId - proper architecture!
-                const isIntelligenceEvent = d.providerId === 'intelligence';
-                if (isIntelligenceEvent) {
+                const needsOffset = d.providerId === 'intelligence' ||
+                                   d.providerId === 'knowledge-events' ||
+                                   d.providerId === 'session-journals';
+                if (needsOffset) {
                     const originalY = safeY;
 
                     // Use a hash of the event ID to determine track (0, 1, or 2)
@@ -802,7 +805,7 @@ export class TimelineRenderer {
                     const trackOffset = track * 2.5; // 0px, 2.5px, 5px
                     safeY = safeY - (baseOffset + trackOffset);
 
-                    // Pathway logging for intelligence event positioning
+                    // Pathway logging for offset event positioning
                     if (i < 3) {
                         const webviewLogger = (window as any).webviewLogger;
                         const LogCategory = (window as any).LogCategory;
@@ -810,7 +813,7 @@ export class TimelineRenderer {
                         if (webviewLogger) {
                             webviewLogger.debug(
                                 LogCategory.VISUALIZATION,
-                                `Intelligence event positioned with vertical offset`,
+                                `Non-git event positioned with vertical offset`,
                                 'TimelineRenderer.render',
                                 {
                                     type: d.type,
@@ -831,9 +834,13 @@ export class TimelineRenderer {
                 return `translate(${safeX}, ${safeY})`;
             });
 
-        // Check if event is from intelligence provider
+        // Check if event should use emoji icon rendering (instead of D3 symbols)
+        // Applies to: intelligence, knowledge-events, session-journals
         // Trust the providerId - proper architecture!
-        const isIntelligenceEvent = (d: any) => d.providerId === 'intelligence';
+        const isIntelligenceEvent = (d: any) =>
+            d.providerId === 'intelligence' ||
+            d.providerId === 'knowledge-events' ||
+            d.providerId === 'session-journals';
 
         transition.select('.event-node')
             .attr('d', (d: any) => {
@@ -881,6 +888,10 @@ export class TimelineRenderer {
                 if (!isIntelligenceEvent(d)) return '0px';
                 const size = this.sizeScale(d.impact || 1);
                 return `${Math.max(16, size * 1.5)}px`;  // Emojis need to be larger
+            })
+            .style('fill', (d: any) => {
+                if (!isIntelligenceEvent(d)) return 'none';
+                return EventVisualTheme.getSemanticColor(d.type);
             })
             .style('pointer-events', (d: any) => isIntelligenceEvent(d) ? 'auto' : 'none')
             .style('opacity', (d: any) => isIntelligenceEvent(d) ? 1 : 0);

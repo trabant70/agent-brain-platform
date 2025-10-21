@@ -714,6 +714,11 @@ export class EventDetailsPopup {
             html += `<p><strong>Created By:</strong> ${event.author.name || 'Coding Agent'}</p>`;
         }
 
+        // Duration
+        if (event.metadata && event.metadata.durationFormatted) {
+            html += `<p><strong>Duration:</strong> ${event.metadata.durationFormatted}</p>`;
+        }
+
         // Summary
         if (event.metadata && event.metadata.summary) {
             html += `<p><strong>Summary:</strong> ${event.metadata.summary}</p>`;
@@ -747,7 +752,30 @@ export class EventDetailsPopup {
             html += `<p><strong>Knowledge Items Used:</strong> ${event.metadata.knowledgeItemsUsed.length}</p>`;
         }
 
+        // Session content/notes
+        if (event.metadata && event.metadata.content) {
+            html += `<div class="session-content">`;
+            html += `<h4>Session Notes:</h4>`;
+            // Truncate content for popup (show first 500 chars)
+            const content = event.metadata.content;
+            const truncated = content.length > 500 ? content.substring(0, 500) + '...' : content;
+            html += `<pre class="session-notes">${this.escapeHtml(truncated)}</pre>`;
+            if (content.length > 500) {
+                html += `<p class="content-note"><em>Full content available in: <code>${event.metadata.filePath}</code></em></p>`;
+            }
+            html += `</div>`;
+        }
+
         return html;
+    }
+
+    /**
+     * Escape HTML to prevent XSS
+     */
+    private escapeHtml(text: string): string {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
     }
 
     /**

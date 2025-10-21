@@ -1,0 +1,576 @@
+/**
+ * Control Panel - Dropdown from Top
+ * Preserves existing filter logic, only changes presentation
+ */
+
+/* ============================================ */
+/* CONTROL PANEL - DROPDOWN LAYOUT */
+/* ============================================ */
+
+.control-panel {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 1200px;
+  max-height: 0;
+  background: var(--vscode-sideBar-background);
+  border: 2px solid var(--vscode-panel-border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s ease;
+  z-index: 1000;
+  box-shadow: none;
+}
+
+.control-panel.open {
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Control Panel Content Container */
+.control-panel-content {
+  padding: 0;
+  min-height: 200px;
+}
+
+/* ============================================ */
+/* TRIGGER BUTTON */
+/* ============================================ */
+
+.controls-trigger {
+  padding: 6px 14px;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.controls-trigger:hover {
+  background: var(--vscode-button-hoverBackground);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.controls-trigger:active {
+  transform: translateY(0);
+}
+
+.controls-trigger::before {
+  content: '🎛️';
+  font-size: 14px;
+}
+
+/* ============================================ */
+/* TAB NAVIGATION (Top of Panel) */
+/* ============================================ */
+
+.tab-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: rgba(0, 212, 255, 0.05);
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.tab-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.tab-btn {
+  padding: 6px 16px;
+  background: transparent;
+  color: var(--vscode-foreground);
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+  background: rgba(0, 212, 255, 0.1);
+  border-bottom-color: rgba(0, 212, 255, 0.3);
+}
+
+.tab-btn.active {
+  color: var(--knowledge-accent, #00d4ff);
+  border-bottom-color: var(--knowledge-accent, #00d4ff);
+  background: rgba(0, 212, 255, 0.08);
+}
+
+.close-panel-btn {
+  background: transparent;
+  border: none;
+  color: var(--vscode-foreground);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.close-panel-btn:hover {
+  background: rgba(255, 68, 68, 0.15);
+  color: #ff4444;
+}
+
+/* ============================================ */
+/* TAB PANELS */
+/* ============================================ */
+
+.tab-panels-container {
+  flex: 1;
+  display: block;
+  position: relative;
+}
+
+.tab-panel {
+  display: none;
+  padding: 16px;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+/* ============================================ */
+/* FILTER SECTIONS (Collapsible) */
+/* ============================================ */
+
+.filter-section {
+  margin-bottom: 12px;
+  border: 1px solid var(--vscode-panel-border);
+  border-left: 3px solid rgba(0, 212, 255, 0.4);
+  border-radius: 6px;
+  background: var(--vscode-sideBar-background);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.filter-section:hover {
+  border-left-color: var(--knowledge-accent, #00d4ff);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Section Header (Clickable) */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  user-select: none;
+  background: rgba(0, 212, 255, 0.05);
+  border-radius: 6px 6px 0 0;
+  transition: background-color 0.15s ease;
+}
+
+.section-header:hover {
+  background: rgba(0, 212, 255, 0.12);
+}
+
+.section-header.collapsible {
+  cursor: pointer;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--vscode-foreground);
+}
+
+.section-count {
+  background: rgba(0, 212, 255, 0.2);
+  color: var(--knowledge-accent, #00d4ff);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: auto;
+  margin-right: 8px;
+}
+
+.collapse-icon {
+  transition: transform 0.2s ease;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+
+/* Collapsed State - ONLY apply to sections with collapsible class */
+.section-header.collapsible + .checkbox-list {
+  display: block; /* Default: show */
+}
+
+.filter-section.collapsed .collapse-icon {
+  transform: rotate(-90deg);
+}
+
+.filter-section.collapsed .checkbox-list {
+  display: none !important;
+}
+
+.filter-section.collapsed .section-items {
+  display: none !important;
+}
+
+/* Configuration sections are NEVER collapsed */
+.config-section .checkbox-list,
+.config-section .config-options {
+  display: block !important;
+}
+
+.config-section-header {
+  cursor: default !important; /* Not clickable */
+}
+
+/* ============================================ */
+/* CHECKBOX LISTS (Filter Items) */
+/* ============================================ */
+
+.checkbox-list {
+  padding: 8px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.checkbox-item,
+.provider-item,
+.display-mode-item,
+.section-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  transition: background-color 0.15s ease;
+}
+
+.checkbox-item:hover,
+.provider-item:hover,
+.display-mode-item:hover,
+.section-item:hover {
+  background: rgba(0, 212, 255, 0.08);
+}
+
+.checkbox-item input[type="checkbox"],
+.provider-item input[type="checkbox"],
+.section-item input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.checkbox-item label,
+.provider-item label,
+.display-mode-item label,
+.section-item label {
+  flex: 1;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--vscode-foreground);
+}
+
+.checkbox-item .count,
+.section-item-count {
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+  font-weight: 600;
+  margin-left: auto;
+}
+
+/* Radio buttons for display modes */
+.display-mode-item input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+/* ============================================ */
+/* PROVIDER ITEMS (Data Sources) */
+/* ============================================ */
+
+.provider-item {
+  padding: 8px 10px;
+  margin-bottom: 6px;
+}
+
+.provider-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.provider-item label {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ============================================ */
+/* FILTER HEADER (Search, Reset) */
+/* ============================================ */
+
+.filter-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: rgba(0, 212, 255, 0.03);
+  border-radius: 6px;
+  border: 1px solid var(--vscode-panel-border);
+}
+
+.result-summary {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--knowledge-accent, #00d4ff);
+  white-space: nowrap;
+}
+
+#filter-search {
+  flex: 1;
+  padding: 6px 12px;
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 4px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  font-size: 13px;
+}
+
+#filter-search:focus {
+  outline: none;
+  border-color: var(--knowledge-accent, #00d4ff);
+  box-shadow: 0 0 0 1px var(--knowledge-accent, #00d4ff);
+}
+
+.clear-filters-btn {
+  padding: 6px 12px;
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.clear-filters-btn:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+/* ============================================ */
+/* FILTER SECTIONS GRID */
+/* ============================================ */
+
+.filter-sections-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* ============================================ */
+/* ACTIVE FILTERS (Footer) */
+/* ============================================ */
+
+.active-filters-section {
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(0, 212, 255, 0.03);
+  border-radius: 6px;
+  border: 1px solid var(--vscode-panel-border);
+}
+
+.active-filters-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.filter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(0, 212, 255, 0.2);
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--knowledge-accent, #00d4ff);
+}
+
+.filter-badge-remove {
+  cursor: pointer;
+  font-weight: bold;
+  margin-left: 2px;
+  color: var(--knowledge-accent, #00d4ff);
+  opacity: 0.7;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.filter-badge-remove:hover {
+  opacity: 1;
+  color: #ff4444;
+}
+
+/* ============================================ */
+/* CONFIG HINTS & DESCRIPTIONS */
+/* ============================================ */
+
+.config-section-description {
+  margin: 0 0 8px 0;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.config-hint {
+  margin: 8px 0 0 0;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  font-style: italic;
+}
+
+/* ============================================ */
+/* SCROLLBAR STYLING */
+/* ============================================ */
+
+.control-panel::-webkit-scrollbar,
+.checkbox-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.control-panel::-webkit-scrollbar-track,
+.checkbox-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.control-panel::-webkit-scrollbar-thumb,
+.checkbox-list::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-background);
+  border-radius: 4px;
+}
+
+.control-panel::-webkit-scrollbar-thumb:hover,
+.checkbox-list::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+}
+
+/* ============================================ */
+/* PROVIDER GROUPING SECTIONS */
+/* ============================================ */
+
+.filter-provider-section {
+  margin-bottom: 12px;
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  background: var(--vscode-editor-background);
+}
+
+.filter-provider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--vscode-sideBar-background);
+  border-bottom: 1px solid var(--vscode-panel-border);
+  font-weight: 500;
+}
+
+.filter-provider-label {
+  color: var(--vscode-foreground);
+  font-size: 13px;
+}
+
+.filter-provider-count {
+  color: var(--vscode-descriptionForeground);
+  font-size: 11px;
+}
+
+.filter-provider-content {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 8px 12px;
+}
+
+/* Scrollbar styling for provider content */
+.filter-provider-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.filter-provider-content::-webkit-scrollbar-track {
+  background: var(--vscode-editor-background);
+  border-radius: 4px;
+}
+
+.filter-provider-content::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-background);
+  border-radius: 4px;
+}
+
+.filter-provider-content::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+}
+
+/* ============================================ */
+/* RESPONSIVE ADJUSTMENTS */
+/* ============================================ */
+
+@media (max-width: 768px) {
+  .filter-sections-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .control-panel.open {
+    max-height: 90vh;
+  }
+}
+
+/* ============================================ */
+/* ANIMATION KEYFRAMES */
+/* ============================================ */
+
+@keyframes slideDown {
+  from {
+    max-height: 0;
+    opacity: 0;
+  }
+  to {
+    max-height: 80vh;
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    max-height: 80vh;
+    opacity: 1;
+  }
+  to {
+    max-height: 0;
+    opacity: 0;
+  }
+}
