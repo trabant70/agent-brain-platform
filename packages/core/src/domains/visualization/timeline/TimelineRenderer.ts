@@ -51,7 +51,7 @@ export class TimelineRenderer {
     private yScale: any;
     private sizeScale: any;
 
-    private margin: { top: number; right: number; bottom: number; left: number } = { top: 20, right: 20, bottom: 30, left: 120 };
+    private margin: { top: number; right: number; bottom: number; left: number } = { top: 20, right: 50, bottom: 30, left: 120 };
     private innerWidth: number = 0;
     private innerHeight: number = 0;
 
@@ -216,7 +216,7 @@ export class TimelineRenderer {
 
             this.margin = {
                 top: 20,
-                right: 20,
+                right: 50,
                 bottom: 30,
                 left: Math.min(120, fallbackWidth * 0.15)
             };
@@ -226,7 +226,7 @@ export class TimelineRenderer {
             // Dynamic margins based on container size
             this.margin = {
                 top: 20,
-                right: 20,
+                right: 50,
                 bottom: 30,
                 left: Math.min(120, width * 0.15) // Dynamic left margin
             };

@@ -117,66 +117,70 @@ ui/knowledge/
 - [x] Update KnowledgeViewController to use templates (2,240 → 2,004 lines, -236)
 - [x] Build and verify (webpack compiled successfully)
 
-### 2.3 Extract Table Controller
-- [ ] Create `ui/knowledge/KnowledgeTableController.ts`
-  - [ ] Move state: items, selectedItems, sortBy, sortDirection, collapsedSections
-  - [ ] Move methods: renderKnowledgeTable, createItemRow, groupItems
-  - [ ] Move methods: toggleItemSelection, handleSort, updateSortIndicators
-  - [ ] Move methods: toggleSectionCollapse, toggleAllSections, selectAll, deselectAll
-  - [ ] Move methods: getFilteredItems (delegate to KnowledgeFilters utility)
-  - [ ] Import table templates
-  - [ ] Add message callback for communication with parent
-  - [ ] Update references to use imported utilities
+### 2.3 Extract Table Controller ✅ COMPLETE
+- [x] Create `ui/knowledge/KnowledgeTableController.ts` (573 lines)
+  - [x] Move state: items, selectedItems, sortBy, sortDirection, collapsedSections, groupBy
+  - [x] Move methods: renderKnowledgeTable, createItemRow, groupItems
+  - [x] Move methods: toggleItemSelection, handleSort, updateSortIndicators
+  - [x] Move methods: toggleSectionCollapse, toggleAllSections, selectAll, deselectAll
+  - [x] Move methods: changeGrouping (added during refactoring)
+  - [x] Move methods: getFilteredItems (delegate to KnowledgeFilters utility)
+  - [x] Import table templates
+  - [x] Add callback interface for communication with parent
+  - [x] Update references to use imported utilities
 
-### 2.4 Extract Accordion Controller
-- [ ] Create `ui/knowledge/ClaudeMdAccordionController.ts`
-  - [ ] Move state: claudeMdFiles, expandedAccordions, accordionScrollPositions, selectedClaudeFile
-  - [ ] Move methods: renderClaudeMdAccordion, saveAccordionScrollPositions, restoreAccordionScrollPositions
-  - [ ] Move methods: saveClaudeMdContent, scanClaudeMdFiles
-  - [ ] Import accordion templates
-  - [ ] Add message callback for communication with parent
+### 2.4 Extract Accordion Controller ✅ COMPLETE
+- [x] Create `ui/knowledge/ClaudeMdAccordionController.ts` (318 lines)
+  - [x] Move state: claudeMdFiles, expandedAccordions, accordionScrollPositions, selectedClaudeFile
+  - [x] Move methods: renderClaudeMdAccordion, saveScrollPositions, restoreScrollPositions
+  - [x] Import accordion templates
+  - [x] Add callback interface for communication with parent
+  - [x] Automatic scroll save/restore on every render
 
-### 2.5 Extract Form Controller
-- [ ] Create `ui/knowledge/KnowledgeFormController.ts`
-  - [ ] Move methods: createNewItem, editItem, showEditForm, deleteItem, showDeleteConfirmation
-  - [ ] Move methods: handleOperationResult
-  - [ ] Import form templates
-  - [ ] Import ModalDialog
-  - [ ] Add message callback for communication with parent
+### 2.5 Extract Form Controller ✅ COMPLETE
+- [x] Create `ui/knowledge/KnowledgeFormController.ts` (401 lines)
+  - [x] Move methods: createNewItem, editItem, showEditForm, deleteItem, showDeleteConfirmation
+  - [x] Move methods: handleOperationResult
+  - [x] Import form constants (TYPE_OPTIONS, SCOPE_OPTIONS)
+  - [x] Import ModalDialog
+  - [x] Add callback interface for communication with parent
 
-### 2.6 Extract Template Controller
-- [ ] Create `ui/knowledge/TemplateController.ts`
-  - [ ] Move state: templates
-  - [ ] Move methods: renderTemplateControls, updateTemplateButtons
-  - [ ] Move methods: saveAsTemplate, applySelectedItems, applyTemplateToFocused
-  - [ ] Move methods: exportTemplate, importTemplate, handleTemplateSelection, removeTemplate
-  - [ ] Add message callback for communication with parent
+### 2.6 Extract Template Controller ✅ COMPLETE
+- [x] Create `ui/knowledge/TemplateController.ts` (459 lines)
+  - [x] Move state: templates
+  - [x] Move methods: renderTemplateControls, updateTemplateButtons
+  - [x] Move methods: saveAsTemplate, applySelectedItems, applyTemplateToFocused
+  - [x] Move methods: exportTemplate, importTemplate, handleTemplateSelection, removeTemplate
+  - [x] Add callback interface for communication with parent
+  - [x] Internal message routing for cross-controller coordination
 
-### 2.7 Refactor Main Controller (Orchestrator)
-- [ ] Update KnowledgeViewController to orchestrate sub-controllers
-  - [ ] Initialize all sub-controllers in constructor
-  - [ ] Delegate loadData() to TableController
-  - [ ] Delegate loadClaudeMdFiles() to AccordionController
-  - [ ] Forward messages from sub-controllers to extension
-  - [ ] Update render() to call sub-controller renders
-  - [ ] Remove extracted code
-  - [ ] Keep only orchestration logic
+### 2.7 Refactor Main Controller (Orchestrator) ✅ COMPLETE
+- [x] Update KnowledgeViewController to orchestrate sub-controllers (2,004 → 512 lines, -75%)
+  - [x] Initialize all 4 sub-controllers in constructor with callback wiring
+  - [x] Delegate loadData() to TableController and TemplateController
+  - [x] Delegate loadClaudeMdFiles() to AccordionController
+  - [x] Forward messages from sub-controllers to extension
+  - [x] Update render() to call sub-controller renders
+  - [x] Remove all extracted code
+  - [x] Keep only orchestration logic
+  - [x] Add handleTemplateMessage() for internal coordination
 
-### 2.8 Update Imports & References
-- [ ] Update SimpleTimelineApp.ts imports
-- [ ] Update any other files importing KnowledgeViewController
-- [ ] Verify all message passing works
+### 2.8 Update Imports & References ✅ COMPLETE
+- [x] All imports automatically updated during refactoring
+- [x] No other files import KnowledgeViewController directly
+- [x] All message passing verified working
 
-### 2.9 Verification
-- [ ] Run build - verify no compilation errors
-- [ ] Test all knowledge tab features:
-  - [ ] Table rendering, filtering, sorting
-  - [ ] Create/edit/delete knowledge items
-  - [ ] Claude.md accordion expand/collapse
-  - [ ] Template save/apply/export/import
-  - [ ] Scroll position preservation
-  - [ ] File selection for knowledge application
-- [ ] Commit changes
+### 2.9 Verification ✅ COMPLETE
+- [x] Run build - no compilation errors
+- [x] Test all knowledge tab features:
+  - [x] Table rendering, filtering, sorting ✅
+  - [x] Create/edit/delete knowledge items ✅
+  - [x] Claude.md accordion expand/collapse ✅
+  - [x] Template save/apply/export/import ✅
+  - [x] Scroll position preservation ✅ (fixed post-refactoring)
+  - [x] File selection for knowledge application ✅
+  - [x] Grouping by type/scope/tag ✅ (fixed post-refactoring)
+- [x] VSIX packaged and verified (v0.2.65)
 
 **Estimated Impact:**
 - Main controller: 2,361 → ~300 lines (87% reduction)
@@ -307,7 +311,7 @@ services/
   - Updated exports to use ui/FilterController.ts
   - Build verified, committed (729abda), pushed to origin
   - **Net reduction: 1,531 lines of dead code**
-- [ ] **Phase 2: KnowledgeViewController Decomposition (HIGH PRIORITY)** - 🚧 IN PROGRESS
+- [x] **Phase 2: KnowledgeViewController Decomposition (HIGH PRIORITY)** - ✅ COMPLETE
   - [x] **Phase 2.1:** Extract utilities (MarkdownRenderer, KnowledgeFilters) ✅
     - Created ui/knowledge/utils/ directory
     - KnowledgeViewController: 2,361 → 2,240 lines (-121)
@@ -317,12 +321,25 @@ services/
     - Created 3 template files: table-templates.ts (90), form-constants.ts (114), accordion-templates.ts (98)
     - KnowledgeViewController: 2,240 → 2,004 lines (-236)
     - Build verified (webpack compiled successfully)
-    - **Phase 2.1 + 2.2 total reduction: 357 lines (15% reduction from 2,361 → 2,004)**
-  - [ ] **Phase 2.3:** Extract controller classes
-  - [ ] **Phase 2.4:** Refactor main controller as orchestrator
+  - [x] **Phase 2.3-2.7:** Extract controller classes and refactor orchestrator ✅
+    - Created 4 controller files:
+      - KnowledgeTableController.ts (573 lines)
+      - ClaudeMdAccordionController.ts (318 lines)
+      - KnowledgeFormController.ts (401 lines)
+      - TemplateController.ts (459 lines)
+    - KnowledgeViewController: 2,004 → 512 lines (-75% reduction)
+    - Build verified (v0.2.64)
+  - [x] **Phase 2.8-2.9:** Post-refactoring fixes ✅
+    - Fixed scroll position preservation in accordion
+    - Fixed grouping by scope/tag functionality
+    - Fixed expand button to show icon only
+    - Fixed timeline right margin (20px → 50px)
+    - Build verified (v0.2.65)
+  - **Phase 2 total reduction: 2,361 → 512 lines (78% reduction)**
+  - **Created: 4 controllers + 3 utilities + 3 templates = 10 focused modules**
 - [ ] Phase 3: TimelineProvider Decomposition (MEDIUM PRIORITY)
 - [ ] Phase 4: KnowledgeManager Decomposition (MEDIUM PRIORITY)
 
-**Current Phase:** Phase 2.2 - COMPLETE ✅
-**Next Step:** Phase 2.3 - Extract Controller Classes
-**Status:** Templates and utilities extracted, KnowledgeViewController reduced by 15%, ready for controller extraction
+**Current Phase:** Phase 2 - COMPLETE ✅
+**Next Step:** Phase 3 - TimelineProvider Decomposition (Optional)
+**Status:** KnowledgeViewController successfully decomposed, all features working, ready for production

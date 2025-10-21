@@ -379,7 +379,8 @@ export class SessionViewController {
    * Render the sessions table
    */
   private renderTable(): void {
-    if (!this.tableBody) {
+    const tableBody = this.tableBody;
+    if (!tableBody) {
       webviewLogger.error(
         LogCategory.UI,
         'Table body element not found',
@@ -397,7 +398,7 @@ export class SessionViewController {
     );
 
     // Clear existing content
-    this.tableBody!.innerHTML = '';
+    tableBody.innerHTML = '';
 
     // Show empty state if no sessions
     if (this.state.filteredSessions.length === 0) {
@@ -418,14 +419,14 @@ export class SessionViewController {
           </div>
         </td>
       `;
-      this.tableBody!.appendChild(emptyRow);
+      tableBody.appendChild(emptyRow);
       return;
     }
 
     // Render each session row
     this.state.filteredSessions.forEach(session => {
       const row = this.createSessionRow(session);
-      this.tableBody!.appendChild(row);
+      tableBody.appendChild(row);
     });
 
     this.updateSortIndicators();
