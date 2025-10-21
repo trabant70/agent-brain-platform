@@ -7,7 +7,7 @@ export * from './timeline/LegendRenderer';
 export * from './timeline/InteractionHandler';
 
 // Filters
-export * from './filters/FilterController';
+export * from './ui/FilterController';
 export * from './filters/FilterStateManager';
 
 // UI Controllers
