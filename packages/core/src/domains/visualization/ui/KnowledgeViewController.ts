@@ -353,10 +353,16 @@ export class KnowledgeViewController {
       </td>
       <td class="col-actions">
         <button class="icon-button edit-btn" data-item-id="${item.id}" title="Edit">
-          ✏️
+          <svg width="16" height="16" viewBox="0 0 16 16" class="action-icon">
+            <path d="M11.5 1.5l3 3-8.5 8.5H3v-3l8.5-8.5z M10 3l2 2" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <line x1="2" y1="14" x2="14" y2="14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
         </button>
         <button class="icon-button delete-btn" data-item-id="${item.id}" title="Delete">
-          🗑️
+          <svg width="16" height="16" viewBox="0 0 16 16" class="action-icon">
+            <path d="M3 4h10M5 4V3a1 1 0 011-1h4a1 1 0 011 1v1M6 7v5M8 7v5M10 7v5" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+            <path d="M4 4l.5 9a1 1 0 001 1h5a1 1 0 001-1l.5-9" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
         </button>
       </td>
     `;
@@ -497,7 +503,11 @@ export class KnowledgeViewController {
       contentHTML += `
         <div class="claude-md-controls">
           <button class="edit-claude-btn ab-btn-secondary" data-file-path="${file.path}" title="Edit claude.md content">
-            ✏️ Edit Content
+            <svg width="14" height="14" viewBox="0 0 16 16" class="action-icon" style="margin-right: 4px; opacity: 1;">
+              <path d="M11.5 1.5l3 3-8.5 8.5H3v-3l8.5-8.5z M10 3l2 2" stroke="currentColor" fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="2" y1="14" x2="14" y2="14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            </svg>
+            Edit Content
           </button>
         </div>
       `;

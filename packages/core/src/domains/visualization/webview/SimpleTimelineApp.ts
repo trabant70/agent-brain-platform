@@ -140,6 +140,9 @@ export class SimpleTimelineApp {
         // Setup brush callback for range selector
         this.setupRendererCallbacks();
 
+        // Setup legend toggle controls
+        this.setupLegendToggle();
+
         webviewLogger.info(LogCategory.VISUALIZATION, 'Renderer initialized', 'constructor');
     }
 
@@ -210,6 +213,66 @@ export class SimpleTimelineApp {
         // Connect event handlers from PopupController to renderer
         const eventHandlers = this.uiManager.getEventHandlers();
         (this.renderer as any).eventHandlers = eventHandlers;
+    }
+
+    /**
+     * Setup legend toggle controls
+     */
+    private setupLegendToggle() {
+        const legendElement = document.getElementById('timeline-legend');
+        const legendTrigger = document.getElementById('legend-trigger');
+        const legendClose = document.getElementById('legend-close');
+
+        if (!legendElement || !legendTrigger || !legendClose) {
+            webviewLogger.warn(LogCategory.UI, 'Legend elements not found', 'setupLegendToggle');
+            return;
+        }
+
+        // Check localStorage for saved state (default: visible)
+        const savedState = localStorage.getItem('timeline-legend-visible');
+        const isVisible = savedState === null ? true : savedState === 'true';
+
+        // Apply initial state
+        if (!isVisible) {
+            legendElement.classList.add('hidden');
+        }
+
+        // Toggle legend visibility
+        const toggleLegend = (visible: boolean) => {
+            if (visible) {
+                legendElement.classList.remove('hidden');
+            } else {
+                legendElement.classList.add('hidden');
+            }
+            localStorage.setItem('timeline-legend-visible', visible.toString());
+
+            webviewLogger.debug(
+                LogCategory.UI,
+                `Legend ${visible ? 'shown' : 'hidden'}`,
+                'toggleLegend',
+                { visible },
+                LogPathway.LEGEND
+            );
+        };
+
+        // Legend button - show legend
+        legendTrigger.addEventListener('click', () => {
+            toggleLegend(true);
+        });
+
+        // Close button - hide legend
+        legendClose.addEventListener('click', (e) => {
+            e.stopPropagation(); // Don't trigger drag
+            toggleLegend(false);
+        });
+
+        webviewLogger.info(
+            LogCategory.UI,
+            'Legend toggle initialized',
+            'setupLegendToggle',
+            { initiallyVisible: isVisible },
+            LogPathway.LEGEND
+        );
     }
 
     /**

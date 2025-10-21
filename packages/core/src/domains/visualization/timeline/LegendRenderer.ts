@@ -261,10 +261,15 @@ export class LegendRenderer {
 
         // If no tabs should show, hide legend entirely
         if (!showGitTab && !showIntelligenceTab) {
-            legendElement.style.display = 'none';
+            legendElement.classList.add('hidden');
             return;
         }
-        legendElement.style.display = 'block';
+
+        // Only show if not manually hidden by user
+        const isManuallyHidden = legendElement.classList.contains('hidden');
+        if (!isManuallyHidden) {
+            legendElement.classList.remove('hidden');
+        }
 
         // Clear existing content div
         let contentDiv = legendElement.querySelector('.legend-content');

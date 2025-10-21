@@ -44,7 +44,10 @@
                         <div class="stat-item" data-tooltip="Time span in days between first and last visible event"><span class="stat-label">Window:</span><span class="stat-value" id="stat-window">-</span></div>
                         <div class="stat-item" data-tooltip="Development activity rate: events per day (higher = more frequent commits/changes)"><span class="stat-label">Velocity:</span><span class="stat-value" id="stat-velocity">0/day</span></div>
                     </div>
-                    <button class="controls-trigger" id="controls-trigger" tabindex="0" role="button" aria-label="Toggle control panel">Controls</button>
+                    <div class="timeline-buttons">
+                        <button class="legend-trigger" id="legend-trigger" tabindex="0" role="button" aria-label="Toggle legend">Legend</button>
+                        <button class="controls-trigger" id="controls-trigger" tabindex="0" role="button" aria-label="Toggle control panel">Controls</button>
+                    </div>
                 </div>
 
                 <div id="timeline-container">
@@ -82,7 +85,10 @@
                         <div class="popup-action-bar" id="popup-action-bar"></div>
                     </div>
                     <div class="legend" id="timeline-legend">
-                        <div class="legend-title">Legend</div>
+                        <div class="legend-title">
+                            Legend
+                            <button class="legend-close" id="legend-close" aria-label="Close legend">×</button>
+                        </div>
                         <div class="legend-content">
                             <div id="legend-items"></div>
                         </div>
@@ -109,7 +115,13 @@
                     <div class="knowledge-left-panel">
                         <div class="panel-header">
                             <h3>📄 Claude.md Files</h3>
-                            <button id="scan-claude-files" class="icon-button" title="Scan for claude.md files">🔍</button>
+                            <button id="scan-claude-files" class="icon-button" title="Scan for claude.md files">
+                                <svg width="16" height="16" viewBox="0 0 16 16" class="action-icon">
+                                    <circle cx="7" cy="7" r="4.5" stroke="currentColor" fill="none" stroke-width="1.2"/>
+                                    <line x1="10.5" y1="10.5" x2="14" y2="14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    <circle cx="7" cy="7" r="2.5" stroke="currentColor" fill="none" stroke-width="0.8" opacity="0.4"/>
+                                </svg>
+                            </button>
                         </div>
                         <div id="claude-files-accordion" class="accordion">
                             <div class="empty-state" style="padding: 20px; text-align: center;">

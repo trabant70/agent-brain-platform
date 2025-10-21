@@ -373,7 +373,7 @@
 .knowledge-table thead {
   position: sticky;
   top: 0;
-  background: var(--vscode-editor-lineHighlightBackground);
+  background: var(--vscode-editor-background);
   z-index: 10;
 }
 
@@ -383,6 +383,8 @@
   font-weight: 600;
   border-bottom: 2px solid var(--vscode-panel-border);
   white-space: nowrap;
+  background: var(--vscode-editor-background);
+  backdrop-filter: none;
 }
 
 .knowledge-table th[data-sort] {
@@ -393,7 +395,7 @@
 }
 
 .knowledge-table th[data-sort]:hover {
-  background: rgba(0, 212, 255, 0.1);
+  background: var(--vscode-list-hoverBackground);
   color: var(--knowledge-accent);
 }
 
@@ -666,6 +668,48 @@
 
 .icon-button {
   /* Uses .ab-btn-icon base styles */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.2s ease;
+}
+
+.icon-button:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+}
+
+.icon-button:active {
+  transform: scale(0.95);
+}
+
+/* SVG icons in buttons */
+.action-icon {
+  display: block;
+  color: var(--vscode-foreground);
+  opacity: 0.7;
+  transition: all 0.2s ease;
+}
+
+.icon-button:hover .action-icon {
+  opacity: 1;
+  color: var(--knowledge-accent);
+}
+
+.delete-btn:hover .action-icon {
+  color: #ff4444;
+}
+
+.edit-btn:hover .action-icon {
+  color: var(--knowledge-accent);
+}
+
+#scan-claude-files:hover .action-icon {
+  color: var(--knowledge-accent);
 }
 
 /* Scrollbars */

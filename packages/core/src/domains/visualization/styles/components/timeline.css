@@ -173,6 +173,42 @@
     user-select: none;
     background: var(--bg-secondary);
     border-radius: 8px 8px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.legend-close {
+    background: transparent;
+    border: none;
+    color: var(--vscode-foreground);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+    opacity: 0.6;
+}
+
+.legend-close:hover {
+    background: rgba(255, 255, 255, 0.1);
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.legend-close:active {
+    transform: scale(0.95);
+}
+
+/* Hidden state for legend */
+.legend.hidden {
+    display: none !important;
 }
 
 .legend-content {

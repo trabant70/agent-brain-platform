@@ -39,10 +39,19 @@
 }
 
 /* ============================================ */
-/* TRIGGER BUTTON */
+/* TRIGGER BUTTONS */
 /* ============================================ */
 
-.controls-trigger {
+/* Button Container */
+.timeline-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* Shared Button Styles */
+.controls-trigger,
+.legend-trigger {
   padding: 6px 14px;
   background: var(--vscode-button-background);
   color: var(--vscode-button-foreground);
@@ -58,18 +67,25 @@
   user-select: none;
 }
 
-.controls-trigger:hover {
+.controls-trigger:hover,
+.legend-trigger:hover {
   background: var(--vscode-button-hoverBackground);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.controls-trigger:active {
+.controls-trigger:active,
+.legend-trigger:active {
   transform: translateY(0);
 }
 
 .controls-trigger::before {
   content: '🎛️';
+  font-size: 14px;
+}
+
+.legend-trigger::before {
+  content: '📊';
   font-size: 14px;
 }
 
