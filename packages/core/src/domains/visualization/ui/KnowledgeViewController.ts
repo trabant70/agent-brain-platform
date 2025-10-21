@@ -18,6 +18,8 @@ import {
 import { ModalDialog } from './ModalDialog';
 import { NotificationManager } from './NotificationManager';
 import { webviewLogger, LogCategory, LogPathway } from '../webview/WebviewLogger';
+import { MarkdownRenderer } from './knowledge/utils/MarkdownRenderer';
+import { KnowledgeFilters } from './knowledge/utils/KnowledgeFilters';
 
 export interface KnowledgeViewState {
   items: KnowledgeItem[];
@@ -514,7 +516,7 @@ export class KnowledgeViewController {
 
       // Show markdown content (read-only by default)
       if (file.content && file.content.trim().length > 0) {
-        const renderedMarkdown = this.renderMarkdown(file.content);
+        const renderedMarkdown = MarkdownRenderer.render(file.content);
         contentHTML += `
           <div class="claude-md-content" data-file-path="${file.path}">
             <div class="claude-md-display">
@@ -1023,66 +1025,14 @@ export class KnowledgeViewController {
    * Get filtered items based on current filters
    */
   private getFilteredItems(): KnowledgeItem[] {
-    let items = [...this.state.items];
-
-    // Apply search filter
-    if (this.state.searchQuery) {
-      const query = this.state.searchQuery.toLowerCase();
-      items = items.filter(item =>
-        item.title.toLowerCase().includes(query) ||
-        item.body.toLowerCase().includes(query) ||
-        (item.source && item.source.toLowerCase().includes(query)) ||
-        item.tags.some(tag => tag.toLowerCase().includes(query))
-      );
-    }
-
-    // Apply type filter
-    if (this.state.filterType) {
-      items = items.filter(item => item.type === this.state.filterType);
-    }
-
-    // Apply scope filter
-    if (this.state.filterScope) {
-      items = items.filter(item => item.scope === this.state.filterScope);
-    }
-
-    // Apply tag filter
-    if (this.state.filterTags.length > 0) {
-      items = items.filter(item =>
-        this.state.filterTags.every(tag => item.tags.includes(tag))
-      );
-    }
-
-    // Sort items
-    items.sort((a, b) => {
-      let comparison = 0;
-
-      switch (this.state.sortBy) {
-        case 'title':
-          comparison = a.title.localeCompare(b.title);
-          break;
-        case 'type':
-          comparison = a.type.localeCompare(b.type);
-          break;
-        case 'scope':
-          comparison = a.scope.localeCompare(b.scope);
-          break;
-        case 'updated':
-          // Handle both Date objects and ISO strings (postMessage serializes Dates to strings)
-          const dateA = a.metadata.updatedAt instanceof Date
-            ? a.metadata.updatedAt.getTime()
-            : new Date(a.metadata.updatedAt).getTime();
-          const dateB = b.metadata.updatedAt instanceof Date
-            ? b.metadata.updatedAt.getTime()
-            : new Date(b.metadata.updatedAt).getTime();
-          comparison = dateA - dateB;
-          break;
-      }
-
-      return this.state.sortDirection === 'asc' ? comparison : -comparison;
+    return KnowledgeFilters.filter(this.state.items, {
+      searchQuery: this.state.searchQuery,
+      filterType: this.state.filterType,
+      filterScope: this.state.filterScope,
+      filterTags: this.state.filterTags,
+      sortBy: this.state.sortBy,
+      sortDirection: this.state.sortDirection
     });
-
-    return items;
   }
 
   /**
@@ -2280,77 +2230,6 @@ export class KnowledgeViewController {
     }
   }
 
-  /**
-   * Simple markdown renderer
-   * Converts markdown to HTML for display in claude.md accordion
-   */
-  private renderMarkdown(markdown: string): string {
-    let html = markdown;
-
-    // Escape HTML first to prevent XSS
-    html = this.escapeHtml(html);
-
-    // Headers (h1-h6)
-    html = html.replace(/^######\s+(.+)$/gm, '<h6>$1</h6>');
-    html = html.replace(/^#####\s+(.+)$/gm, '<h5>$1</h5>');
-    html = html.replace(/^####\s+(.+)$/gm, '<h4>$1</h4>');
-    html = html.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
-    html = html.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
-    html = html.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
-
-    // Bold **text** or __text__
-    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
-
-    // Italic *text* or _text_
-    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-    html = html.replace(/_(.+?)_/g, '<em>$1</em>');
-
-    // Inline code `code`
-    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-
-    // Code blocks ```lang\ncode\n```
-    html = html.replace(/```(\w+)?\n([\s\S]+?)```/g, '<pre><code>$2</code></pre>');
-
-    // Links [text](url)
-    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
-
-    // Unordered lists
-    html = html.replace(/^\s*[-*+]\s+(.+)$/gm, '<li>$1</li>');
-    html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
-
-    // Ordered lists
-    html = html.replace(/^\s*\d+\.\s+(.+)$/gm, '<li>$1</li>');
-
-    // Blockquotes
-    html = html.replace(/^>\s+(.+)$/gm, '<blockquote>$1</blockquote>');
-
-    // Horizontal rules
-    html = html.replace(/^---$/gm, '<hr>');
-    html = html.replace(/^\*\*\*$/gm, '<hr>');
-
-    // Line breaks (two spaces at end of line or explicit \n\n)
-    html = html.replace(/\n\n/g, '</p><p>');
-    html = html.replace(/  \n/g, '<br>');
-
-    // Wrap in paragraphs
-    html = '<p>' + html + '</p>';
-
-    // Clean up empty paragraphs
-    html = html.replace(/<p><\/p>/g, '');
-    html = html.replace(/<p>\s*<\/p>/g, '');
-
-    return html;
-  }
-
-  /**
-   * Escape HTML
-   */
-  private escapeHtml(text: string): string {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-  }
 }
 
 // Make controller globally accessible for onclick handlers
