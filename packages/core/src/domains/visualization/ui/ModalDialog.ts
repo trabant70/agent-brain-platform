@@ -467,10 +467,13 @@ export class ModalDialog {
         let titleHtml = '';
         if (options.title) {
             titleHtml = `
-                <div style="padding: 16px 20px; border-bottom: 1px solid var(--vscode-panel-border); background: rgba(0, 212, 255, 0.05);">
-                    <div style="font-size: 16px; font-weight: 600; color: var(--vscode-foreground);">
+                <div style="padding: 16px 20px; border-bottom: 1px solid var(--vscode-panel-border); background: rgba(0, 212, 255, 0.05); display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="font-size: 16px; font-weight: 600; color: var(--vscode-foreground); flex: 1;">
                         ${options.title}
                     </div>
+                    <button id="modal-close-x" type="button" style="background: transparent; border: none; color: var(--vscode-foreground); cursor: pointer; font-size: 20px; line-height: 1; padding: 4px 8px; opacity: 0.7; transition: opacity 0.2s; flex-shrink: 0; margin-left: 12px;" title="Close">
+                        ✕
+                    </button>
                 </div>
             `;
         }
@@ -523,6 +526,23 @@ export class ModalDialog {
                 this.cleanup();
             });
         });
+
+        // Wire up close button (if title is provided)
+        const closeBtn = document.getElementById('modal-close-x');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                this.resolve?.(undefined);
+                this.cleanup();
+            });
+
+            // Add hover effect
+            closeBtn.addEventListener('mouseenter', () => {
+                closeBtn.style.opacity = '1';
+            });
+            closeBtn.addEventListener('mouseleave', () => {
+                closeBtn.style.opacity = '0.7';
+            });
+        }
     }
 
     /**
