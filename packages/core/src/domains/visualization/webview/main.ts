@@ -8,6 +8,7 @@ import * as d3 from 'd3';
 import { SimpleTimelineApp } from './SimpleTimelineApp';
 import { EventVisualTheme } from '../theme/EventVisualTheme';
 import { webviewLogger, LogLevel, LogCategory, LogPathway } from './WebviewLogger';
+import { initI18n } from './i18n';
 
 // Import CSS - webpack will bundle it inline
 import '../styles/timeline.css';
@@ -163,6 +164,16 @@ function setupMessageHandling(): void {
 
         try {
             switch (message.type) {
+                case 'i18n:init':
+                    // Initialize internationalization with locale and translations
+                    initI18n(message.payload.locale, message.payload.translations);
+                    webviewLogger.info(
+                        LogCategory.WEBVIEW,
+                        `i18n initialized with locale: ${message.payload.locale}`,
+                        'setupMessageHandling'
+                    );
+                    break;
+
                 case 'loggingConfig':
                     handleLoggingConfig(message.config);
                     break;

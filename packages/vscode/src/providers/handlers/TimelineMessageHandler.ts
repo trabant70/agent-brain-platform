@@ -21,6 +21,7 @@ export interface TimelineHandlerContext {
   currentRepoPath: string;
   isOrchestratorInitialized: boolean;
   isWebviewReady: boolean;
+  onI18nRequest?: () => void;  // Callback to send i18n data to webview
 }
 
 export class TimelineMessageHandler {
@@ -103,7 +104,12 @@ export class TimelineMessageHandler {
       }
     }
 
-    // Send logging configuration first (webview is now ready)
+    // Send i18n data first (webview needs this for initial render)
+    if (this.context.onI18nRequest) {
+      this.context.onI18nRequest();
+    }
+
+    // Send logging configuration (webview is now ready)
     this.sendLoggingConfig();
     // Then send timeline data
     await this.loadTimelineForActiveFile();

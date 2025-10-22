@@ -116,7 +116,8 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
       get isOrchestratorInitialized() { return provider.providerState.isOrchestratorInitialized; },
       set isOrchestratorInitialized(value) { provider.providerState.isOrchestratorInitialized = value; },
       get isWebviewReady() { return provider.providerState.isWebviewReady; },
-      set isWebviewReady(value) { provider.providerState.isWebviewReady = value; }
+      set isWebviewReady(value) { provider.providerState.isWebviewReady = value; },
+      onI18nRequest: () => { provider.sendI18nData(); }
     } as any);
 
     this.knowledgeHandler = new KnowledgeMessageHandler({
@@ -357,6 +358,83 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
   private sendMessage(message: any): void {
     if (this._view) {
       this._view.webview.postMessage(message);
+    }
+  }
+
+  /**
+   * Send i18n data to webview
+   * Loads the appropriate bundle based on VSCode's display language
+   */
+  public sendI18nData(): void {
+    // Detect VSCode language
+    const locale = vscode.env.language || 'en';
+    logger.debug(LogCategory.EXTENSION, `Detected VSCode language: ${locale}`, 'sendI18nData');
+
+    // Determine bundle file path
+    // Normalize locale: 'zh-cn' -> 'zh-cn', 'en-us' -> 'en', etc.
+    const normalizedLocale = locale.toLowerCase();
+    let bundleFile = 'bundle.l10n.json'; // Default to English
+
+    // Check if we have a specific translation for this locale
+    if (normalizedLocale.startsWith('de')) {
+      bundleFile = 'bundle.l10n.de.json';
+    } else if (normalizedLocale.startsWith('es')) {
+      bundleFile = 'bundle.l10n.es.json';
+    } else if (normalizedLocale.startsWith('zh-cn') || normalizedLocale === 'zh') {
+      bundleFile = 'bundle.l10n.zh-cn.json';
+    } else if (normalizedLocale.startsWith('fr')) {
+      bundleFile = 'bundle.l10n.fr.json';
+    }
+
+    // Load bundle file
+    try {
+      const bundlePath = vscode.Uri.joinPath(this.extensionUri, 'l10n', bundleFile);
+      const bundleContent = fs.readFileSync(bundlePath.fsPath, 'utf8');
+      const translations = JSON.parse(bundleContent);
+
+      logger.info(
+        LogCategory.EXTENSION,
+        `Loaded i18n bundle: ${bundleFile} (${Object.keys(translations).length} strings)`,
+        'sendI18nData'
+      );
+
+      // Send to webview
+      this.sendMessage({
+        type: 'i18n:init',
+        payload: {
+          locale: locale,
+          translations: translations
+        }
+      });
+    } catch (error) {
+      logger.error(
+        LogCategory.EXTENSION,
+        `Failed to load i18n bundle: ${bundleFile}`,
+        'sendI18nData',
+        error
+      );
+
+      // Fallback to English
+      try {
+        const fallbackPath = vscode.Uri.joinPath(this.extensionUri, 'l10n', 'bundle.l10n.json');
+        const fallbackContent = fs.readFileSync(fallbackPath.fsPath, 'utf8');
+        const fallbackTranslations = JSON.parse(fallbackContent);
+
+        this.sendMessage({
+          type: 'i18n:init',
+          payload: {
+            locale: 'en',
+            translations: fallbackTranslations
+          }
+        });
+      } catch (fallbackError) {
+        logger.error(
+          LogCategory.EXTENSION,
+          'Failed to load fallback English bundle',
+          'sendI18nData',
+          fallbackError
+        );
+      }
     }
   }
 

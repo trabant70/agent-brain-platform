@@ -1,0 +1,28 @@
+{
+  "displayName": "Agent Brain Platform",
+  "description": "Transformez les agents de codage IA en développeurs senior - surmontez l'amnésie, appliquez les normes, injectez des solutions d'experts et maintenez des pistes d'audit complètes",
+
+  "command.showTimeline": "Afficher la Chronologie du Dépôt",
+  "command.refreshData": "Actualiser les Données de la Chronologie",
+
+  "viewContainer.activitybar.title": "AB Chronologie",
+  "viewContainer.panel.title": "Agent Brain",
+
+  "view.welcome.name": "Commencer",
+  "view.evolution.name": "Agent Brain",
+
+  "config.title": "Agent Brain Platform",
+
+  "config.logging.pathwayMode.description": "Mode de journalisation des chemins : 'disabled' affiche tous les journaux, 'filter' ajoute des étiquettes de chemin, 'exclusive' affiche uniquement les chemins activés",
+  "config.logging.enabledPathways.description": "Liste des noms de chemins activés pour la journalisation (utilisé uniquement lorsque pathwayMode est 'filter' ou 'exclusive')",
+  "config.logging.logLevel.description": "Niveau de journal minimum à afficher",
+
+  "config.providers.gitLocal.enabled.description": "Activer le fournisseur d'événements du dépôt Git local",
+  "config.providers.github.enabled.description": "Activer le fournisseur d'événements API GitHub (nécessite une authentification)",
+  "config.providers.github.token.description": "Jeton d'accès personnel GitHub pour l'accès API",
+  "config.providers.knowledgeEvents.enabled.description": "Activer le fournisseur d'événements de connaissance (affiche les éléments de connaissance sur la chronologie)",
+  "config.providers.sessionJournals.enabled.description": "Activer le fournisseur de journaux de session (affiche les événements de session sur la chronologie)",
+
+  "error.showTimeline": "Impossible d'afficher la Chronologie du Dépôt. Veuillez vérifier le panneau de Sortie pour plus de détails.",
+  "error.activateFailed": "Impossible d'activer Agent Brain Platform: {0}"
+}

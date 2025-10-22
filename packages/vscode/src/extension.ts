@@ -1,9 +1,13 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as nls from 'vscode-nls';
 import { TimelineProvider } from './providers/timeline-provider-webpack';
 import { WelcomeViewProvider } from './providers/WelcomeViewProvider';
 import { logger, LogCategory, createContextLogger } from '@agent-brain/core/infrastructure/logging/Logger';
 import { KnowledgeManager } from './services';
+
+// Initialize localization
+const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 let timelineProvider: TimelineProvider | null = null;
 let knowledgeManager: KnowledgeManager | null = null;
@@ -68,7 +72,9 @@ export async function activate(context: vscode.ExtensionContext) {
             } catch (error) {
                 log.error(LogCategory.UI, 'Failed to show timeline panel', 'showCommand', error);
                 outputChannel.appendLine(`❌ Failed to show timeline: ${error}`);
-                vscode.window.showErrorMessage('Failed to show Repository Timeline. Please check the Output panel for details.');
+                vscode.window.showErrorMessage(
+                    localize('error.showTimeline', 'Failed to show Repository Timeline. Please check the Output panel for details.')
+                );
             }
         });
         context.subscriptions.push(showTimelineCommand);
@@ -154,7 +160,9 @@ export async function activate(context: vscode.ExtensionContext) {
     } catch (error) {
         log.error(LogCategory.EXTENSION, 'Extension activation failed', 'activate', error);
         outputChannel.appendLine(`❌ Failed to activate extension: ${error}`);
-        vscode.window.showErrorMessage(`Failed to activate Repository Timeline: ${error}`);
+        vscode.window.showErrorMessage(
+            localize('error.activateFailed', 'Failed to activate Agent Brain Platform: {0}', String(error))
+        );
         throw error;
     }
 }

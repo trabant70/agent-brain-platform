@@ -1,0 +1,28 @@
+{
+  "displayName": "Agent Brain Platform",
+  "description": "Transform AI coding agents into senior developers - overcome amnesia, enforce standards, inject expert solutions, and maintain complete audit trails",
+
+  "command.showTimeline": "Show Repository Timeline",
+  "command.refreshData": "Refresh Timeline Data",
+
+  "viewContainer.activitybar.title": "AB Timeline",
+  "viewContainer.panel.title": "Agent Brain",
+
+  "view.welcome.name": "Getting Started",
+  "view.evolution.name": "Agent Brain",
+
+  "config.title": "Agent Brain Platform",
+
+  "config.logging.pathwayMode.description": "Pathway logging mode: 'disabled' shows all logs, 'filter' adds pathway tags, 'exclusive' only shows enabled pathways",
+  "config.logging.enabledPathways.description": "List of enabled pathway names for logging (only used when pathwayMode is 'filter' or 'exclusive')",
+  "config.logging.logLevel.description": "Minimum log level to display",
+
+  "config.providers.gitLocal.enabled.description": "Enable local Git repository event provider",
+  "config.providers.github.enabled.description": "Enable GitHub API event provider (requires authentication)",
+  "config.providers.github.token.description": "GitHub personal access token for API access",
+  "config.providers.knowledgeEvents.enabled.description": "Enable knowledge events provider (shows knowledge items on timeline)",
+  "config.providers.sessionJournals.enabled.description": "Enable session journals provider (shows session events on timeline)",
+
+  "error.showTimeline": "Failed to show Repository Timeline. Please check the Output panel for details.",
+  "error.activateFailed": "Failed to activate Agent Brain Platform: {0}"
+}

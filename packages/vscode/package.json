@@ -1,8 +1,8 @@
 {
   "name": "agent-brain-platform",
-  "displayName": "Agent Brain Platform",
-  "description": "Transform AI coding agents into senior developers - overcome amnesia, enforce standards, inject expert solutions, and maintain complete audit trails",
-  "version": "0.2.74",
+  "displayName": "%displayName%",
+  "description": "%description%",
+  "version": "0.2.75",
   "publisher": "agent-brain-local",
   "icon": "images/timeline_large.png",
   "repository": {
@@ -24,12 +24,12 @@
     "commands": [
       {
         "command": "repoTimeline.showTimeline",
-        "title": "Show Repository Timeline",
+        "title": "%command.showTimeline%",
         "category": "Timeline"
       },
       {
         "command": "repoTimeline.refreshData",
-        "title": "Refresh Timeline Data",
+        "title": "%command.refreshData%",
         "category": "Timeline",
         "icon": "$(refresh)"
       }
@@ -38,14 +38,14 @@
       "activitybar": [
         {
           "id": "repoTimelineActivityBar",
-          "title": "AB Timeline",
+          "title": "%viewContainer.activitybar.title%",
           "icon": "images/timeline_small.svg"
         }
       ],
       "panel": [
         {
           "id": "repoTimelinePanel",
-          "title": "Agent Brain",
+          "title": "%viewContainer.panel.title%",
           "icon": "images/timeline_small.svg"
         }
       ]
@@ -54,14 +54,14 @@
       "repoTimelineActivityBar": [
         {
           "id": "repoTimeline.welcomeView",
-          "name": "Getting Started",
+          "name": "%view.welcome.name%",
           "type": "webview"
         }
       ],
       "repoTimelinePanel": [
         {
           "id": "repoTimeline.evolutionView",
-          "name": "Agent Brain",
+          "name": "%view.evolution.name%",
           "type": "webview"
         }
       ]
@@ -84,7 +84,7 @@
       ]
     },
     "configuration": {
-      "title": "Agent Brain Platform",
+      "title": "%config.title%",
       "properties": {
         "agentBrain.logging.pathwayMode": {
           "type": "string",
@@ -94,7 +94,7 @@
             "exclusive"
           ],
           "default": "exclusive",
-          "description": "Pathway logging mode: 'disabled' shows all logs, 'filter' adds pathway tags, 'exclusive' only shows enabled pathways"
+          "description": "%config.logging.pathwayMode.description%"
         },
         "agentBrain.logging.enabledPathways": {
           "type": "array",
@@ -132,7 +132,7 @@
             "EVT_FWD",
             "KNOWLEDGE"
           ],
-          "description": "List of pathways to track. Agent Brain pathways: GUID_INIT (Guidance Init), VALID (Validation), PLAN (Plan Management), MINI (MiniPlan Lifecycle), DIAG (Diagnostics), GOLD (Golden Path), PROMPT (Prompt Building), EVT_FWD (Event Forwarding), KNOWLEDGE (Knowledge Management)"
+          "description": "%config.logging.enabledPathways.description%"
         },
         "agentBrain.logging.logLevel": {
           "type": "string",
@@ -144,27 +144,27 @@
             "NONE"
           ],
           "default": "INFO",
-          "description": "Minimum log level to display in webview console"
+          "description": "%config.logging.logLevel.description%"
         },
         "agentBrain.providers.gitLocal.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Enable local git repository event provider (commits, branches, tags). Core timeline functionality."
+          "description": "%config.providers.gitLocal.enabled.description%"
         },
         "agentBrain.providers.github.enabled": {
           "type": "boolean",
           "default": false,
-          "description": "Enable GitHub API event provider (PRs, issues, releases). Requires authentication. Disabled by default."
+          "description": "%config.providers.github.enabled.description%"
         },
         "agentBrain.providers.knowledgeEvents.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Enable knowledge management event provider. Shows when knowledge items are applied/removed/created."
+          "description": "%config.providers.knowledgeEvents.enabled.description%"
         },
         "agentBrain.providers.sessionJournals.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Enable agent session journal event provider. Shows session journals created by coding agents."
+          "description": "%config.providers.sessionJournals.enabled.description%"
         }
       }
     }
@@ -178,12 +178,14 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "d3": "^7.9.0"
+    "d3": "^7.9.0",
+    "vscode-nls": "^5.2.0"
   },
   "devDependencies": {
     "@types/d3": "^7.4.3",
     "@types/node": "^20.19.19",
     "@types/vscode": "^1.80.0",
+    "@vscode/l10n-dev": "^0.0.35",
     "@vscode/vsce": "^2.22.0",
     "clean-webpack-plugin": "^4.0.0",
     "copy-webpack-plugin": "^12.0.2",

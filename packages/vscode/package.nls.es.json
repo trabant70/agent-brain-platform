@@ -1,0 +1,28 @@
+{
+  "displayName": "Agent Brain Platform",
+  "description": "Transforme agentes de codificación IA en desarrolladores senior - supere la amnesia, aplique estándares, inyecte soluciones expertas y mantenga pistas de auditoría completas",
+
+  "command.showTimeline": "Mostrar Línea de Tiempo del Repositorio",
+  "command.refreshData": "Actualizar Datos de Línea de Tiempo",
+
+  "viewContainer.activitybar.title": "AB Línea de Tiempo",
+  "viewContainer.panel.title": "Agent Brain",
+
+  "view.welcome.name": "Primeros Pasos",
+  "view.evolution.name": "Agent Brain",
+
+  "config.title": "Agent Brain Platform",
+
+  "config.logging.pathwayMode.description": "Modo de registro de ruta: 'disabled' muestra todos los registros, 'filter' añade etiquetas de ruta, 'exclusive' solo muestra rutas habilitadas",
+  "config.logging.enabledPathways.description": "Lista de nombres de ruta habilitados para el registro (solo se usa cuando pathwayMode es 'filter' o 'exclusive')",
+  "config.logging.logLevel.description": "Nivel mínimo de registro a mostrar",
+
+  "config.providers.gitLocal.enabled.description": "Habilitar proveedor de eventos del repositorio Git local",
+  "config.providers.github.enabled.description": "Habilitar proveedor de eventos de API de GitHub (requiere autenticación)",
+  "config.providers.github.token.description": "Token de acceso personal de GitHub para acceso a API",
+  "config.providers.knowledgeEvents.enabled.description": "Habilitar proveedor de eventos de conocimiento (muestra elementos de conocimiento en la línea de tiempo)",
+  "config.providers.sessionJournals.enabled.description": "Habilitar proveedor de diarios de sesión (muestra eventos de sesión en la línea de tiempo)",
+
+  "error.showTimeline": "Error al mostrar la Línea de Tiempo del Repositorio. Por favor verifique el panel de Salida para más detalles.",
+  "error.activateFailed": "Error al activar Agent Brain Platform: {0}"
+}

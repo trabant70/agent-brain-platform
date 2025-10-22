@@ -1,0 +1,28 @@
+{
+  "displayName": "Agent Brain Platform",
+  "description": "Verwandeln Sie KI-Programmieragenten in Senior-Entwickler - überwinden Sie Amnesie, setzen Sie Standards durch, fügen Sie Expertenlösungen ein und führen Sie vollständige Prüfpfade",
+
+  "command.showTimeline": "Repository-Zeitlinie anzeigen",
+  "command.refreshData": "Zeitliniendaten aktualisieren",
+
+  "viewContainer.activitybar.title": "AB Zeitlinie",
+  "viewContainer.panel.title": "Agent Brain",
+
+  "view.welcome.name": "Erste Schritte",
+  "view.evolution.name": "Agent Brain",
+
+  "config.title": "Agent Brain Platform",
+
+  "config.logging.pathwayMode.description": "Pfad-Protokollierungsmodus: 'disabled' zeigt alle Protokolle, 'filter' fügt Pfad-Tags hinzu, 'exclusive' zeigt nur aktivierte Pfade",
+  "config.logging.enabledPathways.description": "Liste der aktivierten Pfadnamen für die Protokollierung (nur verwendet, wenn pathwayMode 'filter' oder 'exclusive' ist)",
+  "config.logging.logLevel.description": "Minimale Protokollebene zur Anzeige",
+
+  "config.providers.gitLocal.enabled.description": "Lokalen Git-Repository-Ereignisanbieter aktivieren",
+  "config.providers.github.enabled.description": "GitHub API-Ereignisanbieter aktivieren (erfordert Authentifizierung)",
+  "config.providers.github.token.description": "GitHub Personal Access Token für API-Zugriff",
+  "config.providers.knowledgeEvents.enabled.description": "Wissensereignis-Anbieter aktivieren (zeigt Wissenselemente auf der Zeitlinie)",
+  "config.providers.sessionJournals.enabled.description": "Sitzungsjournal-Anbieter aktivieren (zeigt Sitzungsereignisse auf der Zeitlinie)",
+
+  "error.showTimeline": "Fehler beim Anzeigen der Repository-Zeitlinie. Bitte überprüfen Sie das Ausgabe-Panel für Details.",
+  "error.activateFailed": "Fehler beim Aktivieren der Agent Brain Platform: {0}"
+}
