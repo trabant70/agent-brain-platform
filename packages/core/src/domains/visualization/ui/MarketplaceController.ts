@@ -357,7 +357,7 @@ export class MarketplaceController {
   /**
    * Uninstall a template
    */
-  private uninstallTemplate(templateId: string): void {
+  private async uninstallTemplate(templateId: string): Promise<void> {
     const template = this.state.templates.find(t => t.id === templateId);
     if (!template) return;
 
@@ -369,8 +369,14 @@ export class MarketplaceController {
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
 
-    // Show confirmation
-    if (confirm(`Uninstall "${template.name}"? This will remove items that are not in other templates.`)) {
+    // Show confirmation using ModalDialog (webview-safe)
+    const modal = new ModalDialog();
+    const confirmed = await modal.confirm(
+      `Uninstall "${template.name}"? This will remove items that are not in other templates.`,
+      'Confirm Uninstall'
+    );
+
+    if (confirmed) {
       this.sendMessage({
         type: 'marketplace:uninstall',
         payload: { templateId }

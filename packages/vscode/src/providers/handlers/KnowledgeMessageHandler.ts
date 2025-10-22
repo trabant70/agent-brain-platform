@@ -141,12 +141,13 @@ export class KnowledgeMessageHandler {
 
     try {
       const store = this.context.knowledgeManager.getStore();
+      const marketplaceManager = this.context.knowledgeManager.getMarketplaceManager();
       const items = store.getAllItems();
-      const templates = store.getAllTemplates();
+      const templates = marketplaceManager.getAllTemplates();
 
       logger.info(
         LogCategory.EXTENSION,
-        'Retrieved knowledge data from store',
+        'Retrieved knowledge data from store and marketplace',
         'KnowledgeMessageHandler.sendKnowledgeData',
         {
           itemCount: items.length,
