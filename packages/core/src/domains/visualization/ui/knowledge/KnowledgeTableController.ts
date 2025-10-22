@@ -381,7 +381,9 @@ export class KnowledgeTableController {
       // Group by template
       for (const template of this.state.templates) {
         const templateItems: KnowledgeItem[] = [];
-        for (const itemId of template.itemIds) {
+        // Safety check: ensure itemIds exists and is iterable
+        const itemIds = Array.isArray(template.itemIds) ? template.itemIds : [];
+        for (const itemId of itemIds) {
           const item = itemMap.get(itemId);
           if (item) {
             templateItems.push(item);

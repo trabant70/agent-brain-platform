@@ -2,16 +2,16 @@
   "version": "1.0",
   "installed": [
     {
-      "templateId": "bundled.git-essentials",
+      "templateId": "bundled.api-design-basics",
       "version": "1.0.0",
-      "installedAt": "2025-10-22T10:44:02.232Z",
+      "installedAt": "2025-10-22T10:50:16.382Z",
       "installedItemIds": [
-        "bundled.git-essentials.commit-messages",
-        "bundled.git-essentials.branch-strategy",
-        "bundled.git-essentials.conflict-resolution"
+        "bundled.api-design.resource-naming",
+        "bundled.api-design.http-status-codes",
+        "bundled.api-design.pagination"
       ],
       "source": "bundled"
     }
   ],
-  "lastUpdated": "2025-10-22T10:44:02.232Z"
+  "lastUpdated": "2025-10-22T10:50:16.382Z"
 }
