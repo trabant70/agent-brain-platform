@@ -5,14 +5,12 @@
  * Extracted from KnowledgeViewController for better separation of concerns.
  */
 
-// TODO: Phase 3 - Replace with MarketplaceTemplate from marketplace domain
-type Template = any;
-
+import { MarketplaceTemplate } from '../../../knowledge/types';
 import { ModalDialog } from '../ModalDialog';
 import { webviewLogger, LogCategory, LogPathway } from '../../webview/WebviewLogger';
 
 export interface TemplateState {
-  templates: Template[];
+  templates: MarketplaceTemplate[];
 }
 
 export interface TemplateControllerCallbacks {
@@ -39,7 +37,7 @@ export class TemplateController {
   /**
    * Load templates data
    */
-  loadData(templates: Template[]): void {
+  loadData(templates: MarketplaceTemplate[]): void {
     this.state.templates = templates;
     this.renderTemplateControls();
   }
@@ -57,7 +55,7 @@ export class TemplateController {
         templates: this.state.templates?.map(t => ({
           id: t.id,
           name: t.name,
-          itemCount: t.itemIds?.length || 0
+          itemCount: t.items?.length || 0
         })) || []
       },
       LogPathway.KNOWLEDGE_MANAGEMENT
@@ -75,12 +73,15 @@ export class TemplateController {
       return;
     }
 
+    // Preserve current selection before re-rendering
+    const previousSelection = selector.value;
+
     selector.innerHTML = '<option value="">Select template...</option>';
 
     for (const template of this.state.templates) {
       const option = document.createElement('option');
       option.value = template.id;
-      option.textContent = `${template.name} (${template.itemIds?.length || 0} items)`;
+      option.textContent = `${template.name} (${template.items?.length || 0} items)`;
       selector.appendChild(option);
 
       webviewLogger.debug(
@@ -92,13 +93,26 @@ export class TemplateController {
       );
     }
 
+    // Restore previous selection if it still exists
+    if (previousSelection && this.state.templates.some(t => t.id === previousSelection)) {
+      selector.value = previousSelection;
+      webviewLogger.debug(
+        LogCategory.UI,
+        'Restored template selection',
+        'TemplateController.renderTemplateControls',
+        { templateId: previousSelection },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+    }
+
     webviewLogger.info(
       LogCategory.UI,
       'Template controls rendered',
       'TemplateController.renderTemplateControls',
       {
         optionsAdded: this.state.templates.length,
-        totalOptions: selector.options.length
+        totalOptions: selector.options.length,
+        selectedTemplate: selector.value || 'none'
       },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
@@ -116,7 +130,7 @@ export class TemplateController {
     const saveBtn = document.getElementById('save-template') as HTMLButtonElement;
     const applySelectedBtn = document.getElementById('apply-selected') as HTMLButtonElement;
     const applyTemplateBtn = document.getElementById('apply-template') as HTMLButtonElement;
-    const exportBtn = document.getElementById('export-template') as HTMLButtonElement;
+    const publishBtn = document.getElementById('publish-template') as HTMLButtonElement;
 
     // Enable save and apply-selected buttons when items are selected
     if (saveBtn) saveBtn.disabled = !hasSelection;
@@ -126,8 +140,12 @@ export class TemplateController {
     const selector = document.getElementById('template-selector') as HTMLSelectElement;
     const hasTemplateSelected = selector?.value;
     if (applyTemplateBtn) applyTemplateBtn.disabled = !hasTemplateSelected;
-    if (exportBtn && selector) {
-      exportBtn.disabled = !selector.value;
+
+    // Publish button enabled when USER template is selected
+    if (publishBtn) {
+      const template = this.state.templates.find(t => t.id === selector?.value);
+      const canPublish = hasTemplateSelected && template?.source === 'user';
+      publishBtn.disabled = !canPublish;
     }
   }
 
@@ -176,26 +194,119 @@ export class TemplateController {
         8000
       );
     } else {
-      // Creating new template
-      const name = await modal.prompt('Template name:', {
-        required: true,
-        placeholder: 'e.g., "API Design Checklist"'
+      // Creating new template - show comprehensive form
+      const formData = await modal.showForm({
+        title: 'Create Marketplace Template',
+        submitText: 'Create Template',
+        fields: [
+          {
+            name: 'name',
+            label: 'Template Name',
+            type: 'text',
+            required: true,
+            placeholder: 'e.g., "API Design Checklist"'
+          },
+          {
+            name: 'description',
+            label: 'Description',
+            type: 'textarea',
+            required: true,
+            placeholder: 'Brief description of what this template provides (1-2 sentences)'
+          },
+          {
+            name: 'category',
+            label: 'Category',
+            type: 'select',
+            required: true,
+            options: [
+              'development',
+              'documentation',
+              'best-practices',
+              'architecture',
+              'testing',
+              'security',
+              'onboarding',
+              'workflows',
+              'general'
+            ],
+            defaultValue: 'general'
+          },
+          {
+            name: 'tags',
+            label: 'Tags',
+            type: 'text',
+            required: false,
+            placeholder: 'e.g., api, rest, design (comma-separated)'
+          },
+          {
+            name: 'authorName',
+            label: 'Author Name',
+            type: 'text',
+            required: true,
+            placeholder: 'Your name or organization'
+          },
+          {
+            name: 'authorEmail',
+            label: 'Author Email (optional)',
+            type: 'text',
+            required: false,
+            placeholder: 'author@example.com'
+          },
+          {
+            name: 'authorUrl',
+            label: 'Author URL (optional)',
+            type: 'text',
+            required: false,
+            placeholder: 'https://github.com/username'
+          },
+          {
+            name: 'license',
+            label: 'License',
+            type: 'select',
+            required: true,
+            options: [
+              'MIT',
+              'Apache-2.0',
+              'GPL-3.0',
+              'BSD-3-Clause',
+              'CC-BY-4.0',
+              'CC-BY-SA-4.0',
+              'Proprietary',
+              'Other'
+            ],
+            defaultValue: 'MIT'
+          }
+        ]
       });
 
-      if (!name) {
+      if (!formData) {
         return; // User cancelled
       }
+
+      // Parse tags from comma-separated string
+      const tags = formData.tags
+        ? formData.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t.length > 0)
+        : [];
 
       this.callbacks.onSendMessage({
         type: 'knowledge:create-template',
         payload: {
-          name,
+          name: formData.name,
+          description: formData.description,
+          category: formData.category,
+          tags,
+          author: {
+            name: formData.authorName,
+            email: formData.authorEmail || undefined,
+            url: formData.authorUrl || undefined
+          },
+          license: formData.license,
           itemIds: selectedIds
         }
       });
 
       this.callbacks.onShowNotification(
-        `Creating template "${name}" with ${selectedIds.length} item(s)...`,
+        `Creating template "${formData.name}" with ${selectedIds.length} item(s)...`,
         'info'
       );
     }
@@ -282,10 +393,12 @@ export class TemplateController {
     );
   }
 
+
   /**
-   * Export selected template
+   * Publish template to marketplace
+   * Validates template and sends to backend for publishing
    */
-  exportTemplate(): void {
+  async publishTemplate(): Promise<void> {
     const selector = document.getElementById('template-selector') as HTMLSelectElement;
     const templateId = selector?.value;
 
@@ -298,31 +411,54 @@ export class TemplateController {
     }
 
     const template = this.state.templates.find(t => t.id === templateId);
-    const templateName = template?.name || 'template';
+    if (!template) {
+      this.callbacks.onShowNotification('Template not found', 'error');
+      return;
+    }
 
+    // Only allow publishing USER templates (not bundled ones)
+    if (template.source === 'bundled') {
+      this.callbacks.onShowNotification(
+        'Cannot publish bundled templates. Only user-created templates can be published.',
+        'warning'
+      );
+      return;
+    }
+
+    // Validate required metadata
+    const validationErrors: string[] = [];
+    if (!template.name || template.name.trim().length === 0) {
+      validationErrors.push('Template name is required');
+    }
+    if (!template.description || template.description.trim().length === 0) {
+      validationErrors.push('Template description is required');
+    }
+    if (!template.author?.name || template.author.name.trim().length === 0) {
+      validationErrors.push('Author name is required');
+    }
+    if (!template.category) {
+      validationErrors.push('Template category is required');
+    }
+    if (!template.items || template.items.length === 0) {
+      validationErrors.push('Template must contain at least one knowledge item');
+    }
+
+    if (validationErrors.length > 0) {
+      this.callbacks.onShowNotification(
+        `Cannot publish template: ${validationErrors.join(', ')}`,
+        'error'
+      );
+      return;
+    }
+
+    // Send message to backend to handle publishing
     this.callbacks.onSendMessage({
-      type: 'knowledge:export-template',
+      type: 'knowledge:publish-template',
       payload: { templateId }
     });
 
     this.callbacks.onShowNotification(
-      `Exporting template "${templateName}"...`,
-      'info'
-    );
-  }
-
-  /**
-   * Import template from file
-   */
-  importTemplate(): void {
-    // Send message to backend to trigger file picker
-    this.callbacks.onSendMessage({
-      type: 'knowledge:import-template',
-      payload: {}
-    });
-
-    this.callbacks.onShowNotification(
-      'Select a template file to import...',
+      `Publishing template "${template.name}" to marketplace...`,
       'info'
     );
   }
@@ -366,14 +502,16 @@ export class TemplateController {
       return;
     }
 
+    const itemIds = template.items?.map(item => item.id) || [];
+
     webviewLogger.debug(
       LogCategory.UI,
       'Found template, updating selections',
       'TemplateController.handleTemplateSelection',
       {
         templateName: template.name,
-        templateItemCount: template.itemIds.length,
-        templateItemIds: template.itemIds
+        templateItemCount: itemIds.length,
+        templateItemIds: itemIds
       },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
@@ -385,7 +523,7 @@ export class TemplateController {
     let selectedCount = 0;
     let missingCount = 0;
 
-    for (const itemId of template.itemIds) {
+    for (const itemId of itemIds) {
       const itemExists = !!this.callbacks.getItemById(itemId);
       if (itemExists) {
         selectedCount++;
@@ -409,7 +547,7 @@ export class TemplateController {
         templateName: template.name,
         itemsSelected: selectedCount,
         itemsMissing: missingCount,
-        totalTemplateItems: template.itemIds.length
+        totalTemplateItems: itemIds.length
       },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
@@ -430,7 +568,7 @@ export class TemplateController {
     // This will be handled by the main controller
     this.callbacks.onSendMessage({
       type: 'internal:select-template-items',
-      payload: { templateItemIds: template.itemIds }
+      payload: { templateItemIds: itemIds }
     });
 
     this.updateTemplateButtons();

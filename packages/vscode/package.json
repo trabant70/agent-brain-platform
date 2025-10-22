@@ -2,7 +2,7 @@
   "name": "agent-brain-platform",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.2.81",
+  "version": "0.2.94",
   "publisher": "agent-brain-local",
   "icon": "images/timeline_large.png",
   "repository": {
@@ -93,7 +93,7 @@
             "filter",
             "exclusive"
           ],
-          "default": "exclusive",
+          "default": "filter",
           "description": "%config.logging.pathwayMode.description%"
         },
         "agentBrain.logging.enabledPathways": {

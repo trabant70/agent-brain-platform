@@ -264,6 +264,9 @@ export class MarketplaceController {
 
         <div class="template-card-footer">
           ${installButton}
+          <button class="btn btn-secondary" data-action="export" data-template-id="${template.id}" title="Export template to file">
+            💾 Export
+          </button>
           <button class="btn btn-secondary" data-action="details" data-template-id="${template.id}">
             Details
           </button>
@@ -320,6 +323,9 @@ export class MarketplaceController {
             break;
           case 'uninstall':
             this.uninstallTemplate(templateId);
+            break;
+          case 'export':
+            this.exportTemplate(templateId);
             break;
           case 'details':
             this.showTemplateDetails(templateId);
@@ -382,6 +388,27 @@ export class MarketplaceController {
         payload: { templateId }
       });
     }
+  }
+
+  /**
+   * Export a template to file
+   */
+  private exportTemplate(templateId: string): void {
+    const template = this.state.templates.find(t => t.id === templateId);
+    if (!template) return;
+
+    webviewLogger.info(
+      LogCategory.UI,
+      'Exporting template',
+      'MarketplaceController.exportTemplate',
+      { templateId, name: template.name },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    this.sendMessage({
+      type: 'marketplace:export',
+      payload: { templateId }
+    });
   }
 
   /**

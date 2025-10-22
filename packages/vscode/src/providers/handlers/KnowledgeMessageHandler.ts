@@ -30,6 +30,13 @@ export class KnowledgeMessageHandler {
         return true;
 
       case 'knowledge:scan-claude-files':
+        logger.info(
+          LogCategory.EXTENSION,
+          'Received knowledge:scan-claude-files message from webview',
+          'KnowledgeMessageHandler.handleMessage',
+          {},
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
         await this.sendClaudeMdFiles();
         return true;
 
@@ -69,12 +76,8 @@ export class KnowledgeMessageHandler {
         await this.handleRemoveTemplate(message.payload);
         return true;
 
-      case 'knowledge:export-template':
-        await this.handleExportTemplate(message.payload);
-        return true;
-
-      case 'knowledge:import-template':
-        await this.handleImportTemplate(message.payload);
+      case 'knowledge:publish-template':
+        await this.handlePublishTemplate(message.payload);
         return true;
 
       case 'knowledge:showCreateDialog':
@@ -143,7 +146,12 @@ export class KnowledgeMessageHandler {
       const store = this.context.knowledgeManager.getStore();
       const marketplaceManager = this.context.knowledgeManager.getMarketplaceManager();
       const items = store.getAllItems();
-      const templates = marketplaceManager.getAllTemplates();
+
+      // Send both LOCAL templates (from .agent-brain/templates/) and MARKETPLACE user templates
+      // Local templates are for grouping only, marketplace templates are published
+      const localTemplates = this.context.knowledgeManager.getLocalTemplates();
+      const marketplaceUserTemplates = marketplaceManager.getUserTemplates();
+      const templates = [...localTemplates, ...marketplaceUserTemplates];
 
       logger.info(
         LogCategory.EXTENSION,
@@ -151,9 +159,9 @@ export class KnowledgeMessageHandler {
         'KnowledgeMessageHandler.sendKnowledgeData',
         {
           itemCount: items.length,
-          templateCount: templates.length,
+          userTemplateCount: templates.length,
           items: items.map((i: any) => ({ id: i.id, type: i.type, title: i.title })),
-          templates: templates.map((t: any) => ({ id: t.id, name: t.name, itemCount: t.itemIds?.length }))
+          templates: templates.map((t: any) => ({ id: t.id, name: t.name, source: t.source, itemCount: t.items?.length || 0 }))
         },
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
@@ -452,11 +460,16 @@ export class KnowledgeMessageHandler {
 
     try {
       await this.context.knowledgeManager.updateTemplate(payload.templateId, payload.itemIds);
+
+      // Reload marketplace templates to get updated version
+      const marketplaceManager = this.context.knowledgeManager.getMarketplaceManager();
+      await marketplaceManager.loadAllTemplates();
+
+      // Refresh knowledge data to show updated template
       await this.sendKnowledgeData();
 
-      const store = this.context.knowledgeManager.getStore();
-      const template = store.getTemplate(payload.templateId);
-      const templateName = template?.name || 'Template';
+      const marketplaceTemplate = marketplaceManager.getTemplate(payload.templateId);
+      const templateName = marketplaceTemplate?.name || 'Template';
 
       this.context.view?.webview.postMessage({
         type: 'knowledge:success',
@@ -557,8 +570,8 @@ export class KnowledgeMessageHandler {
       await this.sendClaudeMdFiles();
 
       // Send success message to webview
-      const store = this.context.knowledgeManager.getStore();
-      const template = store.getTemplate(payload.templateId);
+      const marketplaceManager = this.context.knowledgeManager.getMarketplaceManager();
+      const template = marketplaceManager.getTemplate(payload.templateId);
       const templateName = template?.name || 'Template';
       const action = result?.wasReplaced ? 'updated in' : 'applied to';
 
@@ -724,93 +737,74 @@ export class KnowledgeMessageHandler {
   }
 
   /**
-   * Handle export template
+   * Handle publish template to marketplace
    */
-  private async handleExportTemplate(payload: any): Promise<void> {
+  private async handlePublishTemplate(payload: any): Promise<void> {
     if (!this.context.knowledgeManager) {
       return;
     }
 
     try {
-      const path = await this.context.knowledgeManager.exportTemplate(payload.templateId);
+      const result = await this.context.knowledgeManager.publishTemplate(payload.templateId);
 
-      this.context.view?.webview.postMessage({
-        type: 'knowledge:success',
-        payload: { message: `Template exported to ${path}` }
-      });
-    } catch (error: any) {
-      this.context.view?.webview.postMessage({
-        type: 'knowledge:error',
-        payload: { error: error.message }
-      });
-    }
-  }
+      // Reload marketplace templates to include the newly published template
+      const marketplaceManager = this.context.knowledgeManager.getMarketplaceManager();
+      await marketplaceManager.loadAllTemplates();
 
-  /**
-   * Handle import template from file
-   */
-  private async handleImportTemplate(payload: any): Promise<void> {
-    if (!this.context.knowledgeManager) {
-      return;
-    }
+      // Update installation status
+      const templateRegistry = this.context.knowledgeManager.getTemplateRegistry();
+      const installed = templateRegistry.getAllInstalled();
+      marketplaceManager.updateInstallationStatus(installed);
 
-    try {
-      // Show file picker dialog
-      const fileUris = await vscode.window.showOpenDialog({
-        canSelectFiles: true,
-        canSelectFolders: false,
-        canSelectMany: false,
-        filters: {
-          'Markdown': ['md'],
-          'All Files': ['*']
-        },
-        title: 'Select Template File to Import'
-      });
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Marketplace templates reloaded after publishing',
+        'KnowledgeMessageHandler.handlePublishTemplate',
+        { templateId: result.templateId, installedCount: installed.length },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
 
-      if (!fileUris || fileUris.length === 0) {
-        return; // User cancelled
-      }
-
-      const filePath = fileUris[0].fsPath;
-
-      // Import the template (using default options: skip conflicts, skip duplicate items)
-      const result = await this.context.knowledgeManager.importTemplateFromFile(filePath, {
-        conflictResolution: 'skip',
-        skipDuplicateItems: true
-      });
-
-      // Refresh knowledge data
+      // Refresh knowledge data to show updated template
       await this.sendKnowledgeData();
 
-      if (result.success) {
-        // Send success with details
-        const details = [];
-        if (result.itemsCreated > 0) details.push(`${result.itemsCreated} items created`);
-        if (result.itemsUpdated > 0) details.push(`${result.itemsUpdated} items updated`);
-        if (result.itemsSkipped > 0) details.push(`${result.itemsSkipped} items skipped`);
+      // Refresh marketplace data to show the published template
+      await this.sendMarketplaceTemplates();
 
-        const message = `Template "${result.templateName}" imported successfully` +
-          (details.length > 0 ? `: ${details.join(', ')}` : '');
+      logger.info(
+        LogCategory.EXTENSION,
+        'Template published successfully',
+        'KnowledgeMessageHandler.handlePublishTemplate',
+        {
+          templateId: result.templateId,
+          version: result.version,
+          isNewVersion: result.isNewVersion
+        },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
 
-        this.context.view?.webview.postMessage({
-          type: 'knowledge:import-success',
-          payload: {
-            message,
-            templateId: result.templateId,
-            warnings: result.warnings
-          }
-        });
-      } else {
-        // Send errors
-        this.context.view?.webview.postMessage({
-          type: 'knowledge:error',
-          payload: {
-            error: result.errors.join(', '),
-            warnings: result.warnings
-          }
-        });
-      }
+      // Send success message with details
+      const message = result.isNewVersion
+        ? `Template "${result.templateName}" published as version ${result.version}. ${result.changesSummary}`
+        : `Template "${result.templateName}" published to marketplace as version ${result.version}.`;
+
+      this.context.view?.webview.postMessage({
+        type: 'knowledge:publish-success',
+        payload: {
+          message,
+          templateId: result.templateId,
+          version: result.version,
+          isNewVersion: result.isNewVersion
+        }
+      });
     } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to publish template',
+        'KnowledgeMessageHandler.handlePublishTemplate',
+        { templateId: payload.templateId, error },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
       this.context.view?.webview.postMessage({
         type: 'knowledge:error',
         payload: { error: error.message }

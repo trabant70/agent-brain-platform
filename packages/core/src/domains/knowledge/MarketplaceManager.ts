@@ -99,6 +99,9 @@ export class MarketplaceManager {
     let count = 0;
 
     try {
+      // Clear existing bundled templates to ensure fresh load
+      this.bundledTemplates.clear();
+
       if (!fs.existsSync(this.bundledTemplatesPath)) {
         errors.push(`Bundled templates directory not found: ${this.bundledTemplatesPath}`);
         return { count: 0, errors };
@@ -135,6 +138,9 @@ export class MarketplaceManager {
     let count = 0;
 
     try {
+      // Clear existing user templates to ensure fresh load
+      this.userTemplates.clear();
+
       if (!fs.existsSync(this.userTemplatesPath)) {
         // Create directory if it doesn't exist
         fs.mkdirSync(this.userTemplatesPath, { recursive: true });
@@ -235,6 +241,16 @@ export class MarketplaceManager {
   }
 
   /**
+   * Add a user template to the in-memory store
+   * Used for loading migrated templates or programmatically adding templates
+   */
+  addUserTemplate(template: MarketplaceTemplate): void {
+    // Ensure source is USER
+    template.source = TemplateSource.USER;
+    this.userTemplates.set(template.id, template);
+  }
+
+  /**
    * Get templates by category
    */
   getTemplatesByCategory(category: TemplateCategory): MarketplaceTemplate[] {
@@ -294,18 +310,33 @@ export class MarketplaceManager {
   }
 
   /**
-   * Export a template to JSON file in user templates directory
+   * Export a template to JSON file
+   * @param template - The template to export
+   * @param customPath - Optional custom file path. If not provided, saves to user templates directory
    */
-  async exportTemplate(template: MarketplaceTemplate): Promise<ExportTemplateResult> {
+  async exportTemplate(template: MarketplaceTemplate, customPath?: string): Promise<ExportTemplateResult> {
     try {
-      // Ensure user templates directory exists
-      if (!fs.existsSync(this.userTemplatesPath)) {
-        fs.mkdirSync(this.userTemplatesPath, { recursive: true });
-      }
+      let filePath: string;
 
-      // Generate filename from template name
-      const filename = `${template.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
-      const filePath = path.join(this.userTemplatesPath, filename);
+      if (customPath) {
+        // Use custom path provided (e.g., from save dialog)
+        filePath = customPath;
+
+        // Ensure parent directory exists
+        const dir = path.dirname(filePath);
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true });
+        }
+      } else {
+        // Use default user templates directory
+        if (!fs.existsSync(this.userTemplatesPath)) {
+          fs.mkdirSync(this.userTemplatesPath, { recursive: true });
+        }
+
+        // Generate filename from template name
+        const filename = `${template.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+        filePath = path.join(this.userTemplatesPath, filename);
+      }
 
       // Prepare template for export (remove runtime fields)
       const exportData = {
@@ -318,8 +349,10 @@ export class MarketplaceManager {
       // Write to file
       fs.writeFileSync(filePath, JSON.stringify(exportData, null, 2), 'utf-8');
 
-      // Add to user templates map
-      this.userTemplates.set(template.id, template);
+      // Only add to user templates map if saving to user templates directory
+      if (!customPath) {
+        this.userTemplates.set(template.id, template);
+      }
 
       return {
         success: true,
