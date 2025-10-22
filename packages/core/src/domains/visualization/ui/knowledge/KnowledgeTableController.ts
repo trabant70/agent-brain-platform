@@ -5,13 +5,14 @@
  * Extracted from KnowledgeViewController for better separation of concerns.
  */
 
-import { KnowledgeItem, KnowledgeType, KnowledgeScope } from '../../../knowledge/types';
+import { KnowledgeItem, KnowledgeType, KnowledgeScope, Template } from '../../../knowledge/types';
 import { TableTemplates } from './templates/table-templates';
 import { KnowledgeFilters } from './utils/KnowledgeFilters';
 import { webviewLogger, LogCategory, LogPathway } from '../../webview/WebviewLogger';
 
 export interface TableState {
   items: KnowledgeItem[];
+  templates: Template[];  // Templates for grouping
   selectedItems: Set<string>;
   searchQuery: string;
   filterType: KnowledgeType | null;
@@ -19,7 +20,7 @@ export interface TableState {
   filterTags: string[];
   sortBy: 'title' | 'type' | 'scope' | 'updated';
   sortDirection: 'asc' | 'desc';
-  groupBy: 'type' | 'scope' | 'tag';
+  groupBy: 'type' | 'scope' | 'tag' | 'template';
   collapsedSections: Set<string>;
 }
 
@@ -37,6 +38,7 @@ export class KnowledgeTableController {
     this.callbacks = callbacks;
     this.state = {
       items: [],
+      templates: [],
       selectedItems: new Set(),
       searchQuery: '',
       filterType: null,
@@ -52,8 +54,9 @@ export class KnowledgeTableController {
   /**
    * Load knowledge items data
    */
-  loadData(items: KnowledgeItem[]): void {
+  loadData(items: KnowledgeItem[], templates: Template[] = []): void {
     this.state.items = items;
+    this.state.templates = templates;
     this.renderKnowledgeTable();
   }
 
@@ -310,7 +313,7 @@ export class KnowledgeTableController {
   /**
    * Get display info for a group
    */
-  private getGroupDisplayInfo(groupKey: string, dimension: 'type' | 'scope' | 'tag'): { icon: string; label: string } {
+  private getGroupDisplayInfo(groupKey: string, dimension: 'type' | 'scope' | 'tag' | 'template'): { icon: string; label: string } {
     // Import these from types
     const { getKnowledgeTypeIcon, getKnowledgeTypeLabel, getKnowledgeScopeLabel } = require('../../../knowledge/types');
 
@@ -331,6 +334,21 @@ export class KnowledgeTableController {
         icon: scopeIcons[groupKey] || '📦',
         label: getKnowledgeScopeLabel(groupKey as KnowledgeScope)
       };
+    } else if (dimension === 'template') {
+      // Template grouping
+      if (groupKey === '__ungrouped__') {
+        return {
+          icon: '📁',
+          label: 'Ungrouped'
+        };
+      } else {
+        // Find the template by ID
+        const template = this.state.templates.find(t => t.id === groupKey);
+        return {
+          icon: '📦',
+          label: template?.name || groupKey
+        };
+      }
     } else {
       // Tag
       return {
@@ -341,10 +359,45 @@ export class KnowledgeTableController {
   }
 
   /**
-   * Group items by dimension (type, scope, or tag)
+   * Group items by dimension (type, scope, tag, or template)
    */
-  private groupItems(items: KnowledgeItem[], dimension: 'type' | 'scope' | 'tag'): Map<string, KnowledgeItem[]> {
+  private groupItems(items: KnowledgeItem[], dimension: 'type' | 'scope' | 'tag' | 'template'): Map<string, KnowledgeItem[]> {
     const groups = new Map<string, KnowledgeItem[]>();
+
+    if (dimension === 'template') {
+      // For templates, an item can belong to multiple groups
+      // Create a map of itemId -> item for quick lookup
+      const itemMap = new Map<string, KnowledgeItem>();
+      for (const item of items) {
+        itemMap.set(item.id, item);
+      }
+
+      // Track which items are in at least one template
+      const itemsInTemplates = new Set<string>();
+
+      // Group by template
+      for (const template of this.state.templates) {
+        const templateItems: KnowledgeItem[] = [];
+        for (const itemId of template.itemIds) {
+          const item = itemMap.get(itemId);
+          if (item) {
+            templateItems.push(item);
+            itemsInTemplates.add(itemId);
+          }
+        }
+        if (templateItems.length > 0) {
+          groups.set(template.id, templateItems);
+        }
+      }
+
+      // Add ungrouped items (items not in any template)
+      const ungroupedItems = items.filter(item => !itemsInTemplates.has(item.id));
+      if (ungroupedItems.length > 0) {
+        groups.set('__ungrouped__', ungroupedItems);
+      }
+
+      return groups;
+    }
 
     for (const item of items) {
       let keys: string[];
@@ -538,7 +591,7 @@ export class KnowledgeTableController {
   /**
    * Change grouping dimension
    */
-  changeGrouping(groupBy: 'type' | 'scope' | 'tag'): void {
+  changeGrouping(groupBy: 'type' | 'scope' | 'tag' | 'template'): void {
     if (this.state.groupBy === groupBy) {
       return; // Already selected
     }

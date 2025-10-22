@@ -580,6 +580,146 @@
       "knowledgeItemType": "learning",
       "targetFile": "CLAUDE.md",
       "actor": "user"
+    },
+    {
+      "id": "ke-1761082821839",
+      "timestamp": "2025-10-21T21:40:21.839Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-8ce8f8c2089b",
+      "knowledgeItemTitle": "Template Application Bug - Items Not Visible After Apply",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761082830402",
+      "timestamp": "2025-10-21T21:40:30.402Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-6f60fd833486",
+      "knowledgeItemTitle": "test",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761082830403",
+      "timestamp": "2025-10-21T21:40:30.403Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-3e820bb0765f",
+      "knowledgeItemTitle": "Workspace Root Path Doubling Bug",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761082835062",
+      "timestamp": "2025-10-21T21:40:35.062Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-6f60fd833486",
+      "knowledgeItemTitle": "test",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761082839296",
+      "timestamp": "2025-10-21T21:40:39.296Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-3e820bb0765f",
+      "knowledgeItemTitle": "Workspace Root Path Doubling Bug",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761083368825",
+      "timestamp": "2025-10-21T21:49:28.825Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-8ce8f8c2089b",
+      "knowledgeItemTitle": "Template Application Bug - Items Not Visible After Apply",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761083377083",
+      "timestamp": "2025-10-21T21:49:37.083Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761083377085",
+      "timestamp": "2025-10-21T21:49:37.085Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-55dfcbaae5a1",
+      "knowledgeItemTitle": "Provider Toggle Error Fix - Registration vs Enablement",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761083385281",
+      "timestamp": "2025-10-21T21:49:45.281Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-55dfcbaae5a1",
+      "knowledgeItemTitle": "Provider Toggle Error Fix - Registration vs Enablement",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761083749933",
+      "timestamp": "2025-10-21T21:55:49.933Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761083755336",
+      "timestamp": "2025-10-21T21:55:55.336Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761083755337",
+      "timestamp": "2025-10-21T21:55:55.337Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-55dfcbaae5a1",
+      "knowledgeItemTitle": "Provider Toggle Error Fix - Registration vs Enablement",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761083761450",
+      "timestamp": "2025-10-21T21:56:01.450Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761083763864",
+      "timestamp": "2025-10-21T21:56:03.864Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-55dfcbaae5a1",
+      "knowledgeItemTitle": "Provider Toggle Error Fix - Registration vs Enablement",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
     }
   ]
 }

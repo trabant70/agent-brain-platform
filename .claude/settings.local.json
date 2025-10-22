@@ -129,7 +129,14 @@
       "Bash(code --install-extension \"agent-brain-platform-0.2.15.vsix\" --force)",
       "Bash(code --install-extension \"agent-brain-platform-0.2.16.vsix\" --force)",
       "Bash(code --install-extension \"agent-brain-platform-0.2.17.vsix\" --force)",
-      "Bash(code --install-extension:*)"
+      "Bash(code --install-extension:*)",
+      "Bash(git -C /mnt/c/projects/agent-brain-platform log --oneline --all)",
+      "Bash(git -C /mnt/c/projects/agent-brain-platform show c4b564d:packages/core/src/domains/visualization/ui/KnowledgeViewController.ts)",
+      "Bash(git -C /mnt/c/projects/agent-brain-platform status --short)",
+      "Bash(git reset:*)",
+      "Bash(git -C /mnt/c/projects/agent-brain-platform push origin main)",
+      "Bash(git -C /mnt/c/projects/agent-brain-platform log --oneline -1)",
+      "Bash(follow standards, and learn from experience\"\n\nVersion: 0.2.74\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

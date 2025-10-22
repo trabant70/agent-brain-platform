@@ -151,7 +151,7 @@ export class KnowledgeViewController {
     );
 
     // Delegate to sub-controllers
-    this.tableController.loadData(data.items);
+    this.tableController.loadData(data.items, data.templates);
     this.templateController.loadData(data.templates);
     this.updateStatusBar();
 
