@@ -45,6 +45,7 @@ interface SessionViewState {
   filteredSessions: SessionJournal[];
   searchQuery: string;
   filterTopics: Set<string>;
+  filterTags: Set<string>;
   sortConfig: SortConfig;
 }
 
@@ -72,6 +73,7 @@ export class SessionViewController {
       filteredSessions: [],
       searchQuery: '',
       filterTopics: new Set(),
+      filterTags: new Set(),
       sortConfig: {
         column: 'date',
         direction: 'desc'  // Newest first by default
@@ -246,6 +248,7 @@ export class SessionViewController {
       {
         searchQuery: this.state.searchQuery,
         filterTopics: Array.from(this.state.filterTopics),
+        filterTags: Array.from(this.state.filterTags),
         sortColumn: this.state.sortConfig.column,
         sortDirection: this.state.sortConfig.direction
       },
@@ -272,6 +275,13 @@ export class SessionViewController {
     if (this.state.filterTopics.size > 0) {
       filtered = filtered.filter(session => {
         return session.topics?.some(t => this.state.filterTopics.has(t));
+      });
+    }
+
+    // Apply tag filter
+    if (this.state.filterTags.size > 0) {
+      filtered = filtered.filter(session => {
+        return session.tags?.some(t => this.state.filterTags.has(t));
       });
     }
 
@@ -499,6 +509,25 @@ export class SessionViewController {
     }
     row.appendChild(topicsCell);
 
+    // Tags column
+    const tagsCell = document.createElement('td');
+    tagsCell.className = 'col-tags';
+    if (session.tags && session.tags.length > 0) {
+      session.tags.forEach(tag => {
+        const badge = document.createElement('span');
+        badge.className = 'tag-badge';
+        badge.textContent = tag;
+        badge.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.toggleTagFilter(tag);
+        });
+        tagsCell.appendChild(badge);
+      });
+    } else {
+      tagsCell.textContent = '—';
+    }
+    row.appendChild(tagsCell);
+
     // Files column
     const filesCell = document.createElement('td');
     filesCell.className = 'col-files';
@@ -564,6 +593,29 @@ export class SessionViewController {
   }
 
   /**
+   * Toggle tag filter
+   */
+  private toggleTagFilter(tag: string): void {
+    webviewLogger.debug(
+      LogCategory.UI,
+      'Toggling tag filter',
+      'toggleTagFilter',
+      { tag },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    if (this.state.filterTags.has(tag)) {
+      this.state.filterTags.delete(tag);
+    } else {
+      this.state.filterTags.add(tag);
+    }
+
+    this.applyFiltersAndSort();
+    this.renderTable();
+    this.renderFilterChips();
+  }
+
+  /**
    * Render filter chips
    */
   private renderFilterChips(): void {
@@ -585,6 +637,24 @@ export class SessionViewController {
       if (removeBtn) {
         removeBtn.addEventListener('click', () => {
           this.toggleTopicFilter(topic);
+        });
+      }
+
+      this.filterChipsContainer!.appendChild(chip);
+    });
+
+    this.state.filterTags.forEach(tag => {
+      const chip = document.createElement('div');
+      chip.className = 'filter-chip';
+      chip.innerHTML = `
+        <span>${tag}</span>
+        <button class="remove-filter" data-tag="${tag}">×</button>
+      `;
+
+      const removeBtn = chip.querySelector('.remove-filter');
+      if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+          this.toggleTagFilter(tag);
         });
       }
 
