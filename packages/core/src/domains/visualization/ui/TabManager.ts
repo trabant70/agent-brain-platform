@@ -6,7 +6,7 @@
 
 import { EventEmitter } from 'events';
 
-export type TabId = 'timeline' | 'knowledge' | 'sessions';
+export type TabId = 'timeline' | 'knowledge' | 'sessions' | 'support' | 'marketplace';
 
 export interface TabChangeEvent {
   from: TabId | null;

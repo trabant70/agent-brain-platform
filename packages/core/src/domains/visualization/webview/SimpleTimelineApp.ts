@@ -11,6 +11,8 @@ import { UIControllerManager } from '../ui/UIControllerManager';
 import { TabManager } from '../ui/TabManager';
 import { KnowledgeViewController } from '../ui/KnowledgeViewController';
 import { SessionViewController } from '../ui/SessionViewController';
+import { MarketplaceController } from '../ui/MarketplaceController';
+import { NotificationManager } from '../ui/NotificationManager';
 import { webviewLogger, LogCategory, LogPathway } from './WebviewLogger';
 
 interface CanonicalEvent {
@@ -44,6 +46,7 @@ export class SimpleTimelineApp {
     private tabManager: TabManager;
     private knowledgeController: KnowledgeViewController;
     private sessionController: SessionViewController;
+    private marketplaceController: MarketplaceController;
     private currentEvents: CanonicalEvent[] = [];
     private currentFilterOptions: FilterOptions | null = null;
     private currentAppliedFilters: any = null;  // Current filter state for branch visibility
@@ -135,6 +138,32 @@ export class SimpleTimelineApp {
         if (this.tabManager.getActiveTab() === 'sessions') {
             webviewLogger.info(LogCategory.UI, 'Sessions tab is active on initialization - requesting data', 'constructor', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
             this.sessionController.requestInitialLoad();
+        }
+
+        // Initialize marketplace controller
+        const notificationManager = new NotificationManager();
+        this.marketplaceController = new MarketplaceController({
+            onSendMessage: (message) => {
+                // Forward marketplace messages to extension
+                if (window.vscode) {
+                    window.vscode.postMessage(message);
+                }
+            },
+            notificationManager
+        });
+        this.marketplaceController.initialize();
+
+        // Make marketplace controller globally accessible for onclick handlers
+        (window as any).marketplaceController = this.marketplaceController;
+
+        webviewLogger.info(LogCategory.UI, 'Marketplace controller initialized', 'constructor', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+
+        // If marketplace tab is already active (restored from localStorage), request initial data
+        if (this.tabManager.getActiveTab() === 'marketplace') {
+            webviewLogger.info(LogCategory.UI, 'Marketplace tab is active on initialization - requesting data', 'constructor', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+            if (window.vscode) {
+                window.vscode.postMessage({ type: 'marketplace:request-templates' });
+            }
         }
 
         // Setup brush callback for range selector
@@ -899,6 +928,20 @@ export class SimpleTimelineApp {
                 window.vscode.postMessage({ type: 'sessions:load-all' });
             } else {
                 webviewLogger.debug(LogCategory.UI, 'Session data already loaded - using cached data', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+            }
+        }
+
+        // Load marketplace data when Marketplace tab is activated (if not already loaded)
+        if (to === 'marketplace') {
+            webviewLogger.debug(LogCategory.UI, 'Marketplace tab activated', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+            // Only request data if the controller doesn't have any templates yet
+            // This preserves data when switching between tabs
+            const hasData = this.marketplaceController && (this.marketplaceController as any).state?.templates?.length > 0;
+            if (!hasData && window.vscode) {
+                webviewLogger.debug(LogCategory.UI, 'No marketplace data loaded yet - requesting', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+                window.vscode.postMessage({ type: 'marketplace:request-templates' });
+            } else {
+                webviewLogger.debug(LogCategory.UI, 'Marketplace data already loaded - using cached data', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
             }
         }
 

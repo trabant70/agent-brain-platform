@@ -81,6 +81,30 @@ export class KnowledgeMessageHandler {
         await this.showCreateKnowledgeItemDialog();
         return true;
 
+      case 'marketplace:request-templates':
+        await this.sendMarketplaceTemplates();
+        return true;
+
+      case 'marketplace:install':
+        await this.handleMarketplaceInstall(message.payload);
+        return true;
+
+      case 'marketplace:uninstall':
+        await this.handleMarketplaceUninstall(message.payload);
+        return true;
+
+      case 'marketplace:create-template':
+        await this.handleMarketplaceCreateTemplate(message.payload);
+        return true;
+
+      case 'marketplace:export':
+        await this.handleMarketplaceExport(message.payload);
+        return true;
+
+      case 'marketplace:import':
+        await this.handleMarketplaceImport(message.payload);
+        return true;
+
       default:
         return false; // Not handled by this handler
     }
@@ -880,6 +904,485 @@ export class KnowledgeMessageHandler {
         error
       );
       vscode.window.showErrorMessage(`Failed to create knowledge item: ${error.message}`);
+    }
+  }
+
+  // ============================================
+  // Marketplace Handlers
+  // ============================================
+
+  /**
+   * Send marketplace templates to webview
+   */
+  private async sendMarketplaceTemplates(): Promise<void> {
+    logger.debug(
+      LogCategory.EXTENSION,
+      'Sending marketplace templates to webview',
+      'KnowledgeMessageHandler.sendMarketplaceTemplates',
+      {},
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    try {
+      const marketplaceManager = this.context.knowledgeManager.getMarketplaceManager();
+      const templates = marketplaceManager.getAllTemplates();
+
+      logger.info(
+        LogCategory.EXTENSION,
+        `Loaded ${templates.length} marketplace templates`,
+        'KnowledgeMessageHandler.sendMarketplaceTemplates',
+        { templateCount: templates.length },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      this.context.view?.webview.postMessage({
+        type: 'marketplace:templates-loaded',
+        payload: { templates }
+      });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to load marketplace templates',
+        'KnowledgeMessageHandler.sendMarketplaceTemplates',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      this.context.view?.webview.postMessage({
+        type: 'marketplace:error',
+        payload: { error: error.message }
+      });
+    }
+  }
+
+  /**
+   * Handle marketplace template installation
+   */
+  private async handleMarketplaceInstall(payload: { templateId: string }): Promise<void> {
+    logger.debug(
+      LogCategory.EXTENSION,
+      'Installing marketplace template',
+      'KnowledgeMessageHandler.handleMarketplaceInstall',
+      { templateId: payload.templateId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    try {
+      const result = await this.context.knowledgeManager.installMarketplaceTemplate(
+        payload.templateId,
+        { skipDuplicates: true }
+      );
+
+      if (result.success) {
+        logger.info(
+          LogCategory.EXTENSION,
+          'Successfully installed marketplace template',
+          'KnowledgeMessageHandler.handleMarketplaceInstall',
+          {
+            templateId: payload.templateId,
+            itemsCreated: result.details?.itemsCreated,
+            itemsSkipped: result.details?.itemsSkipped
+          },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
+        vscode.window.showInformationMessage(result.message);
+
+        // Notify webview of successful installation
+        this.context.view?.webview.postMessage({
+          type: 'marketplace:install-success',
+          payload: {
+            templateId: payload.templateId,
+            installedAt: new Date().toISOString()
+          }
+        });
+
+        // Refresh knowledge data to show newly installed items
+        await this.sendKnowledgeData();
+      } else {
+        logger.warn(
+          LogCategory.EXTENSION,
+          'Failed to install marketplace template',
+          'KnowledgeMessageHandler.handleMarketplaceInstall',
+          { templateId: payload.templateId, message: result.message },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
+        vscode.window.showErrorMessage(result.message);
+
+        this.context.view?.webview.postMessage({
+          type: 'marketplace:install-error',
+          payload: {
+            templateId: payload.templateId,
+            error: result.message
+          }
+        });
+      }
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Exception during marketplace template installation',
+        'KnowledgeMessageHandler.handleMarketplaceInstall',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to install template: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'marketplace:install-error',
+        payload: {
+          templateId: payload.templateId,
+          error: error.message
+        }
+      });
+    }
+  }
+
+  /**
+   * Handle marketplace template uninstallation
+   */
+  private async handleMarketplaceUninstall(payload: { templateId: string }): Promise<void> {
+    logger.debug(
+      LogCategory.EXTENSION,
+      'Uninstalling marketplace template',
+      'KnowledgeMessageHandler.handleMarketplaceUninstall',
+      { templateId: payload.templateId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    try {
+      const result = await this.context.knowledgeManager.uninstallMarketplaceTemplate(
+        payload.templateId
+      );
+
+      if (result.success) {
+        logger.info(
+          LogCategory.EXTENSION,
+          'Successfully uninstalled marketplace template',
+          'KnowledgeMessageHandler.handleMarketplaceUninstall',
+          { templateId: payload.templateId },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
+        vscode.window.showInformationMessage(result.message);
+
+        // Notify webview of successful uninstallation
+        this.context.view?.webview.postMessage({
+          type: 'marketplace:uninstall-success',
+          payload: {
+            templateId: payload.templateId
+          }
+        });
+
+        // Refresh knowledge data to reflect removed items
+        await this.sendKnowledgeData();
+      } else {
+        logger.warn(
+          LogCategory.EXTENSION,
+          'Failed to uninstall marketplace template',
+          'KnowledgeMessageHandler.handleMarketplaceUninstall',
+          { templateId: payload.templateId, message: result.message },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
+        vscode.window.showErrorMessage(result.message);
+
+        this.context.view?.webview.postMessage({
+          type: 'marketplace:uninstall-error',
+          payload: {
+            templateId: payload.templateId,
+            error: result.message
+          }
+        });
+      }
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Exception during marketplace template uninstallation',
+        'KnowledgeMessageHandler.handleMarketplaceUninstall',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to uninstall template: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'marketplace:uninstall-error',
+        payload: {
+          templateId: payload.templateId,
+          error: error.message
+        }
+      });
+    }
+  }
+
+  /**
+   * Handle marketplace template creation
+   */
+  private async handleMarketplaceCreateTemplate(payload: any): Promise<void> {
+    logger.debug(
+      LogCategory.EXTENSION,
+      'Creating marketplace template',
+      'KnowledgeMessageHandler.handleMarketplaceCreateTemplate',
+      { name: payload.name },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    try {
+      const result = await this.context.knowledgeManager.createMarketplaceTemplate({
+        name: payload.name,
+        description: payload.description,
+        category: payload.category,
+        tags: payload.tags,
+        author: payload.author,
+        license: payload.license,
+        itemIds: [] // Empty for now - Phase 6 will add item selection
+      });
+
+      if (result.success && result.template) {
+        logger.info(
+          LogCategory.EXTENSION,
+          'Successfully created marketplace template',
+          'KnowledgeMessageHandler.handleMarketplaceCreateTemplate',
+          { templateId: result.template.id, name: result.template.name },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
+        vscode.window.showInformationMessage(result.message);
+
+        // Refresh marketplace templates
+        await this.sendMarketplaceTemplates();
+      } else {
+        logger.warn(
+          LogCategory.EXTENSION,
+          'Failed to create marketplace template',
+          'KnowledgeMessageHandler.handleMarketplaceCreateTemplate',
+          { message: result.message },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
+        vscode.window.showErrorMessage(result.message);
+
+        this.context.view?.webview.postMessage({
+          type: 'marketplace:create-error',
+          payload: { error: result.message }
+        });
+      }
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Exception during marketplace template creation',
+        'KnowledgeMessageHandler.handleMarketplaceCreateTemplate',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to create template: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'marketplace:create-error',
+        payload: { error: error.message }
+      });
+    }
+  }
+
+  /**
+   * Handle marketplace template export
+   */
+  private async handleMarketplaceExport(payload: { templateId: string }): Promise<void> {
+    logger.debug(
+      LogCategory.EXTENSION,
+      'Exporting marketplace template',
+      'KnowledgeMessageHandler.handleMarketplaceExport',
+      { templateId: payload.templateId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    try {
+      const marketplaceManager = this.context.knowledgeManager.getMarketplaceManager();
+      const template = marketplaceManager.getTemplate(payload.templateId);
+
+      if (!template) {
+        vscode.window.showErrorMessage(`Template not found: ${payload.templateId}`);
+        return;
+      }
+
+      // Show save dialog
+      const uri = await vscode.window.showSaveDialog({
+        defaultUri: vscode.Uri.file(`${template.name.toLowerCase().replace(/\s+/g, '-')}.json`),
+        filters: {
+          'Knowledge Template': ['json']
+        },
+        saveLabel: 'Export Template'
+      });
+
+      if (!uri) {
+        // User cancelled
+        return;
+      }
+
+      // Export template to file
+      const result = await marketplaceManager.exportTemplate(template, uri.fsPath);
+
+      if (result.success) {
+        logger.info(
+          LogCategory.EXTENSION,
+          'Successfully exported marketplace template',
+          'KnowledgeMessageHandler.handleMarketplaceExport',
+          { templateId: payload.templateId, filePath: result.filePath },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
+        vscode.window.showInformationMessage(
+          `Template "${template.name}" exported successfully to ${result.filePath}`
+        );
+
+        this.context.view?.webview.postMessage({
+          type: 'marketplace:export-success',
+          payload: {
+            templateId: payload.templateId,
+            filePath: result.filePath
+          }
+        });
+      } else {
+        logger.warn(
+          LogCategory.EXTENSION,
+          'Failed to export marketplace template',
+          'KnowledgeMessageHandler.handleMarketplaceExport',
+          { templateId: payload.templateId, message: result.message },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
+        vscode.window.showErrorMessage(result.message || 'Export failed');
+
+        this.context.view?.webview.postMessage({
+          type: 'marketplace:export-error',
+          payload: {
+            templateId: payload.templateId,
+            error: result.message
+          }
+        });
+      }
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Exception during marketplace template export',
+        'KnowledgeMessageHandler.handleMarketplaceExport',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to export template: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'marketplace:export-error',
+        payload: {
+          templateId: payload.templateId,
+          error: error.message
+        }
+      });
+    }
+  }
+
+  /**
+   * Handle marketplace template import
+   */
+  private async handleMarketplaceImport(payload: any): Promise<void> {
+    logger.debug(
+      LogCategory.EXTENSION,
+      'Importing marketplace template',
+      'KnowledgeMessageHandler.handleMarketplaceImport',
+      {},
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    try {
+      // Show open dialog
+      const uris = await vscode.window.showOpenDialog({
+        canSelectFiles: true,
+        canSelectFolders: false,
+        canSelectMany: false,
+        filters: {
+          'Knowledge Template': ['json']
+        },
+        openLabel: 'Import Template'
+      });
+
+      if (!uris || uris.length === 0) {
+        // User cancelled
+        return;
+      }
+
+      const filePath = uris[0].fsPath;
+
+      // Import template from file
+      const marketplaceManager = this.context.knowledgeManager.getMarketplaceManager();
+      const result = await marketplaceManager.importTemplate(filePath);
+
+      if (result.success && result.template) {
+        logger.info(
+          LogCategory.EXTENSION,
+          'Successfully imported marketplace template',
+          'KnowledgeMessageHandler.handleMarketplaceImport',
+          { templateId: result.template.id, name: result.template.name },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
+        vscode.window.showInformationMessage(
+          `Template "${result.template.name}" imported successfully`
+        );
+
+        // Refresh marketplace templates
+        await this.sendMarketplaceTemplates();
+
+        this.context.view?.webview.postMessage({
+          type: 'marketplace:import-success',
+          payload: {
+            template: result.template
+          }
+        });
+      } else {
+        logger.warn(
+          LogCategory.EXTENSION,
+          'Failed to import marketplace template',
+          'KnowledgeMessageHandler.handleMarketplaceImport',
+          { message: result.message, errors: result.errors },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
+        // Show detailed error message
+        const errorDetails = result.errors && result.errors.length > 0
+          ? `\n\nErrors:\n${result.errors.join('\n')}`
+          : '';
+
+        vscode.window.showErrorMessage(result.message + errorDetails);
+
+        this.context.view?.webview.postMessage({
+          type: 'marketplace:import-error',
+          payload: {
+            error: result.message,
+            errors: result.errors
+          }
+        });
+      }
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Exception during marketplace template import',
+        'KnowledgeMessageHandler.handleMarketplaceImport',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to import template: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'marketplace:import-error',
+        payload: {
+          error: error.message
+        }
+      });
     }
   }
 }

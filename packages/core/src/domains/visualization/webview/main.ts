@@ -13,6 +13,7 @@ import { initI18n } from './i18n';
 // Import CSS - webpack will bundle it inline
 import '../styles/timeline.css';
 import '../styles/components/knowledge.css';
+import '../styles/components/marketplace.css';
 
 // Expose D3 globally
 window.d3 = d3;
@@ -228,6 +229,47 @@ function setupMessageHandling(): void {
 
                 case 'sessions:error':
                     showSessionsError(message.payload.error);
+                    break;
+
+                // Marketplace Messages
+                case 'marketplace:templates-loaded':
+                    handleMarketplaceTemplatesLoaded(message.payload);
+                    break;
+
+                case 'marketplace:install-success':
+                    handleMarketplaceInstallSuccess(message.payload);
+                    break;
+
+                case 'marketplace:install-error':
+                    handleMarketplaceInstallError(message.payload);
+                    break;
+
+                case 'marketplace:uninstall-success':
+                    handleMarketplaceUninstallSuccess(message.payload);
+                    break;
+
+                case 'marketplace:uninstall-error':
+                    handleMarketplaceUninstallError(message.payload);
+                    break;
+
+                case 'marketplace:error':
+                    showMarketplaceError(message.payload.error);
+                    break;
+
+                case 'marketplace:export-success':
+                    handleMarketplaceExportSuccess(message.payload);
+                    break;
+
+                case 'marketplace:export-error':
+                    handleMarketplaceExportError(message.payload);
+                    break;
+
+                case 'marketplace:import-success':
+                    handleMarketplaceImportSuccess(message.payload);
+                    break;
+
+                case 'marketplace:import-error':
+                    handleMarketplaceImportError(message.payload);
                     break;
 
                 // Note: Legacy AI companion message handlers removed
@@ -527,6 +569,177 @@ function handleSessionsLoaded(data: any): void {
 function showSessionsError(error: string): void {
     webviewLogger.error(LogCategory.UI, `Sessions error: ${error}`, 'showSessionsError');
     console.error('[Sessions] Error:', error);
+}
+
+// ============================================
+// Marketplace Message Handlers
+// ============================================
+
+/**
+ * Handle marketplace templates loaded
+ */
+function handleMarketplaceTemplatesLoaded(data: any): void {
+    webviewLogger.info(
+        LogCategory.WEBVIEW,
+        'Received marketplace templates from extension',
+        'handleMarketplaceTemplatesLoaded',
+        { templateCount: data.templates?.length || 0 },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    if ((window as any).marketplaceController) {
+        (window as any).marketplaceController.loadTemplates(data.templates);
+        webviewLogger.debug(
+            LogCategory.UI,
+            'Marketplace templates loaded into controller',
+            'handleMarketplaceTemplatesLoaded',
+            { templateCount: data.templates?.length || 0 },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+    } else {
+        webviewLogger.warn(
+            LogCategory.WEBVIEW,
+            'Cannot load marketplace templates - controller not available',
+            'handleMarketplaceTemplatesLoaded',
+            { hasController: !!(window as any).marketplaceController },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+    }
+}
+
+/**
+ * Handle marketplace template installation success
+ */
+function handleMarketplaceInstallSuccess(data: any): void {
+    webviewLogger.info(
+        LogCategory.UI,
+        'Template installed successfully',
+        'handleMarketplaceInstallSuccess',
+        { templateId: data.templateId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    if ((window as any).marketplaceController) {
+        (window as any).marketplaceController.updateTemplateStatus(
+            data.templateId,
+            true,
+            data.installedAt
+        );
+    }
+}
+
+/**
+ * Handle marketplace template installation error
+ */
+function handleMarketplaceInstallError(data: any): void {
+    webviewLogger.error(
+        LogCategory.UI,
+        'Template installation failed',
+        'handleMarketplaceInstallError',
+        { templateId: data.templateId, error: data.error },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+    console.error('[Marketplace] Install error:', data.error);
+}
+
+/**
+ * Handle marketplace template uninstallation success
+ */
+function handleMarketplaceUninstallSuccess(data: any): void {
+    webviewLogger.info(
+        LogCategory.UI,
+        'Template uninstalled successfully',
+        'handleMarketplaceUninstallSuccess',
+        { templateId: data.templateId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    if ((window as any).marketplaceController) {
+        (window as any).marketplaceController.updateTemplateStatus(
+            data.templateId,
+            false,
+            undefined
+        );
+    }
+}
+
+/**
+ * Handle marketplace template uninstallation error
+ */
+function handleMarketplaceUninstallError(data: any): void {
+    webviewLogger.error(
+        LogCategory.UI,
+        'Template uninstallation failed',
+        'handleMarketplaceUninstallError',
+        { templateId: data.templateId, error: data.error },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+    console.error('[Marketplace] Uninstall error:', data.error);
+}
+
+/**
+ * Show marketplace error message
+ */
+function showMarketplaceError(error: string): void {
+    webviewLogger.error(LogCategory.UI, `Marketplace error: ${error}`, 'showMarketplaceError');
+    console.error('[Marketplace] Error:', error);
+}
+
+/**
+ * Handle marketplace template export success
+ */
+function handleMarketplaceExportSuccess(data: any): void {
+    webviewLogger.info(
+        LogCategory.UI,
+        'Template exported successfully',
+        'handleMarketplaceExportSuccess',
+        { templateId: data.templateId, filePath: data.filePath },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+}
+
+/**
+ * Handle marketplace template export error
+ */
+function handleMarketplaceExportError(data: any): void {
+    webviewLogger.error(
+        LogCategory.UI,
+        'Template export failed',
+        'handleMarketplaceExportError',
+        { templateId: data.templateId, error: data.error },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+    console.error('[Marketplace] Export error:', data.error);
+}
+
+/**
+ * Handle marketplace template import success
+ */
+function handleMarketplaceImportSuccess(data: any): void {
+    webviewLogger.info(
+        LogCategory.UI,
+        'Template imported successfully',
+        'handleMarketplaceImportSuccess',
+        { template: data.template },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+}
+
+/**
+ * Handle marketplace template import error
+ */
+function handleMarketplaceImportError(data: any): void {
+    webviewLogger.error(
+        LogCategory.UI,
+        'Template import failed',
+        'handleMarketplaceImportError',
+        { error: data.error, errors: data.errors },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+    console.error('[Marketplace] Import error:', data.error);
+    if (data.errors) {
+        console.error('[Marketplace] Import validation errors:', data.errors);
+    }
 }
 
 // Initialize

@@ -389,8 +389,7 @@ export class SessionViewController {
    * Render the sessions table
    */
   private renderTable(): void {
-    const tableBody = this.tableBody;
-    if (!tableBody) {
+    if (!this.tableBody) {
       webviewLogger.error(
         LogCategory.UI,
         'Table body element not found',
@@ -398,6 +397,7 @@ export class SessionViewController {
       );
       return;
     }
+    const tableBody = this.tableBody;
 
     webviewLogger.debug(
       LogCategory.UI,

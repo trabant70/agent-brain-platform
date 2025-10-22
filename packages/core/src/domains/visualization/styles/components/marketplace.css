@@ -1,0 +1,575 @@
+/**
+ * Marketplace Tab Styles
+ * Template cards, filters, and installation UI
+ */
+
+/* Variables for marketplace theme */
+:root {
+  --marketplace-accent: #ff9500;
+  --marketplace-secondary: #ffcc00;
+  --marketplace-installed: #00ff88;
+  --marketplace-bundled: #00d4ff;
+}
+
+/* Container */
+#marketplace-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px;
+  overflow-y: auto;
+  gap: 16px;
+}
+
+/* Header */
+.marketplace-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  gap: 16px;
+}
+
+.marketplace-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.marketplace-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.marketplace-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.marketplace-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.marketplace-stats span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Filters */
+.marketplace-filters {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  white-space: nowrap;
+}
+
+.filter-select,
+.filter-search {
+  padding: 6px 10px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 3px;
+  font-size: 13px;
+  font-family: var(--vscode-font-family);
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.filter-select:focus,
+.filter-search:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.filter-search {
+  min-width: 200px;
+  flex: 1;
+}
+
+.filter-search::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+/* Template Grid */
+.marketplace-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  padding: 4px;
+}
+
+/* Template Card */
+.template-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 6px;
+  padding: 16px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.template-card:hover {
+  border-color: var(--marketplace-accent);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.template-card.installed {
+  border-color: var(--marketplace-installed);
+  background: rgba(0, 255, 136, 0.05);
+}
+
+.template-card.installed::before {
+  content: '✓';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 20px;
+  color: var(--marketplace-installed);
+  opacity: 0.6;
+}
+
+/* Card Header */
+.template-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.template-category-badge {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.template-source-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* Card Body */
+.template-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.template-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  line-height: 1.4;
+}
+
+.template-description {
+  margin: 0;
+  font-size: 13px;
+  color: var(--vscode-descriptionForeground);
+  line-height: 1.5;
+  flex: 1;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.template-meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  padding-top: 4px;
+}
+
+.template-items,
+.template-version {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Tags */
+.template-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.template-tags .tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  background: var(--vscode-textBlockQuote-background);
+  color: var(--vscode-textBlockQuote-foreground);
+  border-radius: 3px;
+  border: 1px solid var(--vscode-textBlockQuote-border);
+}
+
+.template-tags .tag-more {
+  font-size: 11px;
+  padding: 2px 8px;
+  color: var(--vscode-descriptionForeground);
+  font-style: italic;
+}
+
+/* Author */
+.template-author {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--vscode-panel-border);
+}
+
+.template-author small {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
+
+/* Card Footer */
+.template-card-footer {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--vscode-panel-border);
+}
+
+.template-card-footer .btn {
+  flex: 1;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--vscode-font-family);
+  outline: none;
+}
+
+.template-card-footer .btn:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}
+
+.template-card-footer .btn-primary {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.template-card-footer .btn-primary:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.template-card-footer .btn-secondary {
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+}
+
+.template-card-footer .btn-secondary:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+/* Empty State */
+.marketplace-empty {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--vscode-descriptionForeground);
+}
+
+.marketplace-empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* Loading State */
+.marketplace-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--vscode-descriptionForeground);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .marketplace-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .marketplace-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filter-search {
+    width: 100%;
+  }
+}
+
+/* Dark theme enhancements */
+.vscode-dark .template-card:hover {
+  box-shadow: 0 4px 16px rgba(255, 149, 0, 0.2);
+}
+
+.vscode-dark .template-card.installed {
+  background: rgba(0, 255, 136, 0.08);
+}
+
+/* High contrast mode */
+.vscode-high-contrast .template-card {
+  border-width: 2px;
+}
+
+.vscode-high-contrast .template-card:hover {
+  border-width: 3px;
+}
+
+.vscode-high-contrast .template-card-footer .btn {
+  border: 1px solid currentColor;
+}
+
+/* ============================================
+   Template Details Modal
+   ============================================ */
+
+.template-details-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.template-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.template-details-badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.template-details-modal .badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.template-details-modal .badge-category {
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+}
+
+.template-details-modal .badge-source {
+  background: var(--vscode-textBlockQuote-background);
+  color: var(--vscode-textBlockQuote-foreground);
+  border: 1px solid var(--vscode-textBlockQuote-border);
+}
+
+.template-details-modal .badge-installed {
+  background: rgba(0, 255, 136, 0.2);
+  color: var(--marketplace-installed);
+  border: 1px solid var(--marketplace-installed);
+}
+
+.template-details-version {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  padding: 4px 10px;
+  background: var(--vscode-editor-background);
+  border-radius: 4px;
+}
+
+.template-details-description {
+  line-height: 1.6;
+  color: var(--vscode-foreground);
+}
+
+.template-details-description p {
+  margin: 0;
+}
+
+.template-details-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--vscode-editor-background);
+  border-radius: 4px;
+  border: 1px solid var(--vscode-panel-border);
+}
+
+.meta-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.meta-label {
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  min-width: 90px;
+  flex-shrink: 0;
+}
+
+.meta-value {
+  color: var(--vscode-descriptionForeground);
+  flex: 1;
+}
+
+.template-details-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.template-details-tags .tags-list {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.template-details-tags .tag {
+  font-size: 11px;
+  padding: 3px 10px;
+  background: var(--vscode-textBlockQuote-background);
+  color: var(--vscode-textBlockQuote-foreground);
+  border-radius: 3px;
+  border: 1px solid var(--vscode-textBlockQuote-border);
+}
+
+.template-details-items {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.template-details-items h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.items-preview {
+  padding: 16px;
+  background: var(--vscode-editor-background);
+  border-radius: 4px;
+  border: 1px solid var(--vscode-panel-border);
+}
+
+.items-preview-placeholder {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.items-preview-placeholder p {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--vscode-foreground);
+}
+
+.items-preview-note {
+  padding: 12px;
+  background: var(--vscode-textBlockQuote-background);
+  border-left: 3px solid var(--vscode-textBlockQuote-border);
+  border-radius: 3px;
+  font-size: 13px;
+  color: var(--vscode-descriptionForeground);
+}
+
+/* Items list (for future Phase 4 enhancement) */
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.item-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: var(--vscode-list-hoverBackground);
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.item-preview:hover {
+  background: var(--vscode-list-activeSelectionBackground);
+}
+
+.item-preview-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.item-preview-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.item-preview-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-preview-type {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
