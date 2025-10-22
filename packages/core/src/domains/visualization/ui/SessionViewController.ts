@@ -397,7 +397,7 @@ export class SessionViewController {
       );
       return;
     }
-    const tableBody = this.tableBody;
+    const tableBody = this.tableBody!; // Non-null assertion - checked above
 
     webviewLogger.debug(
       LogCategory.UI,

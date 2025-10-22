@@ -229,7 +229,7 @@ export class KnowledgeManager {
         'KnowledgeManager.refreshAll',
         {
           itemsInStore: this.store.getAllItems().length,
-          templatesInStore: this.store.getAllTemplates().length
+          templatesInMarketplace: this.marketplaceManager.getAllTemplates().length
         },
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
@@ -1673,7 +1673,7 @@ export class KnowledgeManager {
           filesFound: files.length,
           templatesLoaded: loadedCount,
           templatesFailed: errorCount,
-          templatesInStore: this.store.getAllTemplates().length
+          templatesInMarketplace: this.marketplaceManager.getAllTemplates().length
         },
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
