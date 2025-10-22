@@ -53,8 +53,12 @@ export class TemplateController {
       'Rendering template controls',
       'TemplateController.renderTemplateControls',
       {
-        templateCount: this.state.templates.length,
-        templates: this.state.templates.map(t => ({ id: t.id, name: t.name, itemCount: t.itemIds.length }))
+        templateCount: this.state.templates?.length || 0,
+        templates: this.state.templates?.map(t => ({
+          id: t.id,
+          name: t.name,
+          itemCount: t.itemIds?.length || 0
+        })) || []
       },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
@@ -76,7 +80,7 @@ export class TemplateController {
     for (const template of this.state.templates) {
       const option = document.createElement('option');
       option.value = template.id;
-      option.textContent = `${template.name} (${template.itemIds.length} items)`;
+      option.textContent = `${template.name} (${template.itemIds?.length || 0} items)`;
       selector.appendChild(option);
 
       webviewLogger.debug(

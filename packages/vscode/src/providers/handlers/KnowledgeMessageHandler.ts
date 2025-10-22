@@ -113,7 +113,7 @@ export class KnowledgeMessageHandler {
   /**
    * Send knowledge data to webview
    */
-  private async sendKnowledgeData(): Promise<void> {
+  public async sendKnowledgeData(): Promise<void> {
     logger.debug(
       LogCategory.EXTENSION,
       'Sending knowledge data to webview',
@@ -188,7 +188,7 @@ export class KnowledgeMessageHandler {
   /**
    * Send claude.md files to webview
    */
-  private async sendClaudeMdFiles(): Promise<void> {
+  public async sendClaudeMdFiles(): Promise<void> {
     logger.debug(
       LogCategory.EXTENSION,
       'Sending claude.md files to webview',

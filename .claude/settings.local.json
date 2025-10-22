@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Read(//mnt/c/**)"
+      "Read(//mnt/c/**)",
+      "Read(///**)"
     ],
     "deny": [],
     "ask": []

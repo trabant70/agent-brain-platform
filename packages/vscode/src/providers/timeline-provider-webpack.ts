@@ -548,6 +548,26 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
   }
 
   /**
+   * Send knowledge data to webview
+   * Delegates to knowledge handler
+   */
+  private sendKnowledgeData(): void {
+    if (this.knowledgeHandler) {
+      this.knowledgeHandler.sendKnowledgeData();
+    }
+  }
+
+  /**
+   * Send claude.md files to webview
+   * Delegates to knowledge handler
+   */
+  private sendClaudeMdFiles(): void {
+    if (this.knowledgeHandler) {
+      this.knowledgeHandler.sendClaudeMdFiles();
+    }
+  }
+
+  /**
    * Dispose provider
    */
   dispose(): void {
