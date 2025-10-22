@@ -149,6 +149,10 @@ const webviewConfig = {
         {
           from: path.resolve(__dirname, '../../l10n'),
           to: path.resolve(__dirname, 'l10n')
+        },
+        {
+          from: path.resolve(__dirname, '../core/src/domains/knowledge/bundled-templates'),
+          to: path.resolve(__dirname, 'dist/knowledge/bundled-templates')
         }
       ]
     })

@@ -1,13 +1,13 @@
 /**
  * KnowledgeStore - In-Memory Knowledge Management
  *
- * Provides fast, indexed storage for knowledge items and templates.
+ * Provides fast, indexed storage for knowledge items.
  * Maintains indexes for efficient filtering by type, scope, and tags.
+ * Templates are now managed by MarketplaceManager.
  */
 
 import {
   KnowledgeItem,
-  Template,
   KnowledgeType,
   KnowledgeScope,
   KnowledgeStats,
@@ -17,7 +17,6 @@ import {
 
 export class KnowledgeStore {
   private items: Map<string, KnowledgeItem> = new Map();
-  private templates: Map<string, Template> = new Map();
 
   // Indexes for fast lookups
   private indexByType: Map<KnowledgeType, Set<string>> = new Map();
@@ -133,77 +132,6 @@ export class KnowledgeStore {
    */
   hasItem(id: string): boolean {
     return this.items.has(id);
-  }
-
-  // ============================================
-  // Template Operations
-  // ============================================
-
-  /**
-   * Add a template to the store
-   */
-  addTemplate(template: Template): void {
-    this.templates.set(template.id, template);
-  }
-
-  /**
-   * Get a template by ID
-   */
-  getTemplate(id: string): Template | undefined {
-    return this.templates.get(id);
-  }
-
-  /**
-   * Update a template
-   */
-  updateTemplate(id: string, updates: Partial<Template>): void {
-    const existing = this.templates.get(id);
-    if (!existing) {
-      throw new Error(`Template not found: ${id}`);
-    }
-
-    const updated: Template = {
-      ...existing,
-      ...updates,
-      id: existing.id,  // Never allow ID to change
-      metadata: {
-        ...existing.metadata,
-        ...(updates.metadata || {}),
-        updatedAt: new Date()
-      }
-    };
-
-    this.templates.set(id, updated);
-  }
-
-  /**
-   * Delete a template
-   */
-  deleteTemplate(id: string): void {
-    this.templates.delete(id);
-  }
-
-  /**
-   * Get all templates
-   */
-  getAllTemplates(): Template[] {
-    return Array.from(this.templates.values());
-  }
-
-  /**
-   * Check if a template exists
-   */
-  hasTemplate(id: string): boolean {
-    return this.templates.has(id);
-  }
-
-  /**
-   * Get templates that include a specific item
-   */
-  getTemplatesContainingItem(itemId: string): Template[] {
-    return Array.from(this.templates.values()).filter(template =>
-      template.itemIds.includes(itemId)
-    );
   }
 
   // ============================================
@@ -366,7 +294,6 @@ export class KnowledgeStore {
       totalItems: this.items.size,
       itemsByType: new Map(),
       itemsByScope: new Map(),
-      totalTemplates: this.templates.size,
       invalidItems: 0,
       uniqueTags: this.indexByTag.size,
       totalSize: 0
@@ -411,11 +338,10 @@ export class KnowledgeStore {
   // ============================================
 
   /**
-   * Clear all items and templates
+   * Clear all items
    */
   clear(): void {
     this.items.clear();
-    this.templates.clear();
     this.indexByPath.clear();
     this.indexByTag.clear();
 
@@ -434,15 +360,6 @@ export class KnowledgeStore {
   loadItems(items: KnowledgeItem[]): void {
     for (const item of items) {
       this.addItem(item);
-    }
-  }
-
-  /**
-   * Load multiple templates at once
-   */
-  loadTemplates(templates: Template[]): void {
-    for (const template of templates) {
-      this.addTemplate(template);
     }
   }
 
@@ -526,7 +443,6 @@ export class KnowledgeStore {
   getDebugInfo(): any {
     return {
       items: this.items.size,
-      templates: this.templates.size,
       indexes: {
         types: Array.from(this.indexByType.entries()).map(([type, ids]) => ({
           type,

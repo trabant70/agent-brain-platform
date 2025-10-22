@@ -1,0 +1,70 @@
+{
+  "id": "bundled.git-essentials",
+  "name": "Git Essentials",
+  "description": "Essential Git workflow patterns and best practices for version control",
+  "version": "1.0.0",
+  "createdAt": "2025-01-22T00:00:00.000Z",
+  "updatedAt": "2025-01-22T00:00:00.000Z",
+  "category": "development",
+  "tags": ["git", "version-control", "workflow"],
+  "author": {
+    "name": "Agent Brain Team",
+    "email": "team@agentbrain.dev"
+  },
+  "license": "MIT",
+  "source": "bundled",
+  "itemCount": 3,
+  "items": [
+    {
+      "id": "bundled.git-essentials.commit-messages",
+      "title": "Effective Commit Messages",
+      "type": "golden-path",
+      "scope": "team",
+      "body": "# Writing Effective Commit Messages\n\n## Format\n```\ntype(scope): subject\n\nbody\n\nfooter\n```\n\n## Types\n- **feat**: New feature\n- **fix**: Bug fix\n- **docs**: Documentation only\n- **style**: Code style changes (formatting, no logic change)\n- **refactor**: Code change that neither fixes a bug nor adds a feature\n- **test**: Adding or updating tests\n- **chore**: Maintenance tasks\n\n## Example\n```\nfeat(auth): Add OAuth2 login support\n\nImplement OAuth2 authentication flow using authorization code grant.\nAdds login button and callback handler.\n\nCloses #123\n```\n\n## Best Practices\n1. Use imperative mood (\"Add feature\" not \"Added feature\")\n2. Keep subject line under 50 characters\n3. Separate subject from body with blank line\n4. Wrap body at 72 characters\n5. Explain what and why, not how",
+      "tags": ["git", "commit-messages", "best-practices"],
+      "source": "conventional-commits",
+      "author": "Agent Brain Team",
+      "valid": true,
+      "path": ".agent-brain/golden-paths/effective-commit-messages.md",
+      "metadata": {
+        "createdAt": "2025-01-22T00:00:00.000Z",
+        "updatedAt": "2025-01-22T00:00:00.000Z",
+        "fileSize": 856
+      }
+    },
+    {
+      "id": "bundled.git-essentials.branch-strategy",
+      "title": "Git Branch Strategy",
+      "type": "golden-path",
+      "scope": "team",
+      "body": "# Git Branch Strategy\n\n## Branch Types\n\n### Main Branches\n- **main**: Production-ready code\n- **develop**: Integration branch for features\n\n### Supporting Branches\n- **feature/***: New features (branch from develop)\n- **bugfix/***: Bug fixes (branch from develop)\n- **hotfix/***: Urgent production fixes (branch from main)\n- **release/***: Release preparation (branch from develop)\n\n## Workflow\n\n### Starting a Feature\n```bash\ngit checkout develop\ngit pull origin develop\ngit checkout -b feature/user-authentication\n```\n\n### Finishing a Feature\n```bash\ngit checkout develop\ngit merge --no-ff feature/user-authentication\ngit branch -d feature/user-authentication\ngit push origin develop\n```\n\n### Hotfix Process\n```bash\ngit checkout main\ngit checkout -b hotfix/security-patch\n# Make fixes\ngit checkout main\ngit merge --no-ff hotfix/security-patch\ngit tag -a v1.0.1\ngit checkout develop\ngit merge --no-ff hotfix/security-patch\ngit branch -d hotfix/security-patch\n```\n\n## Best Practices\n1. Never commit directly to main or develop\n2. Use pull requests for code review\n3. Delete branches after merging\n4. Keep branches short-lived (< 1 week)\n5. Rebase feature branches before merging",
+      "tags": ["git", "branching", "workflow", "gitflow"],
+      "source": "gitflow",
+      "author": "Agent Brain Team",
+      "valid": true,
+      "path": ".agent-brain/golden-paths/git-branch-strategy.md",
+      "metadata": {
+        "createdAt": "2025-01-22T00:00:00.000Z",
+        "updatedAt": "2025-01-22T00:00:00.000Z",
+        "fileSize": 1245
+      }
+    },
+    {
+      "id": "bundled.git-essentials.conflict-resolution",
+      "title": "Git Conflict Resolution",
+      "type": "troubleshooting-guide",
+      "scope": "team",
+      "body": "# Git Conflict Resolution\n\n## Understanding Conflicts\nConflicts occur when Git cannot automatically merge changes from different branches.\n\n## Conflict Markers\n```\n<<<<<<< HEAD\nYour changes\n=======\nTheir changes\n>>>>>>> branch-name\n```\n\n## Resolution Steps\n\n### 1. Identify Conflicts\n```bash\ngit status\n# Shows files with conflicts\n```\n\n### 2. Open Conflicted Files\nLook for conflict markers (<<<<<<, =======, >>>>>>>)\n\n### 3. Resolve Conflicts\n- Review both versions\n- Edit file to keep desired changes\n- Remove conflict markers\n- Test the resolution\n\n### 4. Mark as Resolved\n```bash\ngit add <resolved-file>\n```\n\n### 5. Complete the Merge\n```bash\ngit commit\n# Or for rebase:\ngit rebase --continue\n```\n\n## Prevention Strategies\n1. **Pull frequently**: Stay in sync with the main branch\n2. **Small commits**: Easier to identify and resolve conflicts\n3. **Communicate**: Coordinate on files being edited\n4. **Feature toggles**: Avoid long-lived branches\n\n## Tools\n- `git mergetool`: Launch visual merge tool\n- VS Code: Built-in conflict resolution UI\n- GitKraken, SourceTree: Visual conflict resolution\n\n## Aborting\nIf things go wrong:\n```bash\n# Abort merge\ngit merge --abort\n\n# Abort rebase\ngit rebase --abort\n```",
+      "tags": ["git", "conflicts", "troubleshooting", "merge"],
+      "source": "git-documentation",
+      "author": "Agent Brain Team",
+      "valid": true,
+      "path": ".agent-brain/troubleshooting/git-conflict-resolution.md",
+      "metadata": {
+        "createdAt": "2025-01-22T00:00:00.000Z",
+        "updatedAt": "2025-01-22T00:00:00.000Z",
+        "fileSize": 1389
+      }
+    }
+  ]
+}

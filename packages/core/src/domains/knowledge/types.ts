@@ -94,6 +94,19 @@ export interface KnowledgeItem {
 
   /** Metadata about the knowledge item */
   metadata: KnowledgeItemMetadata;
+
+  /**
+   * Template provenance (NEW)
+   * Tracks which marketplace template this item came from
+   */
+  sourceTemplate?: {
+    /** Template ID */
+    id: string;
+    /** Template version at install time */
+    version: string;
+    /** Original item ID in template (for tracking) */
+    itemKey: string;
+  };
 }
 
 /**
@@ -116,45 +129,96 @@ export interface KnowledgeItemMetadata {
   fileSize?: number;
 }
 
+// =============================================================================
+// Marketplace Template Types (REPLACES old Template interface)
+// =============================================================================
+
 /**
- * Template for combining multiple knowledge items
- * Templates can be applied to claude.md files
+ * Template category for marketplace classification
  */
-export interface Template {
-  /** Unique identifier */
-  id: string;
-
-  /** Template name */
-  name: string;
-
-  /** Description of what this template contains */
-  description: string;
-
-  /** Version number */
-  version: number;
-
-  /** Array of knowledge item IDs included in this template */
-  itemIds: string[];
-
-  /** Template metadata */
-  metadata: TemplateMetadata;
+export enum TemplateCategory {
+  DEVELOPMENT = 'development',
+  DOCUMENTATION = 'documentation',
+  BEST_PRACTICES = 'best-practices',
+  ARCHITECTURE = 'architecture',
+  TESTING = 'testing',
+  SECURITY = 'security',
+  ONBOARDING = 'onboarding',
+  WORKFLOWS = 'workflows',
+  GENERAL = 'general'
 }
 
 /**
- * Metadata for templates
+ * Source of the template
  */
-export interface TemplateMetadata {
-  /** When the template was created */
-  createdAt: Date;
+export enum TemplateSource {
+  BUNDLED = 'bundled',  // Shipped with extension
+  USER = 'user'         // Created by user
+}
 
-  /** When the template was last updated */
-  updatedAt: Date;
+/**
+ * Author information for templates
+ */
+export interface TemplateAuthor {
+  name: string;
+  email?: string;
+  url?: string;
+}
 
-  /** Optional author */
-  author?: string;
+/**
+ * Marketplace Template
+ * Complete template structure with embedded items for marketplace
+ */
+export interface MarketplaceTemplate {
+  // Core Identity
+  id: string;                     // UUID (e.g., "bundled.git-essentials")
+  name: string;                   // Display name
+  description: string;            // Short description (1-2 sentences)
 
-  /** Number of times this template has been applied */
-  usageCount?: number;
+  // Versioning
+  version: string;                // Semantic version (e.g., "1.0.0")
+  createdAt: string;              // ISO timestamp
+  updatedAt: string;              // ISO timestamp
+
+  // Classification
+  category: TemplateCategory;     // Primary category
+  tags: string[];                 // Search/filter tags
+
+  // Attribution
+  author: TemplateAuthor;         // Creator information
+  license: string;                // License (MIT, CC-BY, Apache, etc.)
+
+  // Source
+  source: TemplateSource;         // Origin type
+
+  // Content
+  items: KnowledgeItem[];         // Embedded full items
+  itemCount: number;              // Convenience field
+
+  // Runtime State (not persisted in template file)
+  isInstalled?: boolean;          // Computed at load time
+  installedAt?: string;           // From installation registry
+  installedItemIds?: string[];   // IDs of created items in workspace
+}
+
+/**
+ * Installation record for a template in workspace
+ */
+export interface InstalledTemplate {
+  templateId: string;
+  version: string;
+  installedAt: string;
+  installedItemIds: string[];   // Items created from this template
+  source: TemplateSource;
+}
+
+/**
+ * Installation registry (persisted in .agent-brain/marketplace/installed.json)
+ */
+export interface InstallationRegistry {
+  version: string;              // Registry format version
+  installed: InstalledTemplate[];
+  lastUpdated: string;
 }
 
 /**
@@ -218,9 +282,6 @@ export interface KnowledgeStats {
 
   /** Count of items by scope */
   itemsByScope: Map<KnowledgeScope, number>;
-
-  /** Total number of templates */
-  totalTemplates: number;
 
   /** Number of items that failed to parse */
   invalidItems: number;
@@ -320,13 +381,16 @@ export interface CreateKnowledgeItemOptions {
 }
 
 /**
- * Options for creating a template
+ * Metadata for creating a marketplace template
  */
-export interface CreateTemplateOptions {
+export interface CreateMarketplaceTemplateOptions {
   name: string;
-  description?: string;
-  itemIds: string[];
-  author?: string;
+  description: string;
+  category: TemplateCategory;
+  tags: string[];
+  author: TemplateAuthor;
+  license: string;
+  items: KnowledgeItem[];
 }
 
 /**
@@ -581,4 +645,149 @@ export interface ValidationResult {
 
   /** Validation warnings */
   warnings: string[];
+}
+
+// =============================================================================
+// Marketplace Template Helper Functions
+// =============================================================================
+
+/**
+ * Type guard to check if a string is a valid TemplateCategory
+ */
+export function isTemplateCategory(value: string): value is TemplateCategory {
+  return Object.values(TemplateCategory).includes(value as TemplateCategory);
+}
+
+/**
+ * Type guard to check if a string is a valid TemplateSource
+ */
+export function isTemplateSource(value: string): value is TemplateSource {
+  return Object.values(TemplateSource).includes(value as TemplateSource);
+}
+
+/**
+ * Get display label for template category
+ */
+export function getTemplateCategoryLabel(category: TemplateCategory): string {
+  const labels: Record<TemplateCategory, string> = {
+    [TemplateCategory.DEVELOPMENT]: 'Development',
+    [TemplateCategory.DOCUMENTATION]: 'Documentation',
+    [TemplateCategory.BEST_PRACTICES]: 'Best Practices',
+    [TemplateCategory.ARCHITECTURE]: 'Architecture',
+    [TemplateCategory.TESTING]: 'Testing',
+    [TemplateCategory.SECURITY]: 'Security',
+    [TemplateCategory.ONBOARDING]: 'Onboarding',
+    [TemplateCategory.WORKFLOWS]: 'Workflows',
+    [TemplateCategory.GENERAL]: 'General'
+  };
+  return labels[category];
+}
+
+/**
+ * Get emoji icon for template category
+ */
+export function getTemplateCategoryIcon(category: TemplateCategory): string {
+  const icons: Record<TemplateCategory, string> = {
+    [TemplateCategory.DEVELOPMENT]: '🎯',
+    [TemplateCategory.DOCUMENTATION]: '📘',
+    [TemplateCategory.BEST_PRACTICES]: '⭐',
+    [TemplateCategory.ARCHITECTURE]: '🏗️',
+    [TemplateCategory.TESTING]: '🧪',
+    [TemplateCategory.SECURITY]: '🔒',
+    [TemplateCategory.ONBOARDING]: '🚀',
+    [TemplateCategory.WORKFLOWS]: '🔄',
+    [TemplateCategory.GENERAL]: '📦'
+  };
+  return icons[category];
+}
+
+/**
+ * Get display label for template source
+ */
+export function getTemplateSourceLabel(source: TemplateSource): string {
+  const labels: Record<TemplateSource, string> = {
+    [TemplateSource.BUNDLED]: 'Bundled',
+    [TemplateSource.USER]: 'User'
+  };
+  return labels[source];
+}
+
+/**
+ * Get emoji badge for template source
+ */
+export function getTemplateSourceBadge(source: TemplateSource): string {
+  const badges: Record<TemplateSource, string> = {
+    [TemplateSource.BUNDLED]: '🏢',
+    [TemplateSource.USER]: '👤'
+  };
+  return badges[source];
+}
+
+/**
+ * Validate a marketplace template
+ */
+export function validateMarketplaceTemplate(template: Partial<MarketplaceTemplate>): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  if (!template.id || template.id.trim().length === 0) {
+    errors.push('ID is required');
+  }
+
+  if (!template.name || template.name.trim().length === 0) {
+    errors.push('Name is required');
+  }
+
+  if (!template.description || template.description.trim().length === 0) {
+    errors.push('Description is required');
+  }
+
+  if (!template.version || template.version.trim().length === 0) {
+    errors.push('Version is required');
+  }
+
+  if (!template.category) {
+    errors.push('Category is required');
+  } else if (!isTemplateCategory(template.category)) {
+    errors.push(`Invalid category: ${template.category}`);
+  }
+
+  if (!template.source) {
+    errors.push('Source is required');
+  } else if (!isTemplateSource(template.source)) {
+    errors.push(`Invalid source: ${template.source}`);
+  }
+
+  if (!template.author) {
+    errors.push('Author is required');
+  } else if (!template.author.name || template.author.name.trim().length === 0) {
+    errors.push('Author name is required');
+  }
+
+  if (!template.license || template.license.trim().length === 0) {
+    errors.push('License is required');
+  }
+
+  if (!template.items || !Array.isArray(template.items)) {
+    errors.push('Items array is required');
+  } else if (template.items.length === 0) {
+    errors.push('At least one item is required');
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors
+  };
+}
+
+/**
+ * Generate a template ID slug from a name
+ */
+export function generateTemplateId(name: string, source: TemplateSource): string {
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+  const prefix = source === TemplateSource.BUNDLED ? 'bundled' : 'user';
+  return `${prefix}.${slug}`;
 }

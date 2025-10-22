@@ -12,18 +12,27 @@ import {
   KnowledgeFileSystem,
   TemplateEngine,
   KnowledgeItem,
-  Template,
   KnowledgeStats,
   ClaudeMdFile,
   CreateKnowledgeItemOptions,
-  CreateTemplateOptions,
   KnowledgeType,
   KnowledgeScope,
   ImportOptions,
-  ImportResult
+  ImportResult,
+  // Marketplace (Phase 2)
+  MarketplaceManager,
+  TemplateRegistry,
+  TemplateInstaller,
+  MarketplaceTemplate,
+  TemplateCategory,
+  TemplateSource
 } from '@agent-brain/core/domains/knowledge';
 import { KnowledgeEventStorage } from '@agent-brain/core/domains/events';
 import { logger, LogCategory, LogPathway } from '@agent-brain/core/infrastructure/logging/Logger';
+
+// TODO: Phase 3 - Remove old Template type after UI migration
+type Template = any;
+type CreateTemplateOptions = any;
 
 export class KnowledgeManager {
   private store: KnowledgeStore;
@@ -34,6 +43,11 @@ export class KnowledgeManager {
   private initialized: boolean = false;
   private knowledgeBaseDir: string;
 
+  // Marketplace (Phase 2)
+  private marketplaceManager: MarketplaceManager;
+  private templateRegistry: TemplateRegistry;
+  private templateInstaller: TemplateInstaller;
+
   constructor(
     private workspaceRoot: string,
     private extensionContext: vscode.ExtensionContext
@@ -43,6 +57,22 @@ export class KnowledgeManager {
     this.fileSystem = new KnowledgeFileSystem(workspaceRoot);
     this.templateEngine = new TemplateEngine(this.store);
     this.eventStorage = new KnowledgeEventStorage(workspaceRoot);
+
+    // Initialize marketplace services
+    const bundledTemplatesPath = this.getBundledTemplatesPath();
+    const userTemplatesPath = path.join(this.knowledgeBaseDir, 'marketplace', 'templates');
+
+    this.marketplaceManager = new MarketplaceManager(bundledTemplatesPath, userTemplatesPath);
+    this.templateRegistry = new TemplateRegistry(this.knowledgeBaseDir);
+    this.templateInstaller = new TemplateInstaller(this.store, this.templateRegistry);
+  }
+
+  /**
+   * Get path to bundled templates (shipped with extension)
+   */
+  private getBundledTemplatesPath(): string {
+    // Templates are bundled in the extension
+    return path.join(this.extensionContext.extensionPath, 'dist', 'knowledge', 'bundled-templates');
   }
 
   /**
@@ -82,6 +112,9 @@ export class KnowledgeManager {
 
       // Load all knowledge items
       await this.refreshAll();
+
+      // Load marketplace templates (Phase 2)
+      await this.loadMarketplaceTemplates();
 
       // Setup file watchers
       this.setupFileWatchers();
@@ -1653,6 +1686,249 @@ export class KnowledgeManager {
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
       // Don't throw - template loading failure shouldn't break the entire system
+    }
+  }
+
+  // ============================================
+  // Marketplace Integration (Phase 2)
+  // ============================================
+
+  /**
+   * Load marketplace templates (bundled + user templates)
+   */
+  private async loadMarketplaceTemplates(): Promise<void> {
+    try {
+      logger.info(
+        LogCategory.EXTENSION,
+        'Loading marketplace templates',
+        'KnowledgeManager.loadMarketplaceTemplates',
+        {},
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      const result = await this.marketplaceManager.loadAllTemplates();
+
+      // Update installation status from registry
+      const installed = this.templateRegistry.getAllInstalled();
+      this.marketplaceManager.updateInstallationStatus(installed);
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'Marketplace templates loaded',
+        'KnowledgeManager.loadMarketplaceTemplates',
+        {
+          bundled: result.bundled,
+          user: result.user,
+          errors: result.errors.length
+        },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      if (result.errors.length > 0) {
+        logger.warn(
+          LogCategory.EXTENSION,
+          'Some templates failed to load',
+          'KnowledgeManager.loadMarketplaceTemplates',
+          { errors: result.errors },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+      }
+    } catch (error) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to load marketplace templates',
+        'KnowledgeManager.loadMarketplaceTemplates',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+    }
+  }
+
+  /**
+   * Get marketplace manager (for UI access)
+   */
+  getMarketplaceManager(): MarketplaceManager {
+    return this.marketplaceManager;
+  }
+
+  /**
+   * Get template registry (for UI access)
+   */
+  getTemplateRegistry(): TemplateRegistry {
+    return this.templateRegistry;
+  }
+
+  /**
+   * Get template installer (for UI access)
+   */
+  getTemplateInstaller(): TemplateInstaller {
+    return this.templateInstaller;
+  }
+
+  /**
+   * Install a marketplace template
+   */
+  async installMarketplaceTemplate(
+    templateId: string,
+    options?: { skipDuplicates?: boolean; updateExisting?: boolean }
+  ): Promise<{ success: boolean; message: string; details?: string[] }> {
+    try {
+      const template = this.marketplaceManager.getTemplate(templateId);
+
+      if (!template) {
+        return {
+          success: false,
+          message: 'Template not found'
+        };
+      }
+
+      const result = await this.templateInstaller.install(template, options);
+
+      if (result.success) {
+        // Update marketplace manager with new installation status
+        const installed = this.templateRegistry.getAllInstalled();
+        this.marketplaceManager.updateInstallationStatus(installed);
+
+        return {
+          success: true,
+          message: `Template "${template.name}" installed successfully`,
+          details: result.details
+        };
+      }
+
+      return {
+        success: false,
+        message: result.error || 'Installation failed'
+      };
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to install template',
+        'KnowledgeManager.installMarketplaceTemplate',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      return {
+        success: false,
+        message: `Installation failed: ${error.message}`
+      };
+    }
+  }
+
+  /**
+   * Uninstall a marketplace template
+   */
+  async uninstallMarketplaceTemplate(
+    templateId: string
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      const template = this.marketplaceManager.getTemplate(templateId);
+
+      if (!template) {
+        return {
+          success: false,
+          message: 'Template not found'
+        };
+      }
+
+      const result = await this.templateInstaller.uninstall(templateId);
+
+      if (result.success) {
+        // Update marketplace manager with new installation status
+        const installed = this.templateRegistry.getAllInstalled();
+        this.marketplaceManager.updateInstallationStatus(installed);
+
+        return {
+          success: true,
+          message: `Template "${template.name}" uninstalled (${result.itemsRemoved} items removed)`
+        };
+      }
+
+      return {
+        success: false,
+        message: result.error || 'Uninstallation failed'
+      };
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to uninstall template',
+        'KnowledgeManager.uninstallMarketplaceTemplate',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      return {
+        success: false,
+        message: `Uninstallation failed: ${error.message}`
+      };
+    }
+  }
+
+  /**
+   * Create a new marketplace template from selected items
+   */
+  async createMarketplaceTemplate(options: {
+    name: string;
+    description: string;
+    category: TemplateCategory;
+    tags: string[];
+    itemIds: string[];
+    author: { name: string; email?: string; url?: string };
+    license?: string;
+  }): Promise<{ success: boolean; template?: MarketplaceTemplate; message: string }> {
+    try {
+      // Get the items
+      const items = options.itemIds
+        .map(id => this.store.getItem(id))
+        .filter((item): item is KnowledgeItem => item !== undefined);
+
+      if (items.length === 0) {
+        return {
+          success: false,
+          message: 'No valid items found'
+        };
+      }
+
+      // Create template
+      const template = this.marketplaceManager.createTemplate(
+        options.name,
+        options.description,
+        options.category,
+        options.tags,
+        items,
+        options.author,
+        options.license || 'MIT'
+      );
+
+      // Export to file
+      const exportResult = await this.marketplaceManager.exportTemplate(template);
+
+      if (!exportResult.success) {
+        return {
+          success: false,
+          message: exportResult.error || 'Failed to export template'
+        };
+      }
+
+      return {
+        success: true,
+        template,
+        message: `Template "${template.name}" created successfully`
+      };
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to create marketplace template',
+        'KnowledgeManager.createMarketplaceTemplate',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      return {
+        success: false,
+        message: `Template creation failed: ${error.message}`
+      };
     }
   }
 }

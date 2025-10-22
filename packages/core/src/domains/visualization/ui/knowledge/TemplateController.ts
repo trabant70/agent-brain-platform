@@ -5,7 +5,9 @@
  * Extracted from KnowledgeViewController for better separation of concerns.
  */
 
-import { Template } from '../../../knowledge/types';
+// TODO: Phase 3 - Replace with MarketplaceTemplate from marketplace domain
+type Template = any;
+
 import { ModalDialog } from '../ModalDialog';
 import { webviewLogger, LogCategory, LogPathway } from '../../webview/WebviewLogger';
 

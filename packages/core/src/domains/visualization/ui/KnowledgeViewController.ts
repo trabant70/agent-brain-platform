@@ -10,7 +10,6 @@
 
 import {
   KnowledgeItem,
-  Template,
   ClaudeMdFile,
   KnowledgeType,
   KnowledgeScope
@@ -21,6 +20,9 @@ import { KnowledgeTableController } from './knowledge/KnowledgeTableController';
 import { ClaudeMdAccordionController } from './knowledge/ClaudeMdAccordionController';
 import { KnowledgeFormController } from './knowledge/KnowledgeFormController';
 import { TemplateController } from './knowledge/TemplateController';
+
+// TODO: Phase 3 - Replace with MarketplaceTemplate from marketplace domain
+type Template = any;
 
 export interface KnowledgeViewState {
   items: KnowledgeItem[];

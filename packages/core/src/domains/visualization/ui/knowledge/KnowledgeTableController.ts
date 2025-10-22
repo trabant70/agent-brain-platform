@@ -5,10 +5,13 @@
  * Extracted from KnowledgeViewController for better separation of concerns.
  */
 
-import { KnowledgeItem, KnowledgeType, KnowledgeScope, Template } from '../../../knowledge/types';
+import { KnowledgeItem, KnowledgeType, KnowledgeScope } from '../../../knowledge/types';
 import { TableTemplates } from './templates/table-templates';
 import { KnowledgeFilters } from './utils/KnowledgeFilters';
 import { webviewLogger, LogCategory, LogPathway } from '../../webview/WebviewLogger';
+
+// TODO: Phase 3 - Replace with MarketplaceTemplate from marketplace domain
+type Template = any;
 
 export interface TableState {
   items: KnowledgeItem[];

@@ -1,0 +1,70 @@
+{
+  "id": "bundled.api-design-basics",
+  "name": "REST API Design Basics",
+  "description": "Fundamental principles and patterns for designing RESTful APIs",
+  "version": "1.0.0",
+  "createdAt": "2025-01-22T00:00:00.000Z",
+  "updatedAt": "2025-01-22T00:00:00.000Z",
+  "category": "architecture",
+  "tags": ["api", "rest", "http", "design"],
+  "author": {
+    "name": "Agent Brain Team",
+    "email": "team@agentbrain.dev"
+  },
+  "license": "MIT",
+  "source": "bundled",
+  "itemCount": 3,
+  "items": [
+    {
+      "id": "bundled.api-design.resource-naming",
+      "title": "RESTful Resource Naming",
+      "type": "golden-path",
+      "scope": "team",
+      "body": "# RESTful Resource Naming\n\n## Core Principles\n\n### 1. Use Nouns, Not Verbs\n✅ Good:\n- `/users`\n- `/articles`\n- `/orders`\n\n❌ Bad:\n- `/getUsers`\n- `/createArticle`\n- `/deleteOrder`\n\n### 2. Use Plural Nouns\n✅ Good:\n- `/users/123`\n- `/articles/456`\n\n❌ Bad:\n- `/user/123`\n- `/article/456`\n\n### 3. Use HTTP Methods for Actions\n```\nGET     /users          # List all users\nGET     /users/123      # Get specific user\nPOST    /users          # Create new user\nPUT     /users/123      # Update user (full)\nPATCH   /users/123      # Update user (partial)\nDELETE  /users/123      # Delete user\n```\n\n### 4. Use Nesting for Relationships\n```\nGET /users/123/orders           # Get orders for user 123\nGET /users/123/orders/456       # Get specific order\nPOST /users/123/orders          # Create order for user 123\n```\n\n**Limit nesting to 2 levels**\n✅ Good: `/users/123/orders`\n❌ Bad: `/users/123/orders/456/items/789`\n\n### 5. Use Query Parameters for Filtering\n```\nGET /users?role=admin\nGET /articles?status=published&author=123\nGET /products?category=electronics&price_min=100&price_max=500\n```\n\n### 6. Use Hyphens, Not Underscores\n✅ Good:\n- `/user-profiles`\n- `/order-items`\n\n❌ Bad:\n- `/user_profiles`\n- `/order_items`\n\n### 7. Lowercase Only\n✅ Good: `/users/123/profile-picture`\n❌ Bad: `/Users/123/ProfilePicture`\n\n## Special Endpoints\n\n### Actions on Resources\nFor non-CRUD operations, use a verb:\n```\nPOST /users/123/activate\nPOST /orders/456/cancel\nPOST /articles/789/publish\n```\n\n### Search\n```\nGET /search?q=query&type=users\n```\n\nOr resource-specific:\n```\nGET /users/search?name=John\n```\n\n## Versioning\n```\nhttps://api.example.com/v1/users\nhttps://api.example.com/v2/users\n```\n\n## Examples\n\n### Blog API\n```\nGET    /articles                   # List articles\nGET    /articles?status=draft      # Filter drafts\nGET    /articles/123               # Get article\nPOST   /articles                   # Create article\nPUT    /articles/123               # Update article\nDELETE /articles/123               # Delete article\nGET    /articles/123/comments      # Get comments\nPOST   /articles/123/comments      # Add comment\nPOST   /articles/123/publish       # Publish article\n```\n\n### E-commerce API\n```\nGET    /products                   # List products\nGET    /products?category=books    # Filter by category\nGET    /users/123/cart             # Get user's cart\nPOST   /users/123/cart/items       # Add to cart\nPOST   /users/123/orders           # Create order\nGET    /users/123/orders/456       # Get order details\n```",
+      "tags": ["api", "rest", "naming", "best-practices"],
+      "source": "rest-api-guidelines",
+      "author": "Agent Brain Team",
+      "valid": true,
+      "path": ".agent-brain/golden-paths/restful-resource-naming.md",
+      "metadata": {
+        "createdAt": "2025-01-22T00:00:00.000Z",
+        "updatedAt": "2025-01-22T00:00:00.000Z",
+        "fileSize": 2134
+      }
+    },
+    {
+      "id": "bundled.api-design.http-status-codes",
+      "title": "HTTP Status Code Guide",
+      "type": "api-spec",
+      "scope": "team",
+      "body": "# HTTP Status Code Guide\n\n## Success (2xx)\n\n### 200 OK\n**Use:** Successful GET, PUT, PATCH, or DELETE\n```json\nGET /users/123\n200 OK\n{\n  \"id\": 123,\n  \"name\": \"John Doe\"\n}\n```\n\n### 201 Created\n**Use:** Successful POST that creates a resource\n```json\nPOST /users\n201 Created\nLocation: /users/124\n{\n  \"id\": 124,\n  \"name\": \"Jane Doe\"\n}\n```\n\n### 204 No Content\n**Use:** Successful DELETE or update with no response body\n```\nDELETE /users/123\n204 No Content\n```\n\n## Client Errors (4xx)\n\n### 400 Bad Request\n**Use:** Invalid request syntax or validation errors\n```json\nPOST /users\n400 Bad Request\n{\n  \"error\": \"Validation failed\",\n  \"details\": [\n    {\"field\": \"email\", \"message\": \"Invalid email format\"},\n    {\"field\": \"age\", \"message\": \"Must be at least 18\"}\n  ]\n}\n```\n\n### 401 Unauthorized\n**Use:** Authentication required or failed\n```json\nGET /users/me\n401 Unauthorized\n{\n  \"error\": \"Authentication required\",\n  \"message\": \"Please provide a valid access token\"\n}\n```\n\n### 403 Forbidden\n**Use:** Authenticated but not authorized\n```json\nDELETE /users/456\n403 Forbidden\n{\n  \"error\": \"Insufficient permissions\",\n  \"message\": \"You do not have permission to delete other users\"\n}\n```\n\n### 404 Not Found\n**Use:** Resource doesn't exist\n```json\nGET /users/999\n404 Not Found\n{\n  \"error\": \"Resource not found\",\n  \"message\": \"User with ID 999 does not exist\"\n}\n```\n\n### 409 Conflict\n**Use:** Request conflicts with current state\n```json\nPOST /users\n409 Conflict\n{\n  \"error\": \"User already exists\",\n  \"message\": \"A user with email john@example.com already exists\"\n}\n```\n\n### 422 Unprocessable Entity\n**Use:** Semantic errors in request\n```json\nPOST /orders\n422 Unprocessable Entity\n{\n  \"error\": \"Cannot process order\",\n  \"message\": \"Product out of stock\"\n}\n```\n\n### 429 Too Many Requests\n**Use:** Rate limiting\n```json\nGET /users\n429 Too Many Requests\nRetry-After: 60\n{\n  \"error\": \"Rate limit exceeded\",\n  \"message\": \"Try again in 60 seconds\"\n}\n```\n\n## Server Errors (5xx)\n\n### 500 Internal Server Error\n**Use:** Unexpected server error\n```json\nGET /users\n500 Internal Server Error\n{\n  \"error\": \"Internal server error\",\n  \"message\": \"An unexpected error occurred\",\n  \"requestId\": \"abc-123\"\n}\n```\n\n### 503 Service Unavailable\n**Use:** Server temporarily unavailable\n```json\nGET /users\n503 Service Unavailable\nRetry-After: 300\n{\n  \"error\": \"Service unavailable\",\n  \"message\": \"Database maintenance in progress\"\n}\n```\n\n## Decision Tree\n\n```\nWas the request successful?\n├─ Yes\n│  ├─ Did it create a resource? → 201 Created\n│  ├─ Is there no content to return? → 204 No Content\n│  └─ Otherwise → 200 OK\n└─ No\n   ├─ Is it the client's fault?\n   │  ├─ Bad syntax/validation? → 400 Bad Request\n   │  ├─ Not authenticated? → 401 Unauthorized\n   │  ├─ Not authorized? → 403 Forbidden\n   │  ├─ Resource not found? → 404 Not Found\n   │  ├─ Conflict with current state? → 409 Conflict\n   │  └─ Semantic error? → 422 Unprocessable Entity\n   └─ Is it the server's fault?\n      ├─ Unexpected error? → 500 Internal Server Error\n      └─ Temporarily unavailable? → 503 Service Unavailable\n```\n\n## Best Practices\n\n1. **Always include error details** in the response body\n2. **Use consistent error format** across all endpoints\n3. **Include request IDs** in 5xx errors for debugging\n4. **Add Retry-After header** for 429 and 503\n5. **Never expose stack traces** in production",
+      "tags": ["api", "http", "status-codes", "rest"],
+      "source": "rfc-7231",
+      "author": "Agent Brain Team",
+      "valid": true,
+      "path": ".agent-brain/api-specs/http-status-codes.md",
+      "metadata": {
+        "createdAt": "2025-01-22T00:00:00.000Z",
+        "updatedAt": "2025-01-22T00:00:00.000Z",
+        "fileSize": 3127
+      }
+    },
+    {
+      "id": "bundled.api-design.pagination",
+      "title": "API Pagination Patterns",
+      "type": "design-pattern",
+      "scope": "team",
+      "body": "# API Pagination Patterns\n\n## Why Pagination?\n- **Performance**: Reduce response size\n- **User Experience**: Faster initial load\n- **Resource Management**: Prevent memory issues\n\n## Pattern 1: Offset-Based (Page Number)\n\n### Request\n```\nGET /users?page=2&limit=20\n```\n\n### Response\n```json\n{\n  \"data\": [...],\n  \"pagination\": {\n    \"page\": 2,\n    \"limit\": 20,\n    \"total\": 150,\n    \"totalPages\": 8\n  },\n  \"links\": {\n    \"first\": \"/users?page=1&limit=20\",\n    \"prev\": \"/users?page=1&limit=20\",\n    \"next\": \"/users?page=3&limit=20\",\n    \"last\": \"/users?page=8&limit=20\"\n  }\n}\n```\n\n### Pros\n- Simple to implement\n- Easy to jump to specific page\n- Total count available\n\n### Cons\n- Can skip/duplicate items if data changes\n- Slow for large offsets\n\n### Best For\n- Small to medium datasets\n- Admin interfaces\n- Reports\n\n## Pattern 2: Cursor-Based\n\n### Request\n```\nGET /users?cursor=eyJpZCI6MTIzfQ&limit=20\n```\n\n### Response\n```json\n{\n  \"data\": [...],\n  \"pagination\": {\n    \"cursor\": \"eyJpZCI6MTQzfQ\",\n    \"hasMore\": true,\n    \"limit\": 20\n  },\n  \"links\": {\n    \"next\": \"/users?cursor=eyJpZCI6MTQzfQ&limit=20\"\n  }\n}\n```\n\n### Pros\n- Consistent results even with data changes\n- Efficient for large datasets\n- Works well with real-time data\n\n### Cons\n- Cannot jump to specific page\n- No total count (expensive to compute)\n- More complex to implement\n\n### Best For\n- Social media feeds\n- Real-time data streams\n- Infinite scroll UIs\n- Large datasets\n\n## Pattern 3: Seek/Keyset\n\n### Request\n```\nGET /articles?after_id=123&limit=20\nGET /articles?after_date=2024-01-15T10:00:00Z&limit=20\n```\n\n### Response\n```json\n{\n  \"data\": [...],\n  \"pagination\": {\n    \"after_id\": 143,\n    \"hasMore\": true\n  }\n}\n```\n\n### Pros\n- Very efficient (uses database indexes)\n- Stable pagination\n- Works with any sortable field\n\n### Cons\n- Requires indexed column\n- Cannot go backwards easily\n- Limited to simple sorting\n\n### Best For\n- Time-series data\n- Activity logs\n- Chronological feeds\n\n## Implementation Guide\n\n### TypeScript Interface\n```typescript\n// Offset-based\ninterface OffsetPagination {\n  page: number;\n  limit: number;\n  total: number;\n  totalPages: number;\n}\n\n// Cursor-based\ninterface CursorPagination {\n  cursor?: string;\n  limit: number;\n  hasMore: boolean;\n}\n\n// Response wrapper\ninterface PaginatedResponse<T> {\n  data: T[];\n  pagination: OffsetPagination | CursorPagination;\n  links?: {\n    first?: string;\n    prev?: string;\n    next?: string;\n    last?: string;\n  };\n}\n```\n\n### Database Queries\n\n#### Offset-based (SQL)\n```sql\nSELECT * FROM users\nORDER BY id\nLIMIT 20 OFFSET 40;  -- page 3, limit 20\n\nSELECT COUNT(*) FROM users;  -- total count\n```\n\n#### Cursor-based (SQL)\n```sql\n-- Assuming cursor encodes id=123\nSELECT * FROM users\nWHERE id > 123\nORDER BY id\nLIMIT 21;  -- +1 to check if more exist\n```\n\n## Best Practices\n\n1. **Default limit**: Set reasonable default (e.g., 20-50)\n2. **Maximum limit**: Prevent abuse (e.g., max 100)\n3. **Include links**: Help clients navigate\n4. **Document behavior**: Clarify how pagination works\n5. **Consider caching**: Cache first page for performance\n6. **Use appropriate pattern**: Match your use case\n\n## Example: Hybrid Approach\n\nCombine patterns for flexibility:\n```\nGET /users?page=1&limit=20           # Offset for browsing\nGET /users?cursor=abc&limit=20        # Cursor for infinite scroll\nGET /users?after_id=123&limit=20     # Keyset for efficiency\n```",
+      "tags": ["api", "pagination", "performance", "design-pattern"],
+      "source": "api-best-practices",
+      "author": "Agent Brain Team",
+      "valid": true,
+      "path": ".agent-brain/patterns/api-pagination.md",
+      "metadata": {
+        "createdAt": "2025-01-22T00:00:00.000Z",
+        "updatedAt": "2025-01-22T00:00:00.000Z",
+        "fileSize": 3542
+      }
+    }
+  ]
+}
