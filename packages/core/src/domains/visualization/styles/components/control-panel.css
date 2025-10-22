@@ -16,7 +16,7 @@
   max-width: 1200px;
   max-height: 0;
   background: var(--vscode-sideBar-background);
-  border: 2px solid var(--vscode-panel-border);
+  border: 2px solid var(--accent-commit);
   border-top: none;
   border-radius: 0 0 8px 8px;
   overflow: hidden;

@@ -228,14 +228,12 @@ export class SimpleTimelineApp {
             return;
         }
 
-        // Check localStorage for saved state (default: visible)
-        const savedState = localStorage.getItem('timeline-legend-visible');
-        const isVisible = savedState === null ? true : savedState === 'true';
+        // Always start with legend visible on extension load
+        // User can toggle during session, but it resets to visible on next load
+        const isVisible = true;
 
-        // Apply initial state
-        if (!isVisible) {
-            legendElement.classList.add('hidden');
-        }
+        // Ensure legend is visible (remove hidden class if present)
+        legendElement.classList.remove('hidden');
 
         // Toggle legend visibility
         const toggleLegend = (visible: boolean) => {
