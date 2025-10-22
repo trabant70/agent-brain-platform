@@ -243,13 +243,13 @@ export class ModalDialog {
             background: var(--vscode-editor-background);
             border: 1px solid var(--vscode-panel-border);
             border-radius: 4px;
-            padding: 20px;
             min-width: 500px;
             max-width: 700px;
             max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 4px 12px rgba(--0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
             animation: slideIn 0.2s ease-out;
+            display: flex;
+            flex-direction: column;
         `;
 
         const fieldsHtml = options.fields.map(field => {
@@ -284,21 +284,28 @@ export class ModalDialog {
         }).join('');
 
         this.modal.innerHTML = `
-            <div style="font-size: 15px; font-weight: 600; margin-bottom: 16px; color: var(--vscode-foreground);">
-                ${options.title}
-            </div>
-            <form id="modal-form">
-                ${fieldsHtml}
-                <div id="modal-form-error" style="color: var(--vscode-errorForeground); font-size: 12px; margin-bottom: 12px; display: none;"></div>
-                <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px;">
-                    <button type="button" id="modal-cancel" style="padding: 6px 14px; background: transparent; border: 1px solid var(--vscode-button-border); color: var(--vscode-button-foreground); border-radius: 2px; cursor: pointer; font-size: 13px;">
-                        ${options.cancelText || 'Cancel'}
-                    </button>
-                    <button type="submit" id="modal-submit" style="padding: 6px 14px; background: var(--vscode-button-background); border: none; color: var(--vscode-button-foreground); border-radius: 2px; cursor: pointer; font-size: 13px; font-weight: 500;">
-                        ${options.submitText || 'Create'}
-                    </button>
+            <div style="padding: 16px 20px; border-bottom: 1px solid var(--vscode-panel-border); background: var(--vscode-sideBar-background); display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 15px; font-weight: 600; color: var(--vscode-foreground);">
+                    ${options.title}
                 </div>
-            </form>
+                <button id="modal-close-x" type="button" style="background: transparent; border: none; color: var(--vscode-foreground); cursor: pointer; font-size: 20px; line-height: 1; padding: 4px 8px; opacity: 0.7; transition: opacity 0.2s;" title="Close">
+                    ✕
+                </button>
+            </div>
+            <div style="flex: 1; overflow-y: auto; padding: 20px;">
+                <form id="modal-form">
+                    ${fieldsHtml}
+                    <div id="modal-form-error" style="color: var(--vscode-errorForeground); font-size: 12px; margin-top: 12px; display: none;"></div>
+                </form>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px; padding: 16px 20px; border-top: 1px solid var(--vscode-panel-border); background: var(--vscode-sideBar-background);">
+                <button type="button" id="modal-cancel" style="padding: 6px 14px; background: transparent; border: 1px solid var(--vscode-button-border); color: var(--vscode-button-foreground); border-radius: 2px; cursor: pointer; font-size: 13px;">
+                    ${options.cancelText || 'Cancel'}
+                </button>
+                <button type="button" id="modal-submit" style="padding: 6px 14px; background: var(--vscode-button-background); border: none; color: var(--vscode-button-foreground); border-radius: 2px; cursor: pointer; font-size: 13px; font-weight: 500;">
+                    ${options.submitText || 'Create'}
+                </button>
+            </div>
         `;
 
         this.overlay?.appendChild(this.modal);
@@ -309,9 +316,22 @@ export class ModalDialog {
             firstField?.focus();
         }, 100);
 
-        // Wire up form submission
-        document.getElementById('modal-form')?.addEventListener('submit', (e) => {
-            e.preventDefault();
+        // Wire up close button
+        document.getElementById('modal-close-x')?.addEventListener('click', () => this.cancel());
+
+        // Add hover effect to close button
+        const closeBtn = document.getElementById('modal-close-x');
+        if (closeBtn) {
+            closeBtn.addEventListener('mouseenter', () => {
+                closeBtn.style.opacity = '1';
+            });
+            closeBtn.addEventListener('mouseleave', () => {
+                closeBtn.style.opacity = '0.7';
+            });
+        }
+
+        // Wire up submit button
+        document.getElementById('modal-submit')?.addEventListener('click', () => {
             this.submitForm(options.fields);
         });
 
