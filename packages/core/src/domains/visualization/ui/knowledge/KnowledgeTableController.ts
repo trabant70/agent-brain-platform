@@ -55,7 +55,60 @@ export class KnowledgeTableController {
    * Load knowledge items data
    */
   loadData(items: KnowledgeItem[], templates: MarketplaceTemplate[] = []): void {
-    this.state.items = items;
+    // Extract items from templates and combine with standalone items
+    const templateItems: KnowledgeItem[] = [];
+
+    webviewLogger.debug(
+      LogCategory.UI,
+      'Loading knowledge data into table',
+      'KnowledgeTableController.loadData',
+      {
+        standaloneItems: items.length,
+        templates: templates.length,
+        templateDetails: templates.map(t => ({
+          id: t.id,
+          name: t.name,
+          itemCount: t.items?.length || 0,
+          firstItemSample: t.items?.[0] ? {
+            id: t.items[0].id,
+            type: t.items[0].type,
+            title: t.items[0].title
+          } : null
+        }))
+      },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    for (const template of templates) {
+      if (template.items && Array.isArray(template.items)) {
+        // Add template metadata to each item so we can group by template
+        const itemsWithTemplate = template.items.map((item: any) => ({
+          ...item,
+          templateId: template.id,
+          templateName: template.name
+        }));
+        templateItems.push(...itemsWithTemplate);
+      }
+    }
+
+    webviewLogger.debug(
+      LogCategory.UI,
+      'Extracted items from templates',
+      'KnowledgeTableController.loadData',
+      {
+        extractedCount: templateItems.length,
+        sampleItem: templateItems[0] ? {
+          id: templateItems[0].id,
+          type: templateItems[0].type,
+          title: templateItems[0].title,
+          hasType: !!templateItems[0].type
+        } : null
+      },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    // Combine standalone items and template items
+    this.state.items = [...items, ...templateItems];
     this.state.templates = templates;
     this.renderKnowledgeTable();
   }
@@ -365,40 +418,21 @@ export class KnowledgeTableController {
     const groups = new Map<string, KnowledgeItem[]>();
 
     if (dimension === 'template') {
-      // For templates, an item can belong to multiple groups
-      // Create a map of itemId -> item for quick lookup
-      const itemMap = new Map<string, KnowledgeItem>();
+      // Group by templateId (added during loadData)
       for (const item of items) {
-        itemMap.set(item.id, item);
-      }
-
-      // Track which items are in at least one template
-      const itemsInTemplates = new Set<string>();
-
-      // Group by template
-      for (const template of this.state.templates) {
-        const templateItems: KnowledgeItem[] = [];
-        // Extract item IDs from embedded items (USER templates have items array)
-        const itemIds = Array.isArray(template.items)
-          ? template.items.map(item => item.id)
-          : [];
-
-        for (const itemId of itemIds) {
-          const item = itemMap.get(itemId);
-          if (item) {
-            templateItems.push(item);
-            itemsInTemplates.add(itemId);
+        const templateId = (item as any).templateId;
+        if (templateId) {
+          if (!groups.has(templateId)) {
+            groups.set(templateId, []);
           }
+          groups.get(templateId)!.push(item);
+        } else {
+          // Ungrouped items (not from a template)
+          if (!groups.has('__ungrouped__')) {
+            groups.set('__ungrouped__', []);
+          }
+          groups.get('__ungrouped__')!.push(item);
         }
-        if (templateItems.length > 0) {
-          groups.set(template.id, templateItems);
-        }
-      }
-
-      // Add ungrouped items (items not in any template)
-      const ungroupedItems = items.filter(item => !itemsInTemplates.has(item.id));
-      if (ungroupedItems.length > 0) {
-        groups.set('__ungrouped__', ungroupedItems);
       }
 
       return groups;
