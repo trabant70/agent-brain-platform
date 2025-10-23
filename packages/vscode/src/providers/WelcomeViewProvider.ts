@@ -101,25 +101,26 @@ export class WelcomeViewProvider implements vscode.WebviewViewProvider {
     </div>
 
     <h2>Agent Brain Platform</h2>
-    <p><strong>Transform AI Coding Agents into Senior Developers</strong> - Give coding agents institutional memory, enforce standards, inject expert solutions, and maintain a complete audit trail of their work.</p>
+    <p style="line-height: 1.6; margin-bottom: 16px;"><strong>Help AI agents (like Claude) become better coding partners.</strong> Give them persistent memory, your standards, and expert solutions. Transform forgetful juniors into consistent seniors.</p>
 
     <div class="info-section">
-        <p><strong>🎯 Core Benefits:</strong></p>
+        <p><strong>🎯 The Purpose:</strong></p>
+        <p style="font-size: 13px; line-height: 1.6; margin-bottom: 8px;">AI coding agents are brilliant but lack memory and context between sessions. Agent Brain Platform solves this by providing:</p>
         <ul class="feature-list">
-            <li><strong>Overcome Amnesia:</strong> Agents remember project context across sessions</li>
-            <li><strong>Prevent Overeagerness:</strong> Enforce standards before agents write code</li>
-            <li><strong>Apply Senior Solutions:</strong> Inject expert patterns and best practices</li>
-            <li><strong>Clear Audit Trail:</strong> See exactly what agents did on the timeline</li>
+            <li><strong>Persistent Memory:</strong> Agents remember project history and decisions</li>
+            <li><strong>Standards Enforcement:</strong> Your rules automatically applied every session</li>
+            <li><strong>Expert Solutions:</strong> Inject proven patterns and best practices</li>
+            <li><strong>Audit Trails:</strong> Complete visibility of who (human or AI) did what</li>
         </ul>
     </div>
 
     <div class="info-section">
-        <p><strong>✨ Platform Features:</strong></p>
+        <p><strong>🧠 How It Works:</strong></p>
         <ul class="feature-list">
-            <li><strong>Timeline:</strong> Visual audit trail of all agent and developer work</li>
-            <li><strong>Knowledge:</strong> Capture standards, patterns, and solutions</li>
-            <li><strong>Sessions:</strong> Track multi-prompt agent sessions with full context</li>
-            <li><strong>Guidance:</strong> Inject knowledge into claude.md for agent compliance</li>
+            <li><strong>1. Capture Knowledge</strong> → Document standards, patterns, learnings in markdown</li>
+            <li><strong>2. Inject into CLAUDE.md</strong> → Apply templates so agents load rules on startup</li>
+            <li><strong>3. Track Everything</strong> → Visual timeline shows all agent work and commits</li>
+            <li><strong>4. Learn & Improve</strong> → Capture session journals, build institutional memory</li>
         </ul>
     </div>
 
@@ -134,23 +135,21 @@ export class WelcomeViewProvider implements vscode.WebviewViewProvider {
     </div>
 
     <div class="info-section">
-        <p><strong>📚 Create Knowledge:</strong></p>
+        <p><strong>📋 3-Step Quick Start:</strong></p>
         <ul class="feature-list">
-            <li>Switch to <strong>AB Knowledge</strong> tab</li>
-            <li>Click <strong>"+ Add Item"</strong></li>
-            <li>Choose type: Golden Path, ADR, Pattern, Learning, etc.</li>
-            <li>Write in markdown, save to <code>.agent-brain/</code></li>
+            <li><strong>Step 1:</strong> Go to <strong>AB Marketplace</strong> → Install "Agent Brain Base" and "Reza Rezvani's Essentials"</li>
+            <li><strong>Step 2:</strong> Go to <strong>AB Knowledge</strong> → Scan for CLAUDE.md → Apply installed templates</li>
+            <li><strong>Step 3:</strong> Start coding! AI agents now automatically follow your standards</li>
         </ul>
     </div>
 
     <div class="info-section">
-        <p><strong>📖 Quick Tips:</strong></p>
+        <p><strong>💡 Pro Tips:</strong></p>
         <ul class="feature-list">
-            <li>Hover events for details, click for full popup</li>
-            <li>Use <strong>Controls</strong> button to filter timeline</li>
-            <li>Save knowledge templates for reuse</li>
-            <li>Session journals go in <code>.agent-brain/sessions/</code></li>
-            <li>Check <strong>AB Support</strong> tab for architecture</li>
+            <li>Create session journals for multi-prompt AI sessions (5+ exchanges)</li>
+            <li>Document learnings immediately when discovered during coding</li>
+            <li>Use timeline to audit what agents actually did</li>
+            <li>Check <strong>AB Support → Getting Started</strong> for full guide</li>
         </ul>
     </div>
 

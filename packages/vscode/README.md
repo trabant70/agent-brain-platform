@@ -1,32 +1,62 @@
 # Agent Brain Platform
 
-**Transform AI Coding Agents into Senior Developers** - Give coding agents institutional memory, enforce organizational standards, inject expert solutions, and maintain a complete audit trail of their work.
+> **An extension to help AI coding agents (like Claude) be better partners** - By giving them persistent memory, your standards, expert solutions, and a clear audit trail, they transform from forgetful juniors into consistent, senior-level coding partners.
 
 ![Agent Brain Architecture](images/screenshots/architecture-diagram.png)
 
-## 🚨 The Problem
+## 🎯 The Core Intent
 
-AI coding agents are powerful but suffer from critical limitations:
+**Agent Brain Platform exists to solve a fundamental problem:** AI coding agents are brilliant at writing code, but they lack memory, context, and standards enforcement between sessions. This extension gives them a "brain" - a persistent knowledge system that makes them remember, follow rules, and learn from experience.
 
-- **🧠 Amnesia**: They forget project context between sessions
-- **⚡ Overeagerness**: They jump to solutions without understanding standards
-- **📏 No Compliance**: They don't automatically follow organizational rules
-- **🎓 Junior-Level Solutions**: They miss senior developer patterns and best practices
-- **👻 Invisible Work**: No audit trail of what agents actually did
+**The Vision:** Every AI agent should code like a seasoned team member who:
+- **Remembers** project history and decisions
+- **Follows** your team's standards automatically
+- **Applies** expert patterns without being told
+- **Learns** from previous sessions
+- **Documents** their work for audit trails
 
-**Result:** Developers spend time reviewing, correcting, and explaining the same things repeatedly.
+This isn't just a timeline viewer - it's infrastructure for making AI agents effective long-term partners.
 
-## ✅ The Solution
+## 🚨 The Problems It Solves
 
-Agent Brain Platform solves these problems by providing:
+Research shows AI coding agents suffer from critical issues:
+- **42% of AI-generated code contains hallucinations** (2025 studies)
+- **65% of developers report agents miss project context**
+- **Session amnesia** - agents forget everything between sessions
+- **Inconsistent behavior** - different approaches each time
+- **No standards enforcement** - agents don't follow org rules
+- **Invisible audit trail** - no record of what agents did
 
-- **📊 Visual Timeline** - Complete audit trail showing what agents and developers did
-- **📚 Knowledge Management** - Capture standards, patterns, ADRs, and expert solutions
-- **📝 Session Journals** - Track multi-prompt agent sessions with full context
-- **🎯 AI Guidance System** - Inject knowledge into claude.md files for automatic compliance
-- **🔄 Institutional Memory** - Agents access project history and learnings every session
+**Without Agent Brain:** You spend hours re-explaining context, fixing inconsistent code, and enforcing standards manually.
 
-**Result:** Treat coding agents like senior developers who understand your codebase, follow standards, and learn from experience.
+**With Agent Brain:** Agents automatically receive context, follow standards, and leave clear audit trails.
+
+## ✅ How It Works
+
+Agent Brain Platform provides a complete system for AI agent enhancement:
+
+### 1. **Capture Knowledge** 📚
+Document your standards, patterns, expert solutions, and learnings as markdown files in `.agent-brain/`. These become the agent's "training material."
+
+### 2. **Inject into CLAUDE.md** 🎯
+Apply knowledge templates to your `CLAUDE.md` file. Now every AI session automatically loads this context - agents code according to your rules without being reminded.
+
+### 3. **Track Everything** 📊
+Visual timeline shows all agent work, developer commits, and knowledge creation events. Full audit trail of who (human or AI) did what and when.
+
+### 4. **Learn & Improve** 🔄
+Capture session journals documenting what agents learned. Extract patterns into reusable knowledge. Build institutional memory that persists across sessions.
+
+**The Result:** Your AI agents transform from inconsistent juniors who need hand-holding into reliable senior partners who remember context, follow standards, and improve over time.
+
+## 🌟 Key Benefits
+
+- **Consistency**: Agents follow the same patterns every session
+- **Compliance**: Organizational standards enforced automatically
+- **Memory**: Project context preserved across all sessions
+- **Quality**: Expert patterns applied without prompting
+- **Audit Trail**: Complete visibility into agent work
+- **Learning**: Knowledge accumulates instead of being lost
 
 ## 🎯 Key Features
 

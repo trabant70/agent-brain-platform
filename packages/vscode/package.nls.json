@@ -1,6 +1,6 @@
 {
   "displayName": "Agent Brain Platform",
-  "description": "Transform AI coding agents into senior developers - overcome amnesia, enforce standards, inject expert solutions, and maintain complete audit trails",
+  "description": "Help AI agents (like Claude) be better partners - give them persistent memory, your standards, and expert solutions. Transform forgetful juniors into consistent seniors with audit trails.",
 
   "command.showTimeline": "Show Repository Timeline",
   "command.refreshData": "Refresh Timeline Data",

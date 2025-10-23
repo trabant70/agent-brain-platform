@@ -767,6 +767,58 @@ function handleMarketplaceImportError(data: any): void {
     }
 }
 
+/**
+ * Setup support sub-tabs handling
+ */
+function setupSupportSubTabs(): void {
+    const subTabButtons = document.querySelectorAll('.support-sub-tab');
+    const subContents = document.querySelectorAll('.support-sub-content');
+
+    subTabButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            const targetTab = (button as HTMLElement).getAttribute('data-support-tab');
+
+            if (!targetTab) {
+                return;
+            }
+
+            // Update button states
+            subTabButtons.forEach((btn) => {
+                const isActive = (btn as HTMLElement).getAttribute('data-support-tab') === targetTab;
+                if (isActive) {
+                    btn.classList.add('active');
+                    (btn as HTMLElement).style.background = 'var(--vscode-tab-activeBackground)';
+                    (btn as HTMLElement).style.color = 'var(--vscode-tab-activeForeground)';
+                    (btn as HTMLElement).style.fontWeight = '500';
+                } else {
+                    btn.classList.remove('active');
+                    (btn as HTMLElement).style.background = 'var(--vscode-tab-inactiveBackground)';
+                    (btn as HTMLElement).style.color = 'var(--vscode-tab-inactiveForeground)';
+                    (btn as HTMLElement).style.fontWeight = 'normal';
+                }
+            });
+
+            // Update content visibility
+            subContents.forEach((content) => {
+                const contentId = (content as HTMLElement).id;
+                const isActive = contentId === `support-tab-${targetTab}`;
+                if (isActive) {
+                    (content as HTMLElement).style.display = 'flex';
+                    (content as HTMLElement).classList.add('active');
+                } else {
+                    (content as HTMLElement).style.display = 'none';
+                    (content as HTMLElement).classList.remove('active');
+                }
+            });
+
+            webviewLogger.debug(LogCategory.UI, `Switched to support sub-tab: ${targetTab}`, 'setupSupportSubTabs');
+        });
+    });
+
+    webviewLogger.debug(LogCategory.UI, 'Support sub-tabs initialized', 'setupSupportSubTabs');
+}
+
 // Initialize
 setupMessageHandling();
 initializeWebview();
+setupSupportSubTabs();

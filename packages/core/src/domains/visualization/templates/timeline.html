@@ -284,9 +284,126 @@
 
             <!-- AB Support Tab -->
             <div id="tab-support" class="tab-content" aria-hidden="true">
-                <div class="support-container" style="padding: 20px; height: 100%; overflow: auto;">
-                    <div class="support-diagram" style="max-width: 1400px; margin: 0 auto;">
-                        <img id="architecture-diagram" src="assets/agentbrain-complete-diagram.svg" alt="Agent Brain Architecture Diagram" style="width: 100%; height: auto; display: block; border-radius: 8px;" />
+                <div class="support-container" style="padding: 0; height: 100%; display: flex; flex-direction: column;">
+                    <!-- Support Sub-Tabs -->
+                    <div class="support-sub-tabs" style="display: flex; gap: 4px; padding: 12px 12px 0 12px; border-bottom: 1px solid var(--vscode-panel-border); background: var(--vscode-editor-background);">
+                        <button class="support-sub-tab active" data-support-tab="getting-started" style="padding: 8px 16px; background: var(--vscode-tab-activeBackground); border: none; color: var(--vscode-tab-activeForeground); cursor: pointer; border-radius: 4px 4px 0 0; font-size: 13px; font-weight: 500;">
+                            🚀 Getting Started
+                        </button>
+                        <button class="support-sub-tab" data-support-tab="diagram" style="padding: 8px 16px; background: var(--vscode-tab-inactiveBackground); border: none; color: var(--vscode-tab-inactiveForeground); cursor: pointer; border-radius: 4px 4px 0 0; font-size: 13px;">
+                            📊 Architecture
+                        </button>
+                    </div>
+
+                    <!-- Getting Started Content -->
+                    <div id="support-tab-getting-started" class="support-sub-content active" style="flex: 1; overflow: auto; padding: 24px;">
+                        <div style="max-width: 900px; margin: 0 auto;">
+                            <h1 style="margin-top: 0; margin-bottom: 16px; font-size: 28px; font-weight: 600; color: var(--vscode-editor-foreground);">🧠 Welcome to Agent Brain Platform</h1>
+
+                            <div style="padding: 16px; background: var(--vscode-textBlockQuote-background); border-left: 4px solid var(--vscode-textLink-activeForeground); border-radius: 4px; margin-bottom: 24px;">
+                                <p style="margin: 0; font-size: 15px; line-height: 1.6; color: var(--vscode-editor-foreground);"><strong>Purpose:</strong> This extension helps AI coding agents (like Claude) become better partners by giving them persistent memory, your standards, and expert solutions. Transform forgetful juniors into consistent seniors.</p>
+                            </div>
+
+                            <h2 style="margin-top: 32px; margin-bottom: 12px; font-size: 20px; font-weight: 600; border-bottom: 1px solid var(--vscode-panel-border); padding-bottom: 8px;">📋 Quick Start (3 Steps)</h2>
+
+                            <div style="background: var(--vscode-editor-background); border: 1px solid var(--vscode-panel-border); border-radius: 6px; padding: 20px; margin-bottom: 24px;">
+                                <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 16px; font-weight: 600;">Step 1: Create Knowledge</h3>
+                                <p style="margin: 0 0 12px 0; line-height: 1.6;">Switch to <strong>AB Knowledge</strong> tab → Click <strong>"+ Add Item"</strong> → Choose a type (Golden Path, ADR, Pattern, Learning) → Write your standards/patterns in markdown → Save to <code style="padding: 2px 6px; background: var(--vscode-textCodeBlock-background); border-radius: 3px;">.agent-brain/</code></p>
+                                <p style="margin: 0; font-size: 13px; color: var(--vscode-descriptionForeground);">💡 Example: Document your auth pattern, API conventions, or testing requirements</p>
+                            </div>
+
+                            <div style="background: var(--vscode-editor-background); border: 1px solid var(--vscode-panel-border); border-radius: 6px; padding: 20px; margin-bottom: 24px;">
+                                <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 16px; font-weight: 600;">Step 2: Install Bundled Templates</h3>
+                                <p style="margin: 0 0 12px 0; line-height: 1.6;">Go to <strong>AB Marketplace</strong> tab → Browse bundled templates → Find <strong>"Agent Brain Base"</strong> and <strong>"Reza Rezvani's CLAUDE.md Essentials"</strong> → Click <strong>"Install"</strong> on both</p>
+                                <p style="margin: 0; font-size: 13px; color: var(--vscode-descriptionForeground);">💡 These templates teach AI agents how to behave (honesty, session journals, clean code, etc.)</p>
+                            </div>
+
+                            <div style="background: var(--vscode-editor-background); border: 1px solid var(--vscode-panel-border); border-radius: 6px; padding: 20px; margin-bottom: 24px;">
+                                <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 16px; font-weight: 600;">Step 3: Inject into CLAUDE.md</h3>
+                                <p style="margin: 0 0 12px 0; line-height: 1.6;">In <strong>AB Knowledge</strong> tab → Click <strong>scan icon 🔍</strong> → Find your <code style="padding: 2px 6px; background: var(--vscode-textCodeBlock-background); border-radius: 3px;">CLAUDE.md</code> file → Select knowledge items → Click <strong>"Apply to File"</strong></p>
+                                <p style="margin: 0; font-size: 13px; color: var(--vscode-descriptionForeground);">💡 Now AI agents automatically load this context every session - no more re-explaining!</p>
+                            </div>
+
+                            <h2 style="margin-top: 32px; margin-bottom: 12px; font-size: 20px; font-weight: 600; border-bottom: 1px solid var(--vscode-panel-border); padding-bottom: 8px;">🎯 How to Use Each Tab</h2>
+
+                            <div style="margin-bottom: 20px;">
+                                <h3 style="margin: 16px 0 8px 0; font-size: 15px; font-weight: 600;">📊 AB Timeline</h3>
+                                <ul style="margin: 0; padding-left: 24px; line-height: 1.8;">
+                                    <li><strong>View audit trail:</strong> See all commits, branches, PRs, knowledge items, and session events</li>
+                                    <li><strong>Filter events:</strong> Click "Controls" button → Select event types, branches, authors, time range</li>
+                                    <li><strong>Inspect details:</strong> Hover for tooltips, click events for detailed popup with multiple tabs</li>
+                                    <li><strong>Navigate:</strong> Scroll/drag to move through time, use range selector for precise zoom</li>
+                                </ul>
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <h3 style="margin: 16px 0 8px 0; font-size: 15px; font-weight: 600;">📚 AB Knowledge</h3>
+                                <ul style="margin: 0; padding-left: 24px; line-height: 1.8;">
+                                    <li><strong>Create items:</strong> Click "+ Add Item" → Fill metadata → Write markdown content</li>
+                                    <li><strong>Save templates:</strong> Select items with checkboxes → Click "💾 Save Template"</li>
+                                    <li><strong>Scan CLAUDE.md files:</strong> Click 🔍 icon → View all claude.md files in workspace</li>
+                                    <li><strong>Apply templates:</strong> Select target file → Choose items → Click "Apply to File"</li>
+                                </ul>
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <h3 style="margin: 16px 0 8px 0; font-size: 15px; font-weight: 600;">📝 AB Sessions</h3>
+                                <ul style="margin: 0; padding-left: 24px; line-height: 1.8;">
+                                    <li><strong>Create session journals:</strong> Make markdown file in <code style="padding: 2px 6px; background: var(--vscode-textCodeBlock-background); border-radius: 3px;">.agent-brain/sessions/YYYY-MM/</code></li>
+                                    <li><strong>Required frontmatter:</strong> id, title, startTime, endTime, summary, tags, filesModified</li>
+                                    <li><strong>Appears on timeline:</strong> Sessions show as 📝 events at startTime</li>
+                                    <li><strong>Best practice:</strong> Document multi-prompt AI sessions with 5+ exchanges</li>
+                                </ul>
+                            </div>
+
+                            <div style="margin-bottom: 20px;">
+                                <h3 style="margin: 16px 0 8px 0; font-size: 15px; font-weight="600;">🏪 AB Marketplace</h3>
+                                <ul style="margin: 0; padding-left: 24px; line-height: 1.8;">
+                                    <li><strong>Browse templates:</strong> View bundled templates (included with extension) and user-created</li>
+                                    <li><strong>Install templates:</strong> Click "Install" to add template items to your workspace</li>
+                                    <li><strong>Publish templates:</strong> Save knowledge items as template → Share with team</li>
+                                    <li><strong>Two essential bundles:</strong> "Agent Brain Base" (AI behavior) + "Reza Rezvani's Essentials" (CLAUDE.md structure)</li>
+                                </ul>
+                            </div>
+
+                            <h2 style="margin-top: 32px; margin-bottom: 12px; font-size: 20px; font-weight: 600; border-bottom: 1px solid var(--vscode-panel-border); padding-bottom: 8px;">💡 Key Concepts</h2>
+
+                            <div style="background: var(--vscode-editor-background); border: 1px solid var(--vscode-panel-border); border-radius: 6px; padding: 16px; margin-bottom: 16px;">
+                                <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600;">Knowledge Items</h4>
+                                <p style="margin: 0; line-height: 1.6; font-size: 14px;">Markdown files with YAML frontmatter storing standards, patterns, ADRs, learnings. These are the "training material" for AI agents.</p>
+                            </div>
+
+                            <div style="background: var(--vscode-editor-background); border: 1px solid var(--vscode-panel-border); border-radius: 6px; padding: 16px; margin-bottom: 16px;">
+                                <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600;">Templates</h4>
+                                <p style="margin: 0; line-height: 1.6; font-size: 14px;">Collections of knowledge items that can be installed as a group. Use templates to package expertise for reuse across projects.</p>
+                            </div>
+
+                            <div style="background: var(--vscode-editor-background); border: 1px solid var(--vscode-panel-border); border-radius: 6px; padding: 16px; margin-bottom: 16px;">
+                                <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600;">CLAUDE.md Injection</h4>
+                                <p style="margin: 0; line-height: 1.6; font-size: 14px;">Process of applying knowledge items to your CLAUDE.md file using HTML comment markers. AI agents automatically read this on startup.</p>
+                            </div>
+
+                            <div style="background: var(--vscode-editor-background); border: 1px solid var(--vscode-panel-border); border-radius: 6px; padding: 16px; margin-bottom: 24px;">
+                                <h4 style="margin: 0 0 8px 0; font-size: 14px; font-weight: 600;">Session Journals</h4>
+                                <p style="margin: 0; line-height: 1.6; font-size: 14px;">Documented multi-prompt coding sessions with AI agents. Capture decisions, learnings, and context for future reference and timeline tracking.</p>
+                            </div>
+
+                            <div style="padding: 20px; background: var(--vscode-textBlockQuote-background); border-left: 4px solid var(--vscode-charts-green); border-radius: 4px;">
+                                <h3 style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600;">🎉 You're Ready!</h3>
+                                <p style="margin: 0; line-height: 1.6;">Press <kbd style="padding: 2px 6px; background: var(--vscode-keybindingLabel-background); border: 1px solid var(--vscode-keybindingLabel-border); border-radius: 3px; font-family: monospace;">Ctrl+Shift+T</kbd> (Mac: <kbd style="padding: 2px 6px; background: var(--vscode-keybindingLabel-background); border: 1px solid var(--vscode-keybindingLabel-border); border-radius: 3px; font-family: monospace;">Cmd+Shift+T</kbd>) to open Agent Brain anytime. Start by installing the bundled templates in AB Marketplace, then create your own project-specific knowledge!</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Architecture Diagram Content -->
+                    <div id="support-tab-diagram" class="support-sub-content" style="flex: 1; overflow: auto; padding: 20px; display: none;">
+                        <div style="max-width: 1400px; margin: 0 auto;">
+                            <h2 style="margin-top: 0; margin-bottom: 16px; font-size: 24px; font-weight: 600; text-align: center;">Agent Brain Complete Architecture</h2>
+                            <p style="text-align: center; margin-bottom: 24px; color: var(--vscode-descriptionForeground);">Complete knowledge flow and learning cycle - from external expertise to AI agent enhancement</p>
+                            <div class="support-diagram">
+                                <img id="architecture-diagram" src="assets/agentbrain-complete-diagram.svg" alt="Agent Brain Architecture Diagram" style="width: 100%; height: auto; display: block; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
