@@ -1100,8 +1100,8 @@ export class KnowledgeMessageHandler {
           }
         });
 
-        // Refresh knowledge data to show newly installed items
-        await this.sendKnowledgeData();
+        // Refresh knowledge data from disk to show newly installed items
+        await this.sendKnowledgeData(true); // reload=true to refresh from disk
       } else {
         logger.warn(
           LogCategory.EXTENSION,
@@ -1178,8 +1178,8 @@ export class KnowledgeMessageHandler {
           }
         });
 
-        // Refresh knowledge data to reflect removed items
-        await this.sendKnowledgeData();
+        // Refresh knowledge data from disk to reflect removed items
+        await this.sendKnowledgeData(true); // reload=true to refresh from disk
       } else {
         logger.warn(
           LogCategory.EXTENSION,
