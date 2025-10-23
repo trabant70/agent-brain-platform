@@ -641,6 +641,395 @@
   background: var(--vscode-scrollbarSlider-activeBackground);
 }
 
+/* Validation Log Viewer Modal */
+.validation-log-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 2rem;
+}
+
+.validation-log-modal {
+  background: var(--vscode-editor-background);
+  border: 2px solid var(--vscode-focusBorder);
+  border-radius: 8px;
+  max-width: 700px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.validation-log-header {
+  padding: 1.5rem;
+  border-bottom: 2px solid var(--vscode-panel-border);
+  background: var(--vscode-sideBar-background);
+}
+
+.validation-log-header h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.validation-log-header .template-name {
+  font-size: 0.95rem;
+  color: var(--vscode-descriptionForeground);
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Validation Summary Section */
+.validation-log-summary {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.validation-status {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+}
+
+.validation-status.success {
+  background: rgba(75, 181, 67, 0.15);
+  border-left: 4px solid var(--vscode-testing-iconPassed);
+}
+
+.validation-status.error {
+  background: rgba(224, 89, 72, 0.15);
+  border-left: 4px solid var(--vscode-testing-iconFailed);
+}
+
+.validation-status .status-icon {
+  font-size: 1.5rem;
+}
+
+.validation-status .status-text {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+/* Validation Stats Grid */
+.validation-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.validation-stats .stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.validation-stats .stat-label {
+  font-size: 0.8rem;
+  color: var(--vscode-descriptionForeground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.validation-stats .stat-value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.validation-stats .stat-value.warning {
+  color: var(--vscode-statusBarItem-warningForeground);
+}
+
+/* Threats Breakdown */
+.threats-breakdown {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--vscode-textCodeBlock-background);
+  border-radius: 6px;
+  border-left: 3px solid var(--vscode-statusBarItem-warningBackground);
+}
+
+.threats-breakdown h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.threats-breakdown ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  list-style: none;
+}
+
+.threats-breakdown li {
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--vscode-foreground);
+  line-height: 1.4;
+}
+
+.threats-breakdown li:last-child {
+  margin-bottom: 0;
+}
+
+.sanitization-notice {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--vscode-testing-iconPassed);
+  font-weight: 500;
+}
+
+.warnings-summary {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: rgba(255, 191, 0, 0.1);
+  border-left: 3px solid var(--vscode-statusBarItem-warningBackground);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: var(--vscode-foreground);
+}
+
+/* Validation Details Section */
+.validation-log-details {
+  padding: 1rem 1.5rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.validation-toggle-details {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.validation-toggle-details:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.validation-details-content {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--vscode-panel-border);
+}
+
+/* Validation Log Sections */
+.validation-log-section {
+  margin-bottom: 1.5rem;
+}
+
+.validation-log-section:last-child {
+  margin-bottom: 0;
+}
+
+.validation-log-section h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+/* Validator List */
+.validator-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.validator-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: var(--vscode-sideBar-background);
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.validator-icon {
+  color: var(--vscode-testing-iconPassed);
+  font-weight: bold;
+}
+
+.validator-name {
+  color: var(--vscode-foreground);
+}
+
+/* Error List */
+.error-list, .warning-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.error-item, .warning-item {
+  padding: 0.75rem;
+  background: var(--vscode-sideBar-background);
+  border-radius: 6px;
+  border-left: 3px solid var(--vscode-testing-iconFailed);
+}
+
+.warning-item {
+  border-left-color: var(--vscode-statusBarItem-warningBackground);
+}
+
+.error-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.error-code {
+  font-family: var(--vscode-editor-font-family);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--vscode-testing-iconFailed);
+  background: rgba(224, 89, 72, 0.15);
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+}
+
+.error-field {
+  font-size: 0.75rem;
+  color: var(--vscode-descriptionForeground);
+  font-family: var(--vscode-editor-font-family);
+}
+
+.error-message {
+  font-size: 0.85rem;
+  color: var(--vscode-foreground);
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.error-suggestion {
+  font-size: 0.8rem;
+  color: var(--vscode-descriptionForeground);
+  font-style: italic;
+  padding: 0.5rem;
+  background: var(--vscode-textCodeBlock-background);
+  border-radius: 4px;
+}
+
+/* Performance Metrics */
+.performance-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--vscode-textCodeBlock-background);
+  border-radius: 6px;
+}
+
+.performance-metrics .metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.performance-metrics .metric-label {
+  font-size: 0.75rem;
+  color: var(--vscode-descriptionForeground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.performance-metrics .metric-value {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  font-family: var(--vscode-editor-font-family);
+}
+
+/* Validation Footer */
+.validation-log-footer {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 2px solid var(--vscode-panel-border);
+  background: var(--vscode-sideBar-background);
+  justify-content: flex-end;
+}
+
+.validation-log-footer .btn {
+  padding: 0.65rem 1.25rem;
+  font-size: 0.9rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.validation-log-footer .btn-primary {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.validation-log-footer .btn-primary:hover {
+  background: var(--vscode-button-hoverBackground);
+  transform: translateY(-1px);
+}
+
+.validation-log-footer .btn-secondary {
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: 1px solid var(--vscode-panel-border);
+}
+
+.validation-log-footer .btn-secondary:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+/* Scrollbar for Validation Details */
+.validation-log-details::-webkit-scrollbar {
+  width: 8px;
+}
+
+.validation-log-details::-webkit-scrollbar-track {
+  background: var(--vscode-scrollbarSlider-background);
+}
+
+.validation-log-details::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+  border-radius: 4px;
+}
+
+.validation-log-details::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-activeBackground);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .modal-overlay {
@@ -669,5 +1058,26 @@
 
   .modal-body {
     padding: 1rem;
+  }
+
+  .validation-log-overlay {
+    padding: 0.5rem;
+  }
+
+  .validation-log-modal {
+    max-height: 95vh;
+  }
+
+  .validation-stats {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .validator-list {
+    grid-template-columns: 1fr;
+  }
+
+  .performance-metrics {
+    grid-template-columns: 1fr;
   }
 }

@@ -267,6 +267,10 @@ function setupMessageHandling(): void {
                     handleMarketplaceExportError(message.payload);
                     break;
 
+                case 'marketplace:import-validation-complete':
+                    handleMarketplaceValidationComplete(message.payload);
+                    break;
+
                 case 'marketplace:import-success':
                     handleMarketplaceImportSuccess(message.payload);
                     break;
@@ -738,6 +742,23 @@ function handleMarketplaceExportError(data: any): void {
 }
 
 /**
+ * Handle marketplace template validation complete - show validation log viewer
+ */
+function handleMarketplaceValidationComplete(data: any): void {
+    const { template, validationResult } = data;
+
+    webviewLogger.info(
+        LogCategory.UI,
+        'Showing validation results',
+        'handleMarketplaceValidationComplete',
+        { template, validationResult },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    showValidationLogViewer(template, validationResult);
+}
+
+/**
  * Handle marketplace template import success
  */
 function handleMarketplaceImportSuccess(data: any): void {
@@ -765,6 +786,229 @@ function handleMarketplaceImportError(data: any): void {
     if (data.errors) {
         console.error('[Marketplace] Import validation errors:', data.errors);
     }
+}
+
+/**
+ * Show validation log viewer modal
+ */
+function showValidationLogViewer(template: any, validationResult: any): void {
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'validation-log-overlay';
+    overlay.innerHTML = `
+        <div class="validation-log-modal">
+            <div class="validation-log-header">
+                <h2>🔒 Security Validation Complete</h2>
+                <p class="template-name">${escapeHtml(template.name)}</p>
+            </div>
+
+            <div class="validation-log-summary">
+                ${renderValidationSummary(validationResult)}
+            </div>
+
+            <div class="validation-log-details">
+                <button class="btn btn-secondary validation-toggle-details" id="toggle-validation-details">
+                    📋 View Detailed Validation Log
+                </button>
+                <div class="validation-details-content" id="validation-details-content" style="display: none;">
+                    ${renderValidationDetails(validationResult)}
+                </div>
+            </div>
+
+            <div class="validation-log-footer">
+                <button class="btn btn-secondary" id="validation-cancel-btn">Cancel</button>
+                <button class="btn btn-primary" id="validation-proceed-btn">
+                    ✓ Proceed with Import
+                </button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Attach event listeners
+    const toggleBtn = document.getElementById('toggle-validation-details');
+    const detailsContent = document.getElementById('validation-details-content');
+    const cancelBtn = document.getElementById('validation-cancel-btn');
+    const proceedBtn = document.getElementById('validation-proceed-btn');
+
+    if (toggleBtn && detailsContent) {
+        toggleBtn.addEventListener('click', () => {
+            const isVisible = detailsContent.style.display !== 'none';
+            detailsContent.style.display = isVisible ? 'none' : 'block';
+            toggleBtn.textContent = isVisible ? '📋 View Detailed Validation Log' : '📋 Hide Validation Log';
+        });
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            document.body.removeChild(overlay);
+        });
+    }
+
+    if (proceedBtn) {
+        proceedBtn.addEventListener('click', () => {
+            document.body.removeChild(overlay);
+            // Confirm import with extension
+            vscode.postMessage({
+                type: 'marketplace:confirm-import',
+                payload: { template }
+            });
+        });
+    }
+}
+
+/**
+ * Render validation summary section
+ */
+function renderValidationSummary(validationResult: any): string {
+    const { metadata } = validationResult;
+    const threats = metadata.threatsDetected;
+    const totalThreats = Object.values(threats).reduce((sum: number, count: any) => sum + count, 0);
+
+    const statusIcon = validationResult.isValid ? '✅' : '❌';
+    const statusText = validationResult.isValid ? 'Validation Passed' : 'Validation Failed';
+    const statusClass = validationResult.isValid ? 'success' : 'error';
+
+    return `
+        <div class="validation-status ${statusClass}">
+            <span class="status-icon">${statusIcon}</span>
+            <span class="status-text">${statusText}</span>
+        </div>
+
+        <div class="validation-stats">
+            <div class="stat">
+                <span class="stat-label">Validators Run:</span>
+                <span class="stat-value">${metadata.validatorsRun.length}</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Execution Time:</span>
+                <span class="stat-value">${metadata.durationMs}ms</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Threats Detected:</span>
+                <span class="stat-value ${totalThreats > 0 ? 'warning' : ''}">${totalThreats}</span>
+            </div>
+        </div>
+
+        ${totalThreats > 0 ? `
+            <div class="threats-breakdown">
+                <h4>Threats Detected & Sanitized:</h4>
+                <ul>
+                    ${threats.xss > 0 ? `<li>🔒 XSS Attacks: ${threats.xss}</li>` : ''}
+                    ${threats.promptInjection > 0 ? `<li>🤖 Prompt Injection: ${threats.promptInjection}</li>` : ''}
+                    ${threats.unicode > 0 ? `<li>🔤 Unicode Exploits: ${threats.unicode}</li>` : ''}
+                    ${threats.injection > 0 ? `<li>💉 Code Injection: ${threats.injection}</li>` : ''}
+                    ${threats.pathTraversal > 0 ? `<li>📂 Path Traversal: ${threats.pathTraversal}</li>` : ''}
+                </ul>
+                <p class="sanitization-notice">✓ All threats have been automatically sanitized</p>
+            </div>
+        ` : ''}
+
+        ${validationResult.warnings.length > 0 ? `
+            <div class="validation-warnings">
+                <h4>⚠️ Warnings (${validationResult.warnings.length}):</h4>
+                <ul>
+                    ${validationResult.warnings.slice(0, 3).map((w: any) => `
+                        <li>${escapeHtml(w.message)}</li>
+                    `).join('')}
+                    ${validationResult.warnings.length > 3 ? `
+                        <li><em>+ ${validationResult.warnings.length - 3} more warnings</em></li>
+                    ` : ''}
+                </ul>
+            </div>
+        ` : ''}
+    `;
+}
+
+/**
+ * Render detailed validation log
+ */
+function renderValidationDetails(validationResult: any): string {
+    const { metadata, errors, warnings } = validationResult;
+
+    return `
+        <div class="validation-log-section">
+            <h4>Validators Executed:</h4>
+            <ul class="validator-list">
+                ${metadata.validatorsRun.map((name: string) => `
+                    <li class="validator-item">
+                        <span class="validator-icon">✓</span>
+                        <span class="validator-name">${escapeHtml(name)}</span>
+                    </li>
+                `).join('')}
+            </ul>
+        </div>
+
+        ${errors.length > 0 ? `
+            <div class="validation-log-section">
+                <h4>Errors Found (${errors.length}):</h4>
+                <ul class="error-list">
+                    ${errors.map((err: any) => `
+                        <li class="error-item">
+                            <div class="error-header">
+                                <span class="error-code">[${err.code}]</span>
+                                <span class="error-field">${escapeHtml(err.field)}</span>
+                            </div>
+                            <div class="error-message">${escapeHtml(err.message)}</div>
+                            ${err.suggestion ? `
+                                <div class="error-suggestion">💡 ${escapeHtml(err.suggestion)}</div>
+                            ` : ''}
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
+        ` : ''}
+
+        ${warnings.length > 0 ? `
+            <div class="validation-log-section">
+                <h4>Warnings (${warnings.length}):</h4>
+                <ul class="warning-list">
+                    ${warnings.map((warn: any) => `
+                        <li class="warning-item">
+                            <div class="warning-header">
+                                <span class="warning-code">[${warn.code}]</span>
+                                <span class="warning-field">${escapeHtml(warn.field)}</span>
+                            </div>
+                            <div class="warning-message">${escapeHtml(warn.message)}</div>
+                            ${warn.suggestion ? `
+                                <div class="warning-suggestion">💡 ${escapeHtml(warn.suggestion)}</div>
+                            ` : ''}
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
+        ` : ''}
+
+        <div class="validation-log-section">
+            <h4>Performance:</h4>
+            <div class="performance-stats">
+                <div>Original Size: ${formatBytes(metadata.originalSize)}</div>
+                ${metadata.sanitizedSize ? `
+                    <div>Sanitized Size: ${formatBytes(metadata.sanitizedSize)}</div>
+                ` : ''}
+                <div>Duration: ${metadata.durationMs}ms</div>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Format bytes to human readable format
+ */
+function formatBytes(bytes: number): string {
+    if (bytes < 1024) return bytes + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+}
+
+/**
+ * Escape HTML to prevent XSS in displayed content
+ */
+function escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 /**

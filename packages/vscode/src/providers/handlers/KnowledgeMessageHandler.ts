@@ -114,6 +114,10 @@ export class KnowledgeMessageHandler {
         await this.handleMarketplaceImport(message.payload);
         return true;
 
+      case 'marketplace:confirm-import':
+        await this.handleMarketplaceConfirmImport(message.payload);
+        return true;
+
       case 'marketplace:delete':
         await this.handleMarketplaceDelete(message.payload);
         return true;
@@ -1432,17 +1436,12 @@ export class KnowledgeMessageHandler {
           LogPathway.KNOWLEDGE_MANAGEMENT
         );
 
-        vscode.window.showInformationMessage(
-          `Template "${result.template.name}" imported successfully`
-        );
-
-        // Refresh marketplace templates
-        await this.sendMarketplaceTemplates();
-
+        // Send validation result to webview for user review
         this.context.view?.webview.postMessage({
-          type: 'marketplace:import-success',
+          type: 'marketplace:import-validation-complete',
           payload: {
-            template: result.template
+            template: result.template,
+            validationResult: result.validationResult
           }
         });
       } else {
@@ -1486,6 +1485,46 @@ export class KnowledgeMessageHandler {
           error: error.message
         }
       });
+    }
+  }
+
+  /**
+   * Handle marketplace import confirmation (after user reviews validation)
+   */
+  private async handleMarketplaceConfirmImport(payload: any): Promise<void> {
+    const { template } = payload;
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'User confirmed marketplace template import',
+      'KnowledgeMessageHandler.handleMarketplaceConfirmImport',
+      { templateId: template.id, name: template.name },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    try {
+      // Template is already imported to marketplace, just show success
+      vscode.window.showInformationMessage(
+        `Template "${template.name}" imported successfully to marketplace`
+      );
+
+      // Refresh marketplace templates
+      await this.sendMarketplaceTemplates();
+
+      this.context.view?.webview.postMessage({
+        type: 'marketplace:import-success',
+        payload: { template }
+      });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to confirm template import',
+        'KnowledgeMessageHandler.handleMarketplaceConfirmImport',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to complete import: ${error.message}`);
     }
   }
 

@@ -30,6 +30,7 @@ export interface LoadTemplateResult {
   template?: MarketplaceTemplate;
   error?: string;
   errors?: string[];  // Detailed error messages for validation failures
+  validationResult?: any;  // Full validation result for UI display
 }
 
 export interface ExportTemplateResult {
@@ -242,7 +243,16 @@ export class MarketplaceTemplateManager {
         isInstalled: false
       };
 
-      return { success: true, template };
+      return {
+        success: true,
+        template,
+        validationResult: {
+          isValid: validationResult.isValid,
+          errors: validationResult.errors,
+          warnings: validationResult.warnings,
+          metadata: validationResult.metadata
+        }
+      };
     } catch (error: any) {
       return {
         success: false,
