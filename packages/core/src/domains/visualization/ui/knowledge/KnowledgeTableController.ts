@@ -5,17 +5,14 @@
  * Extracted from KnowledgeViewController for better separation of concerns.
  */
 
-import { KnowledgeItem, KnowledgeType, KnowledgeScope } from '../../../knowledge/types';
+import { KnowledgeItem, KnowledgeType, KnowledgeScope, MarketplaceTemplate } from '../../../knowledge/types';
 import { TableTemplates } from './templates/table-templates';
 import { KnowledgeFilters } from './utils/KnowledgeFilters';
 import { webviewLogger, LogCategory, LogPathway } from '../../webview/WebviewLogger';
 
-// TODO: Phase 3 - Replace with MarketplaceTemplate from marketplace domain
-type Template = any;
-
 export interface TableState {
   items: KnowledgeItem[];
-  templates: Template[];  // Templates for grouping
+  templates: MarketplaceTemplate[];  // Templates for grouping
   selectedItems: Set<string>;
   searchQuery: string;
   filterType: KnowledgeType | null;
@@ -57,7 +54,7 @@ export class KnowledgeTableController {
   /**
    * Load knowledge items data
    */
-  loadData(items: KnowledgeItem[], templates: Template[] = []): void {
+  loadData(items: KnowledgeItem[], templates: MarketplaceTemplate[] = []): void {
     this.state.items = items;
     this.state.templates = templates;
     this.renderKnowledgeTable();
@@ -381,8 +378,11 @@ export class KnowledgeTableController {
       // Group by template
       for (const template of this.state.templates) {
         const templateItems: KnowledgeItem[] = [];
-        // Safety check: ensure itemIds exists and is iterable
-        const itemIds = Array.isArray(template.itemIds) ? template.itemIds : [];
+        // Extract item IDs from embedded items (USER templates have items array)
+        const itemIds = Array.isArray(template.items)
+          ? template.items.map(item => item.id)
+          : [];
+
         for (const itemId of itemIds) {
           const item = itemMap.get(itemId);
           if (item) {

@@ -52,8 +52,8 @@ export class TableTemplates {
                ${isSelected ? 'checked' : ''}>
       </td>
       <td class="col-type ${validClass}">
-        <span class="type-badge" data-type="${item.type}">
-          ${getKnowledgeTypeIcon(item.type)} ${getKnowledgeTypeLabel(item.type)}
+        <span class="type-badge" data-type="${item.type || 'unknown'}">
+          ${item.type ? `${getKnowledgeTypeIcon(item.type)} ${getKnowledgeTypeLabel(item.type)}` : '⚠️ Unknown'}
         </span>
       </td>
       <td class="col-title ${validClass}">

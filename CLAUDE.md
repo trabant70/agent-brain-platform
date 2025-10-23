@@ -249,8 +249,11 @@ Markdown content here...
 - `FilterState.ts` - Filter configuration
 
 **knowledge/** - Knowledge management system
-- `types.ts` - 20+ knowledge types (ADR, DESIGN_PATTERN, GOLDEN_PATH, LEARNING, STANDARD, SNIPPET, etc.)
-- `KnowledgeStore.ts` - In-memory storage with 5 indexes (type, scope, tag, path, source)
+- `types.ts` - 20+ knowledge types + MarketplaceTemplate interface (unified format)
+- `KnowledgeStore.ts` - In-memory storage with 5 indexes (type, scope, tag, path, source) - **items only, NOT templates**
+- `MarketplaceManager.ts` - Manages ALL templates (bundled + user-created)
+- `TemplateRegistry.ts` - Tracks template installations per workspace
+- `TemplateInstaller.ts` - Handles template installation into workspace
 - `KnowledgeFileSystem.ts` - Markdown file I/O with YAML frontmatter parsing
 - `TemplateEngine.ts` - Template injection/removal for claude.md files
 - Index exports all types and classes
@@ -362,6 +365,22 @@ npm test -- data-ingestion.pathway.test.ts
 
 8. **KnowledgeStore Indexes**: Store maintains 5 indexes - updates must maintain index consistency. Use provided methods (addItem, updateItem, deleteItem) rather than direct manipulation.
 
+9. **Template vs Knowledge Item Separation**:
+   - `KnowledgeStore` = knowledge items ONLY (no templates)
+   - `MarketplaceManager` = ALL templates (bundled + user)
+   - When working with templates, always use `marketplaceManager.getTemplate(templateId)`
+   - Template structure: `MarketplaceTemplate` with embedded `KnowledgeItem[]` (not just IDs)
+   - User templates saved to `.agent-brain/marketplace/templates/`
+   - Bundled templates in `dist/knowledge/bundled-templates/`
+
+10. **Date Serialization Across postMessage**: When data crosses extension→webview boundary via `postMessage()`, Date objects become ISO strings. Always handle both:
+    ```typescript
+    // Safe pattern - handles both Date objects and strings
+    const timestamp = date instanceof Date
+      ? date.getTime()
+      : new Date(date).getTime();
+    ```
+
 ## Configuration Files
 
 - `packages/core/tsconfig.json` - Core TypeScript config
@@ -386,6 +405,9 @@ npm test -- data-ingestion.pathway.test.ts
 - Canonical Events: `packages/core/src/domains/events/CanonicalEvent.ts`
 - Knowledge Types: `packages/core/src/domains/knowledge/types.ts`
 - Knowledge Store: `packages/core/src/domains/knowledge/KnowledgeStore.ts`
+- Marketplace Manager: `packages/core/src/domains/knowledge/MarketplaceManager.ts`
+- Template Registry: `packages/core/src/domains/knowledge/TemplateRegistry.ts`
+- Template Installer: `packages/core/src/domains/knowledge/TemplateInstaller.ts`
 - Knowledge FileSystem: `packages/core/src/domains/knowledge/KnowledgeFileSystem.ts`
 - Template Engine: `packages/core/src/domains/knowledge/TemplateEngine.ts`
 
@@ -443,10 +465,14 @@ npm test -- data-ingestion.pathway.test.ts
 5. Export/import via JSON
 
 **Template System:**
-- Templates stored as JSON in `.agent-brain/templates/`
+- Templates stored as JSON in `.agent-brain/templates/` (user templates) and bundled with extension
 - Applied to claude.md or other markdown files
 - Uses HTML comment markers for injection/removal tracking
 - Supports versioning and conflict detection
+- **IMPORTANT**: All templates managed by `MarketplaceManager`, NOT `KnowledgeStore`
+  - KnowledgeStore = knowledge items only (ADRs, patterns, learnings, etc.)
+  - MarketplaceManager = ALL templates (bundled + user-created)
+  - Use `this.marketplaceManager.getTemplate()` NOT `this.store.getTemplate()`
 
 ## Session Journals
 

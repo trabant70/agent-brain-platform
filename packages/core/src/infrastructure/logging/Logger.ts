@@ -76,6 +76,7 @@ class Logger {
     private maxHistorySize = 1000;
     private testMode: boolean = false;  // Enable test mode for LogCapture integration
     private testModeCallback?: (level: LogLevel, category: LogCategory, message: string, context?: string, data?: any, pathway?: LogPathway) => void;
+    private outputChannel: any = null;  // VSCode OutputChannel (any type to avoid circular dependency)
 
     private constructor() {
         // Initialize from configuration or environment
@@ -87,6 +88,13 @@ class Logger {
             Logger.instance = new Logger();
         }
         return Logger.instance;
+    }
+
+    /**
+     * Set VSCode OutputChannel for logging (extension environment only)
+     */
+    public setOutputChannel(channel: any): void {
+        this.outputChannel = channel;
     }
 
     private initializeFromConfig(): void {
@@ -263,18 +271,31 @@ class Logger {
 
         const formattedMessage = this.formatMessage(level, category, message, context, pathway);
 
-        // Output to appropriate console method based on level (skip in test mode to avoid noise)
+        // Output to appropriate destination (skip in test mode to avoid noise)
         if (!this.testMode) {
-            switch (level) {
-                case LogLevel.ERROR:
-                    break;
-                case LogLevel.WARN:
-                    break;
-                case LogLevel.INFO:
-                    break;
-                case LogLevel.DEBUG:
-                case LogLevel.TRACE:
-                    break;
+            // If OutputChannel is available (VSCode extension environment), use it
+            if (this.outputChannel) {
+                this.outputChannel.appendLine(formattedMessage);
+                if (data) {
+                    this.outputChannel.appendLine(JSON.stringify(data, null, 2));
+                }
+            } else {
+                // Fallback to console for non-extension environments (webview, tests, etc.)
+                switch (level) {
+                    case LogLevel.ERROR:
+                        console.error(formattedMessage, data);
+                        break;
+                    case LogLevel.WARN:
+                        console.warn(formattedMessage, data);
+                        break;
+                    case LogLevel.INFO:
+                        console.log(formattedMessage, data);
+                        break;
+                    case LogLevel.DEBUG:
+                    case LogLevel.TRACE:
+                        console.log(formattedMessage, data);
+                        break;
+                }
             }
         }
     }

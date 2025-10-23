@@ -12,7 +12,8 @@ import {
   KnowledgeItem,
   ClaudeMdFile,
   KnowledgeType,
-  KnowledgeScope
+  KnowledgeScope,
+  MarketplaceTemplate
 } from '../../knowledge/types';
 import { NotificationManager } from './NotificationManager';
 import { webviewLogger, LogCategory, LogPathway } from '../webview/WebviewLogger';
@@ -21,12 +22,9 @@ import { ClaudeMdAccordionController } from './knowledge/ClaudeMdAccordionContro
 import { KnowledgeFormController } from './knowledge/KnowledgeFormController';
 import { TemplateController } from './knowledge/TemplateController';
 
-// TODO: Phase 3 - Replace with MarketplaceTemplate from marketplace domain
-type Template = any;
-
 export interface KnowledgeViewState {
   items: KnowledgeItem[];
-  templates: Template[];
+  templates: MarketplaceTemplate[];
   claudeMdFiles: ClaudeMdFile[];
 }
 
@@ -125,7 +123,7 @@ export class KnowledgeViewController {
   /**
    * Load knowledge data from extension
    */
-  loadData(data: { items: KnowledgeItem[]; templates: Template[] }): void {
+  loadData(data: { items: KnowledgeItem[]; templates: MarketplaceTemplate[] }): void {
     webviewLogger.info(
       LogCategory.UI,
       'Loading knowledge data into controller',
@@ -294,11 +292,11 @@ export class KnowledgeViewController {
     const applyTemplateBtn = document.getElementById('apply-template');
     applyTemplateBtn?.addEventListener('click', () => this.templateController.applyTemplateToFocused());
 
-    const exportTemplateBtn = document.getElementById('export-template');
-    exportTemplateBtn?.addEventListener('click', () => this.templateController.exportTemplate());
+    const publishTemplateBtn = document.getElementById('publish-template');
+    publishTemplateBtn?.addEventListener('click', () => this.templateController.publishTemplate());
 
-    const importTemplateBtn = document.getElementById('import-template');
-    importTemplateBtn?.addEventListener('click', () => this.templateController.importTemplate());
+    const deleteTemplateBtn = document.getElementById('delete-template');
+    deleteTemplateBtn?.addEventListener('click', () => this.templateController.deleteTemplate());
 
     // Template selector - delegate to template controller
     const templateSelector = document.getElementById('template-selector') as HTMLSelectElement;
@@ -459,14 +457,69 @@ export class KnowledgeViewController {
 
   /**
    * Refresh knowledge data from extension
+   * Reloads both knowledge items AND templates from disk
    */
   refreshKnowledgeData(): void {
     this.sendMessage({
-      type: 'knowledge:load-request'
+      type: 'knowledge:load-request',
+      payload: { reload: true }
     });
     this.sendMessage({
       type: 'knowledge:scan-claude-files'
     });
+  }
+
+  /**
+   * Select a template in the dropdown
+   * Used after template creation to enable 3-click workflow: Create → Apply → Publish
+   */
+  selectTemplate(templateId: string): void {
+    webviewLogger.info(
+      LogCategory.UI,
+      'Selecting template in dropdown',
+      'KnowledgeViewController.selectTemplate',
+      { templateId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    const selector = document.getElementById('template-selector') as HTMLSelectElement;
+    if (!selector) {
+      webviewLogger.error(
+        LogCategory.UI,
+        'Template selector not found',
+        'KnowledgeViewController.selectTemplate',
+        { templateId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+      return;
+    }
+
+    // Check if the template exists in the dropdown
+    const option = Array.from(selector.options).find(opt => opt.value === templateId);
+    if (!option) {
+      webviewLogger.warn(
+        LogCategory.UI,
+        'Template not found in dropdown options',
+        'KnowledgeViewController.selectTemplate',
+        { templateId, availableOptions: Array.from(selector.options).map(o => o.value) },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+      return;
+    }
+
+    // Select the template
+    selector.value = templateId;
+
+    // Trigger change event to update button states
+    selector.dispatchEvent(new Event('change'));
+
+    webviewLogger.info(
+      LogCategory.UI,
+      'Template selected successfully',
+      'KnowledgeViewController.selectTemplate',
+      { templateId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
   }
 
   /**

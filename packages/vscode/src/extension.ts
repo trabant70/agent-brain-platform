@@ -16,6 +16,9 @@ const log = createContextLogger(LogCategory.EXTENSION);
 export async function activate(context: vscode.ExtensionContext) {
     const outputChannel = vscode.window.createOutputChannel('Repository Timeline');
 
+    // Configure Logger to use VSCode OutputChannel for all extension-side logging
+    logger.setOutputChannel(outputChannel);
+
     log.info(LogCategory.EXTENSION, 'Starting extension activation');
     outputChannel.appendLine('🚀 Activating Repository Timeline Extension...');
 

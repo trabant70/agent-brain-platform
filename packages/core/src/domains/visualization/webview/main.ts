@@ -209,13 +209,16 @@ function setupMessageHandling(): void {
 
                 case 'knowledge:item-updated':
                 case 'knowledge:item-deleted':
-                case 'knowledge:template-created':
                     // Reload knowledge data
                     requestKnowledgeData();
                     break;
 
                 case 'knowledge:success':
                     showKnowledgeSuccess(message.payload.message);
+                    break;
+
+                case 'knowledge:template-created':
+                    handleTemplateCreated(message.payload);
                     break;
 
                 case 'knowledge:error':
@@ -519,6 +522,28 @@ function showKnowledgeError(error: string): void {
     const knowledgeController = (window as any).knowledgeController;
     if (knowledgeController && typeof knowledgeController.handleOperationResult === 'function') {
         knowledgeController.handleOperationResult('Operation', false, error);
+    }
+}
+
+/**
+ * Handle template created - select it in the dropdown
+ */
+function handleTemplateCreated(payload: any): void {
+    webviewLogger.info(
+        LogCategory.UI,
+        'Template created, selecting in dropdown',
+        'handleTemplateCreated',
+        { templateId: payload.templateId, templateName: payload.templateName },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    // Show success notification
+    showKnowledgeSuccess(payload.message);
+
+    // Select the newly created template in the dropdown
+    const knowledgeController = (window as any).knowledgeController;
+    if (knowledgeController && typeof knowledgeController.selectTemplate === 'function') {
+        knowledgeController.selectTemplate(payload.templateId);
     }
 }
 

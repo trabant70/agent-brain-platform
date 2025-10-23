@@ -131,6 +131,7 @@ export class TemplateController {
     const applySelectedBtn = document.getElementById('apply-selected') as HTMLButtonElement;
     const applyTemplateBtn = document.getElementById('apply-template') as HTMLButtonElement;
     const publishBtn = document.getElementById('publish-template') as HTMLButtonElement;
+    const deleteBtn = document.getElementById('delete-template') as HTMLButtonElement;
 
     // Enable save and apply-selected buttons when items are selected
     if (saveBtn) saveBtn.disabled = !hasSelection;
@@ -146,6 +147,11 @@ export class TemplateController {
       const template = this.state.templates.find(t => t.id === selector?.value);
       const canPublish = hasTemplateSelected && template?.source === 'user';
       publishBtn.disabled = !canPublish;
+    }
+
+    // Delete button enabled when ANY template is selected (bundled or user)
+    if (deleteBtn) {
+      deleteBtn.disabled = !hasTemplateSelected;
     }
   }
 
@@ -459,6 +465,51 @@ export class TemplateController {
 
     this.callbacks.onShowNotification(
       `Publishing template "${template.name}" to marketplace...`,
+      'info'
+    );
+  }
+
+  /**
+   * Delete template from project
+   * Can delete both bundled and user templates from the project
+   */
+  async deleteTemplate(): Promise<void> {
+    const selector = document.getElementById('template-selector') as HTMLSelectElement;
+    const templateId = selector?.value;
+
+    if (!templateId) {
+      this.callbacks.onShowNotification(
+        'Please select a template to delete',
+        'warning'
+      );
+      return;
+    }
+
+    const template = this.state.templates.find(t => t.id === templateId);
+    if (!template) {
+      this.callbacks.onShowNotification('Template not found', 'error');
+      return;
+    }
+
+    // Confirm deletion
+    const modal = new ModalDialog();
+    const confirmed = await modal.confirm(
+      `Delete template "${template.name}" from your project? This will remove the template file from .agent-brain/templates/.`,
+      'Confirm Deletion'
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    // Send delete message
+    this.callbacks.onSendMessage({
+      type: 'knowledge:delete-template',
+      payload: { templateId }
+    });
+
+    this.callbacks.onShowNotification(
+      `Deleting template "${template.name}"...`,
       'info'
     );
   }

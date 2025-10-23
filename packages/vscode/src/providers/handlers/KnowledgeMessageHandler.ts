@@ -26,7 +26,9 @@ export class KnowledgeMessageHandler {
   async handleMessage(message: any): Promise<boolean> {
     switch (message.type) {
       case 'knowledge:load-request':
-        await this.sendKnowledgeData();
+        // Support reload flag to reload templates from disk (used by refresh button)
+        const reload = message.payload?.reload ?? false;
+        await this.sendKnowledgeData(reload);
         return true;
 
       case 'knowledge:scan-claude-files':
@@ -88,6 +90,10 @@ export class KnowledgeMessageHandler {
         await this.sendMarketplaceTemplates();
         return true;
 
+      case 'marketplace:refresh':
+        await this.handleMarketplaceRefresh();
+        return true;
+
       case 'marketplace:install':
         await this.handleMarketplaceInstall(message.payload);
         return true;
@@ -108,6 +114,14 @@ export class KnowledgeMessageHandler {
         await this.handleMarketplaceImport(message.payload);
         return true;
 
+      case 'marketplace:delete':
+        await this.handleMarketplaceDelete(message.payload);
+        return true;
+
+      case 'knowledge:delete-template':
+        await this.handleDeleteProjectTemplate(message.payload);
+        return true;
+
       default:
         return false; // Not handled by this handler
     }
@@ -115,15 +129,17 @@ export class KnowledgeMessageHandler {
 
   /**
    * Send knowledge data to webview
+   * @param reload If true, reloads templates from disk before sending
    */
-  public async sendKnowledgeData(): Promise<void> {
+  public async sendKnowledgeData(reload: boolean = false): Promise<void> {
     logger.debug(
       LogCategory.EXTENSION,
       'Sending knowledge data to webview',
       'KnowledgeMessageHandler.sendKnowledgeData',
       {
         hasKnowledgeManager: !!this.context.knowledgeManager,
-        hasView: !!this.context.view
+        hasView: !!this.context.view,
+        reload
       },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
@@ -143,23 +159,32 @@ export class KnowledgeMessageHandler {
     }
 
     try {
+      // Reload templates from disk if requested (e.g., when refresh button is clicked)
+      if (reload) {
+        logger.info(
+          LogCategory.EXTENSION,
+          'Reloading knowledge data from disk',
+          'KnowledgeMessageHandler.sendKnowledgeData',
+          {},
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        await this.context.knowledgeManager.refreshAll();
+      }
+
       const store = this.context.knowledgeManager.getStore();
-      const marketplaceManager = this.context.knowledgeManager.getMarketplaceManager();
       const items = store.getAllItems();
 
-      // Send both LOCAL templates (from .agent-brain/templates/) and MARKETPLACE user templates
-      // Local templates are for grouping only, marketplace templates are published
-      const localTemplates = this.context.knowledgeManager.getLocalTemplates();
-      const marketplaceUserTemplates = marketplaceManager.getUserTemplates();
-      const templates = [...localTemplates, ...marketplaceUserTemplates];
+      // Send ONLY LOCAL templates (from .agent-brain/templates/)
+      // Published templates appear only in marketplace, not in Knowledge tab
+      const templates = this.context.knowledgeManager.getLocalTemplates();
 
       logger.info(
         LogCategory.EXTENSION,
-        'Retrieved knowledge data from store and marketplace',
+        'Retrieved knowledge data from store',
         'KnowledgeMessageHandler.sendKnowledgeData',
         {
           itemCount: items.length,
-          userTemplateCount: templates.length,
+          localTemplateCount: templates.length,
           items: items.map((i: any) => ({ id: i.id, type: i.type, title: i.title })),
           templates: templates.map((t: any) => ({ id: t.id, name: t.name, source: t.source, itemCount: t.items?.length || 0 }))
         },
@@ -435,12 +460,16 @@ export class KnowledgeMessageHandler {
     }
 
     try {
-      await this.context.knowledgeManager.createTemplate(payload);
+      const template = await this.context.knowledgeManager.createTemplate(payload);
       await this.sendKnowledgeData();
 
       this.context.view?.webview.postMessage({
-        type: 'knowledge:success',
-        payload: { message: 'Template created successfully' }
+        type: 'knowledge:template-created',
+        payload: {
+          message: 'Template created successfully',
+          templateId: template.id,
+          templateName: template.name
+        }
       });
     } catch (error: any) {
       this.context.view?.webview.postMessage({
@@ -461,15 +490,15 @@ export class KnowledgeMessageHandler {
     try {
       await this.context.knowledgeManager.updateTemplate(payload.templateId, payload.itemIds);
 
-      // Reload marketplace templates to get updated version
-      const marketplaceManager = this.context.knowledgeManager.getMarketplaceManager();
-      await marketplaceManager.loadAllTemplates();
+      // Reload project templates to get updated version
+      const projectTemplateManager = this.context.knowledgeManager.getProjectTemplateManager();
+      await projectTemplateManager.loadTemplatesFromDisk();
 
       // Refresh knowledge data to show updated template
       await this.sendKnowledgeData();
 
-      const marketplaceTemplate = marketplaceManager.getTemplate(payload.templateId);
-      const templateName = marketplaceTemplate?.name || 'Template';
+      const projectTemplate = projectTemplateManager.getTemplate(payload.templateId);
+      const templateName = projectTemplate?.name || 'Template';
 
       this.context.view?.webview.postMessage({
         type: 'knowledge:success',
@@ -570,8 +599,13 @@ export class KnowledgeMessageHandler {
       await this.sendClaudeMdFiles();
 
       // Send success message to webview
-      const marketplaceManager = this.context.knowledgeManager.getMarketplaceManager();
-      const template = marketplaceManager.getTemplate(payload.templateId);
+      // Check both project and marketplace template managers
+      const projectManager = this.context.knowledgeManager.getProjectTemplateManager();
+      const marketplaceManager = this.context.knowledgeManager.getMarketplaceTemplateManager();
+      let template = projectManager.getTemplate(payload.templateId);
+      if (!template) {
+        template = marketplaceManager.getTemplate(payload.templateId);
+      }
       const templateName = template?.name || 'Template';
       const action = result?.wasReplaced ? 'updated in' : 'applied to';
 
@@ -745,26 +779,32 @@ export class KnowledgeMessageHandler {
     }
 
     try {
-      const result = await this.context.knowledgeManager.publishTemplate(payload.templateId);
+      // Use orchestrator to publish from project to marketplace
+      const orchestrator = this.context.knowledgeManager.getTemplateOrchestrator();
+      const result = await orchestrator.publishToMarketplace(payload.templateId);
 
-      // Reload marketplace templates to include the newly published template
-      const marketplaceManager = this.context.knowledgeManager.getMarketplaceManager();
-      await marketplaceManager.loadAllTemplates();
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to publish template');
+      }
 
-      // Update installation status
-      const templateRegistry = this.context.knowledgeManager.getTemplateRegistry();
-      const installed = templateRegistry.getAllInstalled();
-      marketplaceManager.updateInstallationStatus(installed);
+      // Get template name for user message
+      const projectTemplateManager = this.context.knowledgeManager.getProjectTemplateManager();
+      const template = projectTemplateManager.getTemplate(payload.templateId);
+      const templateName = template?.name || 'Template';
 
       logger.debug(
         LogCategory.EXTENSION,
-        'Marketplace templates reloaded after publishing',
+        'Template published via orchestrator',
         'KnowledgeMessageHandler.handlePublishTemplate',
-        { templateId: result.templateId, installedCount: installed.length },
+        {
+          templateId: result.templateId,
+          version: result.version,
+          isNewVersion: result.isNewVersion
+        },
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
 
-      // Refresh knowledge data to show updated template
+      // Refresh knowledge data (project templates)
       await this.sendKnowledgeData();
 
       // Refresh marketplace data to show the published template
@@ -777,15 +817,16 @@ export class KnowledgeMessageHandler {
         {
           templateId: result.templateId,
           version: result.version,
-          isNewVersion: result.isNewVersion
+          isNewVersion: result.isNewVersion,
+          changesSummary: result.changesSummary
         },
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
 
       // Send success message with details
       const message = result.isNewVersion
-        ? `Template "${result.templateName}" published as version ${result.version}. ${result.changesSummary}`
-        : `Template "${result.templateName}" published to marketplace as version ${result.version}.`;
+        ? `Template "${templateName}" published as version ${result.version}. ${result.changesSummary}`
+        : `Template "${templateName}" published to marketplace as version ${result.version}.`;
 
       this.context.view?.webview.postMessage({
         type: 'knowledge:publish-success',
@@ -919,14 +960,20 @@ export class KnowledgeMessageHandler {
     );
 
     try {
-      const marketplaceManager = this.context.knowledgeManager.getMarketplaceManager();
-      const templates = marketplaceManager.getAllTemplates();
+      const marketplaceTemplateManager = this.context.knowledgeManager.getMarketplaceTemplateManager();
+      const templateRegistry = this.context.knowledgeManager.getTemplateRegistry();
+
+      // Update installation status before sending
+      const installed = templateRegistry.getAllInstalled();
+      marketplaceTemplateManager.updateInstallationStatus(installed);
+
+      const templates = marketplaceTemplateManager.getAllTemplates();
 
       logger.info(
         LogCategory.EXTENSION,
         `Loaded ${templates.length} marketplace templates`,
         'KnowledgeMessageHandler.sendMarketplaceTemplates',
-        { templateCount: templates.length },
+        { templateCount: templates.length, installedCount: installed.length },
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
 
@@ -942,6 +989,67 @@ export class KnowledgeMessageHandler {
         error,
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
+
+      this.context.view?.webview.postMessage({
+        type: 'marketplace:error',
+        payload: { error: error.message }
+      });
+    }
+  }
+
+  /**
+   * Handle marketplace refresh request
+   * Reloads all templates from disk
+   */
+  private async handleMarketplaceRefresh(): Promise<void> {
+    logger.info(
+      LogCategory.EXTENSION,
+      'Refreshing marketplace templates',
+      'KnowledgeMessageHandler.handleMarketplaceRefresh',
+      {},
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    try {
+      // Reload templates from disk
+      const marketplaceManager = this.context.knowledgeManager.getMarketplaceTemplateManager();
+      const result = await marketplaceManager.loadAllTemplates();
+
+      // Update installation status
+      const templateRegistry = this.context.knowledgeManager.getTemplateRegistry();
+      const installed = templateRegistry.getAllInstalled();
+      marketplaceManager.updateInstallationStatus(installed);
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'Marketplace templates refreshed',
+        'KnowledgeMessageHandler.handleMarketplaceRefresh',
+        {
+          bundled: result.bundled,
+          user: result.user,
+          errors: result.errors.length,
+          installedCount: installed.length
+        },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      // Send updated templates to webview
+      await this.sendMarketplaceTemplates();
+
+      // Show success notification
+      vscode.window.showInformationMessage(
+        `Marketplace refreshed: ${result.bundled} bundled, ${result.user} user templates loaded`
+      );
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to refresh marketplace',
+        'KnowledgeMessageHandler.handleMarketplaceRefresh',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to refresh marketplace: ${error.message}`);
 
       this.context.view?.webview.postMessage({
         type: 'marketplace:error',
@@ -1195,7 +1303,7 @@ export class KnowledgeMessageHandler {
     );
 
     try {
-      const marketplaceManager = this.context.knowledgeManager.getMarketplaceManager();
+      const marketplaceManager = this.context.knowledgeManager.getMarketplaceTemplateManager();
       const template = marketplaceManager.getTemplate(payload.templateId);
 
       if (!template) {
@@ -1312,7 +1420,7 @@ export class KnowledgeMessageHandler {
       const filePath = uris[0].fsPath;
 
       // Import template from file
-      const marketplaceManager = this.context.knowledgeManager.getMarketplaceManager();
+      const marketplaceManager = this.context.knowledgeManager.getMarketplaceTemplateManager();
       const result = await marketplaceManager.importTemplate(filePath);
 
       if (result.success && result.template) {
@@ -1378,6 +1486,130 @@ export class KnowledgeMessageHandler {
           error: error.message
         }
       });
+    }
+  }
+
+  /**
+   * Handle marketplace template deletion (user templates only)
+   */
+  private async handleMarketplaceDelete(payload: any): Promise<void> {
+    const { templateId } = payload;
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'Deleting marketplace template',
+      'KnowledgeMessageHandler.handleMarketplaceDelete',
+      { templateId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    try {
+      const marketplaceManager = this.context.knowledgeManager.getMarketplaceTemplateManager();
+      const template = marketplaceManager.getTemplate(templateId);
+
+      if (!template) {
+        vscode.window.showErrorMessage('Template not found');
+        return;
+      }
+
+      // Only allow deleting user templates
+      if (template.source === 'bundled') {
+        vscode.window.showWarningMessage('Cannot delete bundled templates');
+        return;
+      }
+
+      // Delete the template file from marketplace/templates/
+      const result = await this.context.knowledgeManager.deleteMarketplaceTemplate(templateId);
+
+      if (result.success) {
+        logger.info(
+          LogCategory.EXTENSION,
+          'Successfully deleted marketplace template',
+          'KnowledgeMessageHandler.handleMarketplaceDelete',
+          { templateId, name: template.name },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
+        vscode.window.showInformationMessage(
+          `Template "${template.name}" deleted from marketplace`
+        );
+
+        // Send updated marketplace templates to webview
+        // (deleteMarketplaceTemplate already removed from memory)
+        await this.sendMarketplaceTemplates();
+
+        this.context.view?.webview.postMessage({
+          type: 'marketplace:delete-success',
+          payload: { templateId }
+        });
+      } else {
+        vscode.window.showErrorMessage(result.message || 'Failed to delete template');
+      }
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Exception during marketplace template deletion',
+        'KnowledgeMessageHandler.handleMarketplaceDelete',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to delete template: ${error.message}`);
+    }
+  }
+
+  /**
+   * Handle project template deletion
+   * Deletes template file from .agent-brain/templates/ folder
+   */
+  private async handleDeleteProjectTemplate(payload: any): Promise<void> {
+    const { templateId } = payload;
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'Deleting project template',
+      'KnowledgeMessageHandler.handleDeleteProjectTemplate',
+      { templateId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    try {
+      // Delete the template file from project templates folder
+      const result = await this.context.knowledgeManager.deleteProjectTemplate(templateId);
+
+      if (result.success) {
+        logger.info(
+          LogCategory.EXTENSION,
+          'Successfully deleted project template',
+          'KnowledgeMessageHandler.handleDeleteProjectTemplate',
+          { templateId },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
+        vscode.window.showInformationMessage(
+          `Template deleted from project`
+        );
+
+        // Refresh knowledge data (reloads local templates and sends to webview)
+        await this.sendKnowledgeData(true);
+
+        this.context.view?.webview.postMessage({
+          type: 'knowledge:delete-success',
+          payload: { templateId }
+        });
+      } else {
+        vscode.window.showErrorMessage(result.message || 'Failed to delete template');
+      }
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Exception during project template deletion',
+        'KnowledgeMessageHandler.handleDeleteProjectTemplate',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to delete template: ${error.message}`);
     }
   }
 }

@@ -141,6 +141,9 @@ export class MarketplaceController {
           </div>
         </div>
         <div class="marketplace-header-right">
+          <button id="refresh-marketplace-btn" class="btn btn-secondary" title="Refresh template listings">
+            🔄 Refresh
+          </button>
           <button id="import-template-btn" class="btn btn-secondary">
             📥 Import Template
           </button>
@@ -227,12 +230,38 @@ export class MarketplaceController {
     const categoryInfo = this.getCategoryInfo(template.category);
     const sourceBadge = template.source === 'bundled' ? '📦 Bundled' : '👤 User';
     const installButton = template.isInstalled
-      ? `<button class="btn btn-secondary" data-action="uninstall" data-template-id="${template.id}">
+      ? `<button class="btn btn-secondary" data-action="uninstall" data-template-id="${template.id}" title="Uninstall template from project">
            ✓ Uninstall
          </button>`
-      : `<button class="btn btn-primary" data-action="install" data-template-id="${template.id}">
+      : `<button class="btn btn-primary" data-action="install" data-template-id="${template.id}" title="Install template to project">
            Install
          </button>`;
+
+    // Only show delete button for user-created templates (not bundled)
+    const deleteButton = template.source === 'user'
+      ? `<button class="btn btn-danger" data-action="delete" data-template-id="${template.id}" title="Delete template from marketplace">
+           🗑️ Delete
+         </button>`
+      : '';
+
+    // Render items list (collapsible)
+    const items = (template as any).items;
+    const itemsList = items && items.length > 0
+      ? items.slice(0, 5).map((item: any) =>
+          `<li>${this.escapeHtml(item.title)} <span class="item-type">(${item.type})</span></li>`
+        ).join('')
+      : '<li>No items</li>';
+
+    const hasMoreItems = items && items.length > 5;
+    const itemsPreview = `
+      <details class="template-items-preview">
+        <summary>📄 ${template.itemCount} items</summary>
+        <ul class="template-items-list">
+          ${itemsList}
+          ${hasMoreItems ? `<li class="items-more">...and ${items.length - 5} more</li>` : ''}
+        </ul>
+      </details>
+    `;
 
     return `
       <div class="template-card ${template.isInstalled ? 'installed' : ''}" data-template-id="${template.id}">
@@ -246,7 +275,7 @@ export class MarketplaceController {
           <p class="template-description">${this.escapeHtml(template.description)}</p>
 
           <div class="template-meta">
-            <span class="template-items">📄 ${template.itemCount} items</span>
+            ${itemsPreview}
             <span class="template-version">v${template.version}</span>
           </div>
 
@@ -267,9 +296,10 @@ export class MarketplaceController {
           <button class="btn btn-secondary" data-action="export" data-template-id="${template.id}" title="Export template to file">
             💾 Export
           </button>
-          <button class="btn btn-secondary" data-action="details" data-template-id="${template.id}">
+          <button class="btn btn-secondary" data-action="details" data-template-id="${template.id}" title="View full template details">
             Details
           </button>
+          ${deleteButton}
         </div>
       </div>
     `;
@@ -329,6 +359,9 @@ export class MarketplaceController {
             break;
           case 'details':
             this.showTemplateDetails(templateId);
+            break;
+          case 'delete':
+            this.deleteTemplate(templateId);
             break;
         }
       });
@@ -412,9 +445,56 @@ export class MarketplaceController {
   }
 
   /**
+   * Delete a template from marketplace (user templates only)
+   */
+  private async deleteTemplate(templateId: string): Promise<void> {
+    const template = this.state.templates.find(t => t.id === templateId);
+    if (!template) return;
+
+    // Only allow deleting user templates
+    if (template.source === 'bundled') {
+      webviewLogger.warn(
+        LogCategory.UI,
+        'Cannot delete bundled template',
+        'MarketplaceController.deleteTemplate',
+        { templateId, name: template.name },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+      return;
+    }
+
+    webviewLogger.info(
+      LogCategory.UI,
+      'Deleting template',
+      'MarketplaceController.deleteTemplate',
+      { templateId, name: template.name },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    // Show confirmation using ModalDialog
+    const modal = new ModalDialog();
+    const confirmed = await modal.confirm(
+      `Delete template "${template.name}" from marketplace? This action cannot be undone.`,
+      'Confirm Deletion'
+    );
+
+    if (confirmed) {
+      this.sendMessage({
+        type: 'marketplace:delete',
+        payload: { templateId }
+      });
+    }
+  }
+
+  /**
    * Attach create and import button listeners
    */
   private attachCreateButtonListener(): void {
+    const refreshBtn = document.getElementById('refresh-marketplace-btn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => this.refreshMarketplace());
+    }
+
     const createBtn = document.getElementById('create-template-btn');
     if (createBtn) {
       createBtn.addEventListener('click', () => this.showCreateTemplateForm());
@@ -424,6 +504,30 @@ export class MarketplaceController {
     if (importBtn) {
       importBtn.addEventListener('click', () => this.importTemplate());
     }
+  }
+
+  /**
+   * Refresh marketplace templates from disk
+   */
+  private refreshMarketplace(): void {
+    webviewLogger.info(
+      LogCategory.UI,
+      'Refreshing marketplace templates',
+      'MarketplaceController.refreshMarketplace',
+      {},
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    // Send message to backend to reload templates from disk
+    this.sendMessage({
+      type: 'marketplace:refresh',
+      payload: {}
+    });
+
+    this.notificationManager.show({
+      type: 'info',
+      message: 'Refreshing marketplace templates...'
+    });
   }
 
   /**
@@ -654,49 +758,44 @@ export class MarketplaceController {
   }
 
   /**
-   * Render items preview list
+   * Render items preview list for details modal
    */
   private renderItemsPreview(template: MarketplaceTemplate): string {
-    // For Phase 4, we'll request full item details from the extension
-    // For now, show item count with a placeholder
+    const items = (template as any).items;
+    if (!items || items.length === 0) {
+      return `
+        <div class="items-preview-placeholder">
+          <p>This template contains <strong>${template.itemCount} knowledge items</strong>.</p>
+          <p>Items will be added to your knowledge base when you install this template.</p>
+        </div>
+      `;
+    }
+
+    // Show full list of items with details
+    const itemsList = items.map((item: any) => `
+      <div class="knowledge-item-preview">
+        <div class="item-preview-title">${this.escapeHtml(item.title)}</div>
+        <div class="item-preview-meta">
+          <span class="item-preview-type">${item.type}</span>
+          <span class="item-preview-scope">${item.scope}</span>
+          ${item.tags && item.tags.length > 0 ? `
+            <span class="item-preview-tags">
+              ${item.tags.slice(0, 2).map((tag: string) => `<span class="tag-mini">${this.escapeHtml(tag)}</span>`).join('')}
+              ${item.tags.length > 2 ? `<span class="tag-mini">+${item.tags.length - 2}</span>` : ''}
+            </span>
+          ` : ''}
+        </div>
+      </div>
+    `).join('');
+
     return `
-      <div class="items-preview-placeholder">
-        <p>This template contains <strong>${template.itemCount} knowledge items</strong>.</p>
-        <p>Items will be added to your knowledge base when you install this template.</p>
+      <div class="items-preview-list">
+        ${itemsList}
         <p class="items-preview-note">
-          ${template.source === 'bundled'
-            ? '📦 This is a bundled template that ships with Agent Brain Platform.'
-            : '👤 This is a user-created template that was imported from a file.'}
+          ${items.length} knowledge items will be added to your project when installed.
         </p>
       </div>
     `;
-  }
-
-  /**
-   * Export template to file
-   */
-  private exportTemplate(templateId: string): void {
-    const template = this.state.templates.find(t => t.id === templateId);
-    if (!template) return;
-
-    webviewLogger.info(
-      LogCategory.UI,
-      'Exporting template',
-      'MarketplaceController.exportTemplate',
-      { templateId, name: template.name },
-      LogPathway.KNOWLEDGE_MANAGEMENT
-    );
-
-    // Send export request to extension
-    this.sendMessage({
-      type: 'marketplace:export',
-      payload: { templateId }
-    });
-
-    this.notificationManager.show({
-      type: 'info',
-      message: `Exporting "${template.name}"...`
-    });
   }
 
   /**

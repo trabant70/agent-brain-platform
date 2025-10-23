@@ -308,7 +308,6 @@ export class SessionFileSystem {
 
         const summary = data.summary;
         const tags = this.parseTags(data.tags);
-        const topics = this.parseArray(data.topics);
         const filesModified = this.parseArray(data.filesModified);
         const knowledgeItemsUsed = this.parseArray(data.knowledgeItemsUsed);
 
@@ -319,7 +318,6 @@ export class SessionFileSystem {
             endTime,
             summary,
             tags,
-            topics,
             filesModified,
             knowledgeItemsUsed,
             filePath,

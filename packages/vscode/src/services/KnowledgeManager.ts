@@ -19,14 +19,17 @@ import {
   KnowledgeScope,
   ImportOptions,
   ImportResult,
-  // Marketplace (Phase 2)
-  MarketplaceManager,
+  // Marketplace (Phase 2+)
   TemplateRegistry,
   TemplateInstaller,
   MarketplaceTemplate,
   TemplateCategory,
   TemplateSource
 } from '@agent-brain/core/domains/knowledge';
+import { ProjectTemplateManager } from '@agent-brain/core/domains/knowledge/project/ProjectTemplateManager';
+import { MarketplaceTemplateManager, PublishResult } from '@agent-brain/core/domains/knowledge/marketplace/MarketplaceTemplateManager';
+import { TemplateUsageTracker } from '@agent-brain/core/domains/knowledge/project/TemplateUsageTracker';
+import { TemplateOrchestrator } from './TemplateOrchestrator';
 import { KnowledgeEventStorage } from '@agent-brain/core/domains/events';
 import { logger, LogCategory, LogPathway } from '@agent-brain/core/infrastructure/logging/Logger';
 
@@ -43,11 +46,17 @@ export class KnowledgeManager {
   private initialized: boolean = false;
   private knowledgeBaseDir: string;
 
-  // Marketplace (Phase 2)
-  private marketplaceManager: MarketplaceManager;
+  // Template Management (Refactored Phase 3)
+  private projectTemplateManager: ProjectTemplateManager;
+  private marketplaceTemplateManager: MarketplaceTemplateManager;
+  private templateUsageTracker: TemplateUsageTracker;
+  private templateOrchestrator: TemplateOrchestrator;
+
+  // Shared services
   private templateRegistry: TemplateRegistry;
   private templateInstaller: TemplateInstaller;
 
+  // DEPRECATED: Remove after migration complete
   // Local templates (for Knowledge tab grouping only, NOT in marketplace)
   private localTemplates: MarketplaceTemplate[] = [];
 
@@ -61,13 +70,35 @@ export class KnowledgeManager {
     this.templateEngine = new TemplateEngine(this.store);
     this.eventStorage = new KnowledgeEventStorage(workspaceRoot);
 
-    // Initialize marketplace services
-    const bundledTemplatesPath = this.getBundledTemplatesPath();
-    const userTemplatesPath = path.join(this.knowledgeBaseDir, 'marketplace', 'templates');
-
-    this.marketplaceManager = new MarketplaceManager(bundledTemplatesPath, userTemplatesPath);
+    // Initialize shared services
     this.templateRegistry = new TemplateRegistry(this.knowledgeBaseDir);
     this.templateInstaller = new TemplateInstaller(this.store, this.templateRegistry);
+
+    // Initialize project template manager
+    const projectTemplatesPath = path.join(this.knowledgeBaseDir, 'templates');
+    this.projectTemplateManager = new ProjectTemplateManager(
+      projectTemplatesPath,
+      (itemId: string) => this.store.getItem(itemId)
+    );
+
+    // Initialize marketplace template manager
+    const bundledTemplatesPath = this.getBundledTemplatesPath();
+    const marketplaceTemplatesPath = path.join(this.knowledgeBaseDir, 'marketplace', 'templates');
+    this.marketplaceTemplateManager = new MarketplaceTemplateManager(
+      bundledTemplatesPath,
+      marketplaceTemplatesPath
+    );
+
+    // Initialize usage tracker
+    this.templateUsageTracker = new TemplateUsageTracker(this.knowledgeBaseDir);
+
+    // Initialize orchestrator
+    this.templateOrchestrator = new TemplateOrchestrator(
+      this.projectTemplateManager,
+      this.marketplaceTemplateManager,
+      this.templateInstaller,
+      this.templateRegistry
+    );
   }
 
   /**
@@ -119,8 +150,14 @@ export class KnowledgeManager {
       // Load all knowledge items
       await this.refreshAll();
 
-      // Load marketplace templates (Phase 2)
+      // Load project templates
+      await this.loadProjectTemplates();
+
+      // Load marketplace templates
       await this.loadMarketplaceTemplates();
+
+      // Load template usage tracker
+      await this.templateUsageTracker.load();
 
       // Setup file watchers
       this.setupFileWatchers();
@@ -237,7 +274,7 @@ export class KnowledgeManager {
         'KnowledgeManager.refreshAll',
         {
           itemsInStore: this.store.getAllItems().length,
-          templatesInMarketplace: this.marketplaceManager.getAllTemplates().length
+          templatesInMarketplace: this.marketplaceTemplateManager.getAllTemplates().length
         },
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
@@ -467,7 +504,7 @@ export class KnowledgeManager {
   async createTemplate(options: CreateTemplateOptions): Promise<MarketplaceTemplate> {
     logger.info(
       LogCategory.EXTENSION,
-      'Creating marketplace template',
+      'Creating project template',
       'KnowledgeManager.createTemplate',
       {
         name: options.name,
@@ -479,49 +516,20 @@ export class KnowledgeManager {
     );
 
     try {
-      // Validate that all items exist and get them
-      const items: KnowledgeItem[] = [];
-      for (const itemId of options.itemIds) {
-        const item = this.store.getItem(itemId);
-        if (!item) {
-          throw new Error(`Knowledge item not found: ${itemId}`);
-        }
-        items.push(item);
-      }
-
-      // Generate timestamp
-      const now = new Date().toISOString();
-
-      // Create marketplace template
-      const template: MarketplaceTemplate = {
-        id: this.generateTemplateId(),
+      // Delegate to ProjectTemplateManager
+      const template = await this.projectTemplateManager.createTemplate({
         name: options.name,
-        description: options.description || '',
-        version: '1.0.0',
-        createdAt: now,
-        updatedAt: now,
-        category: options.category || TemplateCategory.GENERAL,
-        tags: options.tags || [],
-        author: {
-          name: options.author?.name || 'Unknown',
-          email: options.author?.email,
-          url: options.author?.url
-        },
-        license: options.license || 'MIT',
-        source: TemplateSource.USER,
-        items: items,
-        itemCount: items.length
-      };
-
-      // Add to marketplace manager
-      this.marketplaceManager.addUserTemplate(template);
-
-      // Save template to file
-      await this.saveMarketplaceTemplateToFile(template);
+        description: options.description,
+        category: options.category,
+        tags: options.tags,
+        author: options.author,
+        license: options.license,
+        itemIds: options.itemIds
+      });
 
       logger.info(
         LogCategory.EXTENSION,
-        'Marketplace template created successfully',
+        'Project template created successfully',
         'KnowledgeManager.createTemplate',
         {
           templateId: template.id,
@@ -535,7 +543,7 @@ export class KnowledgeManager {
     } catch (error) {
       logger.error(
         LogCategory.EXTENSION,
-        'Failed to create marketplace template',
+        'Failed to create template',
         'KnowledgeManager.createTemplate',
         error,
         LogPathway.KNOWLEDGE_MANAGEMENT
@@ -548,57 +556,31 @@ export class KnowledgeManager {
    * Apply a template to a claude.md file
    */
   /**
-   * Update an existing template with new item IDs
+   * Update an existing LOCAL template with new item IDs
    */
   async updateTemplate(templateId: string, itemIds: string[]): Promise<MarketplaceTemplate> {
     logger.info(
       LogCategory.EXTENSION,
-      'Updating template',
+      'Updating project template',
       'KnowledgeManager.updateTemplate',
       { templateId, itemCount: itemIds.length },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
 
     try {
-      const template = this.marketplaceManager.getTemplate(templateId);
-      if (!template) {
-        throw new Error(`Template not found: ${templateId}`);
-      }
-
-      // Validate that all items exist and get them
-      const items: KnowledgeItem[] = [];
-      for (const itemId of itemIds) {
-        const item = this.store.getItem(itemId);
-        if (!item) {
-          throw new Error(`Knowledge item not found: ${itemId}`);
-        }
-        items.push(item);
-      }
-
-      // Parse version and increment
-      const versionParts = template.version.split('.');
-      const majorVersion = parseInt(versionParts[0] || '1');
-      const minorVersion = parseInt(versionParts[1] || '0');
-      const patchVersion = parseInt(versionParts[2] || '0');
-      const newVersion = `${majorVersion}.${minorVersion}.${patchVersion + 1}`;
-
-      // Update template
-      const updatedTemplate: MarketplaceTemplate = {
-        ...template,
-        items: items,
-        itemCount: items.length,
-        version: newVersion,
-        updatedAt: new Date().toISOString()
-      };
-
-      // Save template to file
-      await this.saveMarketplaceTemplateToFile(updatedTemplate);
+      // Delegate to ProjectTemplateManager
+      const updatedTemplate = await this.projectTemplateManager.updateTemplate(templateId, itemIds);
 
       logger.info(
         LogCategory.EXTENSION,
-        'Template updated',
+        'Project template updated successfully',
         'KnowledgeManager.updateTemplate',
-        { templateId, name: updatedTemplate.name, newItemCount: items.length, newVersion },
+        {
+          templateId,
+          name: updatedTemplate.name,
+          itemCount: updatedTemplate.itemCount,
+          version: updatedTemplate.version
+        },
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
 
@@ -606,7 +588,7 @@ export class KnowledgeManager {
     } catch (error) {
       logger.error(
         LogCategory.EXTENSION,
-        'Failed to update template',
+        'Failed to update local template',
         'KnowledgeManager.updateTemplate',
         { templateId, error },
         LogPathway.KNOWLEDGE_MANAGEMENT
@@ -635,9 +617,22 @@ export class KnowledgeManager {
     );
 
     try {
-      const template = this.marketplaceManager.getTemplate(templateId);
+      // IMPORTANT: Reload marketplace templates to ensure we have the latest version
+      // This prevents race conditions when user updates template then immediately publishes
+      await this.marketplaceTemplateManager.loadAllTemplates();
+
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Reloaded marketplace templates before publishing',
+        'KnowledgeManager.publishTemplate',
+        {},
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      // Get template from LOCAL templates (not marketplace)
+      const template = this.localTemplates.find(t => t.id === templateId);
       if (!template) {
-        throw new Error(`Template not found: ${templateId}`);
+        throw new Error(`Template not found in local templates: ${templateId}`);
       }
 
       // Only allow publishing USER templates
@@ -648,7 +643,7 @@ export class KnowledgeManager {
       // Check if this template already exists in marketplace (check ALL templates, not just bundled)
       // When you publish a template, it becomes a marketplace template (saved to marketplace/templates/)
       // So we need to check if there's already a version in the marketplace
-      const allMarketplaceTemplates = this.marketplaceManager.getAllTemplates();
+      const allMarketplaceTemplates = this.marketplaceTemplateManager.getAllTemplates();
       const existingMarketplace = allMarketplaceTemplates.find(t =>
         t.id === template.id || t.name.toLowerCase() === template.name.toLowerCase()
       );
@@ -746,8 +741,9 @@ export class KnowledgeManager {
         Buffer.from(json, 'utf8')
       );
 
-      // Also update the user template with new version
+      // Save to marketplace templates directory and add to marketplace manager
       await this.saveMarketplaceTemplateToFile(publishedTemplate);
+      this.marketplaceTemplateManager.addUserTemplate(publishedTemplate);
 
       // Mark the template as installed since it came from the project side
       const itemIds = publishedTemplate.items.map(item => item.id);
@@ -821,6 +817,157 @@ export class KnowledgeManager {
   }
 
   /**
+   * Delete a marketplace template (user templates only)
+   */
+  async deleteMarketplaceTemplate(templateId: string): Promise<{ success: boolean; message?: string }> {
+    logger.info(
+      LogCategory.EXTENSION,
+      'Deleting marketplace template',
+      'KnowledgeManager.deleteMarketplaceTemplate',
+      { templateId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    try {
+      const template = this.marketplaceTemplateManager.getTemplate(templateId);
+      if (!template) {
+        return { success: false, message: 'Template not found' };
+      }
+
+      if (template.source === 'bundled') {
+        return { success: false, message: 'Cannot delete bundled templates' };
+      }
+
+      // Delete the template file from .agent-brain/marketplace/templates/
+      // Marketplace templates use ID-based filenames: {template-id}.json
+      const marketplaceTemplatesDir = path.join(this.knowledgeBaseDir, 'marketplace', 'templates');
+      const filename = `${templateId}.json`;
+      const templateFile = path.join(marketplaceTemplatesDir, filename);
+      const templateUri = vscode.Uri.file(templateFile);
+
+      try {
+        await vscode.workspace.fs.stat(templateUri);
+        await vscode.workspace.fs.delete(templateUri);
+        logger.info(
+          LogCategory.EXTENSION,
+          'Deleted marketplace template file',
+          'KnowledgeManager.deleteMarketplaceTemplate',
+          { templateId, templateName: template.name, filePath: templateFile },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+      } catch (error) {
+        logger.error(
+          LogCategory.EXTENSION,
+          'Failed to delete template file from disk',
+          'KnowledgeManager.deleteMarketplaceTemplate',
+          { templateId, templateName: template.name, filePath: templateFile, error },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        return { success: false, message: 'Failed to delete template file' };
+      }
+
+      // Remove from marketplace manager
+      this.marketplaceTemplateManager.removeUserTemplate(templateId);
+
+      // Uninstall if installed
+      const isInstalled = this.templateRegistry.isInstalled(templateId);
+      if (isInstalled) {
+        this.templateRegistry.uninstall(templateId);
+        await this.templateRegistry.saveRegistry();
+        logger.info(
+          LogCategory.EXTENSION,
+          'Unregistered template from installation registry',
+          'KnowledgeManager.deleteMarketplaceTemplate',
+          { templateId },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to delete marketplace template',
+        'KnowledgeManager.deleteMarketplaceTemplate',
+        { templateId, error },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+      return { success: false, message: error.message };
+    }
+  }
+
+  /**
+   * Delete a project template from .agent-brain/templates/
+   * Only deletes LOCAL project templates, NOT marketplace templates
+   */
+  async deleteProjectTemplate(templateId: string): Promise<{ success: boolean; message?: string }> {
+    logger.info(
+      LogCategory.EXTENSION,
+      'Deleting project template',
+      'KnowledgeManager.deleteProjectTemplate',
+      { templateId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    try {
+      // Delegate to ProjectTemplateManager
+      const result = await this.projectTemplateManager.deleteTemplate(templateId);
+
+      if (result.success) {
+        logger.info(
+          LogCategory.EXTENSION,
+          'Successfully deleted project template',
+          'KnowledgeManager.deleteProjectTemplate',
+          { templateId },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
+        // Notify marketplace that template was uninstalled from project
+        // This updates the UI to remove the "installed in project" highlight
+        const uninstallResult = await this.templateOrchestrator.notifyUninstall(templateId);
+
+        if (uninstallResult.success) {
+          logger.debug(
+            LogCategory.EXTENSION,
+            'Marketplace notified of template uninstall',
+            'KnowledgeManager.deleteProjectTemplate',
+            { templateId, message: uninstallResult.message },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+        } else {
+          logger.warn(
+            LogCategory.EXTENSION,
+            'Failed to notify marketplace of uninstall',
+            'KnowledgeManager.deleteProjectTemplate',
+            { templateId, message: uninstallResult.message },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+        }
+
+        return { success: true };
+      } else {
+        logger.warn(
+          LogCategory.EXTENSION,
+          'Failed to delete project template',
+          'KnowledgeManager.deleteProjectTemplate',
+          { templateId, message: result.message },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        return { success: false, message: result.message };
+      }
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to delete local template',
+        'KnowledgeManager.deleteProjectTemplate',
+        { templateId, error },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+      return { success: false, message: error.message };
+    }
+  }
+
+  /**
    * Apply a template to a claude.md file
    */
   async applyTemplate(
@@ -829,7 +976,12 @@ export class KnowledgeManager {
     replaceExisting: boolean = false
   ): Promise<{ wasReplaced?: boolean }> {
     try {
-      const template = this.marketplaceManager.getTemplate(templateId);
+      // Check both project and marketplace template managers
+      let template = this.projectTemplateManager.getTemplate(templateId);
+      if (!template) {
+        template = this.marketplaceTemplateManager.getTemplate(templateId);
+      }
+
       if (!template) {
         throw new Error(`Template not found: ${templateId}`);
       }
@@ -1001,7 +1153,11 @@ export class KnowledgeManager {
   async removeTemplate(templateId: string, claudeMdPath: string): Promise<void> {
     try {
       // Get template before removal to record events
-      const template = this.marketplaceManager.getTemplate(templateId);
+      // Check both project and marketplace template managers
+      let template = this.projectTemplateManager.getTemplate(templateId);
+      if (!template) {
+        template = this.marketplaceTemplateManager.getTemplate(templateId);
+      }
 
       // Read claude.md file
       const uri = vscode.Uri.file(claudeMdPath);
@@ -1092,7 +1248,12 @@ export class KnowledgeManager {
    */
   async exportTemplate(templateId: string, targetPath?: string): Promise<string> {
     try {
-      const template = this.marketplaceManager.getTemplate(templateId);
+      // Check both project and marketplace template managers
+      let template = this.projectTemplateManager.getTemplate(templateId);
+      if (!template) {
+        template = this.marketplaceTemplateManager.getTemplate(templateId);
+      }
+
       if (!template) {
         throw new Error(`Template not found: ${templateId}`);
       }
@@ -1210,7 +1371,7 @@ export class KnowledgeManager {
 
       // Create or update template
       const templateName = importOptions.templateNameOverride || parsed.name;
-      const existingTemplate = this.marketplaceManager.getAllTemplates().find(t => t.name === templateName);
+      const existingTemplate = this.marketplaceTemplateManager.getAllTemplates().find(t => t.name === templateName);
 
       let finalResult: ImportResult;
 
@@ -1279,7 +1440,7 @@ export class KnowledgeManager {
         };
 
         await this.saveMarketplaceTemplateToFile(newTemplate);
-        this.marketplaceManager.addUserTemplate(newTemplate);
+        this.marketplaceTemplateManager.addUserTemplate(newTemplate);
 
         finalResult = {
           success: true,
@@ -1841,6 +2002,38 @@ export class KnowledgeManager {
   }
 
   /**
+   * Save a LOCAL template to .agent-brain/templates/ directory
+   */
+  private async saveLocalTemplateToFile(template: MarketplaceTemplate): Promise<void> {
+    const filename = `${template.id}.json`;
+    // Save to LOCAL templates directory
+    const filePath = path.join(this.knowledgeBaseDir, 'templates', filename);
+
+    // Ensure templates directory exists
+    const templatesDir = path.join(this.knowledgeBaseDir, 'templates');
+    try {
+      await vscode.workspace.fs.createDirectory(vscode.Uri.file(templatesDir));
+    } catch (error) {
+      // Directory might already exist, ignore error
+    }
+
+    const json = JSON.stringify(template, null, 2);
+
+    logger.debug(
+      LogCategory.EXTENSION,
+      'Saving local template to file',
+      'KnowledgeManager.saveLocalTemplateToFile',
+      { filePath, templateId: template.id },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    await vscode.workspace.fs.writeFile(
+      vscode.Uri.file(filePath),
+      Buffer.from(json, 'utf8')
+    );
+  }
+
+  /**
    * Generate a filename from a title
    */
   private generateFilename(title: string): string {
@@ -2180,7 +2373,7 @@ export class KnowledgeManager {
           filesFound: files.length,
           templatesMigrated: loadedCount,
           templatesFailed: errorCount,
-          totalTemplatesInMarketplace: this.marketplaceManager.getAllTemplates().length
+          totalTemplatesInMarketplace: this.marketplaceTemplateManager.getAllTemplates().length
         },
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
@@ -2203,6 +2396,55 @@ export class KnowledgeManager {
   /**
    * Load marketplace templates (bundled + user templates)
    */
+  /**
+   * Load project templates from .agent-brain/templates/
+   */
+  private async loadProjectTemplates(): Promise<void> {
+    try {
+      logger.info(
+        LogCategory.EXTENSION,
+        'Loading project templates',
+        'KnowledgeManager.loadProjectTemplates',
+        {},
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      const result = await this.projectTemplateManager.loadTemplatesFromDisk();
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'Project templates loaded',
+        'KnowledgeManager.loadProjectTemplates',
+        {
+          count: result.count,
+          errors: result.errors.length
+        },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      if (result.errors.length > 0) {
+        logger.warn(
+          LogCategory.EXTENSION,
+          'Some project templates failed to load',
+          'KnowledgeManager.loadProjectTemplates',
+          { errors: result.errors },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+      }
+    } catch (error) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to load project templates',
+        'KnowledgeManager.loadProjectTemplates',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+    }
+  }
+
+  /**
+   * Load marketplace templates (bundled + published)
+   */
   private async loadMarketplaceTemplates(): Promise<void> {
     try {
       logger.info(
@@ -2213,11 +2455,11 @@ export class KnowledgeManager {
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
 
-      const result = await this.marketplaceManager.loadAllTemplates();
+      const result = await this.marketplaceTemplateManager.loadAllTemplates();
 
       // Update installation status from registry
       const installed = this.templateRegistry.getAllInstalled();
-      this.marketplaceManager.updateInstallationStatus(installed);
+      this.marketplaceTemplateManager.updateInstallationStatus(installed);
 
       logger.info(
         LogCategory.EXTENSION,
@@ -2252,17 +2494,32 @@ export class KnowledgeManager {
   }
 
   /**
-   * Get marketplace manager (for UI access)
+   * Get project template manager (for UI access)
    */
-  getMarketplaceManager(): MarketplaceManager {
-    return this.marketplaceManager;
+  getProjectTemplateManager(): ProjectTemplateManager {
+    return this.projectTemplateManager;
   }
 
   /**
+   * Get marketplace template manager (for UI access)
+   */
+  getMarketplaceTemplateManager(): MarketplaceTemplateManager {
+    return this.marketplaceTemplateManager;
+  }
+
+  /**
+   * Get template orchestrator (for UI access)
+   */
+  getTemplateOrchestrator(): TemplateOrchestrator {
+    return this.templateOrchestrator;
+  }
+
+  /**
+   * DEPRECATED: Use getProjectTemplateManager().getAllTemplates() instead
    * Get local templates (from .agent-brain/templates/ - for Knowledge tab grouping only)
    */
   getLocalTemplates(): MarketplaceTemplate[] {
-    return this.localTemplates;
+    return this.projectTemplateManager.getAllTemplates();
   }
 
   /**
@@ -2287,7 +2544,7 @@ export class KnowledgeManager {
     options?: { skipDuplicates?: boolean; updateExisting?: boolean }
   ): Promise<{ success: boolean; message: string; details?: string[] }> {
     try {
-      const template = this.marketplaceManager.getTemplate(templateId);
+      const template = this.marketplaceTemplateManager.getTemplate(templateId);
 
       if (!template) {
         return {
@@ -2301,7 +2558,7 @@ export class KnowledgeManager {
       if (result.success) {
         // Update marketplace manager with new installation status
         const installed = this.templateRegistry.getAllInstalled();
-        this.marketplaceManager.updateInstallationStatus(installed);
+        this.marketplaceTemplateManager.updateInstallationStatus(installed);
 
         return {
           success: true,
@@ -2337,7 +2594,7 @@ export class KnowledgeManager {
     templateId: string
   ): Promise<{ success: boolean; message: string }> {
     try {
-      const template = this.marketplaceManager.getTemplate(templateId);
+      const template = this.marketplaceTemplateManager.getTemplate(templateId);
 
       if (!template) {
         return {
@@ -2351,7 +2608,7 @@ export class KnowledgeManager {
       if (result.success) {
         // Update marketplace manager with new installation status
         const installed = this.templateRegistry.getAllInstalled();
-        this.marketplaceManager.updateInstallationStatus(installed);
+        this.marketplaceTemplateManager.updateInstallationStatus(installed);
 
         return {
           success: true,
@@ -2405,7 +2662,7 @@ export class KnowledgeManager {
       }
 
       // Create template
-      const template = this.marketplaceManager.createTemplate(
+      const template = this.marketplaceTemplateManager.createTemplate(
         options.name,
         options.description,
         options.category,
@@ -2416,7 +2673,7 @@ export class KnowledgeManager {
       );
 
       // Export to file
-      const exportResult = await this.marketplaceManager.exportTemplate(template);
+      const exportResult = await this.marketplaceTemplateManager.exportTemplate(template);
 
       if (!exportResult.success) {
         return {

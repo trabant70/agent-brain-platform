@@ -190,10 +190,6 @@
   width: 100px;
 }
 
-.col-topics {
-  width: 250px;
-}
-
 .col-files {
   width: 80px;
   text-align: center;
@@ -232,33 +228,6 @@
   border-radius: 10px;
   font-size: 11px;
   font-weight: 600;
-}
-
-/* Topic Badges */
-.topic-badge {
-  display: inline-block;
-  padding: 2px 8px;
-  margin: 2px 4px 2px 0;
-  background: rgba(0, 212, 255, 0.15);
-  color: var(--sessions-accent);
-  border: 1px solid rgba(0, 212, 255, 0.3);
-  border-radius: 3px;
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
-}
-
-.topic-badge:hover {
-  background: rgba(0, 212, 255, 0.25);
-  border-color: var(--sessions-accent);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 212, 255, 0.2);
-}
-
-.topic-badge:active {
-  transform: translateY(0);
 }
 
 /* Session Summary */
@@ -380,12 +349,6 @@
   padding-bottom: 4px;
   border-bottom: 1px solid var(--vscode-panel-border);
   color: var(--vscode-editor-foreground);
-}
-
-.session-detail-topics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
 }
 
 .session-detail-files-list {
@@ -590,19 +553,11 @@
   .col-summary {
     display: none;
   }
-
-  .col-topics {
-    width: 150px;
-  }
 }
 
 @media (max-width: 768px) {
   .col-duration,
   .col-files {
     display: none;
-  }
-
-  .col-topics {
-    width: 100px;
   }
 }

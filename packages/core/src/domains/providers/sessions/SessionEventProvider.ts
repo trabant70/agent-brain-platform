@@ -229,8 +229,7 @@ export class SessionEventProvider implements IDataProvider {
       branches: [],
       tags: [
         'session-journal',
-        ...(session.tags || []),
-        ...(session.topics || [])
+        ...(session.tags || [])
       ],
 
       // Relationships (for DAG construction)
@@ -243,7 +242,6 @@ export class SessionEventProvider implements IDataProvider {
       metadata: {
         sessionId: session.id,
         summary: session.summary,
-        topics: session.topics,
         filesModified: session.filesModified,
         knowledgeItemsUsed: session.knowledgeItemsUsed,
         filePath: session.filePath,
@@ -257,7 +255,7 @@ export class SessionEventProvider implements IDataProvider {
       },
 
       // Labels
-      labels: [...(session.topics || []), 'agent-created']
+      labels: ['agent-created']
     };
 
     return event;

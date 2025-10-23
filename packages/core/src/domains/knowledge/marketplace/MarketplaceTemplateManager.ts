@@ -1,13 +1,15 @@
 /**
- * MarketplaceManager - Template Management for Marketplace
+ * MarketplaceTemplateManager - Marketplace Template Management
  *
  * Handles:
- * - Loading bundled templates from JSON files
- * - Managing template installations
- * - Template export/import
- * - Installation registry coordination
+ * - Loading bundled templates (shipped with extension)
+ * - Managing user-published templates in .agent-brain/marketplace/templates/
+ * - Version control and change detection
+ * - Installation status tracking (coordinates with TemplateRegistry)
+ * - Template import/export for marketplace
  *
- * Templates are workspace-specific. Installation tracking is managed by TemplateRegistry.
+ * Scope: MARKETPLACE ONLY (not project-local templates)
+ * Project-local templates are managed by ProjectTemplateManager.
  */
 
 import * as fs from 'fs';
@@ -20,7 +22,7 @@ import {
   InstalledTemplate,
   validateMarketplaceTemplate,
   generateTemplateId
-} from './types';
+} from '../types';
 
 export interface LoadTemplateResult {
   success: boolean;
@@ -41,17 +43,35 @@ export interface InstallationStatus {
   installedItemIds?: string[];
 }
 
+export interface PublishResult {
+  success: boolean;
+  templateId: string;
+  version: string;
+  isNewVersion: boolean;
+  changesSummary?: string;
+  error?: string;
+}
+
+export interface ChangesSummary {
+  itemsAdded: number;
+  itemsRemoved: number;
+  itemsModified: number;
+  changes: string[];
+}
+
 /**
- * MarketplaceManager - Manages marketplace templates
+ * MarketplaceTemplateManager - Manages marketplace templates
  *
  * Responsibilities:
  * - Load bundled templates from disk
- * - Load user-created templates from exports directory
+ * - Load user-published templates from .agent-brain/marketplace/templates/
  * - Validate template structure
  * - Export templates to JSON files
+ * - Version control and change detection
+ * - Installation status tracking
  * - Provide template metadata for UI
  */
-export class MarketplaceManager {
+export class MarketplaceTemplateManager {
   private bundledTemplates: Map<string, MarketplaceTemplate> = new Map();
   private userTemplates: Map<string, MarketplaceTemplate> = new Map();
   private bundledTemplatesPath: string;
@@ -317,32 +337,69 @@ export class MarketplaceManager {
   }
 
   /**
+   * Save template to marketplace storage
+   * Internal method for persisting templates to marketplace/templates/
+   * Uses template ID for filename to prevent duplicates when names change
+   * @private
+   */
+  private async saveTemplateToStorage(template: MarketplaceTemplate): Promise<ExportTemplateResult> {
+    try {
+      // Use default user templates directory
+      if (!fs.existsSync(this.userTemplatesPath)) {
+        fs.mkdirSync(this.userTemplatesPath, { recursive: true });
+      }
+
+      // Generate filename from template ID (not name)
+      // This ensures 1:1 mapping between template and file
+      const filename = `${template.id}.json`;
+      const filePath = path.join(this.userTemplatesPath, filename);
+
+      // Prepare template for storage (remove runtime fields)
+      const exportData = {
+        ...template,
+        isInstalled: undefined,
+        installedAt: undefined,
+        installedItemIds: undefined
+      };
+
+      // Write to file (overwrites if exists, which is correct for updates)
+      fs.writeFileSync(filePath, JSON.stringify(exportData, null, 2), 'utf-8');
+
+      // Add to user templates map
+      this.userTemplates.set(template.id, template);
+
+      return {
+        success: true,
+        filePath
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: `Failed to save template: ${error.message}`
+      };
+    }
+  }
+
+  /**
    * Export a template to JSON file
+   * User-facing method for exporting templates to external locations
    * @param template - The template to export
    * @param customPath - Optional custom file path. If not provided, saves to user templates directory
    */
   async exportTemplate(template: MarketplaceTemplate, customPath?: string): Promise<ExportTemplateResult> {
     try {
-      let filePath: string;
+      // If no custom path provided, use internal save method
+      if (!customPath) {
+        return await this.saveTemplateToStorage(template);
+      }
 
-      if (customPath) {
-        // Use custom path provided (e.g., from save dialog)
-        filePath = customPath;
+      // Use custom path provided (e.g., from save dialog)
+      const filePath = customPath;
 
-        // Ensure parent directory exists
-        const dir = path.dirname(filePath);
-        if (!fs.existsSync(dir)) {
-          fs.mkdirSync(dir, { recursive: true });
-        }
-      } else {
-        // Use default user templates directory
-        if (!fs.existsSync(this.userTemplatesPath)) {
-          fs.mkdirSync(this.userTemplatesPath, { recursive: true });
-        }
-
-        // Generate filename from template name
-        const filename = `${template.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
-        filePath = path.join(this.userTemplatesPath, filename);
+      // Ensure parent directory exists
+      const dir = path.dirname(filePath);
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
       }
 
       // Prepare template for export (remove runtime fields)
@@ -355,11 +412,6 @@ export class MarketplaceManager {
 
       // Write to file
       fs.writeFileSync(filePath, JSON.stringify(exportData, null, 2), 'utf-8');
-
-      // Only add to user templates map if saving to user templates directory
-      if (!customPath) {
-        this.userTemplates.set(template.id, template);
-      }
 
       return {
         success: true,
@@ -404,8 +456,8 @@ export class MarketplaceManager {
     }
 
     try {
-      // Find and delete the file
-      const filename = `${template.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.json`;
+      // Delete file using template ID
+      const filename = `${templateId}.json`;
       const filePath = path.join(this.userTemplatesPath, filename);
 
       if (fs.existsSync(filePath)) {
@@ -471,6 +523,194 @@ export class MarketplaceManager {
       installedAt: template.installedAt,
       installedItemIds: template.installedItemIds
     };
+  }
+
+  /**
+   * Check if a template is installed
+   */
+  isInstalled(templateId: string): boolean {
+    const template = this.getTemplate(templateId);
+    return template?.isInstalled || false;
+  }
+
+  /**
+   * Mark a template as installed
+   * Called by TemplateRegistry or installation orchestrator
+   */
+  markAsInstalled(templateId: string, itemIds: string[]): void {
+    const template = this.getTemplate(templateId);
+    if (template) {
+      template.isInstalled = true;
+      template.installedAt = new Date().toISOString();
+      template.installedItemIds = itemIds;
+    }
+  }
+
+  /**
+   * Mark a template as uninstalled
+   * Called when template is removed from project
+   */
+  markAsUninstalled(templateId: string): void {
+    const template = this.getTemplate(templateId);
+    if (template) {
+      template.isInstalled = false;
+      template.installedAt = undefined;
+      template.installedItemIds = undefined;
+    }
+  }
+
+  // ============================================
+  // Publishing & Version Control
+  // ============================================
+
+  /**
+   * Publish a template to marketplace
+   * Handles version control if template already exists
+   */
+  async publishTemplate(template: MarketplaceTemplate): Promise<PublishResult> {
+    try {
+      // Check if template already exists
+      const existingTemplate = this.getTemplate(template.id);
+      let isNewVersion = false;
+      let changesSummary: string | undefined;
+
+      if (existingTemplate) {
+        // Detect changes
+        const changes = this.detectChanges(existingTemplate, template);
+
+        // Increment version
+        const newVersion = this.incrementVersion(existingTemplate.version);
+        template.version = newVersion;
+        template.updatedAt = new Date().toISOString();
+
+        isNewVersion = true;
+        changesSummary = this.formatChangesSummary(changes);
+      } else {
+        // New template
+        template.version = '1.0.0';
+        template.createdAt = new Date().toISOString();
+        template.updatedAt = template.createdAt;
+      }
+
+      // Set source to USER for published templates
+      template.source = TemplateSource.USER;
+
+      // Export to marketplace directory
+      const exportResult = await this.exportTemplate(template);
+
+      if (!exportResult.success) {
+        return {
+          success: false,
+          templateId: template.id,
+          version: template.version,
+          isNewVersion,
+          error: exportResult.error
+        };
+      }
+
+      return {
+        success: true,
+        templateId: template.id,
+        version: template.version,
+        isNewVersion,
+        changesSummary
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        templateId: template.id,
+        version: template.version || '1.0.0',
+        isNewVersion: false,
+        error: `Failed to publish template: ${error.message}`
+      };
+    }
+  }
+
+  /**
+   * Detect changes between two template versions
+   */
+  detectChanges(oldTemplate: MarketplaceTemplate, newTemplate: MarketplaceTemplate): ChangesSummary {
+    const changes: string[] = [];
+
+    // Compare items
+    const oldItemIds = new Set(oldTemplate.items.map(i => i.id));
+    const newItemIds = new Set(newTemplate.items.map(i => i.id));
+
+    const added = newTemplate.items.filter(i => !oldItemIds.has(i.id));
+    const removed = oldTemplate.items.filter(i => !newItemIds.has(i.id));
+
+    // Items that exist in both - check for modifications
+    const modified: KnowledgeItem[] = [];
+    for (const newItem of newTemplate.items) {
+      if (oldItemIds.has(newItem.id)) {
+        const oldItem = oldTemplate.items.find(i => i.id === newItem.id);
+        if (oldItem && this.isItemModified(oldItem, newItem)) {
+          modified.push(newItem);
+        }
+      }
+    }
+
+    // Build change descriptions
+    if (added.length > 0) {
+      changes.push(`Added ${added.length} item(s): ${added.map(i => i.title).join(', ')}`);
+    }
+    if (removed.length > 0) {
+      changes.push(`Removed ${removed.length} item(s): ${removed.map(i => i.title).join(', ')}`);
+    }
+    if (modified.length > 0) {
+      changes.push(`Modified ${modified.length} item(s): ${modified.map(i => i.title).join(', ')}`);
+    }
+
+    // Check metadata changes
+    if (oldTemplate.name !== newTemplate.name) {
+      changes.push(`Name changed: "${oldTemplate.name}" → "${newTemplate.name}"`);
+    }
+    if (oldTemplate.description !== newTemplate.description) {
+      changes.push('Description updated');
+    }
+
+    return {
+      itemsAdded: added.length,
+      itemsRemoved: removed.length,
+      itemsModified: modified.length,
+      changes
+    };
+  }
+
+  /**
+   * Check if a knowledge item has been modified
+   */
+  private isItemModified(oldItem: KnowledgeItem, newItem: KnowledgeItem): boolean {
+    return (
+      oldItem.title !== newItem.title ||
+      oldItem.body !== newItem.body ||
+      oldItem.type !== newItem.type ||
+      JSON.stringify(oldItem.tags) !== JSON.stringify(newItem.tags)
+    );
+  }
+
+  /**
+   * Increment version string (semver-style)
+   * Increments patch version by default
+   */
+  incrementVersion(currentVersion: string): string {
+    const parts = currentVersion.split('.').map(Number);
+    const major = parts[0] || 1;
+    const minor = parts[1] || 0;
+    const patch = parts[2] || 0;
+
+    // Increment patch version
+    return `${major}.${minor}.${patch + 1}`;
+  }
+
+  /**
+   * Format changes summary as readable string
+   */
+  private formatChangesSummary(changes: ChangesSummary): string {
+    if (changes.changes.length === 0) {
+      return 'No changes detected';
+    }
+    return changes.changes.join('; ');
   }
 
   // ============================================

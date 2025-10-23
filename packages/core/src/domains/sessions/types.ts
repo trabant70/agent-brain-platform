@@ -17,8 +17,7 @@
  * title: Authentication Refactor
  * date: 2025-10-21
  * summary: Refactored OAuth implementation to use new KeyCloak integration
- * tags: authentication, oauth, refactoring
- * topics: backend, security
+ * tags: authentication, oauth, refactoring, backend, security
  * filesModified:
  *   - src/auth/oauth.ts
  *   - src/auth/keycloak.ts
@@ -80,12 +79,6 @@ export interface SessionJournal {
      * Comma-separated in frontmatter, parsed to array
      */
     tags?: string[];
-
-    /**
-     * Topics/areas covered (e.g., "backend", "frontend", "database")
-     * Optional
-     */
-    topics?: string[];
 
     /**
      * List of files modified during this session

@@ -22,7 +22,6 @@ export interface SessionJournal {
   endTime: string;    // ISO 8601
   summary?: string;
   tags?: string[];
-  topics?: string[];
   filesModified?: string[];
   knowledgeItemsUsed?: string[];
   filePath: string;
@@ -44,7 +43,6 @@ interface SessionViewState {
   sessions: SessionJournal[];
   filteredSessions: SessionJournal[];
   searchQuery: string;
-  filterTopics: Set<string>;
   filterTags: Set<string>;
   sortConfig: SortConfig;
 }
@@ -72,7 +70,6 @@ export class SessionViewController {
       sessions: [],
       filteredSessions: [],
       searchQuery: '',
-      filterTopics: new Set(),
       filterTags: new Set(),
       sortConfig: {
         column: 'date',
@@ -247,7 +244,6 @@ export class SessionViewController {
       'applyFiltersAndSort',
       {
         searchQuery: this.state.searchQuery,
-        filterTopics: Array.from(this.state.filterTopics),
         filterTags: Array.from(this.state.filterTags),
         sortColumn: this.state.sortConfig.column,
         sortDirection: this.state.sortConfig.direction
@@ -265,16 +261,8 @@ export class SessionViewController {
         return (
           session.title.toLowerCase().includes(searchText) ||
           session.summary?.toLowerCase().includes(searchText) ||
-          session.topics?.some(t => t.toLowerCase().includes(searchText)) ||
           session.tags?.some(t => t.toLowerCase().includes(searchText))
         );
-      });
-    }
-
-    // Apply topic filter
-    if (this.state.filterTopics.size > 0) {
-      filtered = filtered.filter(session => {
-        return session.topics?.some(t => this.state.filterTopics.has(t));
       });
     }
 
@@ -490,25 +478,6 @@ export class SessionViewController {
     durationCell.textContent = this.formatDuration(session.startTime, session.endTime);
     row.appendChild(durationCell);
 
-    // Topics column
-    const topicsCell = document.createElement('td');
-    topicsCell.className = 'col-topics';
-    if (session.topics && session.topics.length > 0) {
-      session.topics.forEach(topic => {
-        const badge = document.createElement('span');
-        badge.className = 'topic-badge';
-        badge.textContent = topic;
-        badge.addEventListener('click', (e) => {
-          e.stopPropagation();
-          this.toggleTopicFilter(topic);
-        });
-        topicsCell.appendChild(badge);
-      });
-    } else {
-      topicsCell.textContent = '—';
-    }
-    row.appendChild(topicsCell);
-
     // Tags column
     const tagsCell = document.createElement('td');
     tagsCell.className = 'col-tags';
@@ -570,29 +539,6 @@ export class SessionViewController {
   }
 
   /**
-   * Toggle topic filter
-   */
-  private toggleTopicFilter(topic: string): void {
-    webviewLogger.debug(
-      LogCategory.UI,
-      'Toggling topic filter',
-      'toggleTopicFilter',
-      { topic },
-      LogPathway.KNOWLEDGE_MANAGEMENT
-    );
-
-    if (this.state.filterTopics.has(topic)) {
-      this.state.filterTopics.delete(topic);
-    } else {
-      this.state.filterTopics.add(topic);
-    }
-
-    this.applyFiltersAndSort();
-    this.renderTable();
-    this.renderFilterChips();
-  }
-
-  /**
    * Toggle tag filter
    */
   private toggleTagFilter(tag: string): void {
@@ -624,24 +570,6 @@ export class SessionViewController {
     }
 
     this.filterChipsContainer.innerHTML = '';
-
-    this.state.filterTopics.forEach(topic => {
-      const chip = document.createElement('div');
-      chip.className = 'filter-chip';
-      chip.innerHTML = `
-        <span>${topic}</span>
-        <button class="remove-filter" data-topic="${topic}">×</button>
-      `;
-
-      const removeBtn = chip.querySelector('.remove-filter');
-      if (removeBtn) {
-        removeBtn.addEventListener('click', () => {
-          this.toggleTopicFilter(topic);
-        });
-      }
-
-      this.filterChipsContainer!.appendChild(chip);
-    });
 
     this.state.filterTags.forEach(tag => {
       const chip = document.createElement('div');
@@ -699,15 +627,6 @@ export class SessionViewController {
           <div class="session-summary" style="margin-bottom: 20px;">
             <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Summary</h3>
             <p style="margin: 0; line-height: 1.5;">${this.escapeHtml(session.summary)}</p>
-          </div>
-        ` : ''}
-
-        ${session.topics && session.topics.length > 0 ? `
-          <div class="session-topics" style="margin-bottom: 20px;">
-            <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Topics</h3>
-            <div class="topic-list" style="display: flex; flex-wrap: wrap; gap: 4px;">
-              ${session.topics.map(t => `<span class="topic-badge" style="display: inline-block; padding: 2px 8px; background: rgba(0, 212, 255, 0.15); color: var(--sessions-accent); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 3px; font-size: 11px;">${this.escapeHtml(t)}</span>`).join('')}
-            </div>
           </div>
         ` : ''}
 

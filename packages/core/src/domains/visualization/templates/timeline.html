@@ -160,7 +160,7 @@
                                 <button class="group-btn ab-toggle-btn" data-group="template" title="Group by templates">Template</button>
                             </div>
                             <button id="refresh-knowledge" class="secondary-button ab-btn-secondary" title="Refresh knowledge data">🔄 Refresh</button>
-                            <button id="add-knowledge-item" class="primary-button ab-btn-primary">+ Add Item</button>
+                            <button id="add-knowledge-item" class="primary-button ab-btn-primary" title="Create a new knowledge item">+ Add Item</button>
                         </div>
 
                         <!-- Knowledge Table -->
@@ -202,10 +202,11 @@
                                 </select>
                             </div>
                             <div class="template-actions">
-                                <button id="save-template" class="secondary-button ab-btn-secondary" disabled>💾 Save Template</button>
-                                <button id="apply-selected" class="primary-button ab-btn-primary" disabled>➕ Apply Selected Items</button>
-                                <button id="apply-template" class="primary-button ab-btn-primary" disabled>📋 Apply Template</button>
+                                <button id="save-template" class="secondary-button ab-btn-secondary" disabled title="Save selected items as a new template or update existing template">💾 Save Template</button>
+                                <button id="apply-selected" class="primary-button ab-btn-primary" disabled title="Apply selected knowledge items directly to focused claude.md file">➕ Apply Items</button>
+                                <button id="apply-template" class="primary-button ab-btn-primary" disabled title="Apply the selected template to focused claude.md file">📋 Apply Template</button>
                                 <button id="publish-template" class="secondary-button ab-btn-secondary" disabled title="Publish template to marketplace">🚀 Publish</button>
+                                <button id="delete-template" class="secondary-button ab-btn-danger" disabled title="Delete selected template from project">🗑️ Delete</button>
                             </div>
                         </div>
 
@@ -224,7 +225,7 @@
                 <div class="sessions-container">
                     <!-- Toolbar -->
                     <div class="sessions-toolbar">
-                        <input type="search" id="sessions-search" placeholder="Search sessions by title, summary, or topics..."/>
+                        <input type="search" id="sessions-search" placeholder="Search sessions by title, summary, or tags..."/>
                         <div class="filter-chips" id="sessions-filter-chips"></div>
                         <button id="refresh-sessions" class="secondary-button ab-btn-secondary" title="Refresh session data">🔄 Refresh</button>
                         <button id="export-sessions" class="secondary-button ab-btn-secondary" title="Export sessions to JSON">📤 Export</button>
@@ -247,7 +248,6 @@
                                         <span>Duration</span>
                                         <span class="sort-indicator"></span>
                                     </th>
-                                    <th class="col-topics">Topics</th>
                                     <th class="col-tags">Tags</th>
                                     <th class="col-files sortable" data-sort="files">
                                         <span>Files</span>
@@ -259,7 +259,7 @@
                             <tbody id="sessions-table-body">
                                 <!-- Will be populated by SessionViewController -->
                                 <tr class="empty-state-row">
-                                    <td colspan="7">
+                                    <td colspan="6">
                                         <div class="empty-state">
                                             <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
                                             <div style="font-weight: 600; margin-bottom: 8px;">No Session Journals Found</div>
