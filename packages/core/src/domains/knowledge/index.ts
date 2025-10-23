@@ -19,3 +19,32 @@ export { TemplateInstaller } from './TemplateInstaller';
 
 // Template Validation (Security)
 export * from './validation';
+
+// V1 Template Sections
+export { AuditLogger } from './AuditLogger';
+export type { CreateAuditEntryParams, AuditLogQueryOptions, AuditLogStatistics } from './AuditLogger';
+
+export { TemplateStore } from './TemplateStore';
+export type {
+  CreateTemplateOptions,
+  UpdateTemplateOptions,
+  CreateItemOptions,
+  UpdateItemOptions,
+  MoveItemResult,
+  CopyItemResult
+} from './TemplateStore';
+
+export { VersionManager } from './VersionManager';
+export type {
+  CreateVersionOptions,
+  VersionDiff,
+  RestoreResult,
+  VersionStatistics
+} from './VersionManager';
+
+export { TemplateCloner } from './TemplateCloner';
+export type {
+  CloneTemplateOptions,
+  CloneResult,
+  CloneMetadata
+} from './TemplateCloner';

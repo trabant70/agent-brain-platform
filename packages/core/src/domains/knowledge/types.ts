@@ -108,6 +108,16 @@ export interface KnowledgeItem {
     /** Original item ID in template (for tracking) */
     itemKey: string;
   };
+
+  // V1: Template association and injection tracking
+  /** Which template owns this item (for template-as-sections model) */
+  templateId?: string;
+
+  /** Template name (denormalized for display) */
+  templateName?: string;
+
+  /** Where this item is currently injected */
+  injectedTo?: InjectionRecord[];
 }
 
 /**
@@ -154,7 +164,9 @@ export enum TemplateCategory {
  */
 export enum TemplateSource {
   BUNDLED = 'bundled',  // Shipped with extension
-  USER = 'user'         // Created by user
+  USER = 'user',        // Created by user
+  CLONED = 'cloned',    // Cloned from another template
+  IMPORTED = 'imported' // Imported from external source
 }
 
 /**
@@ -200,6 +212,22 @@ export interface MarketplaceTemplate {
   isInstalled?: boolean;          // Computed at load time
   installedAt?: string;           // From installation registry
   installedItemIds?: string[];   // IDs of created items in workspace
+
+  // V1: Versioning and audit trail
+  /** Version history (user-created checkpoints) */
+  versionHistory?: TemplateVersion[];
+
+  /** Last time a version checkpoint was created */
+  lastVersionedAt?: string;       // ISO timestamp
+
+  /** Audit trail of all changes */
+  auditLog?: AuditLogEntry[];
+
+  /** If cloned, the source template ID */
+  sourceTemplateId?: string;
+
+  /** Scope/visibility of this template */
+  scope?: KnowledgeScope;
 }
 
 /**
@@ -711,7 +739,9 @@ export function getTemplateCategoryIcon(category: TemplateCategory): string {
 export function getTemplateSourceLabel(source: TemplateSource): string {
   const labels: Record<TemplateSource, string> = {
     [TemplateSource.BUNDLED]: 'Bundled',
-    [TemplateSource.USER]: 'User'
+    [TemplateSource.USER]: 'User',
+    [TemplateSource.CLONED]: 'Cloned',
+    [TemplateSource.IMPORTED]: 'Imported'
   };
   return labels[source];
 }
@@ -722,7 +752,9 @@ export function getTemplateSourceLabel(source: TemplateSource): string {
 export function getTemplateSourceBadge(source: TemplateSource): string {
   const badges: Record<TemplateSource, string> = {
     [TemplateSource.BUNDLED]: '🏢',
-    [TemplateSource.USER]: '👤'
+    [TemplateSource.USER]: '👤',
+    [TemplateSource.CLONED]: '📋',
+    [TemplateSource.IMPORTED]: '📥'
   };
   return badges[source];
 }
@@ -794,4 +826,160 @@ export function generateTemplateId(name: string, source: TemplateSource): string
 
   const prefix = source === TemplateSource.BUNDLED ? 'bundled' : 'user';
   return `${prefix}.${slug}`;
+}
+
+// =============================================================================
+// V1 Template Sections - Audit Logging, Versioning, Injection Tracking
+// =============================================================================
+
+/**
+ * Audit operation types for tracking all template and item changes
+ */
+export enum AuditOperation {
+  // Template operations
+  TEMPLATE_CREATED = 'template.created',
+  TEMPLATE_CLONED = 'template.cloned',
+  TEMPLATE_RENAMED = 'template.renamed',
+  TEMPLATE_DELETED = 'template.deleted',
+  TEMPLATE_EXPORTED = 'template.exported',
+  TEMPLATE_IMPORTED = 'template.imported',
+  TEMPLATE_VERSIONED = 'template.versioned',
+  TEMPLATE_RESTORED = 'template.restored',
+
+  // Item operations
+  ITEM_ADDED = 'item.added',
+  ITEM_REMOVED = 'item.removed',
+  ITEM_UPDATED = 'item.updated',
+  ITEM_MOVED_FROM = 'item.moved_from',      // Item left this template
+  ITEM_MOVED_TO = 'item.moved_to',          // Item entered this template
+  ITEM_COPIED_TO = 'item.copied_to',        // Item copied from elsewhere
+
+  // Injection operations (for timeline integration)
+  TEMPLATE_INJECTED = 'template.injected',
+  TEMPLATE_REMOVED_FROM_FILE = 'template.removed_from_file',
+  ITEM_INJECTED = 'item.injected',
+  ITEM_REMOVED_FROM_FILE = 'item.removed_from_file',
+
+  // Metadata changes
+  METADATA_UPDATED = 'metadata.updated',
+  TAGS_UPDATED = 'tags.updated',
+  DESCRIPTION_UPDATED = 'description.updated'
+}
+
+/**
+ * Detailed information about an audit operation
+ */
+export interface AuditDetails {
+  /** If item-related, the item ID */
+  itemId?: string;
+
+  /** If item-related, the item title */
+  itemTitle?: string;
+
+  /** If injection-related, the target file path */
+  targetFile?: string;
+
+  /** If move/copy operation, the target template ID */
+  targetTemplateId?: string;
+
+  /** If move/copy operation, the target template name */
+  targetTemplateName?: string;
+
+  /** If cloned, the source template ID */
+  sourceTemplateId?: string;
+
+  /** If cloned, the source template name */
+  sourceTemplateName?: string;
+
+  /** Changed fields (field name → value) */
+  changes?: Record<string, any>;
+
+  /** User comment (e.g., on version checkpoint) */
+  comment?: string;
+
+  /** Additional context */
+  context?: string;
+}
+
+/**
+ * Single entry in a template's audit log
+ */
+export interface AuditLogEntry {
+  /** Unique ID for this audit entry */
+  id: string;
+
+  /** When the operation occurred */
+  timestamp: Date;
+
+  /** Type of operation */
+  operation: AuditOperation;
+
+  /** Who performed the operation */
+  actor: string;  // 'user', 'system', or username
+
+  /** Operation details */
+  details: AuditDetails;
+
+  /** State before the change (optional, for critical operations) */
+  before?: any;
+
+  /** State after the change (optional, for critical operations) */
+  after?: any;
+}
+
+/**
+ * Version checkpoint snapshot for a template
+ */
+export interface TemplateVersion {
+  /** Version number (user-defined, e.g., "1.0", "2.1") */
+  versionNumber: string;
+
+  /** Description of this version */
+  description: string;
+
+  /** When this version was created */
+  createdAt: Date;
+
+  /** Who created this version */
+  createdBy: string;
+
+  /** Number of items at this version */
+  itemCount: number;
+
+  /** Full snapshot of template state */
+  snapshot: {
+    /** All items at this version */
+    items: KnowledgeItem[];
+
+    /** Template metadata at this version */
+    templateMetadata: {
+      name: string;
+      description: string;
+      tags: string[];
+      category: TemplateCategory;
+    };
+  };
+}
+
+/**
+ * Record of where a knowledge item is injected
+ */
+export interface InjectionRecord {
+  /** File path where injected (e.g., "docs/claude.md") */
+  filePath: string;
+
+  /** When the item was injected */
+  injectedAt: Date;
+
+  /** Who performed the injection */
+  injectedBy: string;
+
+  /** Whether injected individually or as part of template */
+  injectionType: 'item' | 'template';
+
+  /** If injected as part of template, the template ID */
+  parentTemplateId?: string;
+
+  /** If injected as part of template, the template name */
+  parentTemplateName?: string;
 }

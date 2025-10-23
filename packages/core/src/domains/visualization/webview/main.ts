@@ -850,7 +850,7 @@ function showValidationLogViewer(template: any, validationResult: any): void {
         proceedBtn.addEventListener('click', () => {
             document.body.removeChild(overlay);
             // Confirm import with extension
-            vscode.postMessage({
+            window.vscode.postMessage({
                 type: 'marketplace:confirm-import',
                 payload: { template }
             });
