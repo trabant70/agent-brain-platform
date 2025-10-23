@@ -234,40 +234,23 @@ export class MarketplaceTemplateManager {
         const orchestrator = createDefaultOrchestrator();
         validationResult = orchestrator.validate(data);
 
-        if (!validationResult.isValid) {
-          // Format detailed error messages
-          const errorMessages = validationResult.errors.map((err: any) => {
-            const suggestion = err.suggestion ? ` (${err.suggestion})` : '';
-            return `[${err.code}] ${err.message}${suggestion}`;
-          });
-
-          const warningMessages = validationResult.warnings.length > 0
-            ? `\n\nWarnings:\n${validationResult.warnings.map((w: any) => `- ${w.message}`).join('\n')}`
-            : '';
-
-          return {
-            success: false,
-            error: `Security validation failed:\n${errorMessages.join('\n')}${warningMessages}`,
-            errors: errorMessages
-          };
-        }
-
-        // Use sanitized data (XSS-safe, normalized)
-        const sanitizedData = validationResult.sanitizedData!;
+        // CHANGED: Always allow template through, let user decide via UI
+        // Use sanitized data if available, otherwise use original data
+        const templateData = validationResult.sanitizedData || data;
 
         // Log validation metrics
         const { metadata } = validationResult;
         if (metadata.threatsDetected.xss > 0 ||
             metadata.threatsDetected.promptInjection > 0 ||
             metadata.threatsDetected.unicode > 0) {
-          console.warn(`Template validation detected and sanitized threats:`, metadata.threatsDetected);
+          console.warn(`Template validation detected threats:`, metadata.threatsDetected);
         }
 
         // Parse dates
         template = {
-          ...sanitizedData,
-          createdAt: sanitizedData.createdAt,
-          updatedAt: sanitizedData.updatedAt,
+          ...templateData,
+          createdAt: templateData.createdAt,
+          updatedAt: templateData.updatedAt,
           // Runtime fields will be set by caller or registry
           isInstalled: false
         };

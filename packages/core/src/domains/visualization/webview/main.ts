@@ -865,10 +865,15 @@ function renderValidationSummary(validationResult: any): string {
     const { metadata } = validationResult;
     const threats = metadata.threatsDetected;
     const totalThreats = Object.values(threats).reduce((sum: number, count: any) => sum + count, 0);
+    const validatorChecks = metadata.validatorChecks || [];
 
-    const statusIcon = validationResult.isValid ? '✅' : '❌';
-    const statusText = validationResult.isValid ? 'Validation Passed' : 'Validation Failed';
-    const statusClass = validationResult.isValid ? 'success' : 'error';
+    const statusIcon = validationResult.isValid ? '✅' : '⚠️';
+    const statusText = validationResult.isValid ? 'All Checks Passed' : 'Issues Detected';
+    const statusClass = validationResult.isValid ? 'success' : 'warning';
+
+    // Count passed/failed validators
+    const passedCount = validatorChecks.filter((v: any) => v.passed).length;
+    const failedCount = validatorChecks.filter((v: any) => !v.passed).length;
 
     return `
         <div class="validation-status ${statusClass}">
@@ -882,18 +887,56 @@ function renderValidationSummary(validationResult: any): string {
                 <span class="stat-value">${metadata.validatorsRun.length}</span>
             </div>
             <div class="stat">
+                <span class="stat-label">Passed:</span>
+                <span class="stat-value" style="color: var(--vscode-testing-iconPassed)">${passedCount}</span>
+            </div>
+            <div class="stat">
+                <span class="stat-label">Failed:</span>
+                <span class="stat-value ${failedCount > 0 ? 'error' : ''}">${failedCount}</span>
+            </div>
+            <div class="stat">
                 <span class="stat-label">Execution Time:</span>
                 <span class="stat-value">${metadata.durationMs}ms</span>
             </div>
-            <div class="stat">
-                <span class="stat-label">Threats Detected:</span>
-                <span class="stat-value ${totalThreats > 0 ? 'warning' : ''}">${totalThreats}</span>
-            </div>
         </div>
+
+        ${validatorChecks.length > 0 ? `
+            <div class="validator-checklist">
+                <h4>📋 Validation Checklist</h4>
+                <div class="checklist-items">
+                    ${validatorChecks.map((check: any) => {
+                        const icon = check.passed ? '✅' : '❌';
+                        const status = check.passed ? 'passed' : 'failed';
+                        const categoryLabel = check.category === 'structure' ? '📐 Structure' :
+                                            check.category === 'security' ? '🔒 Security' : '💼 Business';
+                        const errorCount = check.errors.length;
+                        const warningCount = check.warnings.length;
+
+                        return `
+                            <div class="checklist-item ${status}">
+                                <span class="check-icon">${icon}</span>
+                                <div class="check-content">
+                                    <div class="check-header">
+                                        <span class="check-name">${escapeHtml(check.name)}</span>
+                                        <span class="check-category">${categoryLabel}</span>
+                                    </div>
+                                    ${!check.passed ? `
+                                        <div class="check-issues">
+                                            ${errorCount > 0 ? `<span class="issue-count error">⚠️ ${errorCount} error${errorCount > 1 ? 's' : ''}</span>` : ''}
+                                            ${warningCount > 0 ? `<span class="issue-count warning">⚠️ ${warningCount} warning${warningCount > 1 ? 's' : ''}</span>` : ''}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+        ` : ''}
 
         ${totalThreats > 0 ? `
             <div class="threats-breakdown">
-                <h4>Threats Detected & Sanitized:</h4>
+                <h4>🛡️ Threats Detected & Sanitized:</h4>
                 <ul>
                     ${threats.xss > 0 ? `<li>🔒 XSS Attacks: ${threats.xss}</li>` : ''}
                     ${threats.promptInjection > 0 ? `<li>🤖 Prompt Injection: ${threats.promptInjection}</li>` : ''}
@@ -905,17 +948,10 @@ function renderValidationSummary(validationResult: any): string {
             </div>
         ` : ''}
 
-        ${validationResult.warnings.length > 0 ? `
-            <div class="validation-warnings">
-                <h4>⚠️ Warnings (${validationResult.warnings.length}):</h4>
-                <ul>
-                    ${validationResult.warnings.slice(0, 3).map((w: any) => `
-                        <li>${escapeHtml(w.message)}</li>
-                    `).join('')}
-                    ${validationResult.warnings.length > 3 ? `
-                        <li><em>+ ${validationResult.warnings.length - 3} more warnings</em></li>
-                    ` : ''}
-                </ul>
+        ${!validationResult.isValid ? `
+            <div class="user-decision-notice">
+                <p><strong>⚠️ Review the issues above and decide:</strong></p>
+                <p>You can proceed with importing this template despite the validation failures. The content has been sanitized where possible.</p>
             </div>
         ` : ''}
     `;

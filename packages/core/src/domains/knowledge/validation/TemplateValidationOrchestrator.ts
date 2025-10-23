@@ -48,6 +48,7 @@ export class TemplateValidationOrchestrator {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
     const validatorsRun: string[] = [];
+    const validatorChecks: any[] = [];
 
     // Track threats by category
     const threatsDetected = {
@@ -72,6 +73,15 @@ export class TemplateValidationOrchestrator {
       validatorsRun.push(validator.name);
 
       const result = validator.validate(template);
+
+      // Track individual validator result for UI checklist
+      validatorChecks.push({
+        name: validator.name,
+        category: validator.category,
+        passed: result.isValid,
+        errors: result.errors,
+        warnings: result.warnings
+      });
 
       // Accumulate errors and warnings
       errors.push(...result.errors);
@@ -115,6 +125,7 @@ export class TemplateValidationOrchestrator {
       metadata: {
         validatedAt: new Date(),
         validatorsRun,
+        validatorChecks,
         durationMs,
         originalSize,
         sanitizedSize,

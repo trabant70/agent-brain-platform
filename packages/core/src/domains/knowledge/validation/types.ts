@@ -77,6 +77,26 @@ export interface ValidationWarning {
 }
 
 /**
+ * Individual validator result for UI display
+ */
+export interface ValidatorCheckResult {
+  /** Validator name */
+  name: string;
+
+  /** Validator category (structure, security, business) */
+  category: 'structure' | 'security' | 'business';
+
+  /** Whether this validator passed */
+  passed: boolean;
+
+  /** Errors from this validator */
+  errors: ValidationError[];
+
+  /** Warnings from this validator */
+  warnings: ValidationWarning[];
+}
+
+/**
  * Metadata about the validation process
  */
 export interface ValidationMetadata {
@@ -85,6 +105,9 @@ export interface ValidationMetadata {
 
   /** List of validators that ran */
   validatorsRun: string[];
+
+  /** Individual validator results for checklist display */
+  validatorChecks?: ValidatorCheckResult[];
 
   /** Total validation time in milliseconds */
   durationMs: number;

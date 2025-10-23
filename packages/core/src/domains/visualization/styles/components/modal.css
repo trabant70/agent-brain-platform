@@ -755,6 +755,132 @@
   color: var(--vscode-statusBarItem-warningForeground);
 }
 
+.validation-stats .stat-value.error {
+  color: var(--vscode-testing-iconFailed);
+}
+
+/* Validator Checklist */
+.validator-checklist {
+  margin: 1.25rem 0;
+}
+
+.validator-checklist h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.checklist-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--vscode-textCodeBlock-background);
+  border-radius: 4px;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.checklist-item.passed {
+  border-left-color: var(--vscode-testing-iconPassed);
+}
+
+.checklist-item.failed {
+  border-left-color: var(--vscode-testing-iconFailed);
+  background: rgba(224, 89, 72, 0.08);
+}
+
+.checklist-item .check-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+
+.checklist-item .check-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.checklist-item .check-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.checklist-item .check-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--vscode-foreground);
+}
+
+.checklist-item .check-category {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.checklist-item .check-issues {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.15rem;
+}
+
+.checklist-item .issue-count {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+  font-weight: 500;
+}
+
+.checklist-item .issue-count.error {
+  background: rgba(224, 89, 72, 0.15);
+  color: var(--vscode-testing-iconFailed);
+}
+
+.checklist-item .issue-count.warning {
+  background: rgba(255, 191, 0, 0.15);
+  color: var(--vscode-statusBarItem-warningForeground);
+}
+
+/* User Decision Notice */
+.user-decision-notice {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  background: rgba(255, 191, 0, 0.1);
+  border: 1px solid var(--vscode-statusBarItem-warningBackground);
+  border-radius: 6px;
+}
+
+.user-decision-notice p {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.85rem;
+  color: var(--vscode-foreground);
+  line-height: 1.5;
+}
+
+.user-decision-notice p:last-child {
+  margin-bottom: 0;
+}
+
+.validation-status.warning {
+  background: rgba(255, 191, 0, 0.15);
+  border-left: 4px solid var(--vscode-statusBarItem-warningBackground);
+}
+
 /* Threats Breakdown */
 .threats-breakdown {
   margin-top: 1rem;
