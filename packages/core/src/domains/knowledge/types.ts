@@ -17,6 +17,7 @@ export enum KnowledgeType {
 
   // Process & Standards
   GOLDEN_PATH = 'golden-path',          // Recommended way to do something
+  BEST_PRACTICE = 'best-practice',      // Proven best practices
   STANDARD = 'standard',                // Coding/process standards
   CONVENTION = 'convention',            // Team conventions
   CHECKLIST = 'checklist',              // Process checklists
@@ -417,6 +418,7 @@ export function getKnowledgeTypeLabel(type: KnowledgeType): string {
     [KnowledgeType.DESIGN_PATTERN]: 'Design Pattern',
     [KnowledgeType.ANTI_PATTERN]: 'Anti-Pattern',
     [KnowledgeType.GOLDEN_PATH]: 'Golden Path',
+    [KnowledgeType.BEST_PRACTICE]: 'Best Practice',
     [KnowledgeType.STANDARD]: 'Standard',
     [KnowledgeType.CONVENTION]: 'Convention',
     [KnowledgeType.CHECKLIST]: 'Checklist',
@@ -460,6 +462,7 @@ export function getKnowledgeTypeIcon(type: KnowledgeType): string {
     [KnowledgeType.DESIGN_PATTERN]: '🎨',
     [KnowledgeType.ANTI_PATTERN]: '⚠️',
     [KnowledgeType.GOLDEN_PATH]: '⭐',
+    [KnowledgeType.BEST_PRACTICE]: '✨',
     [KnowledgeType.STANDARD]: '📏',
     [KnowledgeType.CONVENTION]: '🤝',
     [KnowledgeType.CHECKLIST]: '✅',

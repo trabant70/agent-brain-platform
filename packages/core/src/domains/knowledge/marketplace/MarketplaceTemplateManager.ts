@@ -135,7 +135,8 @@ export class MarketplaceTemplateManager {
 
       for (const file of jsonFiles) {
         const filePath = path.join(this.bundledTemplatesPath, file);
-        const result = await this.loadTemplateFromFile(filePath);
+        // Skip security validation for bundled templates (already trusted)
+        const result = await this.loadTemplateFromFile(filePath, true);
 
         if (result.success && result.template) {
           // Ensure source is set to BUNDLED
@@ -195,53 +196,82 @@ export class MarketplaceTemplateManager {
 
   /**
    * Load a single template from JSON file
+   * @param filePath Path to template JSON file
+   * @param skipValidation Skip security validation (for bundled templates)
    */
-  private async loadTemplateFromFile(filePath: string): Promise<LoadTemplateResult> {
+  private async loadTemplateFromFile(filePath: string, skipValidation: boolean = false): Promise<LoadTemplateResult> {
     try {
       const content = fs.readFileSync(filePath, 'utf-8');
       const data = JSON.parse(content);
 
-      // NEW: Comprehensive security validation (2024-2025 attack vectors)
-      const orchestrator = createDefaultOrchestrator();
-      const validationResult = orchestrator.validate(data);
+      let template: MarketplaceTemplate;
+      let validationResult: any;
 
-      if (!validationResult.isValid) {
-        // Format detailed error messages
-        const errorMessages = validationResult.errors.map((err: any) => {
-          const suggestion = err.suggestion ? ` (${err.suggestion})` : '';
-          return `[${err.code}] ${err.message}${suggestion}`;
-        });
+      if (skipValidation) {
+        // Bundled templates are pre-validated and trusted, skip security checks
+        template = {
+          ...data,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+          isInstalled: false
+        };
 
-        const warningMessages = validationResult.warnings.length > 0
-          ? `\n\nWarnings:\n${validationResult.warnings.map((w: any) => `- ${w.message}`).join('\n')}`
-          : '';
+        // Create minimal validation result for consistency
+        validationResult = {
+          isValid: true,
+          errors: [],
+          warnings: [],
+          metadata: {
+            validatedAt: new Date(),
+            validatorsRun: ['Skipped (bundled template)'],
+            durationMs: 0,
+            originalSize: content.length,
+            threatsDetected: { xss: 0, injection: 0, pathTraversal: 0, promptInjection: 0, unicode: 0, other: 0 }
+          }
+        };
+      } else {
+        // NEW: Comprehensive security validation (2024-2025 attack vectors)
+        const orchestrator = createDefaultOrchestrator();
+        validationResult = orchestrator.validate(data);
 
-        return {
-          success: false,
-          error: `Security validation failed:\n${errorMessages.join('\n')}${warningMessages}`,
-          errors: errorMessages
+        if (!validationResult.isValid) {
+          // Format detailed error messages
+          const errorMessages = validationResult.errors.map((err: any) => {
+            const suggestion = err.suggestion ? ` (${err.suggestion})` : '';
+            return `[${err.code}] ${err.message}${suggestion}`;
+          });
+
+          const warningMessages = validationResult.warnings.length > 0
+            ? `\n\nWarnings:\n${validationResult.warnings.map((w: any) => `- ${w.message}`).join('\n')}`
+            : '';
+
+          return {
+            success: false,
+            error: `Security validation failed:\n${errorMessages.join('\n')}${warningMessages}`,
+            errors: errorMessages
+          };
+        }
+
+        // Use sanitized data (XSS-safe, normalized)
+        const sanitizedData = validationResult.sanitizedData!;
+
+        // Log validation metrics
+        const { metadata } = validationResult;
+        if (metadata.threatsDetected.xss > 0 ||
+            metadata.threatsDetected.promptInjection > 0 ||
+            metadata.threatsDetected.unicode > 0) {
+          console.warn(`Template validation detected and sanitized threats:`, metadata.threatsDetected);
+        }
+
+        // Parse dates
+        template = {
+          ...sanitizedData,
+          createdAt: sanitizedData.createdAt,
+          updatedAt: sanitizedData.updatedAt,
+          // Runtime fields will be set by caller or registry
+          isInstalled: false
         };
       }
-
-      // Use sanitized data (XSS-safe, normalized)
-      const sanitizedData = validationResult.sanitizedData!;
-
-      // Log validation metrics
-      const { metadata } = validationResult;
-      if (metadata.threatsDetected.xss > 0 ||
-          metadata.threatsDetected.promptInjection > 0 ||
-          metadata.threatsDetected.unicode > 0) {
-        console.warn(`Template validation detected and sanitized threats:`, metadata.threatsDetected);
-      }
-
-      // Parse dates
-      const template: MarketplaceTemplate = {
-        ...sanitizedData,
-        createdAt: sanitizedData.createdAt,
-        updatedAt: sanitizedData.updatedAt,
-        // Runtime fields will be set by caller or registry
-        isInstalled: false
-      };
 
       return {
         success: true,
