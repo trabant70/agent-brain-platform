@@ -818,7 +818,190 @@ function setupSupportSubTabs(): void {
     webviewLogger.debug(LogCategory.UI, 'Support sub-tabs initialized', 'setupSupportSubTabs');
 }
 
+/**
+ * Setup diagram zoom and pan functionality
+ */
+function setupDiagramZoom(): void {
+    const diagram = document.getElementById('architecture-diagram') as HTMLImageElement;
+    const viewport = document.getElementById('diagram-viewport') as HTMLElement;
+    const container = document.getElementById('diagram-container') as HTMLElement;
+    const zoomInBtn = document.getElementById('diagram-zoom-in') as HTMLButtonElement;
+    const zoomOutBtn = document.getElementById('diagram-zoom-out') as HTMLButtonElement;
+    const zoomResetBtn = document.getElementById('diagram-zoom-reset') as HTMLButtonElement;
+
+    if (!diagram || !viewport || !container || !zoomInBtn || !zoomOutBtn || !zoomResetBtn) {
+        webviewLogger.warn(LogCategory.UI, 'Diagram zoom elements not found', 'setupDiagramZoom');
+        return;
+    }
+
+    // Zoom state
+    let scale = 1;
+    let translateX = 0;
+    let translateY = 0;
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+
+    const MIN_SCALE = 0.1;
+    const MAX_SCALE = 5;
+    const ZOOM_STEP = 0.2;
+
+    /**
+     * Apply current transform to viewport
+     */
+    function applyTransform(): void {
+        viewport.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+        webviewLogger.debug(LogCategory.UI, 'Applied diagram transform', 'applyTransform', { scale, translateX, translateY });
+    }
+
+    /**
+     * Calculate initial scale to fit diagram in container
+     */
+    function calculateFitScale(): void {
+        if (!container || !diagram) return;
+
+        // Wait for image to load to get natural dimensions
+        if (!diagram.complete) {
+            diagram.addEventListener('load', calculateFitScale, { once: true });
+            return;
+        }
+
+        const containerWidth = container.clientWidth;
+        const containerHeight = container.clientHeight;
+        const imageWidth = diagram.naturalWidth || diagram.width;
+        const imageHeight = diagram.naturalHeight || diagram.height;
+
+        if (!containerWidth || !containerHeight || !imageWidth || !imageHeight) {
+            webviewLogger.warn(LogCategory.UI, 'Cannot calculate fit scale - missing dimensions', 'calculateFitScale', {
+                containerWidth,
+                containerHeight,
+                imageWidth,
+                imageHeight
+            });
+            return;
+        }
+
+        // Calculate scale to fit both width and height with 20px padding
+        const padding = 20;
+        const scaleX = (containerWidth - padding * 2) / imageWidth;
+        const scaleY = (containerHeight - padding * 2) / imageHeight;
+        scale = Math.min(scaleX, scaleY, 1); // Don't scale up beyond 1x initially
+
+        // Center the image
+        translateX = 0;
+        translateY = 0;
+
+        applyTransform();
+        webviewLogger.info(LogCategory.UI, 'Calculated fit scale for diagram', 'calculateFitScale', {
+            scale,
+            containerWidth,
+            containerHeight,
+            imageWidth,
+            imageHeight
+        });
+    }
+
+    /**
+     * Zoom in
+     */
+    function zoomIn(): void {
+        const newScale = Math.min(scale + ZOOM_STEP, MAX_SCALE);
+        if (newScale !== scale) {
+            scale = newScale;
+            applyTransform();
+        }
+    }
+
+    /**
+     * Zoom out
+     */
+    function zoomOut(): void {
+        const newScale = Math.max(scale - ZOOM_STEP, MIN_SCALE);
+        if (newScale !== scale) {
+            scale = newScale;
+            applyTransform();
+        }
+    }
+
+    /**
+     * Reset zoom to fit screen
+     */
+    function resetZoom(): void {
+        calculateFitScale();
+    }
+
+    /**
+     * Handle mouse wheel zoom
+     */
+    function handleWheel(e: WheelEvent): void {
+        e.preventDefault();
+
+        const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+        const newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale + delta));
+
+        if (newScale !== scale) {
+            scale = newScale;
+            applyTransform();
+        }
+    }
+
+    /**
+     * Handle drag start
+     */
+    function handleDragStart(e: MouseEvent): void {
+        isDragging = true;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+        viewport.style.cursor = 'grabbing';
+        e.preventDefault();
+    }
+
+    /**
+     * Handle drag move
+     */
+    function handleDragMove(e: MouseEvent): void {
+        if (!isDragging) return;
+
+        translateX = e.clientX - startX;
+        translateY = e.clientY - startY;
+        applyTransform();
+    }
+
+    /**
+     * Handle drag end
+     */
+    function handleDragEnd(): void {
+        if (isDragging) {
+            isDragging = false;
+            viewport.style.cursor = 'grab';
+        }
+    }
+
+    // Add event listeners
+    zoomInBtn.addEventListener('click', zoomIn);
+    zoomOutBtn.addEventListener('click', zoomOut);
+    zoomResetBtn.addEventListener('click', resetZoom);
+    viewport.addEventListener('wheel', handleWheel, { passive: false });
+    viewport.addEventListener('mousedown', handleDragStart);
+    viewport.addEventListener('mousemove', handleDragMove);
+    viewport.addEventListener('mouseup', handleDragEnd);
+    viewport.addEventListener('mouseleave', handleDragEnd);
+
+    // Calculate initial fit
+    calculateFitScale();
+
+    // Recalculate on window resize
+    window.addEventListener('resize', () => {
+        if (scale === 1) {
+            calculateFitScale();
+        }
+    });
+
+    webviewLogger.info(LogCategory.UI, 'Diagram zoom and pan initialized', 'setupDiagramZoom');
+}
+
 // Initialize
 setupMessageHandling();
 initializeWebview();
 setupSupportSubTabs();
+setupDiagramZoom();

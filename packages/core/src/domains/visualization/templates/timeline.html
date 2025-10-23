@@ -396,12 +396,28 @@
                     </div>
 
                     <!-- Architecture Diagram Content -->
-                    <div id="support-tab-diagram" class="support-sub-content" style="flex: 1; overflow: auto; padding: 20px; display: none;">
-                        <div style="max-width: 1400px; margin: 0 auto;">
-                            <h2 style="margin-top: 0; margin-bottom: 16px; font-size: 24px; font-weight: 600; text-align: center;">Agent Brain Complete Architecture</h2>
-                            <p style="text-align: center; margin-bottom: 24px; color: var(--vscode-descriptionForeground);">Complete knowledge flow and learning cycle - from external expertise to AI agent enhancement</p>
-                            <div class="support-diagram">
-                                <img id="architecture-diagram" src="assets/agentbrain-complete-diagram.svg" alt="Agent Brain Architecture Diagram" style="width: 100%; height: auto; display: block; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />
+                    <div id="support-tab-diagram" class="support-sub-content" style="flex: 1; overflow: hidden; padding: 0; display: none; flex-direction: column;">
+                        <div style="padding: 20px 20px 12px 20px; border-bottom: 1px solid var(--vscode-panel-border); background: var(--vscode-editor-background);">
+                            <h2 style="margin: 0 0 8px 0; font-size: 24px; font-weight: 600; text-align: center;">Agent Brain Complete Architecture</h2>
+                            <p style="text-align: center; margin: 0 0 12px 0; color: var(--vscode-descriptionForeground); font-size: 14px;">Complete knowledge flow and learning cycle - from external expertise to AI agent enhancement</p>
+                            <div style="display: flex; justify-content: center; gap: 8px; margin-top: 12px;">
+                                <button id="diagram-zoom-in" style="padding: 6px 12px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 500;">
+                                    🔍 Zoom In
+                                </button>
+                                <button id="diagram-zoom-out" style="padding: 6px 12px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 500;">
+                                    🔍 Zoom Out
+                                </button>
+                                <button id="diagram-zoom-reset" style="padding: 6px 12px; background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; border-radius: 4px; cursor: pointer; font-size: 14px; font-weight: 500;">
+                                    ↺ Reset View
+                                </button>
+                            </div>
+                            <p style="text-align: center; margin: 8px 0 0 0; font-size: 12px; color: var(--vscode-descriptionForeground);">
+                                💡 Tip: Use mouse wheel to zoom, drag to pan, or use buttons above
+                            </p>
+                        </div>
+                        <div id="diagram-container" style="flex: 1; position: relative; overflow: hidden; background: var(--vscode-editor-background);">
+                            <div id="diagram-viewport" style="width: 100%; height: 100%; cursor: grab; display: flex; align-items: center; justify-content: center;">
+                                <img id="architecture-diagram" src="assets/agentbrain-complete-diagram.svg" alt="Agent Brain Architecture Diagram" style="max-width: none; height: auto; display: block; user-select: none; pointer-events: none;" />
                             </div>
                         </div>
                     </div>

@@ -1,0 +1,31 @@
+{
+  "id": "user.pathway-logging-guide",
+  "name": "Pathway Logging Guide",
+  "description": "Quick reference for AI agents to follow pathway logging methodology when debugging and testing Agent Brain Platform.",
+  "version": "1.0.0",
+  "category": "development",
+  "tags": ["debugging", "testing", "logging", "pathways"],
+  "author": {
+    "name": "Agent Brain Team",
+    "email": "team@agentbrain.dev"
+  },
+  "license": "MIT",
+  "source": "user",
+  "items": [
+    {
+      "id": "guideline-pathway-logging-quick-ref",
+      "type": "guideline",
+      "scope": "project",
+      "title": "Pathway Logging Quick Reference",
+      "body": "# Pathway Logging Quick Reference\n\n## What It Is\nMilestone-based testing that verifies end-to-end data flows by asserting on log emissions.\n\n## When to Add Logs\n- When data enters/exits a component\n- Before/after transformations\n- At key decision points\n- When crossing extension ↔ webview boundary\n\n## How to Add\n```typescript\n// Extension side\nimport { logger, LogCategory, LogPathway } from '@agent-brain/core/infrastructure/logging/Logger';\nlogger.debug(LogCategory.DATA, 'Message', 'functionName', { data }, LogPathway.DATA_INGESTION);\n\n// Webview side\nimport { webviewLogger, LogCategory, LogPathway } from './WebviewLogger';\nwebviewLogger.debug(LogCategory.VISUALIZATION, 'Message', 'functionName', undefined, LogPathway.RENDER_PIPELINE);\n```\n\n## 8 Core Pathways\n1. **DATA_INGESTION** - Provider → DataOrchestrator → Webview\n2. **FILTER_APPLY** - Filter changes → refresh\n3. **STATE_PERSIST** - State save/restore\n4. **RENDER_PIPELINE** - Data → D3 rendering\n5. **USER_INTERACTION** - Click/zoom/pan events\n6. **WEBVIEW_MESSAGING** - postMessage communication\n7. **CONFIG_SYNC** - Settings changes\n8. **KNOWLEDGE_MANAGEMENT** - Knowledge CRUD ops\n\n## Testing Pattern\n```typescript\nconst asserter = new PathwayAsserter();\nassertPathway(asserter, 'milestone context', { dataField: value });\n// Run operation\nawait asserter.flush();\n```\n\n## Key Rules\n- Log at boundaries, not internal logic\n- Include context (function name) and relevant data\n- Use correct pathway enum\n- Keep messages concise"
+    },
+    {
+      "id": "snippet-pathway-test-template",
+      "type": "snippet",
+      "scope": "project",
+      "title": "Pathway Test Template",
+      "body": "# Pathway Test Template\n\n```typescript\nimport { PathwayAsserter, assertPathway } from '../../../test-utils/PathwayAsserter';\n\ndescribe('YourFeature Pathway', () => {\n    let asserter: PathwayAsserter;\n\n    beforeEach(() => {\n        asserter = new PathwayAsserter();\n    });\n\n    afterEach(async () => {\n        await asserter.flush();\n    });\n\n    it('should follow expected pathway', async () => {\n        // Assert expected milestones\n        assertPathway(asserter, 'ComponentName.methodName', {\n            requiredField: expect.any(String)\n        });\n\n        // Execute operation\n        await yourOperation();\n\n        // Flush waits for all milestones\n        await asserter.flush();\n    });\n});\n```"
+    }
+  ],
+  "itemCount": 2
+}
