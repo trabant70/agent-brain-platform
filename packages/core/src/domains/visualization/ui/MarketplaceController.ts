@@ -771,31 +771,104 @@ export class MarketplaceController {
       `;
     }
 
-    // Show full list of items with details
-    const itemsList = items.map((item: any) => `
-      <div class="knowledge-item-preview">
-        <div class="item-preview-title">${this.escapeHtml(item.title)}</div>
-        <div class="item-preview-meta">
-          <span class="item-preview-type">${item.type}</span>
-          <span class="item-preview-scope">${item.scope}</span>
-          ${item.tags && item.tags.length > 0 ? `
-            <span class="item-preview-tags">
-              ${item.tags.slice(0, 2).map((tag: string) => `<span class="tag-mini">${this.escapeHtml(tag)}</span>`).join('')}
-              ${item.tags.length > 2 ? `<span class="tag-mini">+${item.tags.length - 2}</span>` : ''}
+    // Show full list of items with expandable content
+    const itemsList = items.map((item: any, index: number) => {
+      const typeIcon = this.getTypeIcon(item.type);
+      const scopeLabel = this.getScopeLabel(item.scope);
+
+      return `
+        <details class="knowledge-item-details">
+          <summary class="item-details-summary">
+            <span class="item-summary-left">
+              <span class="item-number">${index + 1}.</span>
+              <span class="item-icon">${typeIcon}</span>
+              <span class="item-title-text">${this.escapeHtml(item.title)}</span>
             </span>
-          ` : ''}
-        </div>
-      </div>
-    `).join('');
+            <span class="item-summary-right">
+              <span class="item-type-badge">${item.type}</span>
+              <span class="item-scope-badge">${scopeLabel}</span>
+            </span>
+          </summary>
+          <div class="item-details-content">
+            <div class="item-details-meta">
+              ${item.tags && item.tags.length > 0 ? `
+                <div class="item-meta-row">
+                  <span class="item-meta-label">Tags:</span>
+                  <span class="item-meta-value">
+                    ${item.tags.map((tag: string) => `<span class="tag-mini">${this.escapeHtml(tag)}</span>`).join(' ')}
+                  </span>
+                </div>
+              ` : ''}
+              ${item.source ? `
+                <div class="item-meta-row">
+                  <span class="item-meta-label">Source:</span>
+                  <span class="item-meta-value">${this.escapeHtml(item.source)}</span>
+                </div>
+              ` : ''}
+            </div>
+            <div class="item-details-body">
+              <div class="item-body-label">Content:</div>
+              <div class="item-body-content">
+                <pre>${this.escapeHtml(item.body || 'No content')}</pre>
+              </div>
+            </div>
+          </div>
+        </details>
+      `;
+    }).join('');
 
     return `
       <div class="items-preview-list">
+        <div class="items-preview-header">
+          <strong>${items.length} Knowledge Items</strong>
+          <span class="items-preview-hint">Click any item to view full content</span>
+        </div>
         ${itemsList}
-        <p class="items-preview-note">
-          ${items.length} knowledge items will be added to your project when installed.
-        </p>
       </div>
     `;
+  }
+
+  /**
+   * Get icon for knowledge type
+   */
+  private getTypeIcon(type: string): string {
+    const icons: Record<string, string> = {
+      'adr': '📋',
+      'design-pattern': '🎨',
+      'anti-pattern': '⚠️',
+      'golden-path': '⭐',
+      'standard': '📏',
+      'convention': '🤝',
+      'checklist': '✅',
+      'snippet': '📝',
+      'configuration': '⚙️',
+      'command': '💻',
+      'api-reference': '📚',
+      'learning': '💡',
+      'troubleshooting': '🔧',
+      'gotcha': '⚡',
+      'tip': '💭',
+      'template': '📄',
+      'guideline': '📖',
+      'workflow': '🔄',
+      'runbook': '📗',
+      'custom': '🏷️'
+    };
+    return icons[type] || '📄';
+  }
+
+  /**
+   * Get label for knowledge scope
+   */
+  private getScopeLabel(scope: string): string {
+    const labels: Record<string, string> = {
+      'personal': 'Personal',
+      'team': 'Team',
+      'project': 'Project',
+      'organization': 'Organization',
+      'public': 'Public'
+    };
+    return labels[scope] || scope;
   }
 
   /**
