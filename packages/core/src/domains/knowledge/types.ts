@@ -371,6 +371,7 @@ export interface TemplateApplicationResult {
  * Options for creating a new knowledge item
  */
 export interface CreateKnowledgeItemOptions {
+  id?: string;  // Optional - if provided, preserves original ID (for template items)
   type: KnowledgeType;
   scope: KnowledgeScope;
   title: string;

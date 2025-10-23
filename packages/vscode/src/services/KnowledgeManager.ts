@@ -315,7 +315,7 @@ export class KnowledgeManager {
         : '_No description provided._';
 
       const item: KnowledgeItem = {
-        id: this.fileSystem.generateId(filePath),
+        id: options.id || this.fileSystem.generateId(filePath),  // Use provided ID or generate from path
         type: options.type,
         scope: options.scope,
         title: options.title,
@@ -2553,11 +2553,68 @@ export class KnowledgeManager {
         };
       }
 
-      const result = await this.templateInstaller.install(template, options);
+      // Instead of using templateInstaller (which only adds to in-memory store),
+      // create actual knowledge item files for each item in the template
+      const createdItems: string[] = [];
+      const skippedItems: string[] = [];
+      const details: string[] = [];
 
-      if (result.success) {
+      for (const templateItem of template.items) {
+        // Check if item already exists (by looking for file with same ID)
+        const existing = this.store.getItem(templateItem.id);
+
+        if (existing && options?.skipDuplicates !== false) {
+          skippedItems.push(templateItem.id);
+          details.push(`Skipped "${templateItem.title}" (already exists)`);
+          continue;
+        }
+
+        try {
+          // Create actual knowledge item file, preserving the original template item ID
+          const createdItem = await this.createItem({
+            id: templateItem.id,  // Preserve original template item ID
+            type: templateItem.type,
+            scope: templateItem.scope,
+            title: templateItem.title,
+            body: templateItem.body,
+            source: templateItem.source,
+            tags: templateItem.tags || [],
+            author: template.author.name
+          });
+
+          createdItems.push(createdItem.id);
+          details.push(`Created "${templateItem.title}"`);
+
+          logger.debug(
+            LogCategory.EXTENSION,
+            'Created knowledge item from template',
+            'KnowledgeManager.installMarketplaceTemplate',
+            { itemId: createdItem.id, title: createdItem.title },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+        } catch (error: any) {
+          logger.error(
+            LogCategory.EXTENSION,
+            'Failed to create knowledge item from template',
+            'KnowledgeManager.installMarketplaceTemplate',
+            { itemTitle: templateItem.title, error: error.message },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+          details.push(`Failed to create "${templateItem.title}": ${error.message}`);
+        }
+      }
+
+      if (createdItems.length > 0 || skippedItems.length > 0) {
+        // Register installation in registry
+        this.templateRegistry.install(
+          template.id,
+          template.version,
+          template.source,
+          [...createdItems, ...skippedItems]
+        );
+        await this.templateRegistry.saveRegistry();
+
         // Save the template to project templates directory so it appears in dropdown
-        // Create template with full items (not just IDs) for display purposes
         const projectTemplate: MarketplaceTemplate = {
           ...template,
           source: 'user' // Mark as user template since it's now in the workspace
@@ -2570,7 +2627,7 @@ export class KnowledgeManager {
           LogCategory.EXTENSION,
           'Saved installed template to project templates',
           'KnowledgeManager.installMarketplaceTemplate',
-          { templateId: template.id, itemCount: result.createdItemIds.length },
+          { templateId: template.id, itemsCreated: createdItems.length, itemsSkipped: skippedItems.length },
           LogPathway.KNOWLEDGE_MANAGEMENT
         );
 
@@ -2580,14 +2637,14 @@ export class KnowledgeManager {
 
         return {
           success: true,
-          message: `Template "${template.name}" installed successfully`,
-          details: result.details
+          message: `Template "${template.name}" installed successfully (${createdItems.length} items created, ${skippedItems.length} skipped)`,
+          details
         };
       }
 
       return {
         success: false,
-        message: result.error || 'Installation failed'
+        message: 'No items were created'
       };
     } catch (error: any) {
       logger.error(
