@@ -2556,6 +2556,24 @@ export class KnowledgeManager {
       const result = await this.templateInstaller.install(template, options);
 
       if (result.success) {
+        // Save the template to project templates directory so it appears in dropdown
+        // Create template with full items (not just IDs) for display purposes
+        const projectTemplate: MarketplaceTemplate = {
+          ...template,
+          source: 'user' // Mark as user template since it's now in the workspace
+        };
+
+        await this.projectTemplateManager.saveTemplateToDisk(projectTemplate);
+        await this.projectTemplateManager.loadTemplatesFromDisk();
+
+        logger.info(
+          LogCategory.EXTENSION,
+          'Saved installed template to project templates',
+          'KnowledgeManager.installMarketplaceTemplate',
+          { templateId: template.id, itemCount: result.createdItemIds.length },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
         // Update marketplace manager with new installation status
         const installed = this.templateRegistry.getAllInstalled();
         this.marketplaceTemplateManager.updateInstallationStatus(installed);
@@ -2606,6 +2624,18 @@ export class KnowledgeManager {
       const result = await this.templateInstaller.uninstall(templateId);
 
       if (result.success) {
+        // Remove the template from project templates directory
+        await this.projectTemplateManager.deleteTemplate(templateId);
+        await this.projectTemplateManager.loadTemplatesFromDisk();
+
+        logger.info(
+          LogCategory.EXTENSION,
+          'Removed template from project templates',
+          'KnowledgeManager.uninstallMarketplaceTemplate',
+          { templateId },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
         // Update marketplace manager with new installation status
         const installed = this.templateRegistry.getAllInstalled();
         this.marketplaceTemplateManager.updateInstallationStatus(installed);
