@@ -23,11 +23,13 @@ import {
   validateMarketplaceTemplate,
   generateTemplateId
 } from '../types';
+import { createDefaultOrchestrator } from '../validation';
 
 export interface LoadTemplateResult {
   success: boolean;
   template?: MarketplaceTemplate;
   error?: string;
+  errors?: string[];  // Detailed error messages for validation failures
 }
 
 export interface ExportTemplateResult {
@@ -198,20 +200,44 @@ export class MarketplaceTemplateManager {
       const content = fs.readFileSync(filePath, 'utf-8');
       const data = JSON.parse(content);
 
-      // Validate template structure
-      const validation = validateMarketplaceTemplate(data);
-      if (!validation.valid) {
+      // NEW: Comprehensive security validation (2024-2025 attack vectors)
+      const orchestrator = createDefaultOrchestrator();
+      const validationResult = orchestrator.validate(data);
+
+      if (!validationResult.isValid) {
+        // Format detailed error messages
+        const errorMessages = validationResult.errors.map((err: any) => {
+          const suggestion = err.suggestion ? ` (${err.suggestion})` : '';
+          return `[${err.code}] ${err.message}${suggestion}`;
+        });
+
+        const warningMessages = validationResult.warnings.length > 0
+          ? `\n\nWarnings:\n${validationResult.warnings.map((w: any) => `- ${w.message}`).join('\n')}`
+          : '';
+
         return {
           success: false,
-          error: `Validation failed: ${validation.errors.join(', ')}`
+          error: `Security validation failed:\n${errorMessages.join('\n')}${warningMessages}`,
+          errors: errorMessages
         };
+      }
+
+      // Use sanitized data (XSS-safe, normalized)
+      const sanitizedData = validationResult.sanitizedData!;
+
+      // Log validation metrics
+      const { metadata } = validationResult;
+      if (metadata.threatsDetected.xss > 0 ||
+          metadata.threatsDetected.promptInjection > 0 ||
+          metadata.threatsDetected.unicode > 0) {
+        console.warn(`Template validation detected and sanitized threats:`, metadata.threatsDetected);
       }
 
       // Parse dates
       const template: MarketplaceTemplate = {
-        ...data,
-        createdAt: data.createdAt,
-        updatedAt: data.updatedAt,
+        ...sanitizedData,
+        createdAt: sanitizedData.createdAt,
+        updatedAt: sanitizedData.updatedAt,
         // Runtime fields will be set by caller or registry
         isInstalled: false
       };

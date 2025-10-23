@@ -16,3 +16,6 @@ export { TemplateEngine } from './TemplateEngine';
 export { MarketplaceManager } from './MarketplaceManager';
 export { TemplateRegistry } from './TemplateRegistry';
 export { TemplateInstaller } from './TemplateInstaller';
+
+// Template Validation (Security)
+export * from './validation';

@@ -147,9 +147,6 @@ export class MarketplaceController {
           <button id="import-template-btn" class="btn btn-secondary">
             📥 Import Template
           </button>
-          <button id="create-template-btn" class="btn btn-primary">
-            + Create Template
-          </button>
         </div>
       </div>
 
@@ -493,11 +490,6 @@ export class MarketplaceController {
     const refreshBtn = document.getElementById('refresh-marketplace-btn');
     if (refreshBtn) {
       refreshBtn.addEventListener('click', () => this.refreshMarketplace());
-    }
-
-    const createBtn = document.getElementById('create-template-btn');
-    if (createBtn) {
-      createBtn.addEventListener('click', () => this.showCreateTemplateForm());
     }
 
     const importBtn = document.getElementById('import-template-btn');
