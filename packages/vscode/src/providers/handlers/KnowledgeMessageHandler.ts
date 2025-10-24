@@ -126,6 +126,47 @@ export class KnowledgeMessageHandler {
         await this.handleDeleteProjectTemplate(message.payload);
         return true;
 
+      // V1 Template Sections (Phase 4)
+      case 'v1:get-templates':
+        await this.handleV1GetTemplates();
+        return true;
+
+      case 'v1:get-template':
+        await this.handleV1GetTemplate(message.payload);
+        return true;
+
+      case 'v1:create-template':
+        await this.handleV1CreateTemplate(message.payload);
+        return true;
+
+      case 'v1:add-item':
+        await this.handleV1AddItem(message.payload);
+        return true;
+
+      case 'v1:update-item':
+        await this.handleV1UpdateItem(message.payload);
+        return true;
+
+      case 'v1:delete-item':
+        await this.handleV1DeleteItem(message.payload);
+        return true;
+
+      case 'v1:create-version':
+        await this.handleV1CreateVersion(message.payload);
+        return true;
+
+      case 'v1:clone-template':
+        await this.handleV1CloneTemplate(message.payload);
+        return true;
+
+      case 'v1:get-audit-log':
+        await this.handleV1GetAuditLog(message.payload);
+        return true;
+
+      case 'v1:check-enabled':
+        await this.handleV1CheckEnabled();
+        return true;
+
       default:
         return false; // Not handled by this handler
     }
@@ -1649,6 +1690,464 @@ export class KnowledgeMessageHandler {
       );
 
       vscode.window.showErrorMessage(`Failed to delete template: ${error.message}`);
+    }
+  }
+
+  // ==========================================================================
+  // V1 TEMPLATE SECTIONS MESSAGE HANDLERS (Phase 4)
+  // ==========================================================================
+
+  /**
+   * Handle v1:get-templates - Get all V1 templates
+   */
+  private async handleV1GetTemplates(): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling v1:get-templates',
+        'KnowledgeMessageHandler.handleV1GetTemplates',
+        {},
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      const templates = await this.context.knowledgeManager.getV1Templates();
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:templates-data',
+        payload: { templates }
+      });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to get V1 templates',
+        'KnowledgeMessageHandler.handleV1GetTemplates',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'get-templates' }
+      });
+    }
+  }
+
+  /**
+   * Handle v1:get-template - Get specific V1 template
+   */
+  private async handleV1GetTemplate(payload: { templateId: string }): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling v1:get-template',
+        'KnowledgeMessageHandler.handleV1GetTemplate',
+        { templateId: payload.templateId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      const template = await this.context.knowledgeManager.getV1Template(payload.templateId);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:template-data',
+        payload: { template }
+      });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to get V1 template',
+        'KnowledgeMessageHandler.handleV1GetTemplate',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'get-template' }
+      });
+    }
+  }
+
+  /**
+   * Handle v1:create-template - Create new V1 template
+   */
+  private async handleV1CreateTemplate(payload: {
+    name: string;
+    description: string;
+    category: string;
+    tags: string[];
+    scope?: string;
+  }): Promise<void> {
+    try {
+      logger.info(
+        LogCategory.EXTENSION,
+        'Handling v1:create-template',
+        'KnowledgeMessageHandler.handleV1CreateTemplate',
+        { name: payload.name },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      const template = await this.context.knowledgeManager.createV1Template(payload);
+
+      vscode.window.showInformationMessage(`Template "${template.name}" created successfully`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:template-created',
+        payload: { template }
+      });
+
+      // Refresh templates list
+      await this.handleV1GetTemplates();
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to create V1 template',
+        'KnowledgeMessageHandler.handleV1CreateTemplate',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to create template: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'create-template' }
+      });
+    }
+  }
+
+  /**
+   * Handle v1:add-item - Add item to V1 template
+   */
+  private async handleV1AddItem(payload: {
+    templateId: string;
+    title: string;
+    body: string;
+    type: string;
+    scope: string;
+    tags: string[];
+  }): Promise<void> {
+    try {
+      logger.info(
+        LogCategory.EXTENSION,
+        'Handling v1:add-item',
+        'KnowledgeMessageHandler.handleV1AddItem',
+        { templateId: payload.templateId, title: payload.title },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      const item = await this.context.knowledgeManager.addItemToV1Template(
+        payload.templateId,
+        {
+          title: payload.title,
+          body: payload.body,
+          type: payload.type,
+          scope: payload.scope,
+          tags: payload.tags
+        }
+      );
+
+      vscode.window.showInformationMessage(`Item "${item.title}" added successfully`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:item-added',
+        payload: { templateId: payload.templateId, item }
+      });
+
+      // Refresh template data
+      await this.handleV1GetTemplate({ templateId: payload.templateId });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to add V1 item',
+        'KnowledgeMessageHandler.handleV1AddItem',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to add item: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'add-item' }
+      });
+    }
+  }
+
+  /**
+   * Handle v1:update-item - Update item in V1 template
+   */
+  private async handleV1UpdateItem(payload: {
+    templateId: string;
+    itemId: string;
+    updates: {
+      title?: string;
+      body?: string;
+      type?: string;
+      scope?: string;
+      tags?: string[];
+    };
+  }): Promise<void> {
+    try {
+      logger.info(
+        LogCategory.EXTENSION,
+        'Handling v1:update-item',
+        'KnowledgeMessageHandler.handleV1UpdateItem',
+        { templateId: payload.templateId, itemId: payload.itemId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      await this.context.knowledgeManager.updateV1Item(
+        payload.templateId,
+        payload.itemId,
+        payload.updates
+      );
+
+      vscode.window.showInformationMessage('Item updated successfully');
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:item-updated',
+        payload: { templateId: payload.templateId, itemId: payload.itemId }
+      });
+
+      // Refresh template data
+      await this.handleV1GetTemplate({ templateId: payload.templateId });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to update V1 item',
+        'KnowledgeMessageHandler.handleV1UpdateItem',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to update item: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'update-item' }
+      });
+    }
+  }
+
+  /**
+   * Handle v1:delete-item - Delete item from V1 template
+   */
+  private async handleV1DeleteItem(payload: {
+    templateId: string;
+    itemId: string;
+  }): Promise<void> {
+    try {
+      logger.info(
+        LogCategory.EXTENSION,
+        'Handling v1:delete-item',
+        'KnowledgeMessageHandler.handleV1DeleteItem',
+        { templateId: payload.templateId, itemId: payload.itemId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      await this.context.knowledgeManager.deleteV1Item(
+        payload.templateId,
+        payload.itemId
+      );
+
+      vscode.window.showInformationMessage('Item deleted successfully');
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:item-deleted',
+        payload: { templateId: payload.templateId, itemId: payload.itemId }
+      });
+
+      // Refresh template data
+      await this.handleV1GetTemplate({ templateId: payload.templateId });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to delete V1 item',
+        'KnowledgeMessageHandler.handleV1DeleteItem',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to delete item: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'delete-item' }
+      });
+    }
+  }
+
+  /**
+   * Handle v1:create-version - Create version checkpoint
+   */
+  private async handleV1CreateVersion(payload: {
+    templateId: string;
+    versionNumber: string;
+    description: string;
+  }): Promise<void> {
+    try {
+      logger.info(
+        LogCategory.EXTENSION,
+        'Handling v1:create-version',
+        'KnowledgeMessageHandler.handleV1CreateVersion',
+        { templateId: payload.templateId, version: payload.versionNumber },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      await this.context.knowledgeManager.createV1Version(
+        payload.templateId,
+        {
+          versionNumber: payload.versionNumber,
+          description: payload.description
+        }
+      );
+
+      vscode.window.showInformationMessage(`Version ${payload.versionNumber} created successfully`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:version-created',
+        payload: { templateId: payload.templateId, versionNumber: payload.versionNumber }
+      });
+
+      // Refresh template data
+      await this.handleV1GetTemplate({ templateId: payload.templateId });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to create V1 version',
+        'KnowledgeMessageHandler.handleV1CreateVersion',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to create version: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'create-version' }
+      });
+    }
+  }
+
+  /**
+   * Handle v1:clone-template - Clone V1 template
+   */
+  private async handleV1CloneTemplate(payload: {
+    templateId: string;
+    newName?: string;
+    shallow?: boolean;
+  }): Promise<void> {
+    try {
+      logger.info(
+        LogCategory.EXTENSION,
+        'Handling v1:clone-template',
+        'KnowledgeMessageHandler.handleV1CloneTemplate',
+        { templateId: payload.templateId, newName: payload.newName },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      const clonedTemplate = await this.context.knowledgeManager.cloneV1Template(
+        payload.templateId,
+        {
+          newName: payload.newName,
+          shallow: payload.shallow
+        }
+      );
+
+      vscode.window.showInformationMessage(`Template cloned as "${clonedTemplate.name}"`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:template-cloned',
+        payload: { template: clonedTemplate }
+      });
+
+      // Refresh templates list
+      await this.handleV1GetTemplates();
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to clone V1 template',
+        'KnowledgeMessageHandler.handleV1CloneTemplate',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to clone template: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'clone-template' }
+      });
+    }
+  }
+
+  /**
+   * Handle v1:get-audit-log - Get audit log for template
+   */
+  private async handleV1GetAuditLog(payload: { templateId: string }): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling v1:get-audit-log',
+        'KnowledgeMessageHandler.handleV1GetAuditLog',
+        { templateId: payload.templateId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      const auditLog = await this.context.knowledgeManager.getV1AuditLog(payload.templateId);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:audit-log-data',
+        payload: { templateId: payload.templateId, auditLog }
+      });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to get V1 audit log',
+        'KnowledgeMessageHandler.handleV1GetAuditLog',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'get-audit-log' }
+      });
+    }
+  }
+
+  /**
+   * Handle v1:check-enabled - Check if V1 features are enabled
+   */
+  private async handleV1CheckEnabled(): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling v1:check-enabled',
+        'KnowledgeMessageHandler.handleV1CheckEnabled',
+        {},
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      const enabled = this.context.knowledgeManager.isV1Enabled();
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:enabled-status',
+        payload: { enabled }
+      });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to check V1 enabled status',
+        'KnowledgeMessageHandler.handleV1CheckEnabled',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'check-enabled' }
+      });
     }
   }
 }

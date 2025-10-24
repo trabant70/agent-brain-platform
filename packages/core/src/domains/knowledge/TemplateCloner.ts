@@ -337,11 +337,16 @@ export class TemplateCloner {
       return null;
     }
 
+    // Convert Date to ISO string if needed
+    const clonedAt = template.createdAt instanceof Date
+      ? template.createdAt.toISOString()
+      : template.createdAt;
+
     return {
       isClone: true,
       sourceTemplateId: template.sourceTemplateId,
-      clonedAt: template.createdAt,
-      itemCount: template.itemCount
+      clonedAt,
+      itemCount: template.itemCount ?? template.items.length
     };
   }
 

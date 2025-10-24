@@ -1,7 +1,9 @@
 /**
- * KnowledgeFileSystem - File I/O for Knowledge Items
+ * KnowledgeFileSystem - File I/O for Knowledge Items and Templates
  *
- * Handles loading and saving knowledge items as markdown files with frontmatter.
+ * Handles loading and saving:
+ * - Knowledge items as markdown files with frontmatter
+ * - Templates as JSON files with embedded items, audit logs, and version history
  * Provides graceful error handling for malformed files.
  */
 
@@ -12,6 +14,7 @@ import {
   KnowledgeType,
   KnowledgeScope,
   KnowledgeFrontmatter,
+  MarketplaceTemplate,
   isKnowledgeType,
   isKnowledgeScope
 } from './types';
@@ -316,6 +319,155 @@ export class KnowledgeFileSystem {
   }
 
   // ============================================
+  // Template JSON Persistence (V1)
+  // ============================================
+
+  /**
+   * Load a template from a JSON file
+   * Handles deserialization of dates and validates structure
+   */
+  async loadTemplateJson(absolutePath: string, fileContent: string): Promise<MarketplaceTemplate> {
+    try {
+      const data = JSON.parse(fileContent);
+
+      // Validate required fields
+      if (!data.id || !data.name || !data.version) {
+        throw new Error('Invalid template: missing required fields (id, name, version)');
+      }
+
+      // Deserialize dates
+      const template: MarketplaceTemplate = {
+        ...data,
+        createdAt: this.parseDate(data.createdAt),
+        updatedAt: this.parseDate(data.updatedAt),
+        lastVersionedAt: data.lastVersionedAt ? this.parseDate(data.lastVersionedAt) : undefined,
+
+        // Deserialize item dates
+        items: data.items?.map((item: any) => ({
+          ...item,
+          metadata: {
+            ...item.metadata,
+            createdAt: this.parseDate(item.metadata?.createdAt),
+            updatedAt: this.parseDate(item.metadata?.updatedAt)
+          },
+          injectedTo: item.injectedTo?.map((record: any) => ({
+            ...record,
+            injectedAt: this.parseDate(record.injectedAt)
+          })) || []
+        })) || [],
+
+        // Deserialize audit log dates
+        auditLog: data.auditLog?.map((entry: any) => ({
+          ...entry,
+          timestamp: this.parseDate(entry.timestamp)
+        })) || [],
+
+        // Deserialize version history dates
+        versionHistory: data.versionHistory?.map((version: any) => ({
+          ...version,
+          createdAt: this.parseDate(version.createdAt),
+          snapshot: {
+            ...version.snapshot,
+            items: version.snapshot?.items?.map((item: any) => ({
+              ...item,
+              metadata: {
+                ...item.metadata,
+                createdAt: this.parseDate(item.metadata?.createdAt),
+                updatedAt: this.parseDate(item.metadata?.updatedAt)
+              }
+            })) || []
+          }
+        })) || []
+      };
+
+      return template;
+    } catch (error: any) {
+      throw new Error(`Failed to load template from ${absolutePath}: ${error.message}`);
+    }
+  }
+
+  /**
+   * Save a template to a JSON file
+   * Handles serialization with pretty printing for human readability
+   */
+  toTemplateJson(template: MarketplaceTemplate, options?: { pretty?: boolean }): string {
+    const pretty = options?.pretty !== false; // Default to true
+
+    // Create a clean copy without undefined values
+    const cleanTemplate = this.cleanUndefinedValues(template);
+
+    // Serialize with pretty printing (2 space indentation)
+    return JSON.stringify(cleanTemplate, null, pretty ? 2 : 0);
+  }
+
+  /**
+   * Validate template JSON structure
+   */
+  validateTemplateJson(content: string): { valid: boolean; error?: string; template?: MarketplaceTemplate } {
+    try {
+      const data = JSON.parse(content);
+
+      // Check required fields
+      if (!data.id) {
+        return { valid: false, error: 'Missing required field: id' };
+      }
+      if (!data.name) {
+        return { valid: false, error: 'Missing required field: name' };
+      }
+      if (!data.version) {
+        return { valid: false, error: 'Missing required field: version' };
+      }
+      if (!Array.isArray(data.items)) {
+        return { valid: false, error: 'Invalid field: items must be an array' };
+      }
+
+      // Try to deserialize (this will catch date parsing errors)
+      const template = {
+        ...data,
+        createdAt: this.parseDate(data.createdAt),
+        updatedAt: this.parseDate(data.updatedAt)
+      } as MarketplaceTemplate;
+
+      return { valid: true, template };
+    } catch (error: any) {
+      return { valid: false, error: `JSON parse error: ${error.message}` };
+    }
+  }
+
+  /**
+   * Generate a template file name from template metadata
+   */
+  generateTemplateFileName(template: MarketplaceTemplate): string {
+    // Sanitize name for filesystem
+    const safeName = template.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+    return `${safeName}-v${template.version}.json`;
+  }
+
+  /**
+   * Get template file path based on source
+   */
+  getTemplateFilePath(template: MarketplaceTemplate, baseDir: string): string {
+    const fileName = this.generateTemplateFileName(template);
+
+    // Organize by source
+    switch (template.source) {
+      case 'bundled':
+        return path.join(baseDir, 'bundled', fileName);
+      case 'cloned':
+        return path.join(baseDir, 'cloned', fileName);
+      case 'imported':
+        return path.join(baseDir, 'imported', fileName);
+      case 'user':
+      default:
+        return path.join(baseDir, 'user', fileName);
+    }
+  }
+
+  // ============================================
   // Private Helpers
   // ============================================
 
@@ -420,5 +572,52 @@ export class KnowledgeFileSystem {
       return value.substring(1, value.length - 1).replace(/\\"/g, '"');
     }
     return value;
+  }
+
+  /**
+   * Parse date from string or Date object
+   * Handles both ISO strings and Date objects (for postMessage compatibility)
+   */
+  private parseDate(value: any): Date {
+    if (value instanceof Date) {
+      return value;
+    }
+    if (typeof value === 'string') {
+      return new Date(value);
+    }
+    if (typeof value === 'number') {
+      return new Date(value);
+    }
+    return new Date(); // Fallback
+  }
+
+  /**
+   * Recursively remove undefined values from object
+   * This ensures clean JSON serialization
+   */
+  private cleanUndefinedValues(obj: any): any {
+    // Handle arrays
+    if (Array.isArray(obj)) {
+      return obj.map(item => this.cleanUndefinedValues(item));
+    }
+
+    // Handle null and primitives
+    if (obj === null || typeof obj !== 'object') {
+      return obj;
+    }
+
+    // Handle Date objects - leave as-is for JSON.stringify
+    if (obj instanceof Date) {
+      return obj;
+    }
+
+    // Handle plain objects
+    const cleaned: any = {};
+    for (const key in obj) {
+      if (obj[key] !== undefined) {
+        cleaned[key] = this.cleanUndefinedValues(obj[key]);
+      }
+    }
+    return cleaned;
   }
 }

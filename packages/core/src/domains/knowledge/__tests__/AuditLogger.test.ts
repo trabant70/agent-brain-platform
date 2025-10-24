@@ -132,8 +132,12 @@ describe('AuditLogger', () => {
       const results = auditLogger.query(sampleLog);
 
       for (let i = 0; i < results.length - 1; i++) {
-        const currentTime = results[i].timestamp.getTime();
-        const nextTime = results[i + 1].timestamp.getTime();
+        const currentTime = typeof results[i].timestamp === 'string'
+          ? new Date(results[i].timestamp).getTime()
+          : (results[i].timestamp as Date).getTime();
+        const nextTime = typeof results[i + 1].timestamp === 'string'
+          ? new Date(results[i + 1].timestamp).getTime()
+          : (results[i + 1].timestamp as Date).getTime();
         expect(currentTime).toBeGreaterThanOrEqual(nextTime);
       }
     });
@@ -144,8 +148,12 @@ describe('AuditLogger', () => {
       });
 
       for (let i = 0; i < results.length - 1; i++) {
-        const currentTime = results[i].timestamp.getTime();
-        const nextTime = results[i + 1].timestamp.getTime();
+        const currentTime = typeof results[i].timestamp === 'string'
+          ? new Date(results[i].timestamp).getTime()
+          : (results[i].timestamp as Date).getTime();
+        const nextTime = typeof results[i + 1].timestamp === 'string'
+          ? new Date(results[i + 1].timestamp).getTime()
+          : (results[i + 1].timestamp as Date).getTime();
         expect(currentTime).toBeLessThanOrEqual(nextTime);
       }
     });

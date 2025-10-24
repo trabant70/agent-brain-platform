@@ -48,3 +48,9 @@ export type {
   CloneResult,
   CloneMetadata
 } from './TemplateCloner';
+
+export { TemplateMigration } from './TemplateMigration';
+export type {
+  MigrationResult,
+  MigrationOptions
+} from './TemplateMigration';

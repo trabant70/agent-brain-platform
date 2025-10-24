@@ -21,17 +21,23 @@ import { KnowledgeTableController } from './knowledge/KnowledgeTableController';
 import { ClaudeMdAccordionController } from './knowledge/ClaudeMdAccordionController';
 import { KnowledgeFormController } from './knowledge/KnowledgeFormController';
 import { TemplateController } from './knowledge/TemplateController';
+import { V1TemplatesTableController } from './knowledge/V1TemplatesTableController';
+import { V1TemplateFormController } from './knowledge/V1TemplateFormController';
+import { AuditLogViewer } from './knowledge/AuditLogViewer';
 
 export interface KnowledgeViewState {
   items: KnowledgeItem[];
   templates: MarketplaceTemplate[];
   claudeMdFiles: ClaudeMdFile[];
+  v1Enabled: boolean;
+  v1Templates: MarketplaceTemplate[];
 }
 
 export class KnowledgeViewController {
   private state: KnowledgeViewState;
   private messageHandler: ((message: any) => void) | null = null;
   private notifications: NotificationManager;
+  private currentView: 'items' | 'templates' = 'items';
 
   // Sub-controllers
   private tableController: KnowledgeTableController;
@@ -39,11 +45,18 @@ export class KnowledgeViewController {
   private formController: KnowledgeFormController;
   private templateController: TemplateController;
 
+  // V1 Sub-controllers
+  private v1TemplatesTableController: V1TemplatesTableController;
+  private v1TemplateFormController: V1TemplateFormController;
+  private auditLogViewer: AuditLogViewer;
+
   constructor() {
     this.state = {
       items: [],
       templates: [],
-      claudeMdFiles: []
+      claudeMdFiles: [],
+      v1Enabled: false,
+      v1Templates: []
     };
     this.notifications = new NotificationManager();
 
@@ -75,6 +88,26 @@ export class KnowledgeViewController {
       onRenderTable: () => this.tableController.renderKnowledgeTable(),
       getItemById: (itemId) => this.state.items.find(i => i.id === itemId)
     });
+
+    // Initialize V1 controllers
+    this.v1TemplatesTableController = new V1TemplatesTableController({
+      onCreateTemplate: () => this.v1TemplateFormController.showCreateTemplateModal(),
+      onCloneTemplate: (templateId) => this.handleCloneTemplate(templateId),
+      onDeleteTemplate: (templateId) => this.handleDeleteTemplate(templateId),
+      onEditTemplate: (templateId) => this.handleEditTemplate(templateId),
+      onAddItem: (templateId) => this.v1TemplateFormController.showAddItemToTemplateModal(templateId),
+      onEditItem: (templateId, itemId) => this.handleEditItem(templateId, itemId),
+      onDeleteItem: (templateId, itemId) => this.handleDeleteItem(templateId, itemId),
+      onCreateVersion: (templateId) => this.handleCreateVersion(templateId),
+      onViewAuditLog: (templateId) => this.handleViewAuditLog(templateId)
+    });
+
+    this.v1TemplateFormController = new V1TemplateFormController({
+      onSendMessage: (message) => this.sendMessage(message),
+      onShowNotification: (message, type, duration) => this.notifications.show({ type, message, duration })
+    });
+
+    this.auditLogViewer = new AuditLogViewer();
   }
 
   /**
@@ -82,7 +115,12 @@ export class KnowledgeViewController {
    */
   initialize(onMessage: (message: any) => void): void {
     this.messageHandler = onMessage;
+
+    // Check if V1 is enabled
+    this.sendMessage({ type: 'v1:check-enabled' });
+
     this.setupEventListeners();
+    this.setupViewModeToggle();
     this.render();
 
     webviewLogger.info(
@@ -118,6 +156,269 @@ export class KnowledgeViewController {
       // Forward to extension
       this.sendMessage(message);
     }
+  }
+
+  /**
+   * Handle messages from the extension
+   */
+  handleMessage(message: any): void {
+    switch (message.type) {
+      case 'v1:enabled-status':
+        this.state.v1Enabled = message.payload.enabled;
+        if (this.state.v1Enabled) {
+          this.loadV1Templates();
+        }
+        webviewLogger.info(
+          LogCategory.UI,
+          'V1 feature status received',
+          'KnowledgeViewController.handleMessage',
+          { v1Enabled: this.state.v1Enabled },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        break;
+
+      case 'v1:templates-data':
+        this.state.v1Templates = message.payload.templates || [];
+        if (this.currentView === 'templates') {
+          this.v1TemplatesTableController.render(this.state.v1Templates);
+        }
+        webviewLogger.info(
+          LogCategory.UI,
+          'V1 templates data received and rendered',
+          'KnowledgeViewController.handleMessage',
+          { templatesCount: this.state.v1Templates.length },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        break;
+
+      case 'v1:template-data':
+        // Update single template in state
+        const updatedTemplate = message.payload.template;
+        const index = this.state.v1Templates.findIndex(t => t.id === updatedTemplate.id);
+        if (index >= 0) {
+          this.state.v1Templates[index] = updatedTemplate;
+        } else {
+          this.state.v1Templates.push(updatedTemplate);
+        }
+        if (this.currentView === 'templates') {
+          this.v1TemplatesTableController.render(this.state.v1Templates);
+        }
+        webviewLogger.debug(
+          LogCategory.UI,
+          'V1 template updated in state and rendered',
+          'KnowledgeViewController.handleMessage',
+          { templateId: updatedTemplate.id },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        break;
+
+      case 'v1:template-created':
+      case 'v1:template-cloned':
+        // Reload all templates
+        this.loadV1Templates();
+        webviewLogger.info(
+          LogCategory.UI,
+          'V1 template created/cloned, reloading all templates',
+          'KnowledgeViewController.handleMessage',
+          { messageType: message.type },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        break;
+
+      case 'v1:audit-log-data':
+        const { templateId, auditLog } = message.payload;
+        const template = this.state.v1Templates.find(t => t.id === templateId);
+        if (template) {
+          this.auditLogViewer.showAuditLog(templateId, template.name, auditLog);
+        }
+        webviewLogger.debug(
+          LogCategory.UI,
+          'Audit log data received',
+          'KnowledgeViewController.handleMessage',
+          { templateId, entriesCount: auditLog?.length || 0 },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        break;
+
+      case 'v1:error':
+        this.notifications.show({
+          type: 'error',
+          message: `V1 Error: ${message.payload.message}`,
+          duration: 5000
+        });
+        webviewLogger.error(
+          LogCategory.UI,
+          'V1 operation error',
+          'KnowledgeViewController.handleMessage',
+          { operation: message.payload.operation, error: message.payload.message },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        break;
+    }
+  }
+
+  /**
+   * Load V1 templates from extension
+   */
+  private loadV1Templates(): void {
+    this.sendMessage({ type: 'v1:get-templates' });
+  }
+
+  /**
+   * Handle clone template action
+   */
+  private handleCloneTemplate(templateId: string): void {
+    const template = this.state.v1Templates.find(t => t.id === templateId);
+    if (template) {
+      this.v1TemplateFormController.showCloneTemplateModal(template);
+    }
+  }
+
+  /**
+   * Handle delete template action
+   */
+  private handleDeleteTemplate(templateId: string): void {
+    const template = this.state.v1Templates.find(t => t.id === templateId);
+    if (!template) return;
+
+    const itemCount = template.items?.length || 0;
+    const message = itemCount > 0
+      ? `Delete template "${template.name}"? This will also delete all ${itemCount} items.`
+      : `Delete template "${template.name}"?`;
+
+    if (confirm(message)) {
+      this.sendMessage({
+        type: 'v1:delete-template',
+        payload: { templateId }
+      });
+    }
+  }
+
+  /**
+   * Handle edit template action
+   */
+  private handleEditTemplate(templateId: string): void {
+    // TODO: Implement edit template modal
+    this.notifications.show({
+      type: 'info',
+      message: 'Edit template functionality coming soon',
+      duration: 3000
+    });
+  }
+
+  /**
+   * Handle edit item action
+   */
+  private handleEditItem(templateId: string, itemId: string): void {
+    const template = this.state.v1Templates.find(t => t.id === templateId);
+    const item = template?.items?.find(i => i.id === itemId);
+    if (item) {
+      // Reuse existing form controller for editing
+      this.formController.editItem(itemId);
+    }
+  }
+
+  /**
+   * Handle delete item action
+   */
+  private handleDeleteItem(templateId: string, itemId: string): void {
+    const template = this.state.v1Templates.find(t => t.id === templateId);
+    const item = template?.items?.find(i => i.id === itemId);
+    if (!item) return;
+
+    if (confirm(`Delete item "${item.title}" from template?`)) {
+      this.sendMessage({
+        type: 'v1:delete-item',
+        payload: { templateId, itemId }
+      });
+    }
+  }
+
+  /**
+   * Handle create version action
+   */
+  private handleCreateVersion(templateId: string): void {
+    this.v1TemplateFormController.showCreateVersionModal(templateId);
+  }
+
+  /**
+   * Handle view audit log action
+   */
+  private handleViewAuditLog(templateId: string): void {
+    this.sendMessage({
+      type: 'v1:get-audit-log',
+      payload: { templateId }
+    });
+  }
+
+  /**
+   * Setup view mode toggle event listeners
+   */
+  private setupViewModeToggle(): void {
+    const toggle = document.getElementById('view-mode-toggle');
+    if (!toggle) return;
+
+    const viewButtons = toggle.querySelectorAll('.view-btn');
+    viewButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const target = e.currentTarget as HTMLElement;
+        const view = target.dataset.view as 'items' | 'templates';
+
+        if (!view || view === this.currentView) return;
+
+        // Update active state
+        viewButtons.forEach(b => b.classList.remove('active'));
+        target.classList.add('active');
+
+        // Switch view
+        this.currentView = view;
+        if (view === 'templates') {
+          this.showV1TemplatesView();
+        } else {
+          this.showItemsView();
+        }
+
+        webviewLogger.info(
+          LogCategory.UI,
+          'View mode switched',
+          'KnowledgeViewController.setupViewModeToggle',
+          { view },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+      });
+    });
+  }
+
+  /**
+   * Show V1 templates view
+   */
+  private showV1TemplatesView(): void {
+    webviewLogger.info(
+      LogCategory.UI,
+      'Switching to V1 templates view',
+      'KnowledgeViewController.showV1TemplatesView',
+      { templatesCount: this.state.v1Templates.length },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    // Render V1 templates using the table controller
+    this.v1TemplatesTableController.render(this.state.v1Templates);
+  }
+
+  /**
+   * Show items view
+   */
+  private showItemsView(): void {
+    webviewLogger.info(
+      LogCategory.UI,
+      'Switching to items view',
+      'KnowledgeViewController.showItemsView',
+      { itemsCount: this.state.items.length },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    // Re-render the table controller
+    this.tableController.renderKnowledgeTable();
   }
 
   /**
@@ -208,11 +509,34 @@ export class KnowledgeViewController {
    * Render the complete knowledge view
    */
   render(): void {
+    // Show/hide V1 UI elements based on v1Enabled
+    this.updateV1UIVisibility();
+
     // Delegate to sub-controllers
-    this.tableController.renderKnowledgeTable();
+    if (this.currentView === 'items') {
+      this.tableController.renderKnowledgeTable();
+    } else {
+      this.showV1TemplatesView();
+    }
     this.accordionController.renderClaudeMdAccordion();
     this.templateController.renderTemplateControls();
     this.updateStatusBar();
+  }
+
+  /**
+   * Update visibility of V1 UI elements based on feature flag
+   */
+  private updateV1UIVisibility(): void {
+    const createTemplateBtn = document.getElementById('create-v1-template');
+    const viewModeToggle = document.getElementById('view-mode-toggle');
+
+    if (this.state.v1Enabled) {
+      createTemplateBtn?.style.setProperty('display', 'inline-block');
+      viewModeToggle?.style.setProperty('display', 'flex');
+    } else {
+      createTemplateBtn?.style.setProperty('display', 'none');
+      viewModeToggle?.style.setProperty('display', 'none');
+    }
   }
 
   /**
@@ -273,6 +597,10 @@ export class KnowledgeViewController {
     // Add item button - delegate to form controller
     const addBtn = document.getElementById('add-knowledge-item');
     addBtn?.addEventListener('click', () => this.formController.createNewItem());
+
+    // V1 Create Template button
+    const createTemplateBtn = document.getElementById('create-v1-template');
+    createTemplateBtn?.addEventListener('click', () => this.v1TemplateFormController.showCreateTemplateModal());
 
     // Refresh button
     const refreshBtn = document.getElementById('refresh-knowledge');

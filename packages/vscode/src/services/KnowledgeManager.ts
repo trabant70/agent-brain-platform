@@ -24,7 +24,14 @@ import {
   TemplateInstaller,
   MarketplaceTemplate,
   TemplateCategory,
-  TemplateSource
+  TemplateSource,
+  // V1 Template Sections (Phase 3)
+  TemplateStore,
+  AuditLogger,
+  VersionManager,
+  TemplateCloner,
+  TemplateMigration,
+  MigrationResult
 } from '@agent-brain/core/domains/knowledge';
 import { ProjectTemplateManager } from '@agent-brain/core/domains/knowledge/project/ProjectTemplateManager';
 import { MarketplaceTemplateManager, PublishResult } from '@agent-brain/core/domains/knowledge/marketplace/MarketplaceTemplateManager';
@@ -55,6 +62,14 @@ export class KnowledgeManager {
   // Shared services
   private templateRegistry: TemplateRegistry;
   private templateInstaller: TemplateInstaller;
+
+  // V1 Template Sections (NEW - Phase 3)
+  private templateStore: TemplateStore;
+  private auditLogger: AuditLogger;
+  private versionManager: VersionManager;
+  private templateCloner: TemplateCloner;
+  private templateMigration: TemplateMigration;
+  private v1Enabled: boolean = false;  // Feature flag for progressive rollout
 
   // DEPRECATED: Remove after migration complete
   // Local templates (for Knowledge tab grouping only, NOT in marketplace)
@@ -99,6 +114,13 @@ export class KnowledgeManager {
       this.templateInstaller,
       this.templateRegistry
     );
+
+    // Initialize V1 Template Sections components
+    this.templateStore = new TemplateStore();
+    this.auditLogger = new AuditLogger();
+    this.versionManager = new VersionManager();
+    this.templateCloner = new TemplateCloner();
+    this.templateMigration = new TemplateMigration();
   }
 
   /**
@@ -158,6 +180,9 @@ export class KnowledgeManager {
 
       // Load template usage tracker
       await this.templateUsageTracker.load();
+
+      // V1 Migration: Detect if migration to template-as-sections is needed
+      await this.detectAndRunV1Migration();
 
       // Setup file watchers
       this.setupFileWatchers();
@@ -2787,6 +2812,478 @@ export class KnowledgeManager {
         success: false,
         message: `Template creation failed: ${error.message}`
       };
+    }
+  }
+
+  // ==========================================================================
+  // V1 TEMPLATE SECTIONS - PUBLIC API (Phase 3)
+  // ==========================================================================
+
+  /**
+   * Get all templates from TemplateStore (V1)
+   */
+  async getV1Templates(): Promise<MarketplaceTemplate[]> {
+    if (!this.v1Enabled) {
+      return [];
+    }
+    return this.templateStore.getAllTemplates();
+  }
+
+  /**
+   * Get a specific template by ID (V1)
+   */
+  async getV1Template(templateId: string): Promise<MarketplaceTemplate | null> {
+    if (!this.v1Enabled) {
+      return null;
+    }
+    return this.templateStore.getTemplate(templateId);
+  }
+
+  /**
+   * Create a new V1 template
+   */
+  async createV1Template(options: {
+    name: string;
+    description: string;
+    category: TemplateCategory;
+    tags: string[];
+    scope?: KnowledgeScope;
+  }): Promise<MarketplaceTemplate> {
+    const template = this.templateStore.createTemplate(
+      {
+        name: options.name,
+        description: options.description,
+        category: options.category,
+        tags: options.tags,
+        author: {
+          name: 'User',
+          email: 'user@local'
+        },
+        license: 'MIT',
+        source: TemplateSource.USER,
+        scope: options.scope
+      },
+      this.auditLogger
+    );
+
+    // Save to disk
+    await this.saveTemplateStoreToFiles();
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'Created V1 template',
+      'KnowledgeManager.createV1Template',
+      { templateId: template.id, name: template.name },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    return template;
+  }
+
+  /**
+   * Add item to V1 template
+   */
+  async addItemToV1Template(templateId: string, options: {
+    title: string;
+    body: string;
+    type: KnowledgeType;
+    scope: KnowledgeScope;
+    tags: string[];
+  }): Promise<KnowledgeItem> {
+    const item = this.templateStore.addItem(
+      templateId,
+      {
+        title: options.title,
+        body: options.body,
+        type: options.type,
+        scope: options.scope,
+        tags: options.tags
+      },
+      this.auditLogger
+    );
+
+    // Save to disk
+    await this.saveTemplateStoreToFiles();
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'Added item to V1 template',
+      'KnowledgeManager.addItemToV1Template',
+      { templateId, itemId: item.id, title: item.title },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    return item;
+  }
+
+  /**
+   * Update item in V1 template
+   */
+  async updateV1Item(templateId: string, itemId: string, updates: {
+    title?: string;
+    body?: string;
+    type?: KnowledgeType;
+    scope?: KnowledgeScope;
+    tags?: string[];
+  }): Promise<void> {
+    this.templateStore.updateItem(templateId, itemId, updates, this.auditLogger);
+
+    // Save to disk
+    await this.saveTemplateStoreToFiles();
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'Updated V1 item',
+      'KnowledgeManager.updateV1Item',
+      { templateId, itemId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+  }
+
+  /**
+   * Delete item from V1 template
+   */
+  async deleteV1Item(templateId: string, itemId: string): Promise<void> {
+    this.templateStore.deleteItem(templateId, itemId, this.auditLogger);
+
+    // Save to disk
+    await this.saveTemplateStoreToFiles();
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'Deleted V1 item',
+      'KnowledgeManager.deleteV1Item',
+      { templateId, itemId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+  }
+
+  /**
+   * Create version checkpoint for V1 template
+   */
+  async createV1Version(templateId: string, options: {
+    versionNumber: string;
+    description: string;
+  }): Promise<void> {
+    const template = this.templateStore.getTemplate(templateId);
+    if (!template) {
+      throw new Error(`Template not found: ${templateId}`);
+    }
+
+    this.versionManager.createVersion(
+      template,
+      {
+        versionNumber: options.versionNumber,
+        description: options.description,
+        createdBy: 'user'
+      },
+      this.auditLogger
+    );
+
+    // Update template in store
+    this.templateStore.updateTemplate(templateId, { versionHistory: template.versionHistory }, this.auditLogger);
+
+    // Save to disk
+    await this.saveTemplateStoreToFiles();
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'Created V1 version checkpoint',
+      'KnowledgeManager.createV1Version',
+      { templateId, versionNumber: options.versionNumber },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+  }
+
+  /**
+   * Clone a V1 template
+   */
+  async cloneV1Template(templateId: string, options: {
+    newName?: string;
+    shallow?: boolean;
+  }): Promise<MarketplaceTemplate> {
+    const sourceTemplate = this.templateStore.getTemplate(templateId);
+    if (!sourceTemplate) {
+      throw new Error(`Template not found: ${templateId}`);
+    }
+
+    const cloneResult = this.templateCloner.cloneTemplate(
+      sourceTemplate,
+      {
+        newName: options.newName,
+        shallow: options.shallow ?? false,
+        includeAuditLog: false,
+        includeVersionHistory: false,
+        createdBy: 'user'
+      },
+      this.auditLogger
+    );
+
+    if (!cloneResult.success || !cloneResult.clonedTemplate) {
+      throw new Error(`Clone failed: ${cloneResult.error}`);
+    }
+
+    // Add cloned template to store
+    this.templateStore.addTemplate(cloneResult.clonedTemplate, this.auditLogger);
+
+    // Save to disk
+    await this.saveTemplateStoreToFiles();
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'Cloned V1 template',
+      'KnowledgeManager.cloneV1Template',
+      { sourceId: templateId, cloneId: cloneResult.clonedTemplate.id },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    return cloneResult.clonedTemplate;
+  }
+
+  /**
+   * Get audit log for V1 template
+   */
+  async getV1AuditLog(templateId: string): Promise<any[]> {
+    const template = this.templateStore.getTemplate(templateId);
+    if (!template) {
+      return [];
+    }
+    return template.auditLog || [];
+  }
+
+  /**
+   * Check if V1 features are enabled
+   */
+  isV1Enabled(): boolean {
+    return this.v1Enabled;
+  }
+
+  // ==========================================================================
+  // V1 TEMPLATE SECTIONS - PRIVATE METHODS
+  // ==========================================================================
+
+  /**
+   * Detect if V1 migration is needed and run it
+   * Migration converts old structure (items + templates) to V1 (templates with embedded items)
+   */
+  private async detectAndRunV1Migration(): Promise<void> {
+    try {
+      logger.info(
+        LogCategory.EXTENSION,
+        'Checking if V1 migration is needed',
+        'KnowledgeManager.detectAndRunV1Migration',
+        {},
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      // Get existing items and templates
+      const existingItems = this.store.getAllItems();
+      const existingTemplates = await this.marketplaceTemplateManager.listAllTemplates();
+
+      // Check if migration is needed
+      const needsMigration = await this.templateMigration.needsMigration(
+        existingTemplates,
+        existingItems
+      );
+
+      if (!needsMigration) {
+        logger.info(
+          LogCategory.EXTENSION,
+          'V1 migration not needed - data structure is up to date',
+          'KnowledgeManager.detectAndRunV1Migration',
+          {},
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        return;
+      }
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'V1 migration required - starting migration',
+        'KnowledgeManager.detectAndRunV1Migration',
+        { itemCount: existingItems.length, templateCount: existingTemplates.length },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      // Run migration
+      const result = await this.templateMigration.migrate(existingItems, existingTemplates, {
+        archiveOldData: true,
+        createUngroupedTemplate: true,
+        dryRun: false
+      });
+
+      if (!result.success) {
+        logger.error(
+          LogCategory.EXTENSION,
+          'V1 migration failed',
+          'KnowledgeManager.detectAndRunV1Migration',
+          { errors: result.errors },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        return;
+      }
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'V1 migration completed successfully',
+        'KnowledgeManager.detectAndRunV1Migration',
+        {
+          templatesCreated: result.templatesCreated,
+          itemsMigrated: result.itemsMigrated,
+          orphanedItems: result.orphanedItems
+        },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      // Load migrated templates into TemplateStore
+      for (const template of result.migratedTemplates) {
+        this.templateStore.addTemplate(template, this.auditLogger);
+      }
+
+      // Save to disk
+      await this.saveTemplateStoreToFiles();
+
+      // Enable V1 features
+      this.v1Enabled = true;
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'V1 features enabled',
+        'KnowledgeManager.detectAndRunV1Migration',
+        {},
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      // Generate migration report
+      const report = this.templateMigration.generateReport(result);
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Migration report',
+        'KnowledgeManager.detectAndRunV1Migration',
+        { report },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+    } catch (error) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Error during V1 migration detection',
+        'KnowledgeManager.detectAndRunV1Migration',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+    }
+  }
+
+  /**
+   * Save TemplateStore contents to JSON files
+   * Organizes templates by source (bundled/, user/, cloned/, imported/)
+   */
+  private async saveTemplateStoreToFiles(): Promise<void> {
+    try {
+      const templates = this.templateStore.getAllTemplates();
+      const templatesDir = path.join(this.knowledgeBaseDir, 'templates-v1');
+
+      // Ensure directories exist
+      await vscode.workspace.fs.createDirectory(vscode.Uri.file(templatesDir));
+      await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.join(templatesDir, 'bundled')));
+      await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.join(templatesDir, 'user')));
+      await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.join(templatesDir, 'cloned')));
+      await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.join(templatesDir, 'imported')));
+
+      for (const template of templates) {
+        const filePath = this.fileSystem.getTemplateFilePath(template, templatesDir);
+        const json = this.fileSystem.toTemplateJson(template);
+
+        await vscode.workspace.fs.writeFile(
+          vscode.Uri.file(filePath),
+          Buffer.from(json, 'utf8')
+        );
+      }
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'Saved TemplateStore to files',
+        'KnowledgeManager.saveTemplateStoreToFiles',
+        { templateCount: templates.length, directory: templatesDir },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+    } catch (error) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to save TemplateStore to files',
+        'KnowledgeManager.saveTemplateStoreToFiles',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Load templates from JSON files into TemplateStore
+   */
+  private async loadTemplateStoreFromFiles(): Promise<void> {
+    try {
+      const templatesDir = path.join(this.knowledgeBaseDir, 'templates-v1');
+
+      // Check if directory exists
+      try {
+        await vscode.workspace.fs.stat(vscode.Uri.file(templatesDir));
+      } catch {
+        logger.debug(
+          LogCategory.EXTENSION,
+          'V1 templates directory does not exist yet',
+          'KnowledgeManager.loadTemplateStoreFromFiles',
+          { directory: templatesDir },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        return;
+      }
+
+      // Find all .json files in subdirectories
+      const pattern = new vscode.RelativePattern(templatesDir, '**/*.json');
+      const files = await vscode.workspace.findFiles(pattern);
+
+      let loadedCount = 0;
+      for (const fileUri of files) {
+        try {
+          const content = await vscode.workspace.fs.readFile(fileUri);
+          const json = Buffer.from(content).toString('utf8');
+
+          const template = await this.fileSystem.loadTemplateJson(fileUri.fsPath, json);
+          this.templateStore.addTemplate(template, this.auditLogger);
+          loadedCount++;
+        } catch (error) {
+          logger.warn(
+            LogCategory.EXTENSION,
+            'Failed to load template file',
+            'KnowledgeManager.loadTemplateStoreFromFiles',
+            { file: fileUri.fsPath, error },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+        }
+      }
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'Loaded templates into TemplateStore',
+        'KnowledgeManager.loadTemplateStoreFromFiles',
+        { loadedCount, totalFiles: files.length },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      if (loadedCount > 0) {
+        this.v1Enabled = true;
+      }
+    } catch (error) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to load TemplateStore from files',
+        'KnowledgeManager.loadTemplateStoreFromFiles',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
     }
   }
 }

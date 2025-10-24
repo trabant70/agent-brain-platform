@@ -124,11 +124,11 @@ export interface KnowledgeItem {
  * Metadata associated with a knowledge item
  */
 export interface KnowledgeItemMetadata {
-  /** When the file was created */
-  createdAt: Date;
+  /** When the file was created (Date object or ISO string) */
+  createdAt: Date | string;
 
-  /** When the file was last modified */
-  updatedAt: Date;
+  /** When the file was last modified (Date object or ISO string) */
+  updatedAt: Date | string;
 
   /** Optional author name */
   author?: string;
@@ -156,7 +156,8 @@ export enum TemplateCategory {
   SECURITY = 'security',
   ONBOARDING = 'onboarding',
   WORKFLOWS = 'workflows',
-  GENERAL = 'general'
+  GENERAL = 'general',
+  CUSTOM = 'custom'
 }
 
 /**
@@ -181,6 +182,9 @@ export interface TemplateAuthor {
 /**
  * Marketplace Template
  * Complete template structure with embedded items for marketplace
+ *
+ * Date fields are `Date | string` to support both runtime (Date objects)
+ * and postMessage serialization (ISO strings)
  */
 export interface MarketplaceTemplate {
   // Core Identity
@@ -190,8 +194,8 @@ export interface MarketplaceTemplate {
 
   // Versioning
   version: string;                // Semantic version (e.g., "1.0.0")
-  createdAt: string;              // ISO timestamp
-  updatedAt: string;              // ISO timestamp
+  createdAt: Date | string;       // ISO timestamp or Date object
+  updatedAt: Date | string;       // ISO timestamp or Date object
 
   // Classification
   category: TemplateCategory;     // Primary category
@@ -206,7 +210,7 @@ export interface MarketplaceTemplate {
 
   // Content
   items: KnowledgeItem[];         // Embedded full items
-  itemCount: number;              // Convenience field
+  itemCount?: number;             // Convenience field (optional, can be computed)
 
   // Runtime State (not persisted in template file)
   isInstalled?: boolean;          // Computed at load time
@@ -218,7 +222,7 @@ export interface MarketplaceTemplate {
   versionHistory?: TemplateVersion[];
 
   /** Last time a version checkpoint was created */
-  lastVersionedAt?: string;       // ISO timestamp
+  lastVersionedAt?: Date | string;  // ISO timestamp or Date object
 
   /** Audit trail of all changes */
   auditLog?: AuditLogEntry[];
@@ -710,7 +714,8 @@ export function getTemplateCategoryLabel(category: TemplateCategory): string {
     [TemplateCategory.SECURITY]: 'Security',
     [TemplateCategory.ONBOARDING]: 'Onboarding',
     [TemplateCategory.WORKFLOWS]: 'Workflows',
-    [TemplateCategory.GENERAL]: 'General'
+    [TemplateCategory.GENERAL]: 'General',
+    [TemplateCategory.CUSTOM]: 'Custom'
   };
   return labels[category];
 }
@@ -728,7 +733,8 @@ export function getTemplateCategoryIcon(category: TemplateCategory): string {
     [TemplateCategory.SECURITY]: '🔒',
     [TemplateCategory.ONBOARDING]: '🚀',
     [TemplateCategory.WORKFLOWS]: '🔄',
-    [TemplateCategory.GENERAL]: '📦'
+    [TemplateCategory.GENERAL]: '📦',
+    [TemplateCategory.CUSTOM]: '✨'
   };
   return icons[category];
 }
@@ -899,6 +905,9 @@ export interface AuditDetails {
 
   /** Additional context */
   context?: string;
+
+  /** Number of items (for bulk operations) */
+  itemCount?: number;
 }
 
 /**
@@ -908,8 +917,8 @@ export interface AuditLogEntry {
   /** Unique ID for this audit entry */
   id: string;
 
-  /** When the operation occurred */
-  timestamp: Date;
+  /** When the operation occurred (Date object or ISO string) */
+  timestamp: Date | string;
 
   /** Type of operation */
   operation: AuditOperation;
@@ -937,8 +946,8 @@ export interface TemplateVersion {
   /** Description of this version */
   description: string;
 
-  /** When this version was created */
-  createdAt: Date;
+  /** When this version was created (Date object or ISO string) */
+  createdAt: Date | string;
 
   /** Who created this version */
   createdBy: string;
@@ -968,8 +977,8 @@ export interface InjectionRecord {
   /** File path where injected (e.g., "docs/claude.md") */
   filePath: string;
 
-  /** When the item was injected */
-  injectedAt: Date;
+  /** When the item was injected (Date object or ISO string) */
+  injectedAt: Date | string;
 
   /** Who performed the injection */
   injectedBy: string;

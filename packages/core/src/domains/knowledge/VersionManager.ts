@@ -334,9 +334,11 @@ export class VersionManager {
       };
     }
 
-    const sortedVersions = [...versions].sort(
-      (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
-    );
+    const sortedVersions = [...versions].sort((a, b) => {
+      const aTime = a.createdAt instanceof Date ? a.createdAt.getTime() : new Date(a.createdAt).getTime();
+      const bTime = b.createdAt instanceof Date ? b.createdAt.getTime() : new Date(b.createdAt).getTime();
+      return aTime - bTime;
+    });
 
     const totalItems = versions.reduce((sum, v) => sum + v.itemCount, 0);
     const averageItemCount = totalItems / versions.length;

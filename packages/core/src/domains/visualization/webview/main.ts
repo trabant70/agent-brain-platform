@@ -288,6 +288,31 @@ function setupMessageHandling(): void {
                     console.error('[Webview] Error from extension:', message.message);
                     showError(message.message);
                     break;
+
+                default:
+                    // Route V1 Template Sections messages to KnowledgeViewController
+                    if (message.type.startsWith('v1:')) {
+                        const knowledgeController = (window as any).knowledgeController;
+                        if (knowledgeController && typeof knowledgeController.handleMessage === 'function') {
+                            knowledgeController.handleMessage(message);
+                            webviewLogger.debug(
+                                LogCategory.WEBVIEW,
+                                `Routed V1 message to KnowledgeViewController: ${message.type}`,
+                                'setupMessageHandling',
+                                { messageType: message.type },
+                                LogPathway.KNOWLEDGE_MANAGEMENT
+                            );
+                        } else {
+                            webviewLogger.warn(
+                                LogCategory.WEBVIEW,
+                                `KnowledgeViewController not available for V1 message: ${message.type}`,
+                                'setupMessageHandling',
+                                { messageType: message.type },
+                                LogPathway.KNOWLEDGE_MANAGEMENT
+                            );
+                        }
+                    }
+                    break;
             }
         } catch (error) {
             console.error('[Webview] Error handling message:', error);

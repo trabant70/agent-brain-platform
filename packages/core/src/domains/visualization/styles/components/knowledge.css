@@ -938,3 +938,392 @@
     padding-top: 16px;
   }
 }
+
+/* ========================================
+   V1 Template Sections Styles
+   ======================================== */
+
+/* View Mode Toggle */
+.view-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  background: var(--vscode-editor-background);
+  border-radius: 4px;
+  border: 1px solid var(--vscode-panel-border);
+  margin-left: auto;
+  margin-right: 8px;
+}
+
+.view-mode-toggle label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--vscode-descriptionForeground);
+  margin-right: 4px;
+}
+
+.view-btn {
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.view-btn:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.view-btn.active {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.view-btn:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 2px;
+}
+
+/* Template Section Header */
+.template-section-header {
+  background: var(--vscode-editor-background);
+  border-left: 4px solid var(--vscode-textLink-activeForeground);
+  font-weight: 600;
+  transition: background-color 0.15s ease;
+  cursor: pointer;
+}
+
+.template-section-header:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.template-section-header td {
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+
+.template-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.template-meta {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  align-items: center;
+}
+
+.item-count {
+  font-weight: 600;
+  color: var(--vscode-textLink-activeForeground);
+}
+
+.version {
+  padding: 2px 6px;
+  background: var(--vscode-textCodeBlock-background);
+  border-radius: 3px;
+  font-family: var(--vscode-editor-font-family, 'Courier New', monospace);
+  font-weight: 500;
+}
+
+.last-versioned {
+  font-style: italic;
+}
+
+/* Template Item Row */
+.template-item-row {
+  background: var(--vscode-editor-background);
+  border-left: 4px solid transparent;
+  transition: background-color 0.15s ease;
+}
+
+.template-item-row:hover {
+  background: var(--vscode-list-hoverBackground);
+  border-left-color: var(--vscode-list-hoverBackground);
+}
+
+.template-item-row td {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+.item-indent {
+  width: 20px;
+  height: 1px;
+  margin-left: 24px;
+  border-left: 2px solid var(--vscode-panel-border);
+  opacity: 0.5;
+}
+
+.empty-items-row {
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* Expand Button */
+.expand-btn {
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  transition: all 0.2s ease;
+  border-radius: 3px;
+  min-width: 28px;
+  text-align: center;
+}
+
+.expand-btn:hover {
+  background: var(--vscode-list-hoverBackground);
+  color: var(--vscode-textLink-activeForeground);
+}
+
+.expand-btn:active {
+  transform: scale(0.95);
+}
+
+.expand-btn:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  outline-offset: 1px;
+}
+
+/* Action Buttons in V1 Template Rows */
+.template-section-header .action-btn,
+.template-item-row .action-btn {
+  padding: 4px 6px;
+  margin: 0 2px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  opacity: 0.7;
+  transition: all 0.15s ease;
+  border-radius: 3px;
+}
+
+.template-section-header .action-btn:hover,
+.template-item-row .action-btn:hover {
+  opacity: 1;
+  background: var(--vscode-toolbar-hoverBackground);
+  transform: scale(1.1);
+}
+
+.template-section-header .action-btn.danger:hover,
+.template-item-row .action-btn.danger:hover {
+  background: rgba(255, 68, 68, 0.15);
+  color: #ff4444;
+}
+
+.template-section-header .action-btn:active,
+.template-item-row .action-btn:active {
+  transform: scale(0.95);
+}
+
+/* Audit Log Table */
+.audit-log-container {
+  max-height: 600px;
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  background: var(--vscode-editor-background);
+}
+
+.audit-log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.audit-log-table thead {
+  position: sticky;
+  top: 0;
+  background: var(--vscode-editor-background);
+  z-index: 1;
+  box-shadow: 0 1px 0 var(--vscode-panel-border);
+}
+
+.audit-log-table th {
+  text-align: left;
+  padding: 12px 8px;
+  font-weight: 600;
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.audit-log-table tbody tr {
+  border-bottom: 1px solid var(--vscode-panel-border);
+  transition: background-color 0.15s ease;
+}
+
+.audit-log-table tbody tr:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.audit-log-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.audit-log-table td {
+  padding: 12px 8px;
+  vertical-align: top;
+}
+
+.audit-operation {
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* V1 Empty State */
+.knowledge-empty-state.v1-empty {
+  padding: 60px 20px;
+}
+
+.knowledge-empty-state.v1-empty .empty-icon {
+  font-size: 64px;
+  margin-bottom: 20px;
+  opacity: 0.6;
+}
+
+.knowledge-empty-state.v1-empty .empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--vscode-foreground);
+}
+
+.knowledge-empty-state.v1-empty .empty-description {
+  font-size: 14px;
+  color: var(--vscode-descriptionForeground);
+  max-width: 400px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* V1 Template Forms in Modals */
+.v1-template-form .form-group {
+  margin-bottom: 16px;
+}
+
+.v1-template-form label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--vscode-foreground);
+}
+
+.v1-template-form input[type="text"],
+.v1-template-form textarea,
+.v1-template-form select {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 3px;
+  font-size: 13px;
+  font-family: var(--vscode-font-family);
+  transition: border-color 0.15s ease;
+}
+
+.v1-template-form input[type="text"]:focus,
+.v1-template-form textarea:focus,
+.v1-template-form select:focus {
+  outline: none;
+  border-color: var(--vscode-focusBorder);
+  box-shadow: 0 0 0 1px var(--vscode-focusBorder);
+}
+
+.v1-template-form textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: var(--vscode-editor-font-family, 'Courier New', monospace);
+}
+
+.v1-template-form input[type="checkbox"] {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.v1-template-form .form-hint {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.v1-template-form .info-box {
+  padding: 12px 14px;
+  background: var(--vscode-textBlockQuote-background);
+  border-left: 4px solid var(--vscode-textLink-activeForeground);
+  border-radius: 3px;
+  font-size: 13px;
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.v1-template-form .source-template-info {
+  padding: 12px 14px;
+  background: var(--vscode-textBlockQuote-background);
+  border-left: 4px solid var(--vscode-textLink-activeForeground);
+  border-radius: 3px;
+  margin-bottom: 16px;
+}
+
+.v1-template-form .source-template-info .template-name {
+  font-weight: 600;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.v1-template-form .source-template-info .template-stats {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+
+/* Responsive adjustments for V1 UI */
+@media (max-width: 768px) {
+  .view-mode-toggle {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  .view-mode-toggle label {
+    margin-bottom: 4px;
+  }
+
+  .view-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .template-meta {
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
+}
