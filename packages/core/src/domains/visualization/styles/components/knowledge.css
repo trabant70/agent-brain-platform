@@ -1385,3 +1385,57 @@
 .template-item-row.editing .action-btn[data-action="cancel-edit"] {
   color: var(--vscode-errorForeground);
 }
+
+/* ===========================
+   Drag-Drop Styles
+   =========================== */
+
+/* Draggable items */
+.template-item-row[draggable="true"] {
+  cursor: move;
+}
+
+.template-item-row.dragging {
+  opacity: 0.5;
+  background: var(--vscode-list-activeSelectionBackground);
+}
+
+/* Drop zones */
+.template-drop-zone {
+  display: none; /* Hidden by default */
+  transition: all 0.2s ease;
+}
+
+.template-drop-zone.drop-zone-active {
+  display: table-row;
+  animation: dropZonePulse 0.5s ease-in-out infinite;
+}
+
+.drop-zone-cell {
+  padding: 20px;
+  text-align: center;
+  background: var(--vscode-editor-background);
+  border: 2px dashed var(--vscode-textLink-activeForeground);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.drop-zone-active .drop-zone-cell {
+  background: var(--vscode-list-hoverBackground);
+  border-color: var(--vscode-focusBorder);
+}
+
+.drop-zone-indicator {
+  color: var(--vscode-textLink-activeForeground);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+@keyframes dropZonePulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}

@@ -32,6 +32,7 @@ export class V1TemplatesTableController {
   private templates: MarketplaceTemplate[] = [];
   private expandedTemplates: Set<string> = new Set();
   private inlineEditingItem: { templateId: string; itemId: string } | null = null;
+  private draggedItem: { templateId: string; itemId: string } | null = null;
 
   constructor(private callbacks: V1TemplatesTableCallbacks) {
     webviewLogger.info(
@@ -90,6 +91,10 @@ export class V1TemplatesTableController {
 
     // Item rows (if expanded)
     if (this.expandedTemplates.has(template.id)) {
+      // Drop zone (always visible when expanded)
+      const dropZone = this.createDropZoneRow(template.id);
+      tbody.appendChild(dropZone);
+
       const items = template.items || [];
       if (items.length === 0) {
         // Show empty state within template
@@ -191,6 +196,7 @@ export class V1TemplatesTableController {
     row.className = 'template-item-row';
     row.dataset.templateId = templateId;
     row.dataset.itemId = item.id;
+    row.draggable = true;
 
     const typeLabel = getKnowledgeTypeLabel(item.type as KnowledgeType);
 
@@ -228,6 +234,10 @@ export class V1TemplatesTableController {
         }
       });
     });
+
+    // Drag-drop event listeners
+    row.addEventListener('dragstart', (e) => this.handleDragStart(e, templateId, item.id));
+    row.addEventListener('dragend', (e) => this.handleDragEnd(e));
 
     return row;
   }
@@ -431,6 +441,152 @@ export class V1TemplatesTableController {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  /**
+   * Create drop zone row for drag-drop
+   */
+  private createDropZoneRow(templateId: string): HTMLElement {
+    const row = document.createElement('tr');
+    row.className = 'template-drop-zone';
+    row.dataset.templateId = templateId;
+
+    row.innerHTML = `
+      <td colspan="7" class="drop-zone-cell">
+        <div class="drop-zone-indicator">Drop items here to add to template</div>
+      </td>
+    `;
+
+    // Event listeners
+    row.addEventListener('dragover', (e) => this.handleDragOver(e, templateId));
+    row.addEventListener('dragleave', (e) => this.handleDragLeave(e));
+    row.addEventListener('drop', (e) => this.handleDrop(e, templateId));
+
+    return row;
+  }
+
+  /**
+   * Handle drag start
+   */
+  private handleDragStart(e: DragEvent, templateId: string, itemId: string): void {
+    this.draggedItem = { templateId, itemId };
+    e.dataTransfer!.effectAllowed = 'copyMove';
+    e.dataTransfer!.setData('text/plain', itemId);
+
+    const target = e.currentTarget as HTMLElement;
+    target.classList.add('dragging');
+
+    webviewLogger.debug(
+      LogCategory.UI,
+      'Drag started',
+      'V1TemplatesTableController.handleDragStart',
+      { templateId, itemId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+  }
+
+  /**
+   * Handle drag end
+   */
+  private handleDragEnd(e: DragEvent): void {
+    const target = e.currentTarget as HTMLElement;
+    target.classList.remove('dragging');
+    this.clearDropZoneHighlights();
+
+    webviewLogger.debug(
+      LogCategory.UI,
+      'Drag ended',
+      'V1TemplatesTableController.handleDragEnd',
+      undefined,
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+  }
+
+  /**
+   * Handle drag over
+   */
+  private handleDragOver(e: DragEvent, targetTemplateId: string): void {
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Set drop effect based on Ctrl key
+    e.dataTransfer!.dropEffect = e.ctrlKey ? 'copy' : 'move';
+
+    // Highlight drop zone
+    const target = e.currentTarget as HTMLElement;
+    target.classList.add('drop-zone-active');
+  }
+
+  /**
+   * Handle drag leave
+   */
+  private handleDragLeave(e: DragEvent): void {
+    const target = e.currentTarget as HTMLElement;
+    target.classList.remove('drop-zone-active');
+  }
+
+  /**
+   * Handle drop
+   */
+  private handleDrop(e: DragEvent, targetTemplateId: string): void {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!this.draggedItem) {
+      webviewLogger.warn(
+        LogCategory.UI,
+        'Drop without dragged item',
+        'V1TemplatesTableController.handleDrop',
+        undefined,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+      return;
+    }
+
+    const { templateId: sourceTemplateId, itemId } = this.draggedItem;
+    const isCopy = e.ctrlKey;
+
+    // Same template and not copying? No-op
+    if (sourceTemplateId === targetTemplateId && !isCopy) {
+      webviewLogger.debug(
+        LogCategory.UI,
+        'Drop to same template ignored',
+        'V1TemplatesTableController.handleDrop',
+        { sourceTemplateId, targetTemplateId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+      this.clearDropZoneHighlights();
+      this.draggedItem = null;
+      return;
+    }
+
+    webviewLogger.info(
+      LogCategory.UI,
+      isCopy ? 'Item copied via drag-drop' : 'Item moved via drag-drop',
+      'V1TemplatesTableController.handleDrop',
+      { itemId, sourceTemplateId, targetTemplateId, isCopy },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    // Call appropriate callback
+    if (isCopy) {
+      this.callbacks.onCopyItem(itemId, sourceTemplateId, targetTemplateId);
+    } else {
+      this.callbacks.onMoveItem(itemId, sourceTemplateId, targetTemplateId);
+    }
+
+    // Clean up
+    this.clearDropZoneHighlights();
+    this.draggedItem = null;
+  }
+
+  /**
+   * Clear drop zone highlights
+   */
+  private clearDropZoneHighlights(): void {
+    document.querySelectorAll('.drop-zone-active').forEach(el => {
+      el.classList.remove('drop-zone-active');
+    });
   }
 
   /**
