@@ -219,6 +219,7 @@ export class KnowledgeManager {
 
   /**
    * Refresh all knowledge items from disk
+   * Items are now stored embedded in templates, not as separate .md files
    */
   async refreshAll(): Promise<void> {
     logger.info(
@@ -243,66 +244,40 @@ export class KnowledgeManager {
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
 
-      // Find all markdown files in .agent-brain
-      const pattern = new vscode.RelativePattern(
-        this.workspaceRoot,
-        '.agent-brain/**/*.md'
-      );
-      const files = await vscode.workspace.findFiles(pattern);
+      // Load templates from disk (v1 templates)
+      await this.loadTemplatesFromDisk();
 
-      logger.info(
-        LogCategory.EXTENSION,
-        'Found markdown files',
-        'KnowledgeManager.refreshAll',
-        { fileCount: files.length, files: files.map(f => f.fsPath) },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-      );
+      // Extract all items from templates and add to store
+      const allTemplates = this.templateStore.getAllTemplates();
+      let itemCount = 0;
 
-      // Load each file
-      let successCount = 0;
-      let errorCount = 0;
-
-      for (const uri of files) {
-        try {
-          await this.loadFile(uri);
-          successCount++;
-        } catch (error) {
-          errorCount++;
-          logger.error(
-            LogCategory.EXTENSION,
-            'Failed to load file',
-            'KnowledgeManager.refreshAll',
-            { filePath: uri.fsPath, error },
-            LogPathway.KNOWLEDGE_MANAGEMENT
-          );
-          // Continue loading other files
+      for (const template of allTemplates) {
+        if (template.items && Array.isArray(template.items)) {
+          for (const item of template.items) {
+            this.store.addItem(item);
+            itemCount++;
+          }
         }
       }
 
-      const finalCount = this.store.getAllItems().length;
       logger.info(
         LogCategory.EXTENSION,
-        'Knowledge items refresh complete',
+        'Knowledge items loaded from templates',
         'KnowledgeManager.refreshAll',
         {
-          filesFound: files.length,
-          filesLoaded: successCount,
-          filesFailed: errorCount,
-          itemsInStore: finalCount
+          templatesLoaded: allTemplates.length,
+          itemsInStore: itemCount
         },
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
 
-      // Load templates from disk
-      await this.loadTemplatesFromDisk();
-
       logger.info(
         LogCategory.EXTENSION,
-        'Knowledge refresh complete (items + templates)',
+        'Knowledge refresh complete (items from templates)',
         'KnowledgeManager.refreshAll',
         {
           itemsInStore: this.store.getAllItems().length,
-          templatesInMarketplace: this.marketplaceTemplateManager.getAllTemplates().length
+          templatesLoaded: allTemplates.length
         },
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
@@ -320,6 +295,7 @@ export class KnowledgeManager {
 
   /**
    * Create a new knowledge item
+   * Items are added to the "Ungrouped Items" default template
    */
   async createItem(options: CreateKnowledgeItemOptions): Promise<KnowledgeItem> {
     logger.info(
@@ -331,57 +307,78 @@ export class KnowledgeManager {
     );
 
     try {
-      // Generate file path based on type
-      const filename = this.generateFilename(options.title);
-      const typeDir = this.getDirectoryForType(options.type);
-      const filePath = path.join(this.knowledgeBaseDir, typeDir, filename);
-
-      // Create the knowledge item
       // Handle empty body gracefully
       const finalBody = options.body && options.body.trim().length > 0
         ? options.body.trim()
         : '_No description provided._';
 
+      // Generate unique ID
+      const itemId = options.id || `item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
+      // Create the knowledge item (no file path - lives in template)
       const item: KnowledgeItem = {
-        id: options.id || this.fileSystem.generateId(filePath),  // Use provided ID or generate from path
+        id: itemId,
         type: options.type,
         scope: options.scope,
         title: options.title,
         body: finalBody,
         source: options.source,
         tags: options.tags || [],
-        path: filePath,
-        relativePath: this.fileSystem.getRelativePath(filePath),
+        path: '', // No file path - item lives in template
+        relativePath: '', // No relative path
         valid: true,
         metadata: {
           createdAt: new Date(),
           updatedAt: new Date(),
           author: options.author
-        }
+        },
+        templateId: 'default.ungrouped-items',
+        templateName: 'Ungrouped Items',
+        injectedTo: []
       };
-
-      // Convert to markdown with frontmatter
-      const markdown = this.fileSystem.toMarkdownWithFrontmatter(item);
-
-      // Ensure directory exists
-      await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.dirname(filePath)));
-
-      // Write file
-      await vscode.workspace.fs.writeFile(
-        vscode.Uri.file(filePath),
-        Buffer.from(markdown, 'utf8')
-      );
-
-      logger.debug(
-        LogCategory.EXTENSION,
-        'Knowledge item file written',
-        'KnowledgeManager.createItem',
-        { filePath, itemId: item.id },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-      );
 
       // Add to store immediately
       this.store.addItem(item);
+
+      // Get or create the "Ungrouped Items" template
+      const defaultTemplateId = 'default.ungrouped-items';
+      let defaultTemplate = this.templateStore.getTemplate(defaultTemplateId);
+
+      if (!defaultTemplate) {
+        // Create default template if it doesn't exist
+        defaultTemplate = {
+          id: defaultTemplateId,
+          name: 'Ungrouped Items',
+          description: 'Default container for knowledge items not yet organized into templates',
+          version: '1.0.0',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          category: 'organization',
+          tags: ['default', 'ungrouped'],
+          author: {
+            name: 'System',
+            email: 'system@agent-brain.local'
+          },
+          license: 'MIT',
+          source: 'user',
+          items: [],
+          itemCount: 0,
+          versionHistory: [],
+          auditLog: []
+        };
+        this.templateStore.addTemplate(defaultTemplate);
+      }
+
+      // Add item to template
+      if (!defaultTemplate.items) {
+        defaultTemplate.items = [];
+      }
+      defaultTemplate.items.push(item);
+      defaultTemplate.itemCount = defaultTemplate.items.length;
+      defaultTemplate.updatedAt = new Date().toISOString();
+
+      // Save template to disk
+      await this.saveTemplateStoreToFiles();
 
       // Record knowledge event
       await this.eventStorage.recordEvent({
@@ -389,15 +386,15 @@ export class KnowledgeManager {
         knowledgeItemId: item.id,
         knowledgeItemTitle: item.title,
         knowledgeItemType: item.type,
-        targetFile: item.relativePath,
+        targetFile: `template:${defaultTemplateId}`,
         actor: 'agent' // Coding agent created this item
       });
 
       logger.info(
         LogCategory.EXTENSION,
-        'Knowledge item created',
+        'Knowledge item created in template',
         'KnowledgeManager.createItem',
-        { itemId: item.id, filePath },
+        { itemId: item.id, templateId: defaultTemplateId },
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
 
@@ -416,6 +413,7 @@ export class KnowledgeManager {
 
   /**
    * Update an existing knowledge item
+   * Updates the item in its template and saves the template to disk
    */
   async updateItem(id: string, updates: Partial<KnowledgeItem>): Promise<void> {
     logger.info(
@@ -438,20 +436,31 @@ export class KnowledgeManager {
       // Get updated item
       const updated = this.store.getItem(id)!;
 
-      // Convert to markdown
-      const markdown = this.fileSystem.toMarkdownWithFrontmatter(updated);
+      // Find the template containing this item
+      const templateId = existing.templateId || 'default.ungrouped-items';
+      const template = this.templateStore.getTemplate(templateId);
 
-      // Write to file
-      await vscode.workspace.fs.writeFile(
-        vscode.Uri.file(updated.path),
-        Buffer.from(markdown, 'utf8')
-      );
+      if (!template) {
+        throw new Error(`Template not found: ${templateId}`);
+      }
+
+      // Update item in template
+      if (template.items) {
+        const itemIndex = template.items.findIndex(i => i.id === id);
+        if (itemIndex !== -1) {
+          template.items[itemIndex] = updated;
+          template.updatedAt = new Date().toISOString();
+        }
+      }
+
+      // Save template to disk
+      await this.saveTemplateStoreToFiles();
 
       logger.info(
         LogCategory.EXTENSION,
-        'Knowledge item updated',
+        'Knowledge item updated in template',
         'KnowledgeManager.updateItem',
-        { itemId: id, path: updated.path },
+        { itemId: id, templateId },
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
     } catch (error) {
@@ -468,6 +477,7 @@ export class KnowledgeManager {
 
   /**
    * Delete a knowledge item
+   * Removes the item from its template and saves the template to disk
    */
   async deleteItem(id: string): Promise<void> {
     logger.info(
@@ -491,11 +501,25 @@ export class KnowledgeManager {
         return;  // Already deleted
       }
 
-      // Delete file
-      await vscode.workspace.fs.delete(vscode.Uri.file(item.path));
+      // Find the template containing this item
+      const templateId = item.templateId || 'default.ungrouped-items';
+      const template = this.templateStore.getTemplate(templateId);
+
+      if (template && template.items) {
+        // Remove item from template
+        const itemIndex = template.items.findIndex(i => i.id === id);
+        if (itemIndex !== -1) {
+          template.items.splice(itemIndex, 1);
+          template.itemCount = template.items.length;
+          template.updatedAt = new Date().toISOString();
+        }
+      }
 
       // Remove from store
       this.store.deleteItem(id);
+
+      // Save template to disk
+      await this.saveTemplateStoreToFiles();
 
       // Record knowledge event
       await this.eventStorage.recordEvent({
@@ -503,15 +527,15 @@ export class KnowledgeManager {
         knowledgeItemId: item.id,
         knowledgeItemTitle: item.title,
         knowledgeItemType: item.type,
-        targetFile: item.relativePath,
+        targetFile: `template:${templateId}`,
         actor: 'user' // User initiated deletion
       });
 
       logger.info(
         LogCategory.EXTENSION,
-        'Knowledge item deleted and event recorded',
+        'Knowledge item deleted from template and event recorded',
         'KnowledgeManager.deleteItem',
-        { itemId: id, path: item.path },
+        { itemId: id, templateId },
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
     } catch (error) {
@@ -1395,7 +1419,7 @@ export class KnowledgeManager {
 
       // Now call the TemplateEngine import with actual item IDs
       // We need to update the store items first, then import the template
-      await this.reloadKnowledgeBase();
+      await this.refreshAll();
 
       // Create or update template
       const templateName = importOptions.templateNameOverride || parsed.name;
@@ -1770,217 +1794,60 @@ export class KnowledgeManager {
 
   /**
    * Setup file watchers for .agent-brain directory
+   * Watch template JSON files since items are embedded in templates
    */
   private setupFileWatchers(): void {
     const pattern = new vscode.RelativePattern(
       this.workspaceRoot,
-      '.agent-brain/**/*.md'
+      '.agent-brain/templates-v1/**/*.json'
     );
 
     const watcher = vscode.workspace.createFileSystemWatcher(pattern);
 
-    // File changed
+    // File changed - reload all items from templates
     watcher.onDidChange(async (uri) => {
-      await this.handleFileChange(uri);
+      await this.handleTemplateChange(uri);
     });
 
-    // File created
+    // File created - reload all items from templates
     watcher.onDidCreate(async (uri) => {
-      await this.handleFileCreate(uri);
+      await this.handleTemplateChange(uri);
     });
 
-    // File deleted
+    // File deleted - reload all items from templates
     watcher.onDidDelete(async (uri) => {
-      await this.handleFileDelete(uri);
+      await this.handleTemplateChange(uri);
     });
 
     this.watchers.push(watcher);
   }
 
   /**
-   * Handle file change event
+   * Handle template file change event
+   * Reloads all items from templates when a template JSON file changes
    */
-  private async handleFileChange(uri: vscode.Uri): Promise<void> {
+  private async handleTemplateChange(uri: vscode.Uri): Promise<void> {
     logger.debug(
       LogCategory.EXTENSION,
-      'File changed, reloading',
-      'KnowledgeManager.handleFileChange',
+      'Template file changed, reloading all items',
+      'KnowledgeManager.handleTemplateChange',
       { filePath: uri.fsPath },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
 
     try {
-      await this.loadFile(uri);
+      await this.refreshAll();
     } catch (error) {
       logger.error(
         LogCategory.EXTENSION,
-        'Failed to reload changed file',
-        'KnowledgeManager.handleFileChange',
+        'Failed to reload items after template change',
+        'KnowledgeManager.handleTemplateChange',
         { filePath: uri.fsPath, error },
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
     }
   }
 
-  /**
-   * Handle file create event
-   */
-  private async handleFileCreate(uri: vscode.Uri): Promise<void> {
-    logger.debug(
-      LogCategory.EXTENSION,
-      'New file created, loading',
-      'KnowledgeManager.handleFileCreate',
-      { filePath: uri.fsPath },
-      LogPathway.KNOWLEDGE_MANAGEMENT
-    );
-
-    try {
-      await this.loadFile(uri);
-    } catch (error) {
-      logger.error(
-        LogCategory.EXTENSION,
-        'Failed to load new file',
-        'KnowledgeManager.handleFileCreate',
-        { filePath: uri.fsPath, error },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-      );
-    }
-  }
-
-  /**
-   * Handle file delete event
-   */
-  private async handleFileDelete(uri: vscode.Uri): Promise<void> {
-    logger.debug(
-      LogCategory.EXTENSION,
-      'File deleted, removing from store',
-      'KnowledgeManager.handleFileDelete',
-      { filePath: uri.fsPath },
-      LogPathway.KNOWLEDGE_MANAGEMENT
-    );
-
-    try {
-      const item = this.store.getItemByPath(uri.fsPath);
-      if (item) {
-        this.store.deleteItem(item.id);
-        logger.debug(
-          LogCategory.EXTENSION,
-          'Item removed from store',
-          'KnowledgeManager.handleFileDelete',
-          { itemId: item.id, filePath: uri.fsPath },
-          LogPathway.KNOWLEDGE_MANAGEMENT
-        );
-      }
-    } catch (error) {
-      logger.error(
-        LogCategory.EXTENSION,
-        'Failed to handle file deletion',
-        'KnowledgeManager.handleFileDelete',
-        { filePath: uri.fsPath, error },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-      );
-    }
-  }
-
-  /**
-   * Load a single markdown file into the store
-   */
-  private async loadFile(uri: vscode.Uri): Promise<void> {
-    logger.debug(
-      LogCategory.EXTENSION,
-      'Loading file',
-      'KnowledgeManager.loadFile',
-      { filePath: uri.fsPath },
-      LogPathway.KNOWLEDGE_MANAGEMENT
-    );
-
-    try {
-      // Skip templates directory
-      if (uri.fsPath.includes('/templates/') || uri.fsPath.includes('\\templates\\')) {
-        logger.debug(
-          LogCategory.EXTENSION,
-          'Skipping template file',
-          'KnowledgeManager.loadFile',
-          { filePath: uri.fsPath },
-          LogPathway.KNOWLEDGE_MANAGEMENT
-        );
-        return;
-      }
-
-      // Read file
-      const content = await vscode.workspace.fs.readFile(uri);
-      const contentStr = Buffer.from(content).toString('utf8');
-
-      logger.debug(
-        LogCategory.EXTENSION,
-        'File content read',
-        'KnowledgeManager.loadFile',
-        { filePath: uri.fsPath, contentLength: contentStr.length },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-      );
-
-      // Get file stats
-      const stats = await vscode.workspace.fs.stat(uri);
-
-      // Parse into knowledge item
-      const item = await this.fileSystem.loadMarkdownFile(
-        uri.fsPath,
-        contentStr,
-        {
-          size: stats.size,
-          mtime: new Date(stats.mtime),
-          ctime: new Date(stats.ctime)
-        }
-      );
-
-      logger.debug(
-        LogCategory.EXTENSION,
-        'File parsed into knowledge item',
-        'KnowledgeManager.loadFile',
-        {
-          filePath: uri.fsPath,
-          itemId: item.id,
-          itemType: item.type,
-          itemTitle: item.title,
-          itemValid: item.valid
-        },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-      );
-
-      // Check if item already exists
-      const existing = this.store.getItemByPath(uri.fsPath);
-      if (existing) {
-        // Update existing
-        this.store.updateItem(existing.id, item);
-        logger.debug(
-          LogCategory.EXTENSION,
-          'Updated existing item in store',
-          'KnowledgeManager.loadFile',
-          { itemId: existing.id, filePath: uri.fsPath },
-          LogPathway.KNOWLEDGE_MANAGEMENT
-        );
-      } else {
-        // Add new
-        this.store.addItem(item);
-        logger.debug(
-          LogCategory.EXTENSION,
-          'Added new item to store',
-          'KnowledgeManager.loadFile',
-          { itemId: item.id, filePath: uri.fsPath },
-          LogPathway.KNOWLEDGE_MANAGEMENT
-        );
-      }
-    } catch (error) {
-      logger.error(
-        LogCategory.EXTENSION,
-        'Failed to load file',
-        'KnowledgeManager.loadFile',
-        { filePath: uri.fsPath, error },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-      );
-      throw error;
-    }
-  }
 
   /**
    * Save a template to the templates directory
@@ -2081,14 +1948,6 @@ export class KnowledgeManager {
       .substring(0, 50);
   }
 
-  /**
-   * Get directory for a knowledge type
-   */
-  private getDirectoryForType(type: KnowledgeType): string {
-    // Flat structure - all knowledge items in single directory
-    // Type information is stored in YAML frontmatter
-    return 'items';
-  }
 
   /**
    * Generate a unique template ID
