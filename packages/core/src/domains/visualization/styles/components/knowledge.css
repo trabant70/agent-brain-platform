@@ -1327,3 +1327,61 @@
     align-items: flex-start;
   }
 }
+
+/* ===========================
+   Inline Editing Styles
+   =========================== */
+
+/* Inline edit input fields */
+.inline-edit-input {
+  width: 100%;
+  padding: 4px 8px;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 3px;
+  font-family: var(--vscode-font-family);
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.inline-edit-input:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  border-color: var(--vscode-focusBorder);
+}
+
+.inline-edit-input::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+  opacity: 0.7;
+}
+
+/* Editing row highlight */
+.template-item-row.editing {
+  background: var(--vscode-editor-selectionBackground);
+  border-left: 3px solid var(--vscode-textLink-activeForeground);
+}
+
+.template-item-row.editing td {
+  padding: 6px 8px;
+}
+
+/* Select dropdowns in editing mode */
+.template-item-row.editing select.inline-edit-input {
+  cursor: pointer;
+}
+
+/* Input field focus states */
+.template-item-row.editing input.inline-edit-input:focus,
+.template-item-row.editing select.inline-edit-input:focus {
+  background: var(--vscode-input-background);
+  box-shadow: 0 0 0 2px var(--vscode-focusBorder);
+}
+
+/* Action buttons in editing mode */
+.template-item-row.editing .action-btn[data-action="save-edit"] {
+  color: var(--vscode-charts-green);
+}
+
+.template-item-row.editing .action-btn[data-action="cancel-edit"] {
+  color: var(--vscode-errorForeground);
+}

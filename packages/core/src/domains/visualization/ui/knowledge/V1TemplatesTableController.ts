@@ -31,6 +31,7 @@ export interface V1TemplatesTableCallbacks {
 export class V1TemplatesTableController {
   private templates: MarketplaceTemplate[] = [];
   private expandedTemplates: Set<string> = new Set();
+  private inlineEditingItem: { templateId: string; itemId: string } | null = null;
 
   constructor(private callbacks: V1TemplatesTableCallbacks) {
     webviewLogger.info(
@@ -172,6 +173,20 @@ export class V1TemplatesTableController {
    * Create item row within a template
    */
   private createItemRow(templateId: string, item: KnowledgeItem): HTMLElement {
+    const isEditing = this.inlineEditingItem?.templateId === templateId &&
+                      this.inlineEditingItem?.itemId === item.id;
+
+    if (isEditing) {
+      return this.createEditableItemRow(templateId, item);
+    } else {
+      return this.createReadOnlyItemRow(templateId, item);
+    }
+  }
+
+  /**
+   * Create read-only item row
+   */
+  private createReadOnlyItemRow(templateId: string, item: KnowledgeItem): HTMLElement {
     const row = document.createElement('tr');
     row.className = 'template-item-row';
     row.dataset.templateId = templateId;
@@ -212,6 +227,59 @@ export class V1TemplatesTableController {
           this.handleItemAction(action, tId, iId);
         }
       });
+    });
+
+    return row;
+  }
+
+  /**
+   * Create editable item row with input fields
+   */
+  private createEditableItemRow(templateId: string, item: KnowledgeItem): HTMLElement {
+    const row = document.createElement('tr');
+    row.className = 'template-item-row editing';
+    row.dataset.templateId = templateId;
+    row.dataset.itemId = item.id;
+
+    row.innerHTML = `
+      <td class="col-select">
+        <div class="item-indent"></div>
+      </td>
+      <td class="col-type">
+        <select id="edit-type-${item.id}" class="inline-edit-input">
+          ${this.renderKnowledgeTypeOptions(item.type)}
+        </select>
+      </td>
+      <td class="col-title">
+        <input type="text" id="edit-title-${item.id}" class="inline-edit-input" value="${this.escapeHtml(item.title)}" />
+      </td>
+      <td class="col-scope">
+        <select id="edit-scope-${item.id}" class="inline-edit-input">
+          ${this.renderScopeOptions(item.scope)}
+        </select>
+      </td>
+      <td class="col-tags">
+        <input type="text" id="edit-tags-${item.id}" class="inline-edit-input" value="${item.tags?.join(', ') || ''}" placeholder="tag1, tag2, tag3" />
+      </td>
+      <td class="col-source">${item.source ? this.escapeHtml(item.source) : '-'}</td>
+      <td class="col-actions">
+        <button class="action-btn" data-action="save-edit" data-template-id="${templateId}" data-item-id="${item.id}" title="Save changes">💾</button>
+        <button class="action-btn" data-action="cancel-edit" data-template-id="${templateId}" data-item-id="${item.id}" title="Cancel editing">❌</button>
+      </td>
+    `;
+
+    // Event listeners for save/cancel
+    const saveBtn = row.querySelector('[data-action="save-edit"]');
+    const cancelBtn = row.querySelector('[data-action="cancel-edit"]');
+
+    saveBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.saveInlineEdit(templateId, item.id);
+    });
+
+    cancelBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.cancelInlineEdit();
     });
 
     return row;
@@ -363,5 +431,139 @@ export class V1TemplatesTableController {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+  }
+
+  /**
+   * Toggle inline editing mode for an item
+   */
+  toggleInlineEdit(templateId: string, itemId: string): void {
+    if (this.inlineEditingItem?.templateId === templateId &&
+        this.inlineEditingItem?.itemId === itemId) {
+      // Cancel editing
+      this.inlineEditingItem = null;
+    } else {
+      // Start editing
+      this.inlineEditingItem = { templateId, itemId };
+    }
+
+    webviewLogger.debug(
+      LogCategory.UI,
+      this.inlineEditingItem ? 'Inline edit started' : 'Inline edit cancelled',
+      'V1TemplatesTableController.toggleInlineEdit',
+      { templateId, itemId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    // Re-render to show editable row
+    this.render(this.templates);
+  }
+
+  /**
+   * Save inline edit changes
+   */
+  private saveInlineEdit(templateId: string, itemId: string): void {
+    const typeEl = document.getElementById(`edit-type-${itemId}`) as HTMLSelectElement;
+    const titleEl = document.getElementById(`edit-title-${itemId}`) as HTMLInputElement;
+    const scopeEl = document.getElementById(`edit-scope-${itemId}`) as HTMLSelectElement;
+    const tagsEl = document.getElementById(`edit-tags-${itemId}`) as HTMLInputElement;
+
+    if (!typeEl || !titleEl || !scopeEl || !tagsEl) {
+      webviewLogger.error(
+        LogCategory.UI,
+        'Inline edit elements not found',
+        'V1TemplatesTableController.saveInlineEdit',
+        { itemId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+      return;
+    }
+
+    const updates = {
+      type: typeEl.value,
+      title: titleEl.value,
+      scope: scopeEl.value,
+      tags: tagsEl.value.split(',').map(t => t.trim()).filter(t => t.length > 0)
+    };
+
+    webviewLogger.info(
+      LogCategory.UI,
+      'Saving inline edit',
+      'V1TemplatesTableController.saveInlineEdit',
+      { templateId, itemId, updates },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    // Call update callback
+    this.callbacks.onUpdateItem(templateId, itemId, updates);
+
+    // Exit editing mode
+    this.inlineEditingItem = null;
+    this.render(this.templates);
+  }
+
+  /**
+   * Cancel inline edit
+   */
+  private cancelInlineEdit(): void {
+    webviewLogger.debug(
+      LogCategory.UI,
+      'Inline edit cancelled',
+      'V1TemplatesTableController.cancelInlineEdit',
+      undefined,
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    this.inlineEditingItem = null;
+    this.render(this.templates);
+  }
+
+  /**
+   * Render knowledge type options for dropdown
+   */
+  private renderKnowledgeTypeOptions(currentType: string): string {
+    const types = [
+      { value: 'golden-path', label: 'Golden Path' },
+      { value: 'adr', label: 'ADR' },
+      { value: 'pattern', label: 'Pattern' },
+      { value: 'learning', label: 'Learning' },
+      { value: 'snippet', label: 'Snippet' },
+      { value: 'standard', label: 'Standard' },
+      { value: 'best-practice', label: 'Best Practice' },
+      { value: 'how-to', label: 'How-To Guide' },
+      { value: 'anti-pattern', label: 'Anti-Pattern' },
+      { value: 'api-spec', label: 'API Spec' },
+      { value: 'code-review-checklist', label: 'Code Review Checklist' },
+      { value: 'data-model', label: 'Data Model' },
+      { value: 'design-pattern', label: 'Design Pattern' },
+      { value: 'meeting-note', label: 'Meeting Note' },
+      { value: 'onboarding', label: 'Onboarding' },
+      { value: 'performance-tip', label: 'Performance Tip' },
+      { value: 'refactoring-guide', label: 'Refactoring Guide' },
+      { value: 'security-guideline', label: 'Security Guideline' },
+      { value: 'technical-debt', label: 'Technical Debt' },
+      { value: 'testing-strategy', label: 'Testing Strategy' },
+      { value: 'troubleshooting-guide', label: 'Troubleshooting Guide' }
+    ];
+
+    return types.map(t =>
+      `<option value="${t.value}" ${t.value === currentType ? 'selected' : ''}>${t.label}</option>`
+    ).join('');
+  }
+
+  /**
+   * Render scope options for dropdown
+   */
+  private renderScopeOptions(currentScope: string): string {
+    const scopes = [
+      { value: 'personal', label: 'Personal' },
+      { value: 'team', label: 'Team' },
+      { value: 'project', label: 'Project' },
+      { value: 'organization', label: 'Organization' },
+      { value: 'public', label: 'Public' }
+    ];
+
+    return scopes.map(s =>
+      `<option value="${s.value}" ${s.value === currentScope ? 'selected' : ''}>${s.label}</option>`
+    ).join('');
   }
 }
