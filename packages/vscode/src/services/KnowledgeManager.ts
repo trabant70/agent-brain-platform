@@ -3059,19 +3059,53 @@ export class KnowledgeManager {
    * Delete a V1 template
    */
   async deleteV1Template(templateId: string): Promise<void> {
-    const success = this.templateStore.deleteTemplate(templateId, 'user');
-    if (!success) {
-      throw new Error(`Failed to delete template ${templateId}`);
+    // Get template before deleting (to calculate file path)
+    const template = this.templateStore.getTemplate(templateId);
+    if (!template) {
+      throw new Error(`Template ${templateId} not found`);
     }
 
-    // Save to disk
-    await this.saveTemplateStoreToFiles();
+    // Cannot delete bundled templates
+    if (template.source === TemplateSource.BUNDLED) {
+      throw new Error('Cannot delete bundled templates. Bundled templates are part of the extension.');
+    }
+
+    // Calculate file path
+    const templatesDir = path.join(this.knowledgeBaseDir, 'templates-v1');
+    const filePath = this.fileSystem.getTemplateFilePath(template, templatesDir);
+
+    // Delete from store
+    const success = this.templateStore.deleteTemplate(templateId, 'user');
+    if (!success) {
+      throw new Error(`Failed to delete template ${templateId} from store`);
+    }
+
+    // Delete file from disk
+    try {
+      await vscode.workspace.fs.delete(vscode.Uri.file(filePath));
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Deleted template file',
+        'KnowledgeManager.deleteV1Template',
+        { filePath },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+    } catch (error) {
+      logger.warn(
+        LogCategory.EXTENSION,
+        'Failed to delete template file (may not exist)',
+        'KnowledgeManager.deleteV1Template',
+        { filePath, error },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+      // Continue even if file deletion fails - it may have already been deleted
+    }
 
     logger.info(
       LogCategory.EXTENSION,
       'Deleted V1 template',
       'KnowledgeManager.deleteV1Template',
-      { templateId },
+      { templateId, filePath },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
   }
