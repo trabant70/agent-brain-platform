@@ -453,18 +453,9 @@ export class KnowledgeFileSystem {
   getTemplateFilePath(template: MarketplaceTemplate, baseDir: string): string {
     const fileName = this.generateTemplateFileName(template);
 
-    // Organize by source
-    switch (template.source) {
-      case 'bundled':
-        return path.join(baseDir, 'bundled', fileName);
-      case 'cloned':
-        return path.join(baseDir, 'cloned', fileName);
-      case 'imported':
-        return path.join(baseDir, 'imported', fileName);
-      case 'user':
-      default:
-        return path.join(baseDir, 'user', fileName);
-    }
+    // Flat structure - all templates in single directory
+    // Source information is already in the template JSON itself
+    return path.join(baseDir, fileName);
   }
 
   // ============================================

@@ -3418,19 +3418,16 @@ export class KnowledgeManager {
 
   /**
    * Save TemplateStore contents to JSON files
-   * Organizes templates by source (bundled/, user/, cloned/, imported/)
+   * Uses flat structure - all templates in single directory
+   * Source information is stored in template JSON metadata
    */
   private async saveTemplateStoreToFiles(): Promise<void> {
     try {
       const templates = this.templateStore.getAllTemplates();
       const templatesDir = path.join(this.knowledgeBaseDir, 'templates-v1');
 
-      // Ensure directories exist
+      // Ensure directory exists (flat structure - single directory)
       await vscode.workspace.fs.createDirectory(vscode.Uri.file(templatesDir));
-      await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.join(templatesDir, 'bundled')));
-      await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.join(templatesDir, 'user')));
-      await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.join(templatesDir, 'cloned')));
-      await vscode.workspace.fs.createDirectory(vscode.Uri.file(path.join(templatesDir, 'imported')));
 
       for (const template of templates) {
         const filePath = this.fileSystem.getTemplateFilePath(template, templatesDir);
@@ -3516,6 +3513,9 @@ export class KnowledgeManager {
 
       if (loadedCount > 0) {
         this.v1Enabled = true;
+
+        // Migrate from subdirectory structure to flat structure if needed
+        await this.migrateToFlatStructure(templatesDir, files);
       }
     } catch (error) {
       logger.error(
@@ -3525,6 +3525,110 @@ export class KnowledgeManager {
         error,
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
+    }
+  }
+
+  /**
+   * Migrate templates from old subdirectory structure to flat structure
+   * Old: .agent-brain/templates-v1/bundled/*.json, user/*.json, etc.
+   * New: .agent-brain/templates-v1/*.json
+   */
+  private async migrateToFlatStructure(templatesDir: string, allFiles: vscode.Uri[]): Promise<void> {
+    try {
+      const subdirectories = ['bundled', 'user', 'cloned', 'imported'];
+      let migratedCount = 0;
+      const filesToDelete: vscode.Uri[] = [];
+
+      // Check if any files are in subdirectories
+      for (const fileUri of allFiles) {
+        const relativePath = path.relative(templatesDir, fileUri.fsPath);
+        const parts = relativePath.split(path.sep);
+
+        // If file is in a subdirectory (not directly in templates-v1)
+        if (parts.length > 1 && subdirectories.includes(parts[0])) {
+          const fileName = path.basename(fileUri.fsPath);
+          const newPath = path.join(templatesDir, fileName);
+
+          // Check if file already exists at root level
+          try {
+            await vscode.workspace.fs.stat(vscode.Uri.file(newPath));
+            // File exists at root - just delete the subdirectory copy
+            filesToDelete.push(fileUri);
+            logger.debug(
+              LogCategory.EXTENSION,
+              'Template already migrated, will delete old copy',
+              'KnowledgeManager.migrateToFlatStructure',
+              { oldPath: fileUri.fsPath, newPath },
+              LogPathway.KNOWLEDGE_MANAGEMENT
+            );
+          } catch {
+            // File doesn't exist at root - move it
+            const content = await vscode.workspace.fs.readFile(fileUri);
+            await vscode.workspace.fs.writeFile(vscode.Uri.file(newPath), content);
+            filesToDelete.push(fileUri);
+            migratedCount++;
+
+            logger.debug(
+              LogCategory.EXTENSION,
+              'Migrated template to flat structure',
+              'KnowledgeManager.migrateToFlatStructure',
+              { oldPath: fileUri.fsPath, newPath },
+              LogPathway.KNOWLEDGE_MANAGEMENT
+            );
+          }
+        }
+      }
+
+      // Delete old files from subdirectories
+      for (const fileUri of filesToDelete) {
+        try {
+          await vscode.workspace.fs.delete(fileUri);
+        } catch (error) {
+          logger.warn(
+            LogCategory.EXTENSION,
+            'Failed to delete old template file',
+            'KnowledgeManager.migrateToFlatStructure',
+            { file: fileUri.fsPath, error },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+        }
+      }
+
+      // Try to delete empty subdirectories
+      for (const subdir of subdirectories) {
+        const subdirPath = path.join(templatesDir, subdir);
+        try {
+          await vscode.workspace.fs.delete(vscode.Uri.file(subdirPath), { recursive: false });
+          logger.debug(
+            LogCategory.EXTENSION,
+            'Deleted empty subdirectory',
+            'KnowledgeManager.migrateToFlatStructure',
+            { subdirectory: subdirPath },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+        } catch {
+          // Ignore errors - directory may not exist or may not be empty
+        }
+      }
+
+      if (migratedCount > 0) {
+        logger.info(
+          LogCategory.EXTENSION,
+          'Migrated templates to flat structure',
+          'KnowledgeManager.migrateToFlatStructure',
+          { migratedCount, deletedCount: filesToDelete.length },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+      }
+    } catch (error) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Error during flat structure migration',
+        'KnowledgeManager.migrateToFlatStructure',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+      // Don't throw - migration failure shouldn't break template loading
     }
   }
 
