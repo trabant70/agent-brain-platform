@@ -19,6 +19,13 @@ export interface V1TemplatesTableCallbacks {
   onDeleteItem: (templateId: string, itemId: string) => void;
   onCreateVersion: (templateId: string) => void;
   onViewAuditLog: (templateId: string) => void;
+  onInjectTemplate: (templateId: string) => void;
+  onExportTemplate: (templateId: string) => void;
+  onInjectItem: (templateId: string, itemId: string) => void;
+  onEditItemInline: (templateId: string, itemId: string) => void;
+  onUpdateItem: (templateId: string, itemId: string, updates: any) => void;
+  onMoveItem: (itemId: string, fromTemplateId: string, toTemplateId: string) => void;
+  onCopyItem: (itemId: string, fromTemplateId: string, toTemplateId: string) => void;
 }
 
 export class V1TemplatesTableController {
@@ -134,7 +141,9 @@ export class V1TemplatesTableController {
         <button class="action-btn" data-action="add-item" data-template-id="${template.id}" title="Add item to template">➕</button>
         <button class="action-btn" data-action="create-version" data-template-id="${template.id}" title="Create version checkpoint">💾</button>
         <button class="action-btn" data-action="clone" data-template-id="${template.id}" title="Clone template">📋</button>
+        <button class="action-btn" data-action="inject-template" data-template-id="${template.id}" title="Inject template to file">📦</button>
         <button class="action-btn" data-action="audit-log" data-template-id="${template.id}" title="View audit log">📊</button>
+        <button class="action-btn" data-action="export" data-template-id="${template.id}" title="Export template to JSON">📤</button>
         <button class="action-btn" data-action="edit" data-template-id="${template.id}" title="Edit template">✏️</button>
         <button class="action-btn danger" data-action="delete" data-template-id="${template.id}" title="Delete template">🗑️</button>
       </td>
@@ -184,6 +193,8 @@ export class V1TemplatesTableController {
       </td>
       <td class="col-source">${item.source ? this.escapeHtml(item.source) : '-'}</td>
       <td class="col-actions">
+        <button class="action-btn" data-action="edit-inline" data-template-id="${templateId}" data-item-id="${item.id}" title="Edit item inline">📝</button>
+        <button class="action-btn" data-action="inject-item" data-template-id="${templateId}" data-item-id="${item.id}" title="Inject item to file">💉</button>
         <button class="action-btn" data-action="edit" data-template-id="${templateId}" data-item-id="${item.id}" title="Edit item">✏️</button>
         <button class="action-btn danger" data-action="delete" data-template-id="${templateId}" data-item-id="${item.id}" title="Delete item">🗑️</button>
       </td>
@@ -272,8 +283,14 @@ export class V1TemplatesTableController {
       case 'clone':
         this.callbacks.onCloneTemplate(templateId);
         break;
+      case 'inject-template':
+        this.callbacks.onInjectTemplate(templateId);
+        break;
       case 'audit-log':
         this.callbacks.onViewAuditLog(templateId);
+        break;
+      case 'export':
+        this.callbacks.onExportTemplate(templateId);
         break;
       case 'edit':
         this.callbacks.onEditTemplate(templateId);
@@ -296,10 +313,19 @@ export class V1TemplatesTableController {
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
 
-    if (action === 'edit') {
-      this.callbacks.onEditItem(templateId, itemId);
-    } else if (action === 'delete') {
-      this.callbacks.onDeleteItem(templateId, itemId);
+    switch (action) {
+      case 'edit-inline':
+        this.callbacks.onEditItemInline(templateId, itemId);
+        break;
+      case 'inject-item':
+        this.callbacks.onInjectItem(templateId, itemId);
+        break;
+      case 'edit':
+        this.callbacks.onEditItem(templateId, itemId);
+        break;
+      case 'delete':
+        this.callbacks.onDeleteItem(templateId, itemId);
+        break;
     }
   }
 

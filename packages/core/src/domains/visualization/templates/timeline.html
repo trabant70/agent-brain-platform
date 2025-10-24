@@ -34,12 +34,6 @@
                 </svg>
                 AB Support
             </button>
-            <button class="tab-button" data-tab="marketplace" aria-label="Template Marketplace view" aria-selected="false">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink: 0;">
-                    <path d="M2 2h12l1 3v8c0 .55-.45 1-1 1H2c-.55 0-1-.45-1-1V5l1-3zm1.4 1l-.6 1.8h10.4L12.6 3H3.4zM2 6v7h12V6H2zm3 2h6v1H5V8z"/>
-                </svg>
-                AB Marketplace
-            </button>
         </div>
 
         <!-- Tab Contents -->
@@ -154,6 +148,7 @@
                             <div class="filter-chips" id="knowledge-filter-chips"></div>
 
                             <button id="refresh-knowledge" class="secondary-button ab-btn-secondary" title="Refresh knowledge data">🔄 Refresh</button>
+                            <button id="import-template" class="secondary-button ab-btn-secondary" title="Import a template from JSON">📦 Import</button>
                             <button id="create-v1-template" class="primary-button ab-btn-primary" title="Create a new template">📦 Create Template</button>
                         </div>
 
@@ -185,23 +180,6 @@
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
-
-                        <!-- Template Controls -->
-                        <div class="template-controls">
-                            <div class="template-selection">
-                                <label for="template-selector">Template:</label>
-                                <select id="template-selector">
-                                    <option value="">Select template...</option>
-                                </select>
-                            </div>
-                            <div class="template-actions">
-                                <button id="save-template" class="secondary-button ab-btn-secondary" disabled title="Save selected items as a new template or update existing template">💾 Save Template</button>
-                                <button id="apply-selected" class="primary-button ab-btn-primary" disabled title="Apply selected knowledge items directly to focused claude.md file">➕ Apply Items</button>
-                                <button id="apply-template" class="primary-button ab-btn-primary" disabled title="Apply the selected template to focused claude.md file">📋 Apply Template</button>
-                                <button id="publish-template" class="secondary-button ab-btn-secondary" disabled title="Publish template to marketplace">🚀 Publish</button>
-                                <button id="delete-template" class="secondary-button ab-btn-danger" disabled title="Delete selected template from project">🗑️ Delete</button>
-                            </div>
                         </div>
 
                         <!-- Status Bar -->
@@ -418,20 +396,6 @@
                 </div>
             </div>
             <!-- End AB Support Tab -->
-
-            <!-- AB Marketplace Tab -->
-            <div id="tab-marketplace" class="tab-content" aria-hidden="true">
-                <div id="marketplace-content">
-                    <!-- Will be populated by MarketplaceController -->
-                    <div class="marketplace-loading" style="padding: 40px; text-align: center;">
-                        <div style="font-size: 48px; margin-bottom: 16px;">🏪</div>
-                        <div style="font-size: 16px; color: var(--vscode-descriptionForeground);">
-                            Loading marketplace...
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- End AB Marketplace Tab -->
         </div>
         <!-- End Tab Contents -->
     </div>
