@@ -13,6 +13,7 @@
   },
   "license": "MIT",
   "source": "bundled",
+  "scope": "team",
   "items": [
     {
       "id": "golden-path-session-journals",

@@ -13,6 +13,7 @@
   },
   "license": "CC-BY-4.0",
   "source": "bundled",
+  "scope": "team",
   "items": [
     {
       "id": "guideline-architecture-blueprint",

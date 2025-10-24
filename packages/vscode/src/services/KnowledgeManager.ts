@@ -184,6 +184,9 @@ export class KnowledgeManager {
       // V1 Migration: Detect if migration to template-as-sections is needed
       await this.detectAndRunV1Migration();
 
+      // Load bundled templates into TemplateStore
+      await this.loadBundledTemplatesIntoStore();
+
       // Setup file watchers
       this.setupFileWatchers();
       logger.debug(
@@ -3281,6 +3284,92 @@ export class KnowledgeManager {
         LogCategory.EXTENSION,
         'Failed to load TemplateStore from files',
         'KnowledgeManager.loadTemplateStoreFromFiles',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+    }
+  }
+
+  /**
+   * Load bundled templates into TemplateStore
+   * Bundled templates are always available and cannot be deleted
+   */
+  private async loadBundledTemplatesIntoStore(): Promise<void> {
+    try {
+      const bundledPath = this.getBundledTemplatesPath();
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'Loading bundled templates into TemplateStore',
+        'KnowledgeManager.loadBundledTemplatesIntoStore',
+        { bundledPath },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      // Check if bundled templates directory exists
+      if (!fs.existsSync(bundledPath)) {
+        logger.warn(
+          LogCategory.EXTENSION,
+          'Bundled templates directory not found',
+          'KnowledgeManager.loadBundledTemplatesIntoStore',
+          { bundledPath },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        return;
+      }
+
+      // Read all JSON files from bundled templates directory
+      const files = fs.readdirSync(bundledPath).filter(f => f.endsWith('.json'));
+
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Found bundled template files',
+        'KnowledgeManager.loadBundledTemplatesIntoStore',
+        { filesCount: files.length, files },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      let loadedCount = 0;
+      for (const file of files) {
+        try {
+          const filePath = path.join(bundledPath, file);
+          const content = fs.readFileSync(filePath, 'utf-8');
+          const template = await this.knowledgeFileSystem.loadTemplateJson(filePath, content);
+
+          // Add to TemplateStore (bundled templates are always added, never replaced by user templates)
+          this.templateStore.addTemplate(template, this.auditLogger);
+          loadedCount++;
+
+          logger.debug(
+            LogCategory.EXTENSION,
+            'Loaded bundled template',
+            'KnowledgeManager.loadBundledTemplatesIntoStore',
+            { templateId: template.id, name: template.name, itemCount: template.items?.length || 0 },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+        } catch (error) {
+          logger.error(
+            LogCategory.EXTENSION,
+            'Failed to load bundled template file',
+            'KnowledgeManager.loadBundledTemplatesIntoStore',
+            { file, error },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+        }
+      }
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'Bundled templates loaded into TemplateStore',
+        'KnowledgeManager.loadBundledTemplatesIntoStore',
+        { loadedCount, totalFiles: files.length },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+    } catch (error) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to load bundled templates into TemplateStore',
+        'KnowledgeManager.loadBundledTemplatesIntoStore',
         error,
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
