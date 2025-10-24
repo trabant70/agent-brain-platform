@@ -69,7 +69,7 @@ export class KnowledgeManager {
   private versionManager: VersionManager;
   private templateCloner: TemplateCloner;
   private templateMigration: TemplateMigration;
-  private v1Enabled: boolean = false;  // Feature flag for progressive rollout
+  private v1Enabled: boolean = true;  // V1 is now the default and only UI
 
   // DEPRECATED: Remove after migration complete
   // Local templates (for Knowledge tab grouping only, NOT in marketplace)

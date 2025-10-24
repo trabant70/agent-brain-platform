@@ -37,7 +37,8 @@ export class KnowledgeViewController {
   private state: KnowledgeViewState;
   private messageHandler: ((message: any) => void) | null = null;
   private notifications: NotificationManager;
-  private currentView: 'items' | 'templates' = 'items';
+  // V1 is now the only view - no need for view switching
+  // private currentView: 'items' | 'templates' = 'templates';
 
   // Sub-controllers
   private tableController: KnowledgeTableController;
@@ -120,7 +121,6 @@ export class KnowledgeViewController {
     this.sendMessage({ type: 'v1:check-enabled' });
 
     this.setupEventListeners();
-    this.setupViewModeToggle();
     this.render();
 
     webviewLogger.info(
@@ -179,9 +179,7 @@ export class KnowledgeViewController {
 
       case 'v1:templates-data':
         this.state.v1Templates = message.payload.templates || [];
-        if (this.currentView === 'templates') {
-          this.v1TemplatesTableController.render(this.state.v1Templates);
-        }
+        this.v1TemplatesTableController.render(this.state.v1Templates);
         webviewLogger.info(
           LogCategory.UI,
           'V1 templates data received and rendered',
@@ -200,9 +198,7 @@ export class KnowledgeViewController {
         } else {
           this.state.v1Templates.push(updatedTemplate);
         }
-        if (this.currentView === 'templates') {
-          this.v1TemplatesTableController.render(this.state.v1Templates);
-        }
+        this.v1TemplatesTableController.render(this.state.v1Templates);
         webviewLogger.debug(
           LogCategory.UI,
           'V1 template updated in state and rendered',
@@ -352,45 +348,7 @@ export class KnowledgeViewController {
   }
 
   /**
-   * Setup view mode toggle event listeners
-   */
-  private setupViewModeToggle(): void {
-    const toggle = document.getElementById('view-mode-toggle');
-    if (!toggle) return;
-
-    const viewButtons = toggle.querySelectorAll('.view-btn');
-    viewButtons.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const target = e.currentTarget as HTMLElement;
-        const view = target.dataset.view as 'items' | 'templates';
-
-        if (!view || view === this.currentView) return;
-
-        // Update active state
-        viewButtons.forEach(b => b.classList.remove('active'));
-        target.classList.add('active');
-
-        // Switch view
-        this.currentView = view;
-        if (view === 'templates') {
-          this.showV1TemplatesView();
-        } else {
-          this.showItemsView();
-        }
-
-        webviewLogger.info(
-          LogCategory.UI,
-          'View mode switched',
-          'KnowledgeViewController.setupViewModeToggle',
-          { view },
-          LogPathway.KNOWLEDGE_MANAGEMENT
-        );
-      });
-    });
-  }
-
-  /**
-   * Show V1 templates view
+   * Show V1 templates view (now the only view)
    */
   private showV1TemplatesView(): void {
     webviewLogger.info(
@@ -403,22 +361,6 @@ export class KnowledgeViewController {
 
     // Render V1 templates using the table controller
     this.v1TemplatesTableController.render(this.state.v1Templates);
-  }
-
-  /**
-   * Show items view
-   */
-  private showItemsView(): void {
-    webviewLogger.info(
-      LogCategory.UI,
-      'Switching to items view',
-      'KnowledgeViewController.showItemsView',
-      { itemsCount: this.state.items.length },
-      LogPathway.KNOWLEDGE_MANAGEMENT
-    );
-
-    // Re-render the table controller
-    this.tableController.renderKnowledgeTable();
   }
 
   /**
@@ -509,34 +451,12 @@ export class KnowledgeViewController {
    * Render the complete knowledge view
    */
   render(): void {
-    // Show/hide V1 UI elements based on v1Enabled
-    this.updateV1UIVisibility();
+    // V1 is now the only view - always show templates
+    this.showV1TemplatesView();
 
-    // Delegate to sub-controllers
-    if (this.currentView === 'items') {
-      this.tableController.renderKnowledgeTable();
-    } else {
-      this.showV1TemplatesView();
-    }
     this.accordionController.renderClaudeMdAccordion();
     this.templateController.renderTemplateControls();
     this.updateStatusBar();
-  }
-
-  /**
-   * Update visibility of V1 UI elements based on feature flag
-   */
-  private updateV1UIVisibility(): void {
-    const createTemplateBtn = document.getElementById('create-v1-template');
-    const viewModeToggle = document.getElementById('view-mode-toggle');
-
-    if (this.state.v1Enabled) {
-      createTemplateBtn?.style.setProperty('display', 'inline-block');
-      viewModeToggle?.style.setProperty('display', 'flex');
-    } else {
-      createTemplateBtn?.style.setProperty('display', 'none');
-      viewModeToggle?.style.setProperty('display', 'none');
-    }
   }
 
   /**

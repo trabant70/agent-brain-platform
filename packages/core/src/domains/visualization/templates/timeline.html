@@ -150,30 +150,11 @@
                     <div class="knowledge-right-panel">
                         <!-- Search & Actions -->
                         <div class="knowledge-toolbar">
-                            <input type="search" id="knowledge-search" placeholder="Search knowledge items..."/>
+                            <input type="search" id="knowledge-search" placeholder="Search templates and items..."/>
                             <div class="filter-chips" id="knowledge-filter-chips"></div>
 
-                            <!-- V1 View Mode Toggle -->
-                            <div class="view-mode-toggle" id="view-mode-toggle" style="display: none;">
-                                <label>View:</label>
-                                <button class="view-btn active" data-view="items" title="View individual knowledge items">
-                                    📚 Items
-                                </button>
-                                <button class="view-btn" data-view="templates" title="View templates with embedded items (V1)">
-                                    📦 Templates (V1)
-                                </button>
-                            </div>
-
-                            <div class="grouping-controls ab-toggle-group">
-                                <label>Group by:</label>
-                                <button class="group-btn ab-toggle-btn active" data-group="type" title="Group by knowledge type">Type</button>
-                                <button class="group-btn ab-toggle-btn" data-group="scope" title="Group by scope (Personal, Team, etc.)">Scope</button>
-                                <button class="group-btn ab-toggle-btn" data-group="tag" title="Group by tags">Tag</button>
-                                <button class="group-btn ab-toggle-btn" data-group="template" title="Group by templates">Template</button>
-                            </div>
                             <button id="refresh-knowledge" class="secondary-button ab-btn-secondary" title="Refresh knowledge data">🔄 Refresh</button>
-                            <button id="add-knowledge-item" class="primary-button ab-btn-primary" title="Create a new knowledge item">+ Add Item</button>
-                            <button id="create-v1-template" class="primary-button ab-btn-primary" title="Create a new V1 template" style="display: none;">📦 Create Template</button>
+                            <button id="create-v1-template" class="primary-button ab-btn-primary" title="Create a new template">📦 Create Template</button>
                         </div>
 
                         <!-- Knowledge Table -->
