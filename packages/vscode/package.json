@@ -2,7 +2,7 @@
   "name": "agent-brain-platform",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "publisher": "agent-brain-local",
   "icon": "images/timeline_large.png",
   "repository": {
