@@ -100,7 +100,14 @@ export class KnowledgeViewController {
       onEditItem: (templateId, itemId) => this.handleEditItem(templateId, itemId),
       onDeleteItem: (templateId, itemId) => this.handleDeleteItem(templateId, itemId),
       onCreateVersion: (templateId) => this.handleCreateVersion(templateId),
-      onViewAuditLog: (templateId) => this.handleViewAuditLog(templateId)
+      onViewAuditLog: (templateId) => this.handleViewAuditLog(templateId),
+      onInjectTemplate: (templateId) => this.handleInjectTemplate(templateId),
+      onExportTemplate: (templateId) => this.handleExportTemplate(templateId),
+      onInjectItem: (templateId, itemId) => this.handleInjectItem(templateId, itemId),
+      onEditItemInline: (templateId, itemId) => this.handleEditItemInline(templateId, itemId),
+      onUpdateItem: (templateId, itemId, updates) => this.handleUpdateItem(templateId, itemId, updates),
+      onMoveItem: (itemId, fromTemplateId, toTemplateId) => this.handleMoveItem(itemId, fromTemplateId, toTemplateId),
+      onCopyItem: (itemId, fromTemplateId, toTemplateId) => this.handleCopyItem(itemId, fromTemplateId, toTemplateId)
     });
 
     this.v1TemplateFormController = new V1TemplateFormController({
@@ -236,6 +243,66 @@ export class KnowledgeViewController {
         );
         break;
 
+      case 'v1:import-success':
+        this.notifications.show({
+          type: 'success',
+          message: 'Template imported successfully!',
+          duration: 3000
+        });
+        this.loadV1Templates();
+        break;
+
+      case 'v1:inject-template-success':
+        this.notifications.show({
+          type: 'success',
+          message: `Template injected to ${message.payload.filePath}`,
+          duration: 3000
+        });
+        break;
+
+      case 'v1:export-success':
+        this.notifications.show({
+          type: 'success',
+          message: `Template exported to ${message.payload.filePath}`,
+          duration: 3000
+        });
+        break;
+
+      case 'v1:inject-item-success':
+        this.notifications.show({
+          type: 'success',
+          message: 'Item injected successfully!',
+          duration: 3000
+        });
+        break;
+
+      case 'v1:update-item-success':
+        this.notifications.show({
+          type: 'success',
+          message: 'Item updated successfully!',
+          duration: 3000
+        });
+        this.loadV1Templates();
+        break;
+
+      case 'v1:move-item-success':
+        this.notifications.show({
+          type: 'success',
+          message: 'Item moved successfully!',
+          duration: 3000
+        });
+        this.loadV1Templates();
+        break;
+
+      case 'v1:copy-item-success':
+        this.notifications.show({
+          type: 'success',
+          message: 'Item copied successfully!',
+          duration: 3000
+        });
+        this.loadV1Templates();
+        break;
+
       case 'v1:error':
         this.notifications.show({
           type: 'error',
@@ -345,6 +412,194 @@ export class KnowledgeViewController {
       type: 'v1:get-audit-log',
       payload: { templateId }
     });
+  }
+
+  /**
+   * Handle inject template action
+   */
+  private handleInjectTemplate(templateId: string): void {
+    const focusedFile = this.accordionController.getSelectedFile();
+    if (!focusedFile) {
+      this.notifications.show({
+        type: 'warning',
+        message: 'Please select a claude.md file first',
+        duration: 3000
+      });
+      return;
+    }
+
+    this.notifications.show({
+      type: 'info',
+      message: 'Injecting template...',
+      duration: 2000
+    });
+
+    this.sendMessage({
+      type: 'v1:inject-template',
+      payload: { templateId, filePath: focusedFile }
+    });
+  }
+
+  /**
+   * Handle export template action
+   */
+  private handleExportTemplate(templateId: string): void {
+    this.notifications.show({
+      type: 'info',
+      message: 'Exporting template...',
+      duration: 2000
+    });
+
+    this.sendMessage({
+      type: 'v1:export-template',
+      payload: { templateId }
+    });
+  }
+
+  /**
+   * Handle inject item action
+   */
+  private handleInjectItem(templateId: string, itemId: string): void {
+    const focusedFile = this.accordionController.getSelectedFile();
+    if (!focusedFile) {
+      this.notifications.show({
+        type: 'warning',
+        message: 'Please select a claude.md file first',
+        duration: 3000
+      });
+      return;
+    }
+
+    this.notifications.show({
+      type: 'info',
+      message: 'Injecting item...',
+      duration: 2000
+    });
+
+    this.sendMessage({
+      type: 'v1:inject-item',
+      payload: { templateId, itemId, filePath: focusedFile }
+    });
+  }
+
+  /**
+   * Handle inline edit item action
+   */
+  private handleEditItemInline(templateId: string, itemId: string): void {
+    // Toggle inline editing mode in table controller
+    this.v1TemplatesTableController.toggleInlineEdit(templateId, itemId);
+  }
+
+  /**
+   * Handle update item action
+   */
+  private handleUpdateItem(templateId: string, itemId: string, updates: any): void {
+    this.notifications.show({
+      type: 'info',
+      message: 'Updating item...',
+      duration: 2000
+    });
+
+    this.sendMessage({
+      type: 'v1:update-item',
+      payload: { templateId, itemId, updates }
+    });
+  }
+
+  /**
+   * Handle move item action
+   */
+  private handleMoveItem(itemId: string, fromTemplateId: string, toTemplateId: string): void {
+    this.notifications.show({
+      type: 'info',
+      message: 'Moving item...',
+      duration: 2000
+    });
+
+    this.sendMessage({
+      type: 'v1:move-item',
+      payload: { itemId, fromTemplateId, toTemplateId }
+    });
+  }
+
+  /**
+   * Handle copy item action
+   */
+  private handleCopyItem(itemId: string, fromTemplateId: string, toTemplateId: string): void {
+    this.notifications.show({
+      type: 'info',
+      message: 'Copying item...',
+      duration: 2000
+    });
+
+    this.sendMessage({
+      type: 'v1:copy-item',
+      payload: { itemId, fromTemplateId, toTemplateId }
+    });
+  }
+
+  /**
+   * Handle import template action
+   */
+  private handleImportTemplate(): void {
+    // Create file input element
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.style.display = 'none';
+
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      try {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const content = event.target?.result as string;
+          try {
+            const templateJson = JSON.parse(content);
+
+            // Validate basic structure
+            if (!templateJson.id || !templateJson.name) {
+              this.notifications.show({
+                type: 'error',
+                message: 'Invalid template format: missing id or name',
+                duration: 5000
+              });
+              return;
+            }
+
+            this.notifications.show({
+              type: 'info',
+              message: 'Importing template...',
+              duration: 2000
+            });
+
+            this.sendMessage({
+              type: 'v1:import-template',
+              payload: { templateJson }
+            });
+          } catch (error) {
+            this.notifications.show({
+              type: 'error',
+              message: `Invalid JSON: ${(error as Error).message}`,
+              duration: 5000
+            });
+          }
+        };
+        reader.readAsText(file);
+      } catch (error) {
+        this.notifications.show({
+          type: 'error',
+          message: `Failed to import template: ${(error as Error).message}`,
+          duration: 5000
+        });
+      }
+    };
+
+    document.body.appendChild(input);
+    input.click();
+    document.body.removeChild(input);
   }
 
   /**
@@ -521,6 +776,10 @@ export class KnowledgeViewController {
     // V1 Create Template button
     const createTemplateBtn = document.getElementById('create-v1-template');
     createTemplateBtn?.addEventListener('click', () => this.v1TemplateFormController.showCreateTemplateModal());
+
+    // Import Template button
+    const importBtn = document.getElementById('import-template');
+    importBtn?.addEventListener('click', () => this.handleImportTemplate());
 
     // Refresh button
     const refreshBtn = document.getElementById('refresh-knowledge');
