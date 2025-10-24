@@ -2085,16 +2085,9 @@ export class KnowledgeManager {
    * Get directory for a knowledge type
    */
   private getDirectoryForType(type: KnowledgeType): string {
-    const typeMap: Record<string, string> = {
-      [KnowledgeType.ADR]: 'adrs',
-      [KnowledgeType.GOLDEN_PATH]: 'golden-paths',
-      [KnowledgeType.DESIGN_PATTERN]: 'patterns',
-      [KnowledgeType.STANDARD]: 'standards',
-      [KnowledgeType.LEARNING]: 'learnings',
-      [KnowledgeType.SNIPPET]: 'snippets'
-    };
-
-    return typeMap[type] || 'custom';
+    // Flat structure - all knowledge items in single directory
+    // Type information is stored in YAML frontmatter
+    return 'items';
   }
 
   /**

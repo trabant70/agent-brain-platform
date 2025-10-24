@@ -720,6 +720,296 @@
       "knowledgeItemType": "custom",
       "targetFile": "CLAUDE.md",
       "actor": "user"
+    },
+    {
+      "id": "ke-1761136955015",
+      "timestamp": "2025-10-22T12:42:35.015Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-8ce8f8c2089b",
+      "knowledgeItemTitle": "Template Application Bug - Items Not Visible After Apply",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761136955016",
+      "timestamp": "2025-10-22T12:42:35.016Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-def68865bd5d",
+      "knowledgeItemTitle": "Date Serialization Bug in postMessage Communication",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761136955017",
+      "timestamp": "2025-10-22T12:42:35.017Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-48ef3ef70fed",
+      "knowledgeItemTitle": "Knowledge Tab Diagnostic Logging Implementation",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761137975155",
+      "timestamp": "2025-10-22T12:59:35.155Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-8ce8f8c2089b",
+      "knowledgeItemTitle": "Template Application Bug - Items Not Visible After Apply",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761138089887",
+      "timestamp": "2025-10-22T13:01:29.887Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-def68865bd5d",
+      "knowledgeItemTitle": "Date Serialization Bug in postMessage Communication",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761138092144",
+      "timestamp": "2025-10-22T13:01:32.144Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-48ef3ef70fed",
+      "knowledgeItemTitle": "Knowledge Tab Diagnostic Logging Implementation",
+      "knowledgeItemType": "learning",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761142871049",
+      "timestamp": "2025-10-22T14:21:11.049Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-5d06be59da55",
+      "knowledgeItemTitle": "Agent-Brain Knowledge Template: testagain",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761142871052",
+      "timestamp": "2025-10-22T14:21:11.052Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-b2a2fab73238",
+      "knowledgeItemTitle": "Control Panel Redesign - Dropdown Implementation",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761142922022",
+      "timestamp": "2025-10-22T14:22:02.022Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-5d06be59da55",
+      "knowledgeItemTitle": "Agent-Brain Knowledge Template: testagain",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761142923955",
+      "timestamp": "2025-10-22T14:22:03.955Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-b2a2fab73238",
+      "knowledgeItemTitle": "Control Panel Redesign - Dropdown Implementation",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761142965051",
+      "timestamp": "2025-10-22T14:22:45.051Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761142965053",
+      "timestamp": "2025-10-22T14:22:45.053Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-55dfcbaae5a1",
+      "knowledgeItemTitle": "Provider Toggle Error Fix - Registration vs Enablement",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761142965054",
+      "timestamp": "2025-10-22T14:22:45.054Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-b2a2fab73238",
+      "knowledgeItemTitle": "Control Panel Redesign - Dropdown Implementation",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761142965056",
+      "timestamp": "2025-10-22T14:22:45.056Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-5d06be59da55",
+      "knowledgeItemTitle": "Agent-Brain Knowledge Template: testagain",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761153860878",
+      "timestamp": "2025-10-22T17:24:20.878Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761153863045",
+      "timestamp": "2025-10-22T17:24:23.045Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-55dfcbaae5a1",
+      "knowledgeItemTitle": "Provider Toggle Error Fix - Registration vs Enablement",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761153865004",
+      "timestamp": "2025-10-22T17:24:25.004Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-b2a2fab73238",
+      "knowledgeItemTitle": "Control Panel Redesign - Dropdown Implementation",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761153870952",
+      "timestamp": "2025-10-22T17:24:30.952Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-5d06be59da55",
+      "knowledgeItemTitle": "Agent-Brain Knowledge Template: testagain",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761153881605",
+      "timestamp": "2025-10-22T17:24:41.605Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761153881606",
+      "timestamp": "2025-10-22T17:24:41.606Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-55dfcbaae5a1",
+      "knowledgeItemTitle": "Provider Toggle Error Fix - Registration vs Enablement",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761153890272",
+      "timestamp": "2025-10-22T17:24:50.272Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-55dfcbaae5a1",
+      "knowledgeItemTitle": "Provider Toggle Error Fix - Registration vs Enablement",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761153892421",
+      "timestamp": "2025-10-22T17:24:52.421Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761153920222",
+      "timestamp": "2025-10-22T17:25:20.222Z",
+      "type": "create",
+      "knowledgeItemId": "knowledge-2cc64150fff6",
+      "knowledgeItemTitle": "dlghqwer",
+      "knowledgeItemType": "design-pattern",
+      "targetFile": ".agent-brain\\patterns\\2025-10-22-dlghqwer.md",
+      "actor": "agent"
+    },
+    {
+      "id": "ke-1761156373219",
+      "timestamp": "2025-10-22T18:06:13.219Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761156373221",
+      "timestamp": "2025-10-22T18:06:13.221Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-55dfcbaae5a1",
+      "knowledgeItemTitle": "Provider Toggle Error Fix - Registration vs Enablement",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761156373222",
+      "timestamp": "2025-10-22T18:06:13.222Z",
+      "type": "apply",
+      "knowledgeItemId": "knowledge-b2a2fab73238",
+      "knowledgeItemTitle": "Control Panel Redesign - Dropdown Implementation",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761156382410",
+      "timestamp": "2025-10-22T18:06:22.410Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-d2d13bed2597",
+      "knowledgeItemTitle": "Session History Table Implementation (Sessions Tab)",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761156384693",
+      "timestamp": "2025-10-22T18:06:24.693Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-55dfcbaae5a1",
+      "knowledgeItemTitle": "Provider Toggle Error Fix - Registration vs Enablement",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761156386693",
+      "timestamp": "2025-10-22T18:06:26.693Z",
+      "type": "remove",
+      "knowledgeItemId": "knowledge-b2a2fab73238",
+      "knowledgeItemTitle": "Control Panel Redesign - Dropdown Implementation",
+      "knowledgeItemType": "custom",
+      "targetFile": "CLAUDE.md",
+      "actor": "user"
     }
   ]
 }
