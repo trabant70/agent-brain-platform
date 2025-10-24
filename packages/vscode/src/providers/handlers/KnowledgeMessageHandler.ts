@@ -167,6 +167,38 @@ export class KnowledgeMessageHandler {
         await this.handleV1CheckEnabled();
         return true;
 
+      case 'v1:import-template':
+        await this.handleV1ImportTemplate(message.payload);
+        return true;
+
+      case 'v1:inject-template':
+        await this.handleV1InjectTemplate(message.payload);
+        return true;
+
+      case 'v1:export-template':
+        await this.handleV1ExportTemplate(message.payload);
+        return true;
+
+      case 'v1:inject-item':
+        await this.handleV1InjectItem(message.payload);
+        return true;
+
+      case 'v1:move-item':
+        await this.handleV1MoveItem(message.payload);
+        return true;
+
+      case 'v1:copy-item':
+        await this.handleV1CopyItem(message.payload);
+        return true;
+
+      case 'v1:delete-template':
+        await this.handleV1DeleteTemplate(message.payload);
+        return true;
+
+      case 'v1:update-template':
+        await this.handleV1UpdateTemplate(message.payload);
+        return true;
+
       default:
         return false; // Not handled by this handler
     }
@@ -240,6 +272,27 @@ export class KnowledgeMessageHandler {
         type: 'knowledge:loaded',
         payload: { items, templates }
       });
+
+      // Also send V1 templates if enabled
+      if (this.context.knowledgeManager.isV1Enabled()) {
+        const v1Templates = await this.context.knowledgeManager.getV1Templates();
+
+        this.context.view.webview.postMessage({
+          type: 'v1:templates-data',
+          payload: { templates: v1Templates }
+        });
+
+        logger.info(
+          LogCategory.EXTENSION,
+          'Sent V1 templates to webview',
+          'KnowledgeMessageHandler.sendKnowledgeData',
+          {
+            v1TemplateCount: v1Templates.length,
+            v1Templates: v1Templates.map((t: any) => ({ id: t.id, name: t.name, source: t.source, itemCount: t.items?.length || 0 }))
+          },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+      }
 
       logger.info(
         LogCategory.EXTENSION,
@@ -2147,6 +2200,338 @@ export class KnowledgeMessageHandler {
       this.context.view?.webview.postMessage({
         type: 'v1:error',
         payload: { message: error.message, operation: 'check-enabled' }
+      });
+    }
+  }
+
+  private async handleV1ImportTemplate(payload: { templateJson: any }): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling v1:import-template',
+        'KnowledgeMessageHandler.handleV1ImportTemplate',
+        {},
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      const template = await this.context.knowledgeManager.importV1Template(payload.templateJson);
+
+      vscode.window.showInformationMessage(`Template "${template.name}" imported successfully`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:import-success',
+        payload: { template }
+      });
+
+      // Refresh template list
+      await this.handleV1GetTemplates();
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to import template',
+        'KnowledgeMessageHandler.handleV1ImportTemplate',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to import template: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'import-template' }
+      });
+    }
+  }
+
+  private async handleV1InjectTemplate(payload: { templateId: string; filePath?: string }): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling v1:inject-template',
+        'KnowledgeMessageHandler.handleV1InjectTemplate',
+        { templateId: payload.templateId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      // Get target file path (use focused file if not provided)
+      let targetFilePath = payload.filePath;
+      if (!targetFilePath) {
+        const activeEditor = vscode.window.activeTextEditor;
+        if (!activeEditor) {
+          throw new Error('No file is currently open');
+        }
+        targetFilePath = activeEditor.document.uri.fsPath;
+      }
+
+      await this.context.knowledgeManager.injectV1Template(payload.templateId, targetFilePath);
+
+      vscode.window.showInformationMessage(`Template injected to ${targetFilePath}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:inject-template-success',
+        payload: { templateId: payload.templateId, filePath: targetFilePath }
+      });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to inject template',
+        'KnowledgeMessageHandler.handleV1InjectTemplate',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to inject template: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'inject-template' }
+      });
+    }
+  }
+
+  private async handleV1ExportTemplate(payload: { templateId: string }): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling v1:export-template',
+        'KnowledgeMessageHandler.handleV1ExportTemplate',
+        { templateId: payload.templateId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      const filePath = await this.context.knowledgeManager.exportV1Template(payload.templateId);
+
+      vscode.window.showInformationMessage(`Template exported to ${filePath}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:export-success',
+        payload: { templateId: payload.templateId, filePath }
+      });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to export template',
+        'KnowledgeMessageHandler.handleV1ExportTemplate',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to export template: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'export-template' }
+      });
+    }
+  }
+
+  private async handleV1InjectItem(payload: { templateId: string; itemId: string; filePath?: string }): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling v1:inject-item',
+        'KnowledgeMessageHandler.handleV1InjectItem',
+        { templateId: payload.templateId, itemId: payload.itemId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      // Get target file path (use focused file if not provided)
+      let targetFilePath = payload.filePath;
+      if (!targetFilePath) {
+        const activeEditor = vscode.window.activeTextEditor;
+        if (!activeEditor) {
+          throw new Error('No file is currently open');
+        }
+        targetFilePath = activeEditor.document.uri.fsPath;
+      }
+
+      await this.context.knowledgeManager.injectV1Item(payload.templateId, payload.itemId, targetFilePath);
+
+      vscode.window.showInformationMessage(`Item injected to ${targetFilePath}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:inject-item-success',
+        payload: { templateId: payload.templateId, itemId: payload.itemId, filePath: targetFilePath }
+      });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to inject item',
+        'KnowledgeMessageHandler.handleV1InjectItem',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to inject item: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'inject-item' }
+      });
+    }
+  }
+
+  private async handleV1MoveItem(payload: { itemId: string; fromTemplateId: string; toTemplateId: string }): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling v1:move-item',
+        'KnowledgeMessageHandler.handleV1MoveItem',
+        { itemId: payload.itemId, fromTemplateId: payload.fromTemplateId, toTemplateId: payload.toTemplateId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      await this.context.knowledgeManager.moveV1Item(payload.itemId, payload.fromTemplateId, payload.toTemplateId);
+
+      vscode.window.showInformationMessage('Item moved successfully');
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:move-item-success',
+        payload: { itemId: payload.itemId, fromTemplateId: payload.fromTemplateId, toTemplateId: payload.toTemplateId }
+      });
+
+      // Refresh template list
+      await this.handleV1GetTemplates();
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to move item',
+        'KnowledgeMessageHandler.handleV1MoveItem',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to move item: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'move-item' }
+      });
+    }
+  }
+
+  private async handleV1CopyItem(payload: { itemId: string; fromTemplateId: string; toTemplateId: string }): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling v1:copy-item',
+        'KnowledgeMessageHandler.handleV1CopyItem',
+        { itemId: payload.itemId, fromTemplateId: payload.fromTemplateId, toTemplateId: payload.toTemplateId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      await this.context.knowledgeManager.copyV1Item(payload.itemId, payload.fromTemplateId, payload.toTemplateId);
+
+      vscode.window.showInformationMessage('Item copied successfully');
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:copy-item-success',
+        payload: { itemId: payload.itemId, fromTemplateId: payload.fromTemplateId, toTemplateId: payload.toTemplateId }
+      });
+
+      // Refresh template list
+      await this.handleV1GetTemplates();
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to copy item',
+        'KnowledgeMessageHandler.handleV1CopyItem',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to copy item: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'copy-item' }
+      });
+    }
+  }
+
+  private async handleV1DeleteTemplate(payload: { templateId: string }): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling v1:delete-template',
+        'KnowledgeMessageHandler.handleV1DeleteTemplate',
+        { templateId: payload.templateId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      await this.context.knowledgeManager.deleteV1Template(payload.templateId);
+
+      vscode.window.showInformationMessage('Template deleted successfully');
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:delete-template-success',
+        payload: { templateId: payload.templateId }
+      });
+
+      // Refresh template list
+      await this.handleV1GetTemplates();
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to delete template',
+        'KnowledgeMessageHandler.handleV1DeleteTemplate',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to delete template: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'delete-template' }
+      });
+    }
+  }
+
+  private async handleV1UpdateTemplate(payload: {
+    templateId: string;
+    updates: {
+      name?: string;
+      description?: string;
+      category?: string;
+      tags?: string[];
+      scope?: string;
+    };
+  }): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling v1:update-template',
+        'KnowledgeMessageHandler.handleV1UpdateTemplate',
+        { templateId: payload.templateId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      await this.context.knowledgeManager.updateV1Template(payload.templateId, payload.updates);
+
+      vscode.window.showInformationMessage('Template updated successfully');
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:update-template-success',
+        payload: { templateId: payload.templateId }
+      });
+
+      // Refresh template list
+      await this.handleV1GetTemplates();
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to update template',
+        'KnowledgeMessageHandler.handleV1UpdateTemplate',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to update template: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'update-template' }
       });
     }
   }

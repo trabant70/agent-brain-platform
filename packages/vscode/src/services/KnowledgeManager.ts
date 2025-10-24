@@ -2852,22 +2852,19 @@ export class KnowledgeManager {
     tags: string[];
     scope?: KnowledgeScope;
   }): Promise<MarketplaceTemplate> {
-    const template = this.templateStore.createTemplate(
-      {
-        name: options.name,
-        description: options.description,
-        category: options.category,
-        tags: options.tags,
-        author: {
-          name: 'User',
-          email: 'user@local'
-        },
-        license: 'MIT',
-        source: TemplateSource.USER,
-        scope: options.scope
+    const template = this.templateStore.addTemplate({
+      name: options.name,
+      description: options.description,
+      category: options.category,
+      tags: options.tags,
+      author: {
+        name: 'User',
+        email: 'user@local'
       },
-      this.auditLogger
-    );
+      license: 'MIT',
+      source: TemplateSource.USER,
+      scope: options.scope
+    });
 
     // Save to disk
     await this.saveTemplateStoreToFiles();
@@ -2893,7 +2890,7 @@ export class KnowledgeManager {
     scope: KnowledgeScope;
     tags: string[];
   }): Promise<KnowledgeItem> {
-    const item = this.templateStore.addItem(
+    const item = this.templateStore.addItemToTemplate(
       templateId,
       {
         title: options.title,
@@ -2902,8 +2899,12 @@ export class KnowledgeManager {
         scope: options.scope,
         tags: options.tags
       },
-      this.auditLogger
+      'user'
     );
+
+    if (!item) {
+      throw new Error(`Failed to add item to template ${templateId}`);
+    }
 
     // Save to disk
     await this.saveTemplateStoreToFiles();
@@ -2929,7 +2930,7 @@ export class KnowledgeManager {
     scope?: KnowledgeScope;
     tags?: string[];
   }): Promise<void> {
-    this.templateStore.updateItem(templateId, itemId, updates, this.auditLogger);
+    this.templateStore.updateItem(templateId, itemId, updates, 'user');
 
     // Save to disk
     await this.saveTemplateStoreToFiles();
@@ -2947,7 +2948,7 @@ export class KnowledgeManager {
    * Delete item from V1 template
    */
   async deleteV1Item(templateId: string, itemId: string): Promise<void> {
-    this.templateStore.deleteItem(templateId, itemId, this.auditLogger);
+    this.templateStore.removeItemFromTemplate(templateId, itemId, 'user');
 
     // Save to disk
     await this.saveTemplateStoreToFiles();
@@ -3027,7 +3028,7 @@ export class KnowledgeManager {
     }
 
     // Add cloned template to store
-    this.templateStore.addTemplate(cloneResult.clonedTemplate, this.auditLogger);
+    this.templateStore.loadTemplates([cloneResult.clonedTemplate]);
 
     // Save to disk
     await this.saveTemplateStoreToFiles();
@@ -3052,6 +3053,209 @@ export class KnowledgeManager {
       return [];
     }
     return template.auditLog || [];
+  }
+
+  /**
+   * Delete a V1 template
+   */
+  async deleteV1Template(templateId: string): Promise<void> {
+    const success = this.templateStore.deleteTemplate(templateId, 'user');
+    if (!success) {
+      throw new Error(`Failed to delete template ${templateId}`);
+    }
+
+    // Save to disk
+    await this.saveTemplateStoreToFiles();
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'Deleted V1 template',
+      'KnowledgeManager.deleteV1Template',
+      { templateId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+  }
+
+  /**
+   * Update V1 template metadata
+   */
+  async updateV1Template(templateId: string, updates: {
+    name?: string;
+    description?: string;
+    category?: string;
+    tags?: string[];
+    scope?: string;
+  }): Promise<void> {
+    const success = this.templateStore.updateTemplate(templateId, updates, 'user');
+    if (!success) {
+      throw new Error(`Failed to update template ${templateId}`);
+    }
+
+    // Save to disk
+    await this.saveTemplateStoreToFiles();
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'Updated V1 template',
+      'KnowledgeManager.updateV1Template',
+      { templateId, updates },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+  }
+
+  /**
+   * Move item from one template to another
+   */
+  async moveV1Item(itemId: string, fromTemplateId: string, toTemplateId: string): Promise<void> {
+    const result = this.templateStore.moveItem(itemId, fromTemplateId, toTemplateId, 'user');
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to move item');
+    }
+
+    // Save to disk
+    await this.saveTemplateStoreToFiles();
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'Moved V1 item',
+      'KnowledgeManager.moveV1Item',
+      { itemId, fromTemplateId, toTemplateId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+  }
+
+  /**
+   * Copy item from one template to another
+   */
+  async copyV1Item(itemId: string, fromTemplateId: string, toTemplateId: string): Promise<void> {
+    const result = this.templateStore.copyItem(itemId, toTemplateId, 'user');
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to copy item');
+    }
+
+    // Save to disk
+    await this.saveTemplateStoreToFiles();
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'Copied V1 item',
+      'KnowledgeManager.copyV1Item',
+      { itemId, fromTemplateId, toTemplateId, newItemId: result.newItemId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+  }
+
+  /**
+   * Import V1 template from JSON
+   */
+  async importV1Template(templateJson: any): Promise<MarketplaceTemplate> {
+    // Validate template structure
+    if (!templateJson.id || !templateJson.name) {
+      throw new Error('Invalid template: missing id or name');
+    }
+
+    // Load the template into store
+    this.templateStore.loadTemplates([templateJson]);
+
+    // Save to disk
+    await this.saveTemplateStoreToFiles();
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'Imported V1 template',
+      'KnowledgeManager.importV1Template',
+      { templateId: templateJson.id, name: templateJson.name },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    return templateJson;
+  }
+
+  /**
+   * Export V1 template to JSON file
+   */
+  async exportV1Template(templateId: string): Promise<string> {
+    const template = this.templateStore.getTemplate(templateId);
+    if (!template) {
+      throw new Error(`Template ${templateId} not found`);
+    }
+
+    // Create exports directory if it doesn't exist
+    const exportsDir = path.join(this.agentBrainPath, 'exports');
+    if (!fs.existsSync(exportsDir)) {
+      fs.mkdirSync(exportsDir, { recursive: true });
+    }
+
+    // Generate filename
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const filename = `template-${template.name.toLowerCase().replace(/\s+/g, '-')}-${timestamp}.json`;
+    const filePath = path.join(exportsDir, filename);
+
+    // Write template to file
+    fs.writeFileSync(filePath, JSON.stringify(template, null, 2), 'utf-8');
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'Exported V1 template',
+      'KnowledgeManager.exportV1Template',
+      { templateId, filePath },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    return filePath;
+  }
+
+  /**
+   * Inject V1 template to a file (e.g., CLAUDE.md)
+   */
+  async injectV1Template(templateId: string, targetFilePath: string): Promise<void> {
+    const template = this.templateStore.getTemplate(templateId);
+    if (!template) {
+      throw new Error(`Template ${templateId} not found`);
+    }
+
+    // Record injection for all items
+    this.templateStore.recordTemplateInjection(templateId, targetFilePath, 'user');
+
+    // Save to disk
+    await this.saveTemplateStoreToFiles();
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'Injected V1 template',
+      'KnowledgeManager.injectV1Template',
+      { templateId, targetFilePath, itemCount: template.items.length },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+  }
+
+  /**
+   * Inject single V1 item to a file (e.g., CLAUDE.md)
+   */
+  async injectV1Item(templateId: string, itemId: string, targetFilePath: string): Promise<void> {
+    const template = this.templateStore.getTemplate(templateId);
+    if (!template) {
+      throw new Error(`Template ${templateId} not found`);
+    }
+
+    const item = template.items.find(i => i.id === itemId);
+    if (!item) {
+      throw new Error(`Item ${itemId} not found in template ${templateId}`);
+    }
+
+    // Record injection
+    this.templateStore.recordItemInjection(itemId, targetFilePath, 'item', templateId, 'user');
+
+    // Save to disk
+    await this.saveTemplateStoreToFiles();
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'Injected V1 item',
+      'KnowledgeManager.injectV1Item',
+      { templateId, itemId, targetFilePath, itemTitle: item.title },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
   }
 
   /**
@@ -3140,7 +3344,7 @@ export class KnowledgeManager {
 
       // Load migrated templates into TemplateStore
       for (const template of result.migratedTemplates) {
-        this.templateStore.addTemplate(template, this.auditLogger);
+        this.templateStore.loadTemplates([template]);
       }
 
       // Save to disk
@@ -3255,7 +3459,7 @@ export class KnowledgeManager {
           const json = Buffer.from(content).toString('utf8');
 
           const template = await this.fileSystem.loadTemplateJson(fileUri.fsPath, json);
-          this.templateStore.addTemplate(template, this.auditLogger);
+          this.templateStore.loadTemplates([template]);
           loadedCount++;
         } catch (error) {
           logger.warn(
@@ -3337,7 +3541,7 @@ export class KnowledgeManager {
           const template = await this.knowledgeFileSystem.loadTemplateJson(filePath, content);
 
           // Add to TemplateStore (bundled templates are always added, never replaced by user templates)
-          this.templateStore.addTemplate(template, this.auditLogger);
+          this.templateStore.loadTemplates([template]);
           loadedCount++;
 
           logger.debug(
