@@ -7,6 +7,7 @@
 
 import { DomainComplexity } from '../../../knowledge/types';
 import { FramingTemplates } from '../../../knowledge/FramingTemplates';
+import { t } from '../../webview/i18n';
 
 export interface MaturityContext {
   complexity: DomainComplexity;
@@ -55,11 +56,11 @@ export class MaturityConfigPanel {
     section.innerHTML = `
       <div class="maturity-header">
         <div class="header-left">
-          <h3>Context Configuration</h3>
+          <h3>${t('maturity.contextConfiguration')}</h3>
           <span class="context-summary">${this.getContextSummary()}</span>
         </div>
-        <button class="btn-controls" id="maturity-controls-toggle" title="Configure maturity context">
-          <span class="codicon codicon-settings-gear"></span> Controls
+        <button class="btn-controls" id="maturity-controls-toggle" title="${t('maturity.contextConfiguration')}">
+          <span class="codicon codicon-settings-gear"></span> ${t('button.controls')}
         </button>
       </div>
 
@@ -109,53 +110,53 @@ export class MaturityConfigPanel {
       <div class="maturity-config-body">
         <!-- Complexity Dropdown -->
         <div class="complexity-selector">
-          <label for="complexity-select">Complexity Level:</label>
+          <label for="complexity-select">${t('maturity.complexityLevel')}</label>
           <select id="complexity-select" class="complexity-dropdown">
             <option value="simple" ${this.currentContext.complexity === DomainComplexity.SIMPLE ? 'selected' : ''}>
-              Simple (Basic CRUD, straightforward logic)
+              ${t('maturity.complexity.simple')} (${t('maturity.complexity.simple.desc')})
             </option>
             <option value="standard" ${this.currentContext.complexity === DomainComplexity.STANDARD ? 'selected' : ''}>
-              Standard (Typical business logic, common patterns)
+              ${t('maturity.complexity.standard')} (${t('maturity.complexity.standard.desc')})
             </option>
             <option value="complex" ${this.currentContext.complexity === DomainComplexity.COMPLEX ? 'selected' : ''}>
-              Complex (Distributed systems, advanced algorithms)
+              ${t('maturity.complexity.complex')} (${t('maturity.complexity.complex.desc')})
             </option>
           </select>
         </div>
 
         <!-- 5x5 Quadrant Grid -->
         <div class="quadrant-grid-container">
-          <p class="grid-label">Your Context: <strong>${this.getQuadrantLabel()}</strong></p>
+          <p class="grid-label">${t('maturity.yourContext')} <strong>${this.getQuadrantLabel()}</strong></p>
 
           <div class="quadrant-grid-5x5">
             <!-- Y-axis label -->
-            <div class="grid-axis-y">Project Phase</div>
+            <div class="grid-axis-y">${t('maturity.projectPhase')}</div>
 
             <!-- Row labels + buttons -->
-            ${this.renderGridRow(5, 'Mature', [21, 22, 23, 24, 25])}
-            ${this.renderGridRow(4, 'Established', [16, 17, 18, 19, 20])}
-            ${this.renderGridRow(3, 'Development', [11, 12, 13, 14, 15])}
-            ${this.renderGridRow(2, 'Inception', [6, 7, 8, 9, 10])}
-            ${this.renderGridRow(1, 'Planning', [1, 2, 3, 4, 5])}
+            ${this.renderGridRow(5, t('maturity.project.mature'), [21, 22, 23, 24, 25])}
+            ${this.renderGridRow(4, t('maturity.project.established'), [16, 17, 18, 19, 20])}
+            ${this.renderGridRow(3, t('maturity.project.development'), [11, 12, 13, 14, 15])}
+            ${this.renderGridRow(2, t('maturity.project.inception'), [6, 7, 8, 9, 10])}
+            ${this.renderGridRow(1, t('maturity.project.planning'), [1, 2, 3, 4, 5])}
 
             <!-- Column labels -->
             <div class="grid-col-labels">
-              <div class="grid-col-label">Novice</div>
-              <div class="grid-col-label">Junior</div>
-              <div class="grid-col-label">Mid</div>
-              <div class="grid-col-label">Senior</div>
-              <div class="grid-col-label">Expert</div>
+              <div class="grid-col-label">${t('maturity.operator.novice')}</div>
+              <div class="grid-col-label">${t('maturity.operator.junior')}</div>
+              <div class="grid-col-label">${t('maturity.operator.mid')}</div>
+              <div class="grid-col-label">${t('maturity.operator.senior')}</div>
+              <div class="grid-col-label">${t('maturity.operator.expert')}</div>
             </div>
 
             <!-- X-axis label -->
-            <div class="grid-axis-x">Operator Experience</div>
+            <div class="grid-axis-x">${t('maturity.operatorExperience')}</div>
           </div>
         </div>
 
         <!-- Max Items Slider -->
         <div class="max-items-control">
           <label for="max-items-slider">
-            Maximum items: <span id="max-items-value">${this.currentContext.maxItems || 25}</span>
+            ${t('maturity.maximumItems')} <span id="max-items-value">${this.currentContext.maxItems || 25}</span>
           </label>
           <input
             type="range"
@@ -169,8 +170,8 @@ export class MaturityConfigPanel {
 
         <!-- Action Buttons -->
         <div class="action-buttons">
-          <button class="btn-secondary" id="reset-defaults">Reset to Defaults</button>
-          <button class="btn-primary" id="apply-config">Apply Configuration</button>
+          <button class="btn-secondary" id="reset-defaults">${t('maturity.resetToDefaults')}</button>
+          <button class="btn-primary" id="apply-config">${t('maturity.applyConfiguration')}</button>
         </div>
       </div>
     `;
