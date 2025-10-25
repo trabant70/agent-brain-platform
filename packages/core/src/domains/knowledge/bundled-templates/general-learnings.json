@@ -1,0 +1,44 @@
+{
+  "id": "bundled.general-learnings",
+  "name": "General Learnings",
+  "description": "Catch-all template for ad-hoc learnings captured during development sessions. This is the default location for emergent knowledge that doesn't belong in a specific template.",
+  "version": "1.0.0",
+  "createdAt": "2025-10-25T00:00:00.000Z",
+  "updatedAt": "2025-10-25T00:00:00.000Z",
+  "category": "learnings",
+  "tags": ["learnings", "general", "session-capture"],
+  "author": {
+    "name": "Agent Brain Team",
+    "email": "team@agentbrain.dev"
+  },
+  "license": "MIT",
+  "source": "bundled",
+  "scope": "team",
+  "userEditable": true,
+  "items": [
+    {
+      "id": "item-vscode-webview-confirm-sandboxing",
+      "type": "troubleshooting-guide",
+      "scope": "team",
+      "title": "VSCode Webview Sandboxing Prevents Browser Dialogs",
+      "body": "# VSCode Webview Sandboxing Prevents Browser Dialogs\n\n## Context\nWhen implementing UI interactions in VSCode webview components (browser context), specifically when needing user confirmation for destructive actions like deleting templates or items.\n\n## Problem\nCalling standard browser dialog methods throws sandboxing errors:\n- `confirm()` → \"Ignored call to 'confirm()'. The document is sandboxed.\"\n- `alert()` → \"Ignored call to 'alert()'. The document is sandboxed.\"\n- `prompt()` → \"Ignored call to 'prompt()'. The document is sandboxed.\"\n\nVSCode webviews run in a sandboxed iframe with strict Content Security Policy that blocks these native browser APIs.\n\n## Discovery\nEncountered during template deletion feature implementation (v0.4.47-0.4.48). Three deletion operations failed:\n1. Delete template from store\n2. Delete item from template\n3. Remove injected template from CLAUDE.md\n\nAll three used `confirm()` for user confirmation and all three failed silently with sandbox errors visible only in webview DevTools console.\n\n## Solution\nUse custom modal dialog components instead of browser dialogs:\n\n### For Confirmations\n```typescript\n// WRONG - Will fail in webview\nprivate handleDeleteTemplate(templateId: string): void {\n  if (confirm('Delete this template?')) {\n    this.sendMessage({ type: 'v1:delete-template', payload: { templateId } });\n  }\n}\n\n// RIGHT - Use ModalDialog\nprivate async handleDeleteTemplate(templateId: string): Promise<void> {\n  const confirmed = await this.modal.confirm(\n    'Delete this template?',\n    'Confirm Deletion'\n  );\n  if (confirmed) {\n    this.sendMessage({ type: 'v1:delete-template', payload: { templateId } });\n  }\n}\n```\n\n### Implementation Pattern\n1. **Import ModalDialog**: `import { ModalDialog } from './ModalDialog';`\n2. **Instantiate in constructor**: `this.modal = new ModalDialog();`\n3. **Make handler async**: Change `void` return to `Promise<void>`\n4. **Use await**: `const confirmed = await this.modal.confirm(message, title);`\n\n### For Alerts/Notifications\nUse `NotificationManager` instead of `alert()`:\n```typescript\nthis.notifications.show({\n  type: 'error',\n  message: 'Operation failed',\n  duration: 5000\n});\n```\n\n### For Input Dialogs\nBuild custom form-based dialogs instead of `prompt()` - see `V1TemplateFormController` for examples.\n\n## Related Files\n- `packages/core/src/domains/visualization/ui/ModalDialog.ts` - Custom modal implementation\n- `packages/core/src/domains/visualization/ui/NotificationManager.ts` - Toast notifications\n- `packages/core/src/domains/visualization/ui/KnowledgeViewController.ts:310-326` - Example: handleDeleteTemplate with ModalDialog\n- `packages/core/src/domains/visualization/ui/KnowledgeViewController.ts:351-366` - Example: handleDeleteItem with ModalDialog\n\n## Testing\nTo verify the issue:\n1. Open webview in Extension Development Host\n2. Right-click webview → \"Open Webview Developer Tools\"\n3. Try calling `confirm()` in console - observe sandbox error\n4. Test ModalDialog-based confirmations - work correctly\n\n## Session Reference\nDiscovered during: session-2025-10-25-template-deletion-fix (v0.4.47 → v0.4.48)\n\n## Tags for Search\n#vscode #webview #sandboxing #confirm #alert #prompt #modal-dialog #ui #browser-apis",
+      "tags": ["vscode", "webview", "sandboxing", "confirm", "alert", "modal-dialog", "ui", "troubleshooting"],
+      "maturity": {
+        "operator": { "min": 3, "max": 5 },
+        "project": { "min": 2, "max": 5 },
+        "complexity": { "min": 2, "max": 3 }
+      },
+      "source": "session-2025-10-25-template-deletion-fix",
+      "path": "",
+      "relativePath": "",
+      "valid": true,
+      "metadata": {
+        "createdAt": "2025-10-25T00:00:00.000Z",
+        "updatedAt": "2025-10-25T00:00:00.000Z",
+        "author": "Claude Code",
+        "version": 1
+      }
+    }
+  ],
+  "itemCount": 1
+}
