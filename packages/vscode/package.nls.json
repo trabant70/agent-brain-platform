@@ -2,10 +2,10 @@
   "displayName": "Agent Brain Platform",
   "description": "Help AI agents (like Claude) be better partners - give them persistent memory, your standards, and expert solutions. Transform forgetful juniors into consistent seniors with audit trails.",
 
-  "command.showTimeline": "Show Repository Timeline",
+  "command.showTimeline": "Show Agent Brain",
   "command.refreshData": "Refresh Timeline Data",
 
-  "viewContainer.activitybar.title": "AB Timeline",
+  "viewContainer.activitybar.title": "Agent Brain",
   "viewContainer.panel.title": "Agent Brain",
 
   "view.welcome.name": "Getting Started",
@@ -23,6 +23,6 @@
   "config.providers.knowledgeEvents.enabled.description": "Enable knowledge events provider (shows knowledge items on timeline)",
   "config.providers.sessionJournals.enabled.description": "Enable session journals provider (shows session events on timeline)",
 
-  "error.showTimeline": "Failed to show Repository Timeline. Please check the Output panel for details.",
+  "error.showTimeline": "Failed to show Agent Brain. Please check the Output panel for details.",
   "error.activateFailed": "Failed to activate Agent Brain Platform: {0}"
 }

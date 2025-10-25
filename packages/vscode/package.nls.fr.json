@@ -2,10 +2,10 @@
   "displayName": "Agent Brain Platform",
   "description": "Transformez les agents de codage IA en développeurs senior - surmontez l'amnésie, appliquez les normes, injectez des solutions d'experts et maintenez des pistes d'audit complètes",
 
-  "command.showTimeline": "Afficher la Chronologie du Dépôt",
+  "command.showTimeline": "Afficher Agent Brain",
   "command.refreshData": "Actualiser les Données de la Chronologie",
 
-  "viewContainer.activitybar.title": "AB Chronologie",
+  "viewContainer.activitybar.title": "Agent Brain",
   "viewContainer.panel.title": "Agent Brain",
 
   "view.welcome.name": "Commencer",
@@ -23,6 +23,6 @@
   "config.providers.knowledgeEvents.enabled.description": "Activer le fournisseur d'événements de connaissance (affiche les éléments de connaissance sur la chronologie)",
   "config.providers.sessionJournals.enabled.description": "Activer le fournisseur de journaux de session (affiche les événements de session sur la chronologie)",
 
-  "error.showTimeline": "Impossible d'afficher la Chronologie du Dépôt. Veuillez vérifier le panneau de Sortie pour plus de détails.",
+  "error.showTimeline": "Impossible d'afficher Agent Brain. Veuillez vérifier le panneau de Sortie pour plus de détails.",
   "error.activateFailed": "Impossible d'activer Agent Brain Platform: {0}"
 }

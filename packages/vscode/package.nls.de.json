@@ -2,10 +2,10 @@
   "displayName": "Agent Brain Platform",
   "description": "Verwandeln Sie KI-Programmieragenten in Senior-Entwickler - überwinden Sie Amnesie, setzen Sie Standards durch, fügen Sie Expertenlösungen ein und führen Sie vollständige Prüfpfade",
 
-  "command.showTimeline": "Repository-Zeitlinie anzeigen",
+  "command.showTimeline": "Agent Brain anzeigen",
   "command.refreshData": "Zeitliniendaten aktualisieren",
 
-  "viewContainer.activitybar.title": "AB Zeitlinie",
+  "viewContainer.activitybar.title": "Agent Brain",
   "viewContainer.panel.title": "Agent Brain",
 
   "view.welcome.name": "Erste Schritte",
@@ -23,6 +23,6 @@
   "config.providers.knowledgeEvents.enabled.description": "Wissensereignis-Anbieter aktivieren (zeigt Wissenselemente auf der Zeitlinie)",
   "config.providers.sessionJournals.enabled.description": "Sitzungsjournal-Anbieter aktivieren (zeigt Sitzungsereignisse auf der Zeitlinie)",
 
-  "error.showTimeline": "Fehler beim Anzeigen der Repository-Zeitlinie. Bitte überprüfen Sie das Ausgabe-Panel für Details.",
+  "error.showTimeline": "Fehler beim Anzeigen von Agent Brain. Bitte überprüfen Sie das Ausgabe-Panel für Details.",
   "error.activateFailed": "Fehler beim Aktivieren der Agent Brain Platform: {0}"
 }

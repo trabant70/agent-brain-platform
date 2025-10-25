@@ -2,10 +2,10 @@
   "displayName": "Agent Brain Platform",
   "description": "Transforme agentes de codificación IA en desarrolladores senior - supere la amnesia, aplique estándares, inyecte soluciones expertas y mantenga pistas de auditoría completas",
 
-  "command.showTimeline": "Mostrar Línea de Tiempo del Repositorio",
+  "command.showTimeline": "Mostrar Agent Brain",
   "command.refreshData": "Actualizar Datos de Línea de Tiempo",
 
-  "viewContainer.activitybar.title": "AB Línea de Tiempo",
+  "viewContainer.activitybar.title": "Agent Brain",
   "viewContainer.panel.title": "Agent Brain",
 
   "view.welcome.name": "Primeros Pasos",
@@ -23,6 +23,6 @@
   "config.providers.knowledgeEvents.enabled.description": "Habilitar proveedor de eventos de conocimiento (muestra elementos de conocimiento en la línea de tiempo)",
   "config.providers.sessionJournals.enabled.description": "Habilitar proveedor de diarios de sesión (muestra eventos de sesión en la línea de tiempo)",
 
-  "error.showTimeline": "Error al mostrar la Línea de Tiempo del Repositorio. Por favor verifique el panel de Salida para más detalles.",
+  "error.showTimeline": "Error al mostrar Agent Brain. Por favor verifique el panel de Salida para más detalles.",
   "error.activateFailed": "Error al activar Agent Brain Platform: {0}"
 }

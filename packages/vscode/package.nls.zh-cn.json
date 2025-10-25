@@ -2,10 +2,10 @@
   "displayName": "Agent Brain Platform",
   "description": "将AI编码代理转变为高级开发人员 - 克服健忘症、执行标准、注入专家解决方案并维护完整的审计跟踪",
 
-  "command.showTimeline": "显示仓库时间线",
+  "command.showTimeline": "显示 Agent Brain",
   "command.refreshData": "刷新时间线数据",
 
-  "viewContainer.activitybar.title": "AB 时间线",
+  "viewContainer.activitybar.title": "Agent Brain",
   "viewContainer.panel.title": "Agent Brain",
 
   "view.welcome.name": "入门指南",
@@ -23,6 +23,6 @@
   "config.providers.knowledgeEvents.enabled.description": "启用知识事件提供程序（在时间线上显示知识项）",
   "config.providers.sessionJournals.enabled.description": "启用会话日志提供程序（在时间线上显示会话事件）",
 
-  "error.showTimeline": "无法显示仓库时间线。请查看输出面板以获取详细信息。",
+  "error.showTimeline": "无法显示 Agent Brain。请查看输出面板以获取详细信息。",
   "error.activateFailed": "无法激活 Agent Brain Platform: {0}"
 }

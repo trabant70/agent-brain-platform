@@ -62,7 +62,7 @@ export class AuditLogViewer {
     });
 
     return `
-      <div class="audit-log-container" style="max-height: 600px; overflow-y: auto; padding: 8px;">
+      <div class="audit-log-container" style="padding: 20px;">
         <table class="audit-log-table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
           <thead style="position: sticky; top: 0; background: var(--vscode-editor-background); z-index: 1;">
             <tr style="border-bottom: 2px solid var(--vscode-panel-border);">
