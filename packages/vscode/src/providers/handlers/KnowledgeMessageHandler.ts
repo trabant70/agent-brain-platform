@@ -118,6 +118,19 @@ export class KnowledgeMessageHandler {
         await this.handleV1RemoveInjectedTemplate(message.payload);
         return true;
 
+      // Maturity-based filtering
+      case 'maturity:get-context':
+        await this.handleGetMaturityContext();
+        return true;
+
+      case 'maturity:save-context':
+        await this.handleSaveMaturityContext(message.payload);
+        return true;
+
+      case 'maturity:update-context':
+        await this.handleUpdateMaturityContext(message.payload);
+        return true;
+
       default:
         return false; // Not handled by this handler
     }
@@ -1103,6 +1116,119 @@ export class KnowledgeMessageHandler {
       this.context.view?.webview.postMessage({
         type: 'v1:error',
         payload: { message: error.message, operation: 'remove-injected-template' }
+      });
+    }
+  }
+
+  // ==========================================================================
+  // MATURITY-BASED FILTERING HANDLERS
+  // ==========================================================================
+
+  /**
+   * Get current maturity context
+   */
+  private async handleGetMaturityContext(): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling maturity:get-context',
+        'KnowledgeMessageHandler.handleGetMaturityContext',
+        {},
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      const context = await this.context.knowledgeManager.getMaturityContext();
+
+      this.context.view?.webview.postMessage({
+        type: 'maturity:context-data',
+        payload: { context }
+      });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to get maturity context',
+        'KnowledgeMessageHandler.handleGetMaturityContext',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      this.context.view?.webview.postMessage({
+        type: 'maturity:error',
+        payload: { message: error.message, operation: 'get-context' }
+      });
+    }
+  }
+
+  /**
+   * Save maturity context
+   */
+  private async handleSaveMaturityContext(payload: { context: any }): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling maturity:save-context',
+        'KnowledgeMessageHandler.handleSaveMaturityContext',
+        { quadrant: payload.context.quadrant, complexity: payload.context.complexity },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      await this.context.knowledgeManager.saveMaturityContext(payload.context);
+
+      vscode.window.showInformationMessage('Maturity configuration saved');
+
+      this.context.view?.webview.postMessage({
+        type: 'maturity:save-success',
+        payload: { context: payload.context }
+      });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to save maturity context',
+        'KnowledgeMessageHandler.handleSaveMaturityContext',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to save maturity configuration: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'maturity:error',
+        payload: { message: error.message, operation: 'save-context' }
+      });
+    }
+  }
+
+  /**
+   * Update maturity context (partial update)
+   */
+  private async handleUpdateMaturityContext(payload: { partial: any }): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling maturity:update-context',
+        'KnowledgeMessageHandler.handleUpdateMaturityContext',
+        payload.partial,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      const updated = await this.context.knowledgeManager.updateMaturityContext(payload.partial);
+
+      this.context.view?.webview.postMessage({
+        type: 'maturity:context-data',
+        payload: { context: updated }
+      });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to update maturity context',
+        'KnowledgeMessageHandler.handleUpdateMaturityContext',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      this.context.view?.webview.postMessage({
+        type: 'maturity:error',
+        payload: { message: error.message, operation: 'update-context' }
       });
     }
   }

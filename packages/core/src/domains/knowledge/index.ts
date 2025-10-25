@@ -54,3 +54,9 @@ export type {
   MigrationResult,
   MigrationOptions
 } from './TemplateMigration';
+
+// 3D Maturity-Based Filtering
+export { MaturitySelector } from './MaturitySelector';
+export { MaturityConfigManager } from './MaturityConfigManager';
+export { FramingTemplates } from './FramingTemplates';
+export type { FramingTemplate } from './FramingTemplates';

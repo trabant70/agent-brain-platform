@@ -13,6 +13,7 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
 import {
   KnowledgeStore,
   KnowledgeFileSystem,
@@ -30,7 +31,9 @@ import {
   VersionManager,
   TemplateCloner,
   TemplateRegistry,
-  TemplateInstaller
+  TemplateInstaller,
+  MaturityContext,
+  MaturityConfigManager
 } from '@agent-brain/core/domains/knowledge';
 
 import { KnowledgeEventStorage } from '@agent-brain/core/domains/events';
@@ -397,6 +400,96 @@ export class KnowledgeManager {
 
   async removeV1Template(templateId: string, targetFilePath: string): Promise<void> {
     await this.templateInjectionService.removeTemplate(templateId, targetFilePath);
+  }
+
+  // ==========================================================================
+  // MATURITY-BASED FILTERING
+  // ==========================================================================
+
+  /**
+   * Get current maturity configuration
+   * Loads from .agent-brain/maturity-config.json or returns defaults
+   */
+  async getMaturityContext(): Promise<MaturityContext> {
+    const configPath = path.join(this.knowledgeBaseDir, 'maturity-config.json');
+
+    try {
+      if (fs.existsSync(configPath)) {
+        const content = fs.readFileSync(configPath, 'utf-8');
+        const json = JSON.parse(content);
+        const context = MaturityConfigManager.fromJSON(json);
+
+        // Validate before returning
+        const validation = MaturityConfigManager.validate(context);
+        if (!validation.valid) {
+          logger.warn(
+            LogCategory.EXTENSION,
+            `Invalid maturity config, using defaults: ${validation.errors.join(', ')}`,
+            'KnowledgeManager.getMaturityContext',
+            {},
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+          return MaturityConfigManager.createDefault();
+        }
+
+        logger.debug(
+          LogCategory.EXTENSION,
+          'Loaded maturity context from config',
+          'KnowledgeManager.getMaturityContext',
+          { quadrant: context.quadrant, complexity: context.complexity },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
+        return context;
+      }
+    } catch (error) {
+      logger.warn(
+        LogCategory.EXTENSION,
+        'Failed to load maturity config, using defaults',
+        'KnowledgeManager.getMaturityContext',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+    }
+
+    // Return defaults if file doesn't exist or parse failed
+    return MaturityConfigManager.createDefault();
+  }
+
+  /**
+   * Save maturity configuration
+   * Writes to .agent-brain/maturity-config.json
+   */
+  async saveMaturityContext(context: MaturityContext): Promise<void> {
+    const configPath = path.join(this.knowledgeBaseDir, 'maturity-config.json');
+
+    // Validate before saving
+    const validation = MaturityConfigManager.validate(context);
+    if (!validation.valid) {
+      throw new Error(`Invalid maturity configuration: ${validation.errors.join(', ')}`);
+    }
+
+    const json = MaturityConfigManager.toJSON(context);
+    fs.writeFileSync(configPath, JSON.stringify(json, null, 2), 'utf-8');
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'Maturity configuration saved',
+      'KnowledgeManager.saveMaturityContext',
+      { quadrant: context.quadrant, complexity: context.complexity },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+  }
+
+  /**
+   * Update maturity configuration (partial update)
+   * Only updates specified fields, keeps others unchanged
+   */
+  async updateMaturityContext(partial: Partial<MaturityContext>): Promise<MaturityContext> {
+    const current = await this.getMaturityContext();
+    const updated = MaturityConfigManager.merge(partial, current);
+    await this.saveMaturityContext(updated);
+    return updated;
   }
 
   // ==========================================================================

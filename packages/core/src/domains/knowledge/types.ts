@@ -118,6 +118,30 @@ export interface KnowledgeItem {
 
   /** Where this item is currently injected */
   injectedTo?: InjectionRecord[];
+
+  // 3D Maturity-Based Filtering (optional for backward compatibility)
+  /**
+   * Maturity footprint - defines where this knowledge applies
+   * Items without footprint are treated as universal (apply everywhere)
+   */
+  maturity?: MaturityFootprint;
+
+  /**
+   * Base relevance score (0-1)
+   * Used as multiplier for distance-based relevance calculation
+   * Default: 0.5
+   */
+  relevance?: number;
+
+  /**
+   * When this learning was captured (for learning items)
+   */
+  capturedAt?: Date | string;
+
+  /**
+   * The maturity context when this learning was captured
+   */
+  capturedContext?: MaturityContext;
 }
 
 /**
@@ -995,4 +1019,114 @@ export interface InjectionRecord {
 
   /** If injected as part of template, the template name */
   parentTemplateName?: string;
+}
+
+// =============================================================================
+// 3D Maturity-Based Knowledge Filtering
+// =============================================================================
+
+/**
+ * Operator maturity levels (5-level scale)
+ * Represents developer experience and skill level
+ */
+export enum OperatorMaturity {
+  NOVICE = 'novice',   // 1 - New to programming or domain
+  JUNIOR = 'junior',   // 2 - 0-2 years experience
+  MID = 'mid',         // 3 - 2-5 years experience
+  SENIOR = 'senior',   // 4 - 5-10 years experience
+  EXPERT = 'expert'    // 5 - 10+ years experience
+}
+
+/**
+ * Project maturity levels (5-level scale)
+ * Represents project lifecycle phase
+ */
+export enum ProjectMaturity {
+  PLANNING = 'planning',         // 1 - Pre-inception, research phase
+  INCEPTION = 'inception',       // 2 - Starting new project
+  DEVELOPMENT = 'development',   // 3 - Active building phase
+  ESTABLISHED = 'established',   // 4 - Stable but growing
+  MATURE = 'mature'              // 5 - Production, maintenance
+}
+
+/**
+ * Domain complexity levels (3-level scale)
+ * Represents technical complexity of the domain
+ */
+export enum DomainComplexity {
+  SIMPLE = 'simple',      // 1 - Basic CRUD, straightforward logic
+  STANDARD = 'standard',  // 2 - Typical business logic, common patterns
+  COMPLEX = 'complex'     // 3 - Distributed systems, advanced algorithms
+}
+
+/**
+ * Range along a single maturity dimension
+ * Defines min/max boundaries for knowledge applicability
+ */
+export interface MaturityRange {
+  /** Minimum level (inclusive) */
+  min: number;  // 1-5 for operator/project, 1-3 for complexity
+
+  /** Maximum level (inclusive) */
+  max: number;  // Must be >= min
+}
+
+/**
+ * 3D footprint defining where knowledge applies
+ * Represents a box in 3D maturity space
+ */
+export interface MaturityFootprint {
+  /** Operator maturity range (1=Novice, 5=Expert) */
+  operator: MaturityRange;
+
+  /** Project maturity range (1=Planning, 5=Mature) */
+  project: MaturityRange;
+
+  /** Complexity range (1=Simple, 3=Complex) */
+  complexity: MaturityRange;
+}
+
+/**
+ * User's current working context
+ * Simple single-point selection (not a range)
+ */
+export interface MaturityContext {
+  /** Current complexity level */
+  complexity: DomainComplexity;
+
+  /** Current quadrant position (1-25 in 5x5 grid) */
+  quadrant: number;
+
+  /** Optional maximum number of items to select */
+  maxItems?: number;
+}
+
+/**
+ * Quadrant metadata for 5x5 grid
+ * Maps quadrant number to semantic information
+ */
+export interface QuadrantMapping {
+  /** Operator maturity for this quadrant */
+  operator: OperatorMaturity;
+
+  /** Project maturity for this quadrant */
+  project: ProjectMaturity;
+
+  /** Human-readable label (e.g., "Productive Builder") */
+  label: string;
+
+  /** Instructional framing verb (e.g., "Build", "Learn", "Guide") */
+  framing: string;
+}
+
+/**
+ * Selected knowledge item with relevance score
+ * Used when returning filtered items based on maturity context
+ */
+export interface SelectedKnowledgeItem {
+  /** The knowledge item */
+  item: KnowledgeItem;
+
+  /** Calculated relevance score (0-1) */
+  relevance: number;
 }
