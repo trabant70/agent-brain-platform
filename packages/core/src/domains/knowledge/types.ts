@@ -936,6 +936,12 @@ export interface AuditDetails {
 
   /** Number of items (for bulk operations) */
   itemCount?: number;
+
+  /** If reordering operation, the old index */
+  oldIndex?: number;
+
+  /** If reordering operation, the new index */
+  newIndex?: number;
 }
 
 /**
