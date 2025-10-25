@@ -208,6 +208,9 @@ export interface MarketplaceTemplate {
   // Source
   source: TemplateSource;         // Origin type
 
+  // Edit Permissions
+  userEditable?: boolean;         // If true, allows editing even for bundled templates (e.g., General Learnings)
+
   // Content
   items: KnowledgeItem[];         // Embedded full items
   itemCount?: number;             // Convenience field (optional, can be computed)
@@ -856,6 +859,7 @@ export enum AuditOperation {
   ITEM_ADDED = 'item.added',
   ITEM_REMOVED = 'item.removed',
   ITEM_UPDATED = 'item.updated',
+  ITEM_REORDERED = 'item.reordered',        // Item reordered within template
   ITEM_MOVED_FROM = 'item.moved_from',      // Item left this template
   ITEM_MOVED_TO = 'item.moved_to',          // Item entered this template
   ITEM_COPIED_TO = 'item.copied_to',        // Item copied from elsewhere

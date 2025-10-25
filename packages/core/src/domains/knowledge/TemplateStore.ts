@@ -306,6 +306,11 @@ export class TemplateStore {
       return null;
     }
 
+    // Cannot modify bundled templates
+    if (template.source === TemplateSource.BUNDLED) {
+      return null;
+    }
+
     // Generate item ID
     const itemId = this.generateItemId();
 
@@ -364,6 +369,11 @@ export class TemplateStore {
       return false;
     }
 
+    // Cannot modify bundled templates
+    if (template.source === TemplateSource.BUNDLED) {
+      return false;
+    }
+
     const itemIndex = template.items.findIndex(item => item.id === itemId);
     if (itemIndex === -1) {
       return false;
@@ -401,6 +411,11 @@ export class TemplateStore {
   ): boolean {
     const template = this.templates.get(templateId);
     if (!template) {
+      return false;
+    }
+
+    // Cannot modify bundled templates
+    if (template.source === TemplateSource.BUNDLED) {
       return false;
     }
 
@@ -677,6 +692,68 @@ export class TemplateStore {
       newItemId,
       toTemplateId
     };
+  }
+
+  /**
+   * Reorder an item within a template
+   */
+  reorderItem(
+    templateId: string,
+    itemId: string,
+    newIndex: number,
+    actor: string = 'user'
+  ): boolean {
+    const template = this.templates.get(templateId);
+    if (!template) {
+      return false;
+    }
+
+    // Cannot modify bundled templates
+    if (template.source === TemplateSource.BUNDLED) {
+      return false;
+    }
+
+    // Find current index
+    const currentIndex = template.items.findIndex(i => i.id === itemId);
+    if (currentIndex === -1) {
+      return false;
+    }
+
+    // Validate new index
+    if (newIndex < 0 || newIndex >= template.items.length) {
+      return false;
+    }
+
+    // No-op if same position
+    if (currentIndex === newIndex) {
+      return true;
+    }
+
+    // Remove item from current position
+    const [item] = template.items.splice(currentIndex, 1);
+
+    // Insert at new position
+    template.items.splice(newIndex, 0, item);
+
+    // Update template metadata
+    template.updatedAt = new Date().toISOString();
+
+    // Log the reorder operation
+    const auditEntry = this.auditLogger.createEntry({
+      operation: AuditOperation.ITEM_REORDERED,
+      actor,
+      details: {
+        itemId: item.id,
+        itemTitle: item.title,
+        oldIndex: currentIndex,
+        newIndex: newIndex
+      }
+    });
+
+    template.auditLog = template.auditLog || [];
+    template.auditLog.push(auditEntry);
+
+    return true;
   }
 
   // ==========================================================================
