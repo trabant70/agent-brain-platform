@@ -5,7 +5,6 @@ startTime: 2025-10-15T09:00:00.000Z
 endTime: 2025-10-15T12:30:00.000Z
 summary: Redesigned the Control Panel from a floating overlay to a dropdown-from-top panel with tab navigation and collapsible sections.
 tags: ui-redesign, control-panel, css
-topics: ui, styling, vscode-extension
 filesModified:
   - packages/core/src/domains/visualization/styles/components/control-panel.css
   - packages/core/src/domains/visualization/ui/FilterController.ts

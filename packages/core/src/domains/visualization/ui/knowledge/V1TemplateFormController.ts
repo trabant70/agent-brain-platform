@@ -115,10 +115,10 @@ export class V1TemplateFormController {
         <div class="form-group">
           <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
             <input type="checkbox" id="clone-shallow" />
-            <span>Shallow clone (structure only, no items)</span>
+            <span>Shallow clone (without audit trail and version history)</span>
           </label>
           <div style="font-size: 12px; color: var(--vscode-descriptionForeground); margin-top: 4px; margin-left: 24px;">
-            Uncheck to create a deep clone with all items
+            Deep clone (default) includes all items, audit trail, and version history. Shallow clone includes all items but starts fresh with no history.
           </div>
         </div>
       </div>
@@ -142,6 +142,76 @@ export class V1TemplateFormController {
               this.cloneTemplate(template.id, formData);
             } else {
               this.callbacks.onShowNotification('Please enter a name for the cloned template', 'error');
+            }
+          }
+        }
+      ],
+      width: '500px'
+    });
+  }
+
+  /**
+   * Show edit template modal
+   */
+  async showEditTemplateModal(template: MarketplaceTemplate): Promise<void> {
+    const modal = new ModalDialog();
+
+    const content = `
+      <div style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+        <div class="form-group">
+          <label for="edit-template-name" style="display: block; margin-bottom: 4px; font-weight: 600;">Name *</label>
+          <input type="text" id="edit-template-name" value="${this.escapeHtml(template.name)}" required style="width: 100%; padding: 8px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); border-radius: 2px;" />
+        </div>
+        <div class="form-group">
+          <label for="edit-template-description" style="display: block; margin-bottom: 4px; font-weight: 600;">Description *</label>
+          <textarea id="edit-template-description" rows="3" required style="width: 100%; padding: 8px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); border-radius: 2px; resize: vertical;">${this.escapeHtml(template.description)}</textarea>
+        </div>
+        <div class="form-group">
+          <label for="edit-template-category" style="display: block; margin-bottom: 4px; font-weight: 600;">Category *</label>
+          <select id="edit-template-category" required style="width: 100%; padding: 8px; background: var(--vscode-dropdown-background); color: var(--vscode-dropdown-foreground); border: 1px solid var(--vscode-dropdown-border); border-radius: 2px;">
+            <option value="development" ${template.category === 'development' ? 'selected' : ''}>Development</option>
+            <option value="best-practices" ${template.category === 'best-practices' ? 'selected' : ''}>Best Practices</option>
+            <option value="documentation" ${template.category === 'documentation' ? 'selected' : ''}>Documentation</option>
+            <option value="testing" ${template.category === 'testing' ? 'selected' : ''}>Testing</option>
+            <option value="security" ${template.category === 'security' ? 'selected' : ''}>Security</option>
+            <option value="architecture" ${template.category === 'architecture' ? 'selected' : ''}>Architecture</option>
+            <option value="custom" ${template.category === 'custom' ? 'selected' : ''}>Custom</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="edit-template-tags" style="display: block; margin-bottom: 4px; font-weight: 600;">Tags (comma-separated)</label>
+          <input type="text" id="edit-template-tags" value="${this.escapeHtml(template.tags?.join(', ') || '')}" placeholder="api, rest, patterns" style="width: 100%; padding: 8px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); border-radius: 2px;" />
+        </div>
+        <div class="form-group">
+          <label for="edit-template-scope" style="display: block; margin-bottom: 4px; font-weight: 600;">Scope *</label>
+          <select id="edit-template-scope" required style="width: 100%; padding: 8px; background: var(--vscode-dropdown-background); color: var(--vscode-dropdown-foreground); border: 1px solid var(--vscode-dropdown-border); border-radius: 2px;">
+            <option value="personal" ${template.scope === 'personal' ? 'selected' : ''}>Personal</option>
+            <option value="team" ${template.scope === 'team' ? 'selected' : ''}>Team</option>
+            <option value="project" ${template.scope === 'project' ? 'selected' : ''}>Project</option>
+            <option value="organization" ${template.scope === 'organization' ? 'selected' : ''}>Organization</option>
+          </select>
+        </div>
+      </div>
+    `;
+
+    await modal.show({
+      title: `Edit Template: ${template.name}`,
+      content,
+      buttons: [
+        {
+          label: 'Cancel',
+          primary: false,
+          onClick: () => {}
+        },
+        {
+          label: 'Save Changes',
+          primary: true,
+          onClick: () => {
+            const formData = this.extractFormData(['edit-template-name', 'edit-template-description', 'edit-template-category', 'edit-template-tags', 'edit-template-scope']);
+            if (formData['edit-template-name'] && formData['edit-template-description']) {
+              this.editTemplate(template.id, formData);
+            } else {
+              this.callbacks.onShowNotification('Please fill in all required fields', 'error');
             }
           }
         }
@@ -210,6 +280,74 @@ export class V1TemplateFormController {
             const formData = this.extractFormData(['item-title', 'item-body', 'item-type', 'item-scope', 'item-tags']);
             if (this.validateRequiredFields(formData, ['item-title', 'item-body', 'item-type', 'item-scope'])) {
               this.addItemToTemplate(templateId, formData);
+            }
+          }
+        }
+      ],
+      width: '600px'
+    });
+  }
+
+  /**
+   * Show edit item modal
+   */
+  async showEditItemModal(templateId: string, item: any): Promise<void> {
+    const modal = new ModalDialog();
+
+    const content = `
+      <div style="padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+        <div class="form-group">
+          <label for="edit-item-title" style="display: block; margin-bottom: 4px; font-weight: 600;">Title *</label>
+          <input type="text" id="edit-item-title" required value="${this.escapeHtml(item.title)}" style="width: 100%; padding: 8px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); border-radius: 2px;" />
+        </div>
+        <div class="form-group">
+          <label for="edit-item-body" style="display: block; margin-bottom: 4px; font-weight: 600;">Body (Markdown) *</label>
+          <textarea id="edit-item-body" rows="10" required placeholder="# Heading\n\nYour markdown content here..." style="width: 100%; padding: 8px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); border-radius: 2px; font-family: 'Courier New', monospace; resize: vertical;">${this.escapeHtml(item.body || '')}</textarea>
+        </div>
+        <div class="form-group">
+          <label for="edit-item-type" style="display: block; margin-bottom: 4px; font-weight: 600;">Type *</label>
+          <select id="edit-item-type" required style="width: 100%; padding: 8px; background: var(--vscode-dropdown-background); color: var(--vscode-dropdown-foreground); border: 1px solid var(--vscode-dropdown-border); border-radius: 2px;">
+            <option value="golden-path" ${item.type === 'golden-path' ? 'selected' : ''}>Golden Path</option>
+            <option value="pattern" ${item.type === 'pattern' ? 'selected' : ''}>Pattern</option>
+            <option value="adr" ${item.type === 'adr' ? 'selected' : ''}>ADR (Architecture Decision Record)</option>
+            <option value="best-practice" ${item.type === 'best-practice' ? 'selected' : ''}>Best Practice</option>
+            <option value="standard" ${item.type === 'standard' ? 'selected' : ''}>Standard</option>
+            <option value="learning" ${item.type === 'learning' ? 'selected' : ''}>Learning</option>
+            <option value="snippet" ${item.type === 'snippet' ? 'selected' : ''}>Snippet</option>
+            <option value="api-spec" ${item.type === 'api-spec' ? 'selected' : ''}>API Spec</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="edit-item-scope" style="display: block; margin-bottom: 4px; font-weight: 600;">Scope *</label>
+          <select id="edit-item-scope" required style="width: 100%; padding: 8px; background: var(--vscode-dropdown-background); color: var(--vscode-dropdown-foreground); border: 1px solid var(--vscode-dropdown-border); border-radius: 2px;">
+            <option value="personal" ${item.scope === 'personal' ? 'selected' : ''}>Personal</option>
+            <option value="team" ${item.scope === 'team' ? 'selected' : ''}>Team</option>
+            <option value="project" ${item.scope === 'project' ? 'selected' : ''}>Project</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="edit-item-tags" style="display: block; margin-bottom: 4px; font-weight: 600;">Tags (comma-separated)</label>
+          <input type="text" id="edit-item-tags" placeholder="auth, oauth, security" value="${this.escapeHtml((item.tags || []).join(', '))}" style="width: 100%; padding: 8px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); border-radius: 2px;" />
+        </div>
+      </div>
+    `;
+
+    await modal.show({
+      title: `Edit Item: ${item.title}`,
+      content,
+      buttons: [
+        {
+          label: 'Cancel',
+          primary: false,
+          onClick: () => {}
+        },
+        {
+          label: 'Save Changes',
+          primary: true,
+          onClick: () => {
+            const formData = this.extractFormData(['edit-item-title', 'edit-item-body', 'edit-item-type', 'edit-item-scope', 'edit-item-tags']);
+            if (this.validateRequiredFields(formData, ['edit-item-title', 'edit-item-body', 'edit-item-type', 'edit-item-scope'])) {
+              this.editItem(templateId, item.id, formData);
             }
           }
         }
@@ -318,6 +456,37 @@ export class V1TemplateFormController {
   }
 
   /**
+   * Edit template from form data
+   */
+  private editTemplate(templateId: string, formData: Record<string, any>): void {
+    const tags = formData['edit-template-tags']
+      ? formData['edit-template-tags'].split(',').map((t: string) => t.trim()).filter((t: string) => t)
+      : [];
+
+    this.callbacks.onSendMessage({
+      type: 'v1:update-template',
+      payload: {
+        templateId,
+        updates: {
+          name: formData['edit-template-name'],
+          description: formData['edit-template-description'],
+          category: formData['edit-template-category'],
+          tags,
+          scope: formData['edit-template-scope']
+        }
+      }
+    });
+
+    webviewLogger.info(
+      LogCategory.UI,
+      'Edit template message sent',
+      'V1TemplateFormController.editTemplate',
+      { templateId, name: formData['edit-template-name'] },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+  }
+
+  /**
    * Add item to template from form data
    */
   private addItemToTemplate(templateId: string, formData: Record<string, any>): void {
@@ -342,6 +511,36 @@ export class V1TemplateFormController {
       'Add item message sent',
       'V1TemplateFormController.addItemToTemplate',
       { templateId, title: formData['item-title'] },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+  }
+
+  /**
+   * Edit item from form data
+   */
+  private editItem(templateId: string, itemId: string, formData: Record<string, any>): void {
+    const tags = formData['edit-item-tags']
+      ? formData['edit-item-tags'].split(',').map((t: string) => t.trim()).filter((t: string) => t)
+      : [];
+
+    this.callbacks.onSendMessage({
+      type: 'v1:update-item',
+      payload: {
+        templateId,
+        itemId,
+        title: formData['edit-item-title'],
+        body: formData['edit-item-body'],
+        type: formData['edit-item-type'],
+        scope: formData['edit-item-scope'],
+        tags
+      }
+    });
+
+    webviewLogger.info(
+      LogCategory.UI,
+      'Edit item message sent',
+      'V1TemplateFormController.editItem',
+      { templateId, itemId, title: formData['edit-item-title'] },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
   }

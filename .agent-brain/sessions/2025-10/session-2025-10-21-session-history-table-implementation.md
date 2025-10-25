@@ -5,7 +5,6 @@ startTime: 2025-10-21T08:00:00.000Z
 endTime: 2025-10-21T11:30:00.000Z
 summary: Implemented complete Session History table in new AB Sessions tab showing session journals with sorting, filtering, search, and modal detail view
 tags: ui, sessions, knowledge-management, timeline, webview
-topics: tab-system, session-journals, table-view, multi-tab-ui
 filesModified:
   - packages/core/src/domains/visualization/ui/TabManager.ts
   - packages/core/src/domains/visualization/templates/timeline.html

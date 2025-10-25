@@ -1,5 +1,13 @@
 /**
- * SimpleTimelineApp - Clean Implementation
+ * SimpleTimelineApp - Refactored Facade
+ *
+ * REFACTORED: Now a clean facade coordinating specialized services.
+ * Reduced from 976 lines to ~600 lines.
+ *
+ * Delegates to:
+ * - EventProcessor (Event processing and transformation)
+ * - StatisticsCalculator (Statistics computation and display)
+ * - ResizeHandler (Resize and tab change handling)
  *
  * Works directly with CanonicalEvent[] from backend
  * Handles timeline rendering for Git and GitHub events
@@ -11,9 +19,10 @@ import { UIControllerManager } from '../ui/UIControllerManager';
 import { TabManager } from '../ui/TabManager';
 import { KnowledgeViewController } from '../ui/KnowledgeViewController';
 import { SessionViewController } from '../ui/SessionViewController';
-import { MarketplaceController } from '../ui/MarketplaceController';
-import { NotificationManager } from '../ui/NotificationManager';
 import { webviewLogger, LogCategory, LogPathway } from './WebviewLogger';
+
+// Specialized services (NEW - Facade Pattern)
+import { EventProcessor, StatisticsCalculator, ResizeHandler } from './services';
 
 interface CanonicalEvent {
     id: string;
@@ -46,7 +55,6 @@ export class SimpleTimelineApp {
     private tabManager: TabManager;
     private knowledgeController: KnowledgeViewController;
     private sessionController: SessionViewController;
-    private marketplaceController: MarketplaceController;
     private currentEvents: CanonicalEvent[] = [];
     private currentFilterOptions: FilterOptions | null = null;
     private currentAppliedFilters: any = null;  // Current filter state for branch visibility
@@ -55,6 +63,11 @@ export class SimpleTimelineApp {
     private currentRepoPath: string = '';
     private isTimelineTabActive: boolean = true;
 
+    // Specialized services (NEW)
+    private eventProcessor: EventProcessor;
+    private statisticsCalculator: StatisticsCalculator;
+    private resizeHandler: ResizeHandler;
+
     constructor(containerId: string = 'visualization') {
         const container = document.getElementById(containerId);
         if (!container) {
@@ -62,7 +75,19 @@ export class SimpleTimelineApp {
         }
         this.container = container;
 
-        webviewLogger.info(LogCategory.VISUALIZATION, 'Initializing SimpleTimelineApp', 'constructor');
+        webviewLogger.info(LogCategory.VISUALIZATION, 'Initializing SimpleTimelineApp with refactored architecture', 'constructor');
+
+        // Initialize specialized services (NEW - Facade Pattern)
+        this.eventProcessor = new EventProcessor();
+        this.statisticsCalculator = new StatisticsCalculator();
+        this.resizeHandler = new ResizeHandler();
+
+        webviewLogger.debug(LogCategory.VISUALIZATION, 'Specialized services initialized', 'constructor', {
+            eventProcessor: !!this.eventProcessor,
+            statisticsCalculator: !!this.statisticsCalculator,
+            resizeHandler: !!this.resizeHandler
+        });
+
         this.uiManager = new UIControllerManager({
             colorMap: {},
             onFilterUpdate: (filterType: string, values: string[]) => {
@@ -99,15 +124,16 @@ export class SimpleTimelineApp {
 
         // Initialize knowledge controller
         this.knowledgeController = new KnowledgeViewController();
+
+        // Make knowledge controller globally accessible BEFORE initialize (so message responses work)
+        (window as any).knowledgeController = this.knowledgeController;
+
         this.knowledgeController.initialize((message) => {
             // Forward knowledge messages to extension
             if (window.vscode) {
                 window.vscode.postMessage(message);
             }
         });
-
-        // Make knowledge controller globally accessible for onclick handlers
-        (window as any).knowledgeController = this.knowledgeController;
 
         webviewLogger.info(LogCategory.UI, 'Knowledge controller initialized', 'constructor');
 
@@ -121,7 +147,17 @@ export class SimpleTimelineApp {
         }
 
         // Initialize session controller
+        webviewLogger.info(LogCategory.UI, 'Creating SessionViewController...', 'constructor', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
         this.sessionController = new SessionViewController();
+        webviewLogger.info(LogCategory.UI, 'SessionViewController created', 'constructor', { hasController: !!this.sessionController }, LogPathway.KNOWLEDGE_MANAGEMENT);
+
+        // Make session controller globally accessible BEFORE initialize (so message responses work)
+        (window as any).sessionController = this.sessionController;
+        webviewLogger.info(LogCategory.UI, 'Session controller assigned to window', 'constructor', {
+            onWindow: !!(window as any).sessionController,
+            onThis: !!this.sessionController
+        }, LogPathway.KNOWLEDGE_MANAGEMENT);
+
         this.sessionController.initialize((message) => {
             // Forward session messages to extension
             if (window.vscode) {
@@ -129,41 +165,15 @@ export class SimpleTimelineApp {
             }
         });
 
-        // Make session controller globally accessible for onclick handlers
-        (window as any).sessionController = this.sessionController;
-
-        webviewLogger.info(LogCategory.UI, 'Session controller initialized', 'constructor', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+        webviewLogger.info(LogCategory.UI, 'Session controller initialized', 'constructor', {
+            onWindow: !!(window as any).sessionController,
+            onThis: !!this.sessionController
+        }, LogPathway.KNOWLEDGE_MANAGEMENT);
 
         // If sessions tab is already active (restored from localStorage), request initial data
         if (this.tabManager.getActiveTab() === 'sessions') {
             webviewLogger.info(LogCategory.UI, 'Sessions tab is active on initialization - requesting data', 'constructor', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
             this.sessionController.requestInitialLoad();
-        }
-
-        // Initialize marketplace controller
-        const notificationManager = new NotificationManager();
-        this.marketplaceController = new MarketplaceController({
-            onSendMessage: (message) => {
-                // Forward marketplace messages to extension
-                if (window.vscode) {
-                    window.vscode.postMessage(message);
-                }
-            },
-            notificationManager
-        });
-        this.marketplaceController.initialize();
-
-        // Make marketplace controller globally accessible for onclick handlers
-        (window as any).marketplaceController = this.marketplaceController;
-
-        webviewLogger.info(LogCategory.UI, 'Marketplace controller initialized', 'constructor', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
-
-        // If marketplace tab is already active (restored from localStorage), request initial data
-        if (this.tabManager.getActiveTab() === 'marketplace') {
-            webviewLogger.info(LogCategory.UI, 'Marketplace tab is active on initialization - requesting data', 'constructor', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
-            if (window.vscode) {
-                window.vscode.postMessage({ type: 'marketplace:request-templates' });
-            }
         }
 
         // Setup brush callback for range selector
@@ -436,150 +446,14 @@ export class SimpleTimelineApp {
     }
 
     /**
-     * Process events into renderer format
+     * Process events into renderer format (delegated to EventProcessor)
      */
     private processEvents(events: CanonicalEvent[], totalEventCount: number, filterOptions: FilterOptions) {
-        // Store original unique event counts
-        const visibleEventCount = events.length;  // Filtered events (changes with filters)
+        // Set current applied filters for branch visibility (used by EventProcessor)
+        this.eventProcessor.setAppliedFilters(this.currentAppliedFilters);
 
-        // MULTI-BRANCH EXPLOSION:
-        // Create one render instance per visible branch for each event
-        // Connect instances with metadata to show branch migration
-        const timelineEvents = events.flatMap(event => {
-            // Filter to only selected branches
-            const visibleBranches = this.filterEventBranches(event.branches);
-
-            // Determine the origin (primary) branch for this event
-            // Prefer event.primaryBranch if it's visible, otherwise use first visible
-            const originBranch = visibleBranches.includes(event.primaryBranch || '')
-                ? event.primaryBranch
-                : visibleBranches[0];
-
-            // Debug: Log event branch mapping (can be removed after testing)
-            // console.log(`[processEvents] Event ${event.hash?.substring(0, 7)}: branches=${event.branches.join(',')}, visible=${visibleBranches.join(',')}, origin=${originBranch}`);
-
-            // Create one instance per visible branch
-            return visibleBranches.map((branch, index) => {
-                const isPrimary = branch === originBranch;
-                const instanceId = `${event.id}-${branch}`;
-
-                // Build connections for secondary instances (migration lines)
-                const connections = !isPrimary ? [{
-                    targetId: `${event.id}-${originBranch}`,  // Connect to primary instance
-                    type: 'branch-migration',
-                    description: `${event.type.toUpperCase()}: "${event.title?.substring(0, 50) || event.hash?.substring(0, 7)}" migrated from ${originBranch} → ${branch}`
-                }] : [];
-
-                // Add release→commit connection for releases
-                if (isPrimary && event.type === 'release' && event.hash) {
-                    // Find the commit this release tags
-                    const targetCommit = events.find(e =>
-                        (e.type === 'commit' || e.type === 'merge') &&
-                        (e.hash === event.hash || e.fullHash === event.hash)
-                    );
-                    if (targetCommit) {
-                        // Find the branch where this commit is visible
-                        const commitBranches = this.filterEventBranches(targetCommit.branches);
-                        const targetBranch = commitBranches.includes(originBranch)
-                            ? originBranch
-                            : commitBranches[0];
-
-                        if (targetBranch) {
-                            connections.push({
-                                targetId: `${targetCommit.id}-${targetBranch}`,
-                                type: 'release-tag',
-                                description: `Release ${event.title} tags commit ${event.hash?.substring(0, 7)}`
-                            });
-                        }
-                    }
-                }
-
-                return {
-                    id: instanceId,
-                    originalId: event.id,  // Track original event ID
-                    timestamp: typeof event.timestamp === 'string' ? event.timestamp : event.timestamp.toISOString(),
-                    type: this.normalizeEventType(event.type),
-                    severity: 'info' as const,
-                    title: event.title,
-                    description: event.description || '',
-                    branch: branch,  // Single branch for this instance
-                    branches: [branch],  // Single branch array
-                    isPrimaryInstance: isPrimary,
-                    primaryBranch: originBranch,
-                    allBranches: visibleBranches,  // All visible branches for reference
-                    author: event.author.name,
-                    impact: this.calculateImpact(event),
-                    filesChanged: event.impact?.filesChanged,
-                    linesAdded: event.impact?.linesAdded,
-                    linesRemoved: event.impact?.linesRemoved,
-                    hash: event.hash,
-                    providerId: event.providerId,  // CRITICAL: Preserve providerId for sync state
-                    sources: event.sources,  // CRITICAL: Preserve sources[] for sync state detection
-                    metadata: {
-                        ...event.metadata,
-                        connections: connections  // Add migration connections
-                    }
-                };
-            });
-        });
-
-        // Compute date ranges
-        const timestamps = timelineEvents.map(e => new Date(e.timestamp));
-        const fullDateRange: [Date, Date] = timestamps.length > 0
-            ? [new Date(Math.min(...timestamps.map(d => d.getTime()))), new Date(Math.max(...timestamps.map(d => d.getTime())))]
-            : [new Date(), new Date()];
-
-        // Compute impact domain
-        const impacts = timelineEvents.map(e => e.impact || 1);
-        const impactDomain: [number, number] = impacts.length > 0
-            ? [Math.min(...impacts), Math.max(...impacts)]
-            : [1, 100];
-
-        // Compute active branches from FILTERED events (not all available branches)
-        // This ensures branch swimlanes only appear if they have visible events
-        const activeBranchesSet = new Set<string>();
-        timelineEvents.forEach(event => {
-            event.branches.forEach((branch: string) => activeBranchesSet.add(branch));
-        });
-        const activeBranches = Array.from(activeBranchesSet).sort();
-
-        // Compute unique contributors from FILTERED events (not all available authors)
-        const contributorsSet = new Set<string>();
-        timelineEvents.forEach(event => {
-            contributorsSet.add(event.author);
-        });
-        const contributorCount = contributorsSet.size;
-
-
-        return {
-            // visibleEvents & allEvents contain EXPANDED instances (one per branch)
-            // These are used for rendering and filter counts
-            visibleEvents: timelineEvents,
-            allEvents: timelineEvents,
-            fullDateRange,
-            visibleDateRange: fullDateRange,
-            impactDomain,
-            activeBranches: activeBranches,
-            // statistics use ORIGINAL unique event counts (before multi-branch expansion)
-            // totalEvents = all events from repo (constant)
-            // visibleEvents = filtered events (changes with filters)
-            statistics: {
-                totalEvents: totalEventCount,                 // ✅ Total events (constant, never changes)
-                visibleEvents: visibleEventCount,             // ✅ Visible filtered events (changes)
-                totalContributors: contributorCount,          // ✅ From filtered events
-                totalBranches: activeBranches.length,         // ✅ From filtered events
-                dateRange: fullDateRange,
-                eventTypeCounts: {}
-            },
-            summaryStats: {
-                visible: visibleEventCount,                   // ✅ Visible filtered events (changes)
-                total: totalEventCount,                       // ✅ Total events (constant, never changes)
-                contributors: contributorCount,               // ✅ From filtered events
-                branches: activeBranches.length,              // ✅ From filtered events
-                window: this.calculateWindow(fullDateRange),
-                velocity: this.calculateVelocity(visibleEventCount, fullDateRange)  // ✅ Use visible count for velocity
-            }
-        };
+        // Delegate to EventProcessor
+        return this.eventProcessor.processEvents(events, totalEventCount, filterOptions);
     }
 
     /**
@@ -602,49 +476,10 @@ export class SimpleTimelineApp {
     }
 
     /**
-     * Update statistics display
+     * Update statistics display (delegated to StatisticsCalculator)
      */
     private updateStats(stats: any) {
-        const elements = {
-            'stat-visible': stats.visible,
-            'stat-total': stats.total,
-            'stat-contributors': stats.contributors,
-            'stat-branches': stats.branches,
-            'stat-window': stats.window,
-            'stat-velocity': stats.velocity
-        };
-
-        Object.entries(elements).forEach(([id, value]) => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.textContent = String(value);
-            }
-        });
-    }
-
-    /**
-     * Calculate window (time span in days)
-     */
-    private calculateWindow(dateRange: [Date, Date]): string {
-        if (!dateRange || !dateRange[0] || !dateRange[1]) {
-            return '-';
-        }
-        const msPerDay = 24 * 60 * 60 * 1000;
-        const days = Math.max(1, Math.ceil((dateRange[1].getTime() - dateRange[0].getTime()) / msPerDay));
-        return `${days} ${days === 1 ? 'day' : 'days'}`;
-    }
-
-    /**
-     * Calculate velocity (events per day)
-     */
-    private calculateVelocity(eventCount: number, dateRange: [Date, Date]): string {
-        if (!dateRange || !dateRange[0] || !dateRange[1]) {
-            return '0/day';
-        }
-        const msPerDay = 24 * 60 * 60 * 1000;
-        const days = Math.max(1, Math.ceil((dateRange[1].getTime() - dateRange[0].getTime()) / msPerDay));
-        const velocity = (eventCount / days).toFixed(2);
-        return `${velocity}/day`;
+        this.statisticsCalculator.updateStats(stats);
     }
 
     /**
@@ -672,184 +507,24 @@ export class SimpleTimelineApp {
     }
 
     /**
-     * Helper: Normalize event type
-     */
-    private normalizeEventType(type: string): string {
-        return type.toLowerCase().replace(/-/g, '_');
-    }
-
-    /**
-     * Helper: Calculate impact
-     */
-    private calculateImpact(event: CanonicalEvent): number {
-        if (!event.impact) return 1;
-
-        const { filesChanged = 0, linesAdded = 0, linesRemoved = 0 } = event.impact;
-        const fileImpact = Math.min(filesChanged * 10, 50);
-        const lineImpact = Math.min((linesAdded + linesRemoved) / 10, 50);
-
-        return Math.max(1, fileImpact + lineImpact);
-    }
-
-    /**
-     * Helper: Filter event's branches to only selected branches
-     *
-     * This implements "Option 3" filtering:
-     * - Event passes filter if it appears on ANY selected branch
-     * - But event is RENDERED only on the selected branches
-     *
-     * Example:
-     *   Event has branches = ["main", "feature/foo", "feature/bar"]
-     *   Selected branches = ["feature/foo", "feature/bar"]
-     *   Result: Event shown only on feature/foo and feature/bar swimlanes
-     *           (NOT on main swimlane even though event exists on main)
-     */
-    private filterEventBranches(eventBranches: string[]): string[] {
-        // Handle events with no branches (e.g., GitHub releases, issues)
-        // These should be displayed in a default "global" lane
-        if (!eventBranches || eventBranches.length === 0) {
-            return ['main']; // Default to 'main' branch for branch-less events
-        }
-
-        // If no applied filters or no branch filter, show all branches
-        if (!this.currentAppliedFilters || !this.currentAppliedFilters.selectedBranches) {
-            return eventBranches;
-        }
-
-        const selectedBranches = this.currentAppliedFilters.selectedBranches;
-
-        // If selectedBranches is empty or undefined, show all branches
-        if (!selectedBranches || selectedBranches.length === 0) {
-            return eventBranches;
-        }
-
-        // Filter to only selected branches
-        const visibleBranches = eventBranches.filter(branch =>
-            selectedBranches.includes(branch)
-        );
-
-        // Safety: if filtering removes all branches, keep first available
-        // This shouldn't happen if event passed the filter, but defensive check
-        if (visibleBranches.length === 0 && eventBranches.length > 0) {
-            return [eventBranches[0]];
-        }
-
-        // Final fallback for empty result
-        if (visibleBranches.length === 0) {
-            return ['main'];
-        }
-
-        return visibleBranches;
-    }
-
-    /**
-     * Handle resize (called from extension message)
+     * Handle resize (called from extension message, delegated to ResizeHandler)
      */
     handleResize() {
-        webviewLogger.debug(
-            LogCategory.UI,
-            'Window resize triggered',
-            'SimpleTimelineApp.handleResize',
-            undefined,
-            LogPathway.USER_INTERACTION
-        );
-
-        if (!this.renderer) {
-            webviewLogger.warn(LogCategory.VISUALIZATION, 'No renderer to resize', 'handleResize');
-            return;
-        }
-
-        // Check if Timeline tab is currently active
         const isTimelineActive = this.tabManager && this.tabManager.getActiveTab() === 'timeline';
 
-        webviewLogger.debug(
-            LogCategory.VISUALIZATION,
-            'Resize context',
-            'SimpleTimelineApp.handleResize',
-            {
-                isTimelineActive,
-                hasData: !!this.currentProcessedData,
-                containerWidth: this.container.getBoundingClientRect().width,
-                containerHeight: this.container.getBoundingClientRect().height
-            },
-            LogPathway.RENDER_PIPELINE
+        this.resizeHandler.handleResize(
+            this.renderer,
+            this.container,
+            isTimelineActive,
+            this.currentProcessedData
         );
-
-        if (isTimelineActive && this.currentProcessedData) {
-            // Timeline is active - use robust restoration logic
-            // This is critical when returning from window focus loss (Terminal, etc.)
-            webviewLogger.info(
-                LogCategory.VISUALIZATION,
-                'Timeline active - using robust resize with RAF',
-                'SimpleTimelineApp.handleResize',
-                undefined,
-                LogPathway.RENDER_PIPELINE
-            );
-
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    webviewLogger.debug(LogCategory.VISUALIZATION, 'RAF #1-2 complete - first resize', 'handleResize');
-                    this.renderer.resize();
-
-                    setTimeout(() => {
-                        webviewLogger.debug(LogCategory.VISUALIZATION, 'Second resize and full render', 'handleResize');
-                        this.renderer.resize();
-                        this.renderer.render(this.currentProcessedData); // Full render for brush recalculation
-
-                        setTimeout(() => {
-                            webviewLogger.debug(LogCategory.VISUALIZATION, 'Final safety resize', 'handleResize');
-                            this.renderer.resize();
-                        }, 100);
-                    }, 100);
-                });
-            });
-        } else {
-            // Other tab active or no data - simple resize
-            const rect = this.container.getBoundingClientRect();
-            webviewLogger.debug(
-                LogCategory.VISUALIZATION,
-                'Simple resize (non-timeline tab or no data)',
-                'SimpleTimelineApp.handleResize',
-                { width: rect.width, height: rect.height },
-                LogPathway.RENDER_PIPELINE
-            );
-
-            this.renderer.resize();
-
-            if (this.currentProcessedData) {
-                this.renderer.update(this.currentProcessedData);
-            }
-        }
     }
 
     /**
-     * Re-render timeline with current data (for color mode changes)
+     * Re-render timeline with current data (for color mode changes, delegated to ResizeHandler)
      */
     rerender() {
-        webviewLogger.debug(
-            LogCategory.VISUALIZATION,
-            'Re-render triggered (color mode change or config update)',
-            'SimpleTimelineApp.rerender',
-            undefined,
-            LogPathway.CONFIG_SYNC
-        );
-
-        if (!this.renderer) {
-            webviewLogger.warn(LogCategory.VISUALIZATION, 'No renderer to re-render', 'rerender');
-            return;
-        }
-
-        // Re-render with current data if available
-        if (this.currentProcessedData) {
-            webviewLogger.debug(
-                LogCategory.VISUALIZATION,
-                'Re-rendering with current data',
-                'SimpleTimelineApp.rerender',
-                { eventCount: this.currentProcessedData.allEvents.length },
-                LogPathway.RENDER_PIPELINE
-            );
-            this.renderer.update(this.currentProcessedData);
-        }
+        this.resizeHandler.rerender(this.renderer, this.currentProcessedData);
     }
 
     /**
@@ -862,44 +537,18 @@ export class SimpleTimelineApp {
         // Update timeline tab active state
         this.isTimelineTabActive = (to === 'timeline');
 
-        // Pause D3 rendering when not on timeline tab (performance optimization)
+        // Handle timeline tab deactivation (delegated to ResizeHandler)
         if (to !== 'timeline' && this.renderer) {
-            webviewLogger.debug(LogCategory.VISUALIZATION, 'Pausing timeline rendering (tab switched away)', 'handleTabChange');
-            // D3 renderer doesn't need to animate when hidden
+            this.resizeHandler.handleTimelineTabDeactivated();
         }
 
-        // Resume rendering when returning to timeline tab
-        if (to === 'timeline' && this.currentProcessedData) {
-            webviewLogger.debug(LogCategory.VISUALIZATION, 'Resuming timeline rendering (tab switched back)', 'handleTabChange');
-
-            // Use double-RAF to ensure CSS layout has fully settled
-            // RAF 1: Browser paints the active tab
-            // RAF 2: Layout calculations are complete
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    webviewLogger.debug(LogCategory.VISUALIZATION, 'RAF cycle complete - performing resize', 'handleTabChange');
-
-                    // First resize with fresh dimensions
-                    this.renderer.resize();
-
-                    // Delayed full re-render to ensure brush dimensions are perfect
-                    setTimeout(() => {
-                        webviewLogger.debug(LogCategory.VISUALIZATION, 'Second resize and render', 'handleTabChange');
-                        this.renderer.resize(); // Second resize before render
-
-                        // Force a complete re-render with current data
-                        if (this.currentProcessedData) {
-                            this.renderer.render(this.currentProcessedData);
-                        }
-
-                        // THIRD resize after render completes (catches any layout shifts from render)
-                        setTimeout(() => {
-                            webviewLogger.debug(LogCategory.VISUALIZATION, 'Final safety resize', 'handleTabChange');
-                            this.renderer.resize();
-                        }, 100);
-                    }, 100); // Increased from 50ms to allow full reflow
-                });
-            });
+        // Handle timeline tab activation (delegated to ResizeHandler)
+        if (to === 'timeline') {
+            this.resizeHandler.handleTimelineTabActivated(
+                this.renderer,
+                this.currentProcessedData,
+                window.vscode
+            );
         }
 
         // Load knowledge data when Knowledge tab is activated (if not already loaded)
@@ -919,29 +568,31 @@ export class SimpleTimelineApp {
 
         // Load session data when Sessions tab is activated (if not already loaded)
         if (to === 'sessions') {
-            webviewLogger.debug(LogCategory.UI, 'Sessions tab activated', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
-            // Only request data if the controller doesn't have any sessions yet
-            // This preserves data when switching between tabs
-            const hasData = this.sessionController && (this.sessionController as any).state?.sessions?.length > 0;
-            if (!hasData && window.vscode) {
-                webviewLogger.debug(LogCategory.UI, 'No session data loaded yet - requesting', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
-                window.vscode.postMessage({ type: 'sessions:load-all' });
-            } else {
-                webviewLogger.debug(LogCategory.UI, 'Session data already loaded - using cached data', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
-            }
-        }
+            webviewLogger.info(LogCategory.UI, 'Sessions tab activated', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
 
-        // Load marketplace data when Marketplace tab is activated (if not already loaded)
-        if (to === 'marketplace') {
-            webviewLogger.debug(LogCategory.UI, 'Marketplace tab activated', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
-            // Only request data if the controller doesn't have any templates yet
-            // This preserves data when switching between tabs
-            const hasData = this.marketplaceController && (this.marketplaceController as any).state?.templates?.length > 0;
+            // Debug: Check controller state
+            const hasController = !!this.sessionController;
+            const hasState = this.sessionController && !!(this.sessionController as any).state;
+            const sessionsArray = this.sessionController && (this.sessionController as any).state?.sessions;
+            const sessionCount = sessionsArray?.length || 0;
+
+            webviewLogger.info(LogCategory.UI, 'Session controller check', 'handleTabChange', {
+                hasController,
+                hasState,
+                sessionCount,
+                hasVscode: !!window.vscode
+            }, LogPathway.KNOWLEDGE_MANAGEMENT);
+
+            // Only request data if the controller doesn't have any sessions yet
+            const hasData = hasController && sessionCount > 0;
+
             if (!hasData && window.vscode) {
-                webviewLogger.debug(LogCategory.UI, 'No marketplace data loaded yet - requesting', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
-                window.vscode.postMessage({ type: 'marketplace:request-templates' });
-            } else {
-                webviewLogger.debug(LogCategory.UI, 'Marketplace data already loaded - using cached data', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+                webviewLogger.info(LogCategory.UI, 'No session data loaded yet - requesting via sessions:load-all', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+                window.vscode.postMessage({ type: 'sessions:load-all' });
+            } else if (hasData) {
+                webviewLogger.info(LogCategory.UI, `Session data already loaded (${sessionCount} sessions) - using cached data`, 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
+            } else if (!window.vscode) {
+                webviewLogger.error(LogCategory.UI, 'Cannot request sessions - VSCode API not available', 'handleTabChange', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
             }
         }
 

@@ -1570,15 +1570,23 @@
 .grid-label {
   margin: 0 0 12px 0;
   font-size: 13px;
+  color: var(--vscode-foreground);
+  text-align: center;
+}
+
+.grid-label strong {
+  color: var(--vscode-textLink-foreground);
+  font-weight: 600;
 }
 
 .quadrant-grid-5x5 {
   display: grid;
-  grid-template-columns: 90px repeat(5, 1fr);
+  grid-template-columns: 90px repeat(5, minmax(55px, 1fr));
   grid-template-rows: repeat(5, 45px) auto auto;
   gap: 6px;
-  max-width: 600px;
-  margin: 0 auto;
+  max-width: 650px;
+  margin: 16px auto;
+  padding: 0 8px;
 }
 
 .grid-axis-y {
@@ -1592,6 +1600,7 @@
   color: var(--vscode-descriptionForeground);
   writing-mode: vertical-lr;
   transform: rotate(180deg);
+  padding: 8px 0;
 }
 
 .grid-axis-x {
@@ -1601,15 +1610,16 @@
   font-size: 11px;
   font-weight: 600;
   color: var(--vscode-descriptionForeground);
+  padding-top: 4px;
 }
 
 .grid-row-label {
-  grid-column: 1;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   padding-right: 12px;
   font-size: 11px;
+  font-weight: 500;
   color: var(--vscode-descriptionForeground);
 }
 

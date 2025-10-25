@@ -12,6 +12,7 @@ export interface ClaudeMdFile {
   relativePath: string;
   content: string;
   hasConflicts: boolean;
+  conflicts?: string[];
   templates: any[];
 }
 
@@ -32,14 +33,32 @@ export class AccordionTemplates {
    * Template for accordion header
    */
   static accordionHeader(file: ClaudeMdFile, isSelected: boolean): string {
+    // Build tooltip with list of injected items
+    let tooltip = '';
+    if (file.templates.length > 0) {
+      const itemsList = file.templates.map(t => {
+        // Determine if this is a template or individual item based on ID pattern
+        const isTemplate = t.templateId.startsWith('template-');
+        const prefix = isTemplate ? '📦 Template' : '📄 Item';
+        return `${prefix}: ${MarkdownRenderer.escapeHtml(t.templateName)}`;
+      }).join('&#10;'); // Use &#10; for newlines in HTML title attribute
+      tooltip = `${file.templates.length} injected section(s):&#10;${itemsList}`;
+    }
+
+    // Build conflict tooltip if there are validation errors
+    let conflictTooltip = '';
+    if (file.hasConflicts && file.conflicts && file.conflicts.length > 0) {
+      conflictTooltip = file.conflicts.join('&#10;'); // Use &#10; for newlines in HTML title attribute
+    }
+
     return `
       <span class="file-selector" data-file-path="${file.path}" title="Select this file as target for applying knowledge items">
         <input type="radio" name="selected-claude-file" ${isSelected ? 'checked' : ''}>
       </span>
       <span class="accordion-icon ab-collapsible-icon">▼</span>
       <span class="accordion-title ab-collapsible-title">📄 ${MarkdownRenderer.escapeHtml(file.relativePath)}</span>
-      ${file.hasConflicts ? '<span class="conflict-badge ab-badge-error">⚠️ Conflicts</span>' : ''}
-      ${file.templates.length > 0 ? `<span class="template-count ab-collapsible-badge">${file.templates.length}</span>` : ''}
+      ${file.hasConflicts ? `<span class="conflict-badge ab-badge-error" title="${conflictTooltip}">⚠️ Conflicts</span>` : ''}
+      ${file.templates.length > 0 ? `<span class="template-count ab-collapsible-badge" title="${tooltip}">${file.templates.length}</span>` : ''}
     `;
   }
 

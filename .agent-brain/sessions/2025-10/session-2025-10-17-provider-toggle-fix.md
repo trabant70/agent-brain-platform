@@ -5,7 +5,6 @@ startTime: 2025-10-17T14:00:00.000Z
 endTime: 2025-10-17T15:45:00.000Z
 summary: Fixed critical bug where GitHub provider couldn't be toggled on because it wasn't registered when disabled by default.
 tags: providers, bug-fix, data-orchestrator
-topics: provider-architecture, toggles
 filesModified:
   - packages/core/src/domains/visualization/orchestration/DataOrchestrator.ts
 ---

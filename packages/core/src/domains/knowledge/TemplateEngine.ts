@@ -21,6 +21,7 @@ import {
   MarketplaceTemplate
 } from './types';
 import { KnowledgeStore } from './KnowledgeStore';
+import { logger, LogCategory, LogPathway } from '../../infrastructure/logging/Logger';
 
 /**
  * Marker type for injection
@@ -43,8 +44,8 @@ export class TemplateEngine {
    */
   generateTemplateMarkers(templateId: string, templateName: string): { start: string; end: string } {
     return {
-      start: `<!-- TEMPLATE: ${templateName} [${templateId}] -->`,
-      end: `<!-- END TEMPLATE: ${templateName} -->`
+      start: `<!-- AGENT-BRAIN:${templateId}:START -->`,
+      end: `<!-- AGENT-BRAIN:${templateId}:END -->`
     };
   }
 
@@ -52,10 +53,9 @@ export class TemplateEngine {
    * Generate V1 item-level markers for individual item injection
    */
   generateItemMarkers(itemId: string, itemTitle: string): { start: string; end: string } {
-    const slug = this.generateSlug(itemTitle);
     return {
-      start: `<!-- ITEM: ${slug} [${itemId}] -->`,
-      end: `<!-- END ITEM: ${slug} -->`
+      start: `<!-- AGENT-BRAIN:${itemId}:START -->`,
+      end: `<!-- AGENT-BRAIN:${itemId}:END -->`
     };
   }
 
@@ -92,23 +92,22 @@ export class TemplateEngine {
       // Generate template-level markers
       const markers = this.generateTemplateMarkers(template.id, template.name);
 
-      // Generate content for all items
+      // Generate content for all items with individual markers
       const itemsContent = template.items.map(item => {
+        const itemMarkers = this.generateItemMarkers(item.id, item.title);
         const icon = getKnowledgeTypeIcon(item.type);
         return [
-          `## ${icon} ${item.title}`,
-          '',
-          item.source ? `**Source:** ${item.source}` : null,
-          item.tags.length > 0 ? `**Tags:** ${item.tags.join(', ')}` : null,
-          '',
-          item.body
-        ].filter(line => line !== null).join('\n');
+          itemMarkers.start,
+          item.body,
+          itemMarkers.end
+        ].join('\n');
       }).join('\n\n');
 
       // Build the template section
       const templateSection = [
         '',
         markers.start,
+        `<!-- Template: ${template.name} (${template.items.length} items) -->`,
         '',
         `# ${template.name} v${template.version}`,
         '',
@@ -169,24 +168,11 @@ export class TemplateEngine {
       // Generate item-level markers
       const markers = this.generateItemMarkers(item.id, item.title);
 
-      // Generate item content
-      const icon = getKnowledgeTypeIcon(item.type);
-      const itemContent = [
-        `## ${icon} ${item.title}`,
-        '',
-        item.source ? `**Source:** ${item.source}` : null,
-        item.tags.length > 0 ? `**Tags:** ${item.tags.join(', ')}` : null,
-        '',
-        item.body
-      ].filter(line => line !== null).join('\n');
-
       // Build the item section
       const itemSection = [
         '',
         markers.start,
-        '',
-        itemContent,
-        '',
+        item.body,
         markers.end,
         ''
       ].join('\n');
@@ -344,14 +330,47 @@ export class TemplateEngine {
   ): TemplateApplicationResult {
     try {
       const sections = this.parseTemplateMarkers(claudeContent);
+
+      logger.info(
+        LogCategory.DATA,
+        `Attempting to remove template`,
+        'TemplateEngine.removeTemplate',
+        {
+          templateId,
+          sectionsFound: sections.length,
+          sectionIds: sections.map(s => s.templateId)
+        },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
       const targetSection = sections.find(s => s.templateId === templateId);
 
       if (!targetSection) {
+        logger.warn(
+          LogCategory.DATA,
+          `Template not found in parsed sections`,
+          'TemplateEngine.removeTemplate',
+          { templateId, availableIds: sections.map(s => s.templateId) },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
         return {
           success: false,
           error: 'Template not found in file'
         };
       }
+
+      logger.info(
+        LogCategory.DATA,
+        `Found template section to remove`,
+        'TemplateEngine.removeTemplate',
+        {
+          templateId,
+          startMarker: targetSection.startMarker,
+          endMarker: targetSection.endMarker
+        },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
 
       // Build regex to match the template section
       const startMarkerEscaped = this.escapeRegExp(targetSection.startMarker);
@@ -379,54 +398,146 @@ export class TemplateEngine {
 
   /**
    * Parse template markers from content to detect existing templates
+   * Supports V1 AGENT-BRAIN markers with nesting
    */
   parseTemplateMarkers(content: string): TemplateSection[] {
     const sections: TemplateSection[] = [];
     const lines = content.split('\n');
 
-    let currentSection: Partial<TemplateSection> | null = null;
-    let sectionLines: string[] = [];
+    // Use a stack to handle nested markers (templates containing items)
+    const sectionStack: Array<Partial<TemplateSection> & { sectionLines: string[] }> = [];
     let lineNumber = 0;
+    let debugMatchCount = 0;
 
     for (const line of lines) {
       lineNumber++;
 
-      // Check for start marker
-      const startMatch = line.match(/<!--\s*Agent-Brain Template:\s*(.+?)\s*\[id:\s*([a-zA-Z0-9-]+)\]\s*Start\s*-->/);
-      if (startMatch) {
-        currentSection = {
-          templateName: startMatch[1].trim(),
-          templateId: startMatch[2].trim(),
+      // Check for V1 AGENT-BRAIN template marker
+      const v1TemplateMatch = line.match(/<!--\s*AGENT-BRAIN:(template-[^:]+):START\s*-->/);
+      if (v1TemplateMatch) {
+        const templateId = v1TemplateMatch[1];
+        debugMatchCount++;
+        logger.info(
+          LogCategory.DATA,
+          `Matched V1 template START at line ${lineNumber}`,
+          'TemplateEngine.parseTemplateMarkers',
+          { templateId, lineNumber, stackDepth: sectionStack.length },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        // Default to ID-derived name, but will try to read actual name from next line
+        sectionStack.push({
+          templateName: templateId.replace('template-', ''),
+          templateId: templateId,
           startMarker: line.trim(),
-          startLine: lineNumber
-        };
-        sectionLines = [];
+          startLine: lineNumber,
+          sectionLines: []
+        });
         continue;
       }
 
-      // Check for end marker
-      const endMatch = line.match(/<!--\s*Agent-Brain Template:\s*(.+?)\s*\[id:\s*([a-zA-Z0-9-]+)\]\s*End\s*-->/);
-      if (endMatch && currentSection) {
+      // Check for template name comment (follows V1 template START marker)
+      const templateNameMatch = line.match(/<!--\s*Template:\s*(.+?)\s*\((\d+)\s+items?\)\s*-->/);
+      if (templateNameMatch && sectionStack.length > 0) {
+        const currentSection = sectionStack[sectionStack.length - 1];
+        // Only update if this is a template marker (not an item marker)
+        if (currentSection.templateId?.startsWith('template-')) {
+          currentSection.templateName = templateNameMatch[1].trim();
+        }
+        continue;
+      }
+
+      // Check for V1 AGENT-BRAIN item marker
+      const v1ItemMatch = line.match(/<!--\s*AGENT-BRAIN:(item-[^:]+):START\s*-->/);
+      if (v1ItemMatch) {
+        const itemId = v1ItemMatch[1];
+        // Default to ID-derived name, but will try to read actual title from next line
+        sectionStack.push({
+          templateName: itemId.replace('item-', ''),
+          templateId: itemId,
+          startMarker: line.trim(),
+          startLine: lineNumber,
+          sectionLines: []
+        });
+        continue;
+      }
+
+      // Check for item title comment (follows V1 item START marker)
+      const itemTitleMatch = line.match(/<!--\s*Item:\s*(.+?)\s*-->/);
+      if (itemTitleMatch && sectionStack.length > 0) {
+        const currentSection = sectionStack[sectionStack.length - 1];
+        // Only update if this is an item marker (not a template marker)
+        if (currentSection.templateId?.startsWith('item-')) {
+          currentSection.templateName = itemTitleMatch[1].trim();
+        }
+        continue;
+      }
+
+      // Check for V1 AGENT-BRAIN end marker (both template and item)
+      const v1EndMatch = line.match(/<!--\s*AGENT-BRAIN:(template-[^:]+|item-[^:]+):END\s*-->/);
+      if (v1EndMatch && sectionStack.length > 0) {
+        const currentSection = sectionStack.pop()!;
+        debugMatchCount++;
+        logger.info(
+          LogCategory.DATA,
+          `Matched V1 END at line ${lineNumber}`,
+          'TemplateEngine.parseTemplateMarkers',
+          { markerId: v1EndMatch[1], lineNumber, stackDepthAfterPop: sectionStack.length },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
         const section: TemplateSection = {
           templateId: currentSection.templateId!,
           templateName: currentSection.templateName!,
           startMarker: currentSection.startMarker!,
           endMarker: line.trim(),
-          content: sectionLines.join('\n').trim(),
+          content: currentSection.sectionLines.join('\n').trim(),
           startLine: currentSection.startLine!,
           endLine: lineNumber
         };
-        sections.push(section);
-        currentSection = null;
-        sectionLines = [];
+        // Only add TOP-LEVEL sections (when stack is now empty)
+        // Nested items inside templates are NOT returned as separate sections
+        if (sectionStack.length === 0) {
+          logger.info(
+            LogCategory.DATA,
+            'Adding top-level section',
+            'TemplateEngine.parseTemplateMarkers',
+            { templateId: section.templateId, templateName: section.templateName, startLine: section.startLine, endLine: section.endLine },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+          sections.push(section);
+        } else {
+          logger.info(
+            LogCategory.DATA,
+            'Skipping nested section',
+            'TemplateEngine.parseTemplateMarkers',
+            { templateId: section.templateId, stackDepth: sectionStack.length },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+        }
         continue;
       }
 
-      // Collect content between markers
-      if (currentSection) {
-        sectionLines.push(line);
+      // Collect content between markers (add to the most recent section in stack)
+      if (sectionStack.length > 0) {
+        sectionStack[sectionStack.length - 1].sectionLines.push(line);
       }
     }
+
+    logger.info(
+      LogCategory.DATA,
+      'parseTemplateMarkers complete',
+      'TemplateEngine.parseTemplateMarkers',
+      {
+        markersMatched: debugMatchCount,
+        topLevelSectionsFound: sections.length,
+        sections: sections.map(s => ({
+          templateId: s.templateId,
+          templateName: s.templateName,
+          startLine: s.startLine,
+          endLine: s.endLine
+        }))
+      },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
 
     return sections;
   }
@@ -441,12 +552,11 @@ export class TemplateEngine {
 
   /**
    * Generate start and end markers for a template/item
+   * @deprecated Use generateTemplateMarkers() or generateItemMarkers() instead
    */
   generateMarkers(templateId: string, name: string): { start: string; end: string } {
-    return {
-      start: `<!-- Agent-Brain Template: ${name} [id: ${templateId}] Start -->`,
-      end: `<!-- Agent-Brain Template: ${name} [id: ${templateId}] End -->`
-    };
+    // Delegate to generateItemMarkers for backward compatibility
+    return this.generateItemMarkers(templateId, name);
   }
 
   // ============================================
@@ -550,63 +660,40 @@ export class TemplateEngine {
 
   /**
    * Check if content has valid template markers
+   * Validates V1 AGENT-BRAIN marker format
    */
   validateTemplateMarkers(content: string): { valid: boolean; errors: string[] } {
     const errors: string[] = [];
+
+    // Parse template sections
     const sections = this.parseTemplateMarkers(content);
 
-    // Instead of counting raw markers (which includes examples in code blocks),
-    // validate that each parsed section has matching start/end markers
+    // Validate sections have both start and end markers
     for (const section of sections) {
       if (!section.startMarker || !section.endMarker) {
         errors.push(`Template "${section.templateName}" has missing or malformed markers`);
       }
-
-      // Verify the template ID matches in both markers
-      if (section.startMarker && section.endMarker) {
-        const startId = section.startMarker.match(/\[id:\s*([a-zA-Z0-9-]+)\]/)?.[1];
-        const endId = section.endMarker.match(/\[id:\s*([a-zA-Z0-9-]+)\]/)?.[1];
-
-        if (startId !== endId) {
-          errors.push(`Template "${section.templateName}" has mismatched marker IDs: start=${startId}, end=${endId}`);
-        }
-      }
     }
 
-    // Check for orphaned markers only among actual parsed sections
-    // This avoids false positives from markers in code blocks or documentation
+    // Count AGENT-BRAIN markers (ignore code block detection - markers are HTML comments, not code)
     const allLines = content.split('\n');
-    let inCodeBlock = false;
-    let actualStartCount = 0;
-    let actualEndCount = 0;
+    let v1StartCount = 0;
+    let v1EndCount = 0;
 
     for (const line of allLines) {
-      // Track code blocks (both ``` and indented)
-      if (line.trim().startsWith('```')) {
-        inCodeBlock = !inCodeBlock;
-        continue;
+      // Count V1 AGENT-BRAIN markers (both template and item level)
+      // HTML comment markers are never part of code blocks, so no need to skip
+      if (line.match(/<!--\s*AGENT-BRAIN:(template-[^:]+|item-[^:]+):START\s*-->/)) {
+        v1StartCount++;
       }
-
-      // Skip lines inside code blocks
-      if (inCodeBlock) {
-        continue;
-      }
-
-      // Count only markers outside code blocks
-      if (line.match(/<!--\s*Agent-Brain Template:[^>]+Start\s*-->/)) {
-        actualStartCount++;
-      }
-      if (line.match(/<!--\s*Agent-Brain Template:[^>]+End\s*-->/)) {
-        actualEndCount++;
+      if (line.match(/<!--\s*AGENT-BRAIN:(template-[^:]+|item-[^:]+):END\s*-->/)) {
+        v1EndCount++;
       }
     }
 
-    if (actualStartCount !== actualEndCount) {
-      errors.push(`Mismatched markers outside code blocks: ${actualStartCount} start, ${actualEndCount} end`);
-    }
-
-    if (actualStartCount !== sections.length) {
-      errors.push(`Marker count mismatch: found ${actualStartCount} markers but parsed ${sections.length} sections`);
+    // Validate V1 marker counts (START and END should match)
+    if (v1StartCount !== v1EndCount) {
+      errors.push(`Mismatched AGENT-BRAIN markers: ${v1StartCount} START, ${v1EndCount} END`);
     }
 
     return {

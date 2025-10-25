@@ -167,24 +167,35 @@ export class MaturityConfigPanel {
    * Render a single grid row with label and quadrant buttons
    */
   private renderGridRow(rowIndex: number, label: string, quadrants: number[]): string {
+    // Explicitly place row label and buttons in grid
+    // rowIndex: 1=Planning, 2=Inception, 3=Development, 4=Established, 5=Mature
+    const gridRow = 6 - rowIndex;  // Invert: row 1 in UI = grid row 5, row 5 in UI = grid row 1
+
     return `
-      <div class="grid-row-label">${label}</div>
-      ${quadrants.map(q => this.renderQuadrantButton(q)).join('')}
+      <div class="grid-row-label" style="grid-row: ${gridRow}; grid-column: 1;">${label}</div>
+      ${quadrants.map((q, idx) => {
+        const gridCol = idx + 2;  // Columns 2-6 for the 5 buttons
+        return this.renderQuadrantButton(q, gridRow, gridCol);
+      }).join('')}
     `;
   }
 
   /**
    * Render individual quadrant button
    */
-  private renderQuadrantButton(quadrant: number): string {
+  private renderQuadrantButton(quadrant: number, gridRow?: number, gridCol?: number): string {
     const isSelected = this.currentContext.quadrant === quadrant;
     const quadrantInfo = FramingTemplates.getQuadrantInfo(quadrant);
+
+    const gridStyle = (gridRow !== undefined && gridCol !== undefined)
+      ? ` style="grid-row: ${gridRow}; grid-column: ${gridCol};"`
+      : '';
 
     return `
       <button
         class="quadrant-btn ${isSelected ? 'selected' : ''}"
         data-quadrant="${quadrant}"
-        title="${quadrantInfo.label}"
+        title="${quadrantInfo.label}"${gridStyle}
       >
         Q${quadrant}
       </button>
@@ -228,15 +239,22 @@ export class MaturityConfigPanel {
 
     // Quadrant buttons
     const quadrantButtons = this.container.querySelectorAll('.quadrant-btn');
+    console.log('[MaturityConfigPanel] Attached event listeners to', quadrantButtons.length, 'quadrant buttons');
+
     quadrantButtons.forEach(btn => {
       btn.addEventListener('click', (e) => {
-        const quadrant = parseInt((e.target as HTMLElement).dataset.quadrant || '13');
+        const target = e.target as HTMLElement;
+        const quadrant = parseInt(target.dataset.quadrant || '13');
+        console.log('[MaturityConfigPanel] Quadrant clicked:', quadrant, 'Previous:', this.currentContext.quadrant);
+
         this.currentContext.quadrant = quadrant;
         this.notifyContextChanged();
 
         // Re-render to update selection
         this.rerenderQuadrantGrid();
         this.updateContextSummary();
+
+        console.log('[MaturityConfigPanel] Updated to quadrant:', this.currentContext.quadrant);
       });
     });
 

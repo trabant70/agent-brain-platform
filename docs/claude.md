@@ -447,3 +447,4 @@ npm test -- data-ingestion.pathway.test.ts
 - Applied to claude.md or other markdown files
 - Uses HTML comment markers for injection/removal tracking
 - Supports versioning and conflict detection
+

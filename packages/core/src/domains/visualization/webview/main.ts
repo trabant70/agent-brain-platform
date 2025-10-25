@@ -13,7 +13,6 @@ import { initI18n } from './i18n';
 // Import CSS - webpack will bundle it inline
 import '../styles/timeline.css';
 import '../styles/components/knowledge.css';
-import '../styles/components/marketplace.css';
 
 // Expose D3 globally
 window.d3 = d3;
@@ -126,6 +125,11 @@ function startApplication(): void {
     try {
         webviewLogger.info(LogCategory.WEBVIEW, 'Starting timeline application', 'startApplication');
         window.timelineApp = new SimpleTimelineApp('visualization');
+        webviewLogger.info(LogCategory.WEBVIEW, 'TimelineApp created and assigned to window', 'startApplication', {
+            hasTimelineApp: !!window.timelineApp,
+            hasSessionController: !!((window as any).sessionController),
+            appHasSessionController: !!(window.timelineApp && (window.timelineApp as any).sessionController)
+        });
         setupResizeObserver();
         setupThemeObserver();
 
@@ -232,51 +236,6 @@ function setupMessageHandling(): void {
 
                 case 'sessions:error':
                     showSessionsError(message.payload.error);
-                    break;
-
-                // Marketplace Messages
-                case 'marketplace:templates-loaded':
-                    handleMarketplaceTemplatesLoaded(message.payload);
-                    break;
-
-                case 'marketplace:install-success':
-                    handleMarketplaceInstallSuccess(message.payload);
-                    break;
-
-                case 'marketplace:install-error':
-                    handleMarketplaceInstallError(message.payload);
-                    break;
-
-                case 'marketplace:uninstall-success':
-                    handleMarketplaceUninstallSuccess(message.payload);
-                    break;
-
-                case 'marketplace:uninstall-error':
-                    handleMarketplaceUninstallError(message.payload);
-                    break;
-
-                case 'marketplace:error':
-                    showMarketplaceError(message.payload.error);
-                    break;
-
-                case 'marketplace:export-success':
-                    handleMarketplaceExportSuccess(message.payload);
-                    break;
-
-                case 'marketplace:export-error':
-                    handleMarketplaceExportError(message.payload);
-                    break;
-
-                case 'marketplace:import-validation-complete':
-                    handleMarketplaceValidationComplete(message.payload);
-                    break;
-
-                case 'marketplace:import-success':
-                    handleMarketplaceImportSuccess(message.payload);
-                    break;
-
-                case 'marketplace:import-error':
-                    handleMarketplaceImportError(message.payload);
                     break;
 
                 // Note: Legacy AI companion message handlers removed
@@ -588,16 +547,45 @@ function handleSessionsLoaded(data: any): void {
         LogPathway.KNOWLEDGE_MANAGEMENT
     );
 
-    if ((window as any).sessionController) {
+    // Debug: Log what's available
+    webviewLogger.info(
+        LogCategory.WEBVIEW,
+        'Checking for session controller',
+        'handleSessionsLoaded',
+        {
+            windowSessionController: typeof (window as any).sessionController,
+            windowTimelineApp: typeof window.timelineApp,
+            windowKeys: Object.keys(window).filter(k => k.includes('session') || k.includes('timeline'))
+        },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    // Try to get controller from window, fallback to timelineApp instance
+    let sessionController = (window as any).sessionController;
+
+    if (!sessionController && window.timelineApp && (window.timelineApp as any).sessionController) {
+        webviewLogger.info(
+            LogCategory.WEBVIEW,
+            'Controller not on window, using timelineApp instance',
+            'handleSessionsLoaded',
+            undefined,
+            LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        sessionController = (window.timelineApp as any).sessionController;
+        // Also assign to window for future messages
+        (window as any).sessionController = sessionController;
+    }
+
+    if (sessionController) {
         webviewLogger.debug(
             LogCategory.WEBVIEW,
             'Passing sessions data to controller',
             'handleSessionsLoaded',
-            { hasController: !!(window as any).sessionController, sessionsToLoad: data.sessions?.length || 0 },
+            { sessionsToLoad: data.sessions?.length || 0 },
             LogPathway.KNOWLEDGE_MANAGEMENT
         );
 
-        (window as any).sessionController.loadData(data.sessions);
+        sessionController.loadData(data.sessions);
 
         webviewLogger.info(
             LogCategory.UI,
@@ -607,11 +595,15 @@ function handleSessionsLoaded(data: any): void {
             LogPathway.KNOWLEDGE_MANAGEMENT
         );
     } else {
-        webviewLogger.warn(
+        webviewLogger.error(
             LogCategory.WEBVIEW,
-            'Cannot load sessions - controller not available',
+            'Cannot load sessions - controller not available anywhere',
             'handleSessionsLoaded',
-            { hasController: !!(window as any).sessionController },
+            {
+                hasWindowController: !!(window as any).sessionController,
+                hasTimelineApp: !!window.timelineApp,
+                hasAppController: !!(window.timelineApp && (window.timelineApp as any).sessionController)
+            },
             LogPathway.KNOWLEDGE_MANAGEMENT
         );
     }
@@ -631,190 +623,6 @@ function showSessionsError(error: string): void {
 
 /**
  * Handle marketplace templates loaded
- */
-function handleMarketplaceTemplatesLoaded(data: any): void {
-    webviewLogger.info(
-        LogCategory.WEBVIEW,
-        'Received marketplace templates from extension',
-        'handleMarketplaceTemplatesLoaded',
-        { templateCount: data.templates?.length || 0 },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-    );
-
-    if ((window as any).marketplaceController) {
-        (window as any).marketplaceController.loadTemplates(data.templates);
-        webviewLogger.debug(
-            LogCategory.UI,
-            'Marketplace templates loaded into controller',
-            'handleMarketplaceTemplatesLoaded',
-            { templateCount: data.templates?.length || 0 },
-            LogPathway.KNOWLEDGE_MANAGEMENT
-        );
-    } else {
-        webviewLogger.warn(
-            LogCategory.WEBVIEW,
-            'Cannot load marketplace templates - controller not available',
-            'handleMarketplaceTemplatesLoaded',
-            { hasController: !!(window as any).marketplaceController },
-            LogPathway.KNOWLEDGE_MANAGEMENT
-        );
-    }
-}
-
-/**
- * Handle marketplace template installation success
- */
-function handleMarketplaceInstallSuccess(data: any): void {
-    webviewLogger.info(
-        LogCategory.UI,
-        'Template installed successfully',
-        'handleMarketplaceInstallSuccess',
-        { templateId: data.templateId },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-    );
-
-    if ((window as any).marketplaceController) {
-        (window as any).marketplaceController.updateTemplateStatus(
-            data.templateId,
-            true,
-            data.installedAt
-        );
-    }
-}
-
-/**
- * Handle marketplace template installation error
- */
-function handleMarketplaceInstallError(data: any): void {
-    webviewLogger.error(
-        LogCategory.UI,
-        'Template installation failed',
-        'handleMarketplaceInstallError',
-        { templateId: data.templateId, error: data.error },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-    );
-    console.error('[Marketplace] Install error:', data.error);
-}
-
-/**
- * Handle marketplace template uninstallation success
- */
-function handleMarketplaceUninstallSuccess(data: any): void {
-    webviewLogger.info(
-        LogCategory.UI,
-        'Template uninstalled successfully',
-        'handleMarketplaceUninstallSuccess',
-        { templateId: data.templateId },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-    );
-
-    if ((window as any).marketplaceController) {
-        (window as any).marketplaceController.updateTemplateStatus(
-            data.templateId,
-            false,
-            undefined
-        );
-    }
-}
-
-/**
- * Handle marketplace template uninstallation error
- */
-function handleMarketplaceUninstallError(data: any): void {
-    webviewLogger.error(
-        LogCategory.UI,
-        'Template uninstallation failed',
-        'handleMarketplaceUninstallError',
-        { templateId: data.templateId, error: data.error },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-    );
-    console.error('[Marketplace] Uninstall error:', data.error);
-}
-
-/**
- * Show marketplace error message
- */
-function showMarketplaceError(error: string): void {
-    webviewLogger.error(LogCategory.UI, `Marketplace error: ${error}`, 'showMarketplaceError');
-    console.error('[Marketplace] Error:', error);
-}
-
-/**
- * Handle marketplace template export success
- */
-function handleMarketplaceExportSuccess(data: any): void {
-    webviewLogger.info(
-        LogCategory.UI,
-        'Template exported successfully',
-        'handleMarketplaceExportSuccess',
-        { templateId: data.templateId, filePath: data.filePath },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-    );
-}
-
-/**
- * Handle marketplace template export error
- */
-function handleMarketplaceExportError(data: any): void {
-    webviewLogger.error(
-        LogCategory.UI,
-        'Template export failed',
-        'handleMarketplaceExportError',
-        { templateId: data.templateId, error: data.error },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-    );
-    console.error('[Marketplace] Export error:', data.error);
-}
-
-/**
- * Handle marketplace template validation complete - show validation log viewer
- */
-function handleMarketplaceValidationComplete(data: any): void {
-    const { template, validationResult } = data;
-
-    webviewLogger.info(
-        LogCategory.UI,
-        'Showing validation results',
-        'handleMarketplaceValidationComplete',
-        { template, validationResult },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-    );
-
-    showValidationLogViewer(template, validationResult);
-}
-
-/**
- * Handle marketplace template import success
- */
-function handleMarketplaceImportSuccess(data: any): void {
-    webviewLogger.info(
-        LogCategory.UI,
-        'Template imported successfully',
-        'handleMarketplaceImportSuccess',
-        { template: data.template },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-    );
-}
-
-/**
- * Handle marketplace template import error
- */
-function handleMarketplaceImportError(data: any): void {
-    webviewLogger.error(
-        LogCategory.UI,
-        'Template import failed',
-        'handleMarketplaceImportError',
-        { error: data.error, errors: data.errors },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-    );
-    console.error('[Marketplace] Import error:', data.error);
-    if (data.errors) {
-        console.error('[Marketplace] Import validation errors:', data.errors);
-    }
-}
-
-/**
- * Show validation log viewer modal
  */
 function showValidationLogViewer(template: any, validationResult: any): void {
     // Create modal overlay

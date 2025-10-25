@@ -444,7 +444,12 @@ export class KnowledgeFileSystem {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
 
-    return `${safeName}-v${template.version}.json`;
+    // Use name + template ID (without "template-" prefix if present)
+    const templateIdPart = template.id.startsWith('template-')
+      ? template.id.substring(9)  // Remove "template-" prefix
+      : template.id;
+
+    return `${safeName}-${templateIdPart}.json`;
   }
 
   /**

@@ -1,56 +1,40 @@
 /**
- * DataOrchestrator - Simplified Central Coordinator
+ * DataOrchestrator - Refactored Facade
  *
- * NEW ARCHITECTURE:
- * - Works natively with CanonicalEvent (no transformations)
- * - Simple caching by repository
- * - Inline filtering (no separate pipeline)
- * - Coordinates providers via ProviderRegistry
+ * REFACTORED: Now a clean facade coordinating specialized services.
+ * Reduced from 847 lines to ~300 lines.
  *
- * REMOVED COMPLEXITY:
- * - No MultiSourceNormalizationCache
- * - No EventNormalizer
- * - No FilteringPipeline
- * - No TimelineEngineAdapter
- * - No transformation layers
- *
- * Data flows cleanly:
- * Provider → CanonicalEvent[] → Cache → Filter → Renderer
+ * Delegates to:
+ * - EventCacheService (Caching with TTL)
+ * - EventFilterService (Complex filtering logic)
+ * - ProviderCoordinator (Provider lifecycle)
+ * - RuntimeEventManager (Runtime events)
  */
 
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import {
   CanonicalEvent,
-  EventType,
   FilterOptions,
-  FilterState,
-  CachedRepoData,
-  ProviderContext
+  FilterState
 } from '../../events';
-import {
-  ProviderRegistry,
-  GitProvider,
-  GitHubProvider,
-  KnowledgeEventProvider,
-  SessionEventProvider
-} from '../../providers';
 import { FilterStateManager } from '../filters/FilterStateManager';
 import { EventMatcher } from './EventMatcher';
 import { logger, LogCategory, LogPathway, createContextLogger } from '../../../infrastructure/logging';
-import { FeatureFlagManager, Feature } from '../../../infrastructure/config/FeatureFlags';
 
-export interface ProviderSettings {
-  gitLocal: boolean;
-  github: boolean;
-  knowledgeEvents: boolean;
-  sessionJournals: boolean;
-}
+// Specialized services (NEW - Facade Pattern)
+import {
+  EventCacheService,
+  EventFilterService,
+  ProviderCoordinator,
+  ProviderSettings,
+  RuntimeEventManager
+} from './services';
 
 export interface DataOrchestratorOptions {
-  cacheTTL?: number; // Cache time-to-live in milliseconds
-  workspaceRoot: string; // REQUIRED: Workspace root directory (NOT .agent-brain subdirectory)
-  providerSettings?: ProviderSettings; // Provider enablement settings
+  cacheTTL?: number;
+  workspaceRoot: string; // REQUIRED
+  providerSettings?: ProviderSettings;
 }
 
 /**
@@ -60,12 +44,6 @@ export interface DataOrchestratorOptions {
 export class DataOrchestrator {
   private readonly log = createContextLogger(LogCategory.ORCHESTRATION);
 
-  // Simple cache: repoPath → cached data
-  private cache = new Map<string, CachedRepoData>();
-
-  // Provider registry for plugin management
-  private providerRegistry: ProviderRegistry;
-
   // Filter state manager for per-repository filter persistence
   private filterStateManager: FilterStateManager;
 
@@ -73,16 +51,18 @@ export class DataOrchestrator {
   private eventMatcher: EventMatcher;
 
   // Options
-  private cacheTTL: number;
-  private workspaceRoot: string; // Workspace root directory (single source of truth)
-  private storagePath: string; // Derived: workspaceRoot + '/.agent-brain'
+  private workspaceRoot: string;
+  private storagePath: string;
   private providerSettings: ProviderSettings;
 
   // Current state
   private currentRepoPath: string = '';
 
-  // Runtime events - added in real-time (e.g., from sessions)
-  private runtimeEvents: CanonicalEvent[] = [];
+  // Specialized services (NEW)
+  private cacheService: EventCacheService;
+  private filterService: EventFilterService;
+  private providerCoordinator: ProviderCoordinator;
+  private runtimeEventManager: RuntimeEventManager;
 
   constructor(options: DataOrchestratorOptions) {
     // Validate required workspaceRoot
@@ -90,7 +70,7 @@ export class DataOrchestrator {
       throw new Error('DataOrchestrator requires workspaceRoot in options');
     }
 
-    // Validate workspaceRoot doesn't end with .agent-brain (prevent double-nesting)
+    // Validate workspaceRoot doesn't end with .agent-brain
     if (options.workspaceRoot.endsWith('.agent-brain')) {
       throw new Error(
         `workspaceRoot should not end with .agent-brain. ` +
@@ -99,19 +79,29 @@ export class DataOrchestrator {
       );
     }
 
-    this.cacheTTL = options.cacheTTL || 300000; // 5 minutes default
     this.workspaceRoot = options.workspaceRoot;
-    this.storagePath = path.join(this.workspaceRoot, '.agent-brain'); // Derive from workspaceRoot
+    this.storagePath = path.join(this.workspaceRoot, '.agent-brain');
     this.providerSettings = this.getProviderSettings(options.providerSettings);
-    this.providerRegistry = new ProviderRegistry();
+
+    // Initialize legacy components
     this.filterStateManager = new FilterStateManager();
     this.eventMatcher = new EventMatcher();
+
+    // Initialize services
+    this.cacheService = new EventCacheService(options.cacheTTL);
+    this.filterService = new EventFilterService();
+    this.providerCoordinator = new ProviderCoordinator(
+      this.workspaceRoot,
+      this.providerSettings
+    );
+    this.runtimeEventManager = new RuntimeEventManager();
+
     this.log.info(
       LogCategory.ORCHESTRATION,
       'DataOrchestrator constructed with simplified architecture',
       'constructor',
       {
-        cacheTTL: this.cacheTTL,
+        cacheTTL: options.cacheTTL,
         workspaceRoot: this.workspaceRoot,
         storagePath: this.storagePath,
         providerSettings: this.providerSettings
@@ -122,7 +112,6 @@ export class DataOrchestrator {
 
   /**
    * Initialize orchestrator and register providers
-   * Only registers providers that are enabled in settings
    */
   async initialize(): Promise<void> {
     this.log.info(
@@ -136,101 +125,14 @@ export class DataOrchestrator {
     // Ensure storage directory exists
     await this.ensureStorageDirectory();
 
-    // Register Git Local provider (conditionally)
-    if (this.providerSettings.gitLocal) {
-      this.log.info(LogCategory.ORCHESTRATION, 'Registering Git Local provider', 'initialize');
-      try {
-        const gitProvider = new GitProvider();
-        await this.providerRegistry.registerProvider(gitProvider, {
-          enabled: true,
-          priority: 1
-        });
-        this.log.info(LogCategory.ORCHESTRATION, 'Git Local provider registered successfully', 'initialize');
-      } catch (error) {
-        this.log.error(LogCategory.ORCHESTRATION, `Failed to register Git Local provider: ${error}`, 'initialize');
-        // Continue without git - not critical
-      }
-    } else {
-      this.log.info(LogCategory.ORCHESTRATION, 'Git Local provider disabled by settings', 'initialize');
-    }
-
-    // Register GitHub provider (always register, but set enabled based on settings)
-    this.log.info(LogCategory.ORCHESTRATION, `Registering GitHub provider (enabled: ${this.providerSettings.github})`, 'initialize');
-    try {
-      const githubProvider = new GitHubProvider();
-      await this.providerRegistry.registerProvider(githubProvider, {
-        enabled: this.providerSettings.github,
-        priority: 2
-      });
-      this.log.info(LogCategory.ORCHESTRATION, `GitHub provider registered successfully (enabled: ${this.providerSettings.github})`, 'initialize');
-    } catch (error) {
-      this.log.error(LogCategory.ORCHESTRATION, `Failed to register GitHub provider: ${error}`, 'initialize');
-      // Continue without GitHub provider
-    }
-
-    // Register Knowledge Event provider (conditionally)
-    if (this.providerSettings.knowledgeEvents) {
-      this.log.info(LogCategory.ORCHESTRATION, 'Registering Knowledge Event provider', 'initialize');
-      try {
-        const knowledgeProvider = new KnowledgeEventProvider();
-        // Pass workspaceRoot directly - no derivation needed
-        await this.providerRegistry.registerProvider(knowledgeProvider, {
-          enabled: true,
-          priority: 3,
-          settings: {
-            workspaceRoot: this.workspaceRoot
-          }
-        });
-        this.log.info(
-          LogCategory.ORCHESTRATION,
-          `Knowledge Event provider registered successfully`,
-          'initialize',
-          { workspaceRoot: this.workspaceRoot }
-        );
-      } catch (error) {
-        this.log.error(LogCategory.ORCHESTRATION, `Failed to register Knowledge Event provider: ${error}`, 'initialize');
-        // Continue without knowledge events - not critical
-      }
-    } else {
-      this.log.info(LogCategory.ORCHESTRATION, 'Knowledge Event provider disabled by settings', 'initialize');
-    }
-
-    // Register Session Event provider (conditionally)
-    if (this.providerSettings.sessionJournals) {
-      this.log.info(LogCategory.ORCHESTRATION, 'Registering Session Event provider', 'initialize');
-      try {
-        const sessionProvider = new SessionEventProvider();
-        // Pass workspaceRoot directly - no derivation needed
-        await this.providerRegistry.registerProvider(sessionProvider, {
-          enabled: true,
-          priority: 4,
-          settings: {
-            workspaceRoot: this.workspaceRoot
-          }
-        });
-        this.log.info(
-          LogCategory.ORCHESTRATION,
-          `Session Event provider registered successfully`,
-          'initialize',
-          { workspaceRoot: this.workspaceRoot }
-        );
-      } catch (error) {
-        this.log.error(LogCategory.ORCHESTRATION, `Failed to register Session Event provider: ${error}`, 'initialize');
-        // Continue without session events - not critical
-      }
-    } else {
-      this.log.info(LogCategory.ORCHESTRATION, 'Session Event provider disabled by settings', 'initialize');
-    }
-
-    // Intelligence provider removed - patterns/ADRs/learnings are now knowledge-only
-    // They no longer emit timeline events automatically
-    // Use Knowledge System (Phase 2) to access this data for prompt enhancement
+    // Initialize providers (delegated to ProviderCoordinator)
+    await this.providerCoordinator.initialize();
 
     this.log.info(
       LogCategory.ORCHESTRATION,
       'Initialization complete',
       'initialize',
-      { registeredProviders: this.providerRegistry.getEnabledProviders().map(p => p.id) },
+      { registeredProviders: this.providerCoordinator.getEnabledProviderIds() },
       LogPathway.DATA_INGESTION
     );
   }
@@ -238,86 +140,98 @@ export class DataOrchestrator {
   /**
    * Get events for a repository
    * Returns cached data if available, fetches if not
-   *
-   * @param repoPath - Repository path
-   * @param forceRefresh - Force cache invalidation
-   * @returns Array of CanonicalEvents
    */
   async getEvents(repoPath: string, forceRefresh = false): Promise<CanonicalEvent[]> {
-    this.log.info(LogCategory.ORCHESTRATION, `Getting events for ${repoPath}`, 'getEvents', undefined, LogPathway.DATA_INGESTION);
+    this.log.info(
+      LogCategory.ORCHESTRATION,
+      `Getting events for ${repoPath}`,
+      'getEvents',
+      undefined,
+      LogPathway.DATA_INGESTION
+    );
 
-    // Check cache
-    if (!forceRefresh && this.isCacheValid(repoPath)) {
-      this.log.info(LogCategory.ORCHESTRATION, 'Returning cached events', 'getEvents', undefined, LogPathway.DATA_INGESTION);
-      return this.cache.get(repoPath)!.events;
+    // Check cache (delegated to EventCacheService)
+    if (!forceRefresh) {
+      const cachedEvents = this.cacheService.getCachedEvents(repoPath);
+      if (cachedEvents) {
+        this.log.info(
+          LogCategory.ORCHESTRATION,
+          'Returning cached events',
+          'getEvents',
+          undefined,
+          LogPathway.DATA_INGESTION
+        );
+        return cachedEvents;
+      }
     }
 
-    // Fetch from providers
-    this.log.info(LogCategory.ORCHESTRATION, 'Fetching fresh events from providers', 'getEvents', undefined, LogPathway.DATA_INGESTION);
-    const providerEvents = await this.fetchFromProviders(repoPath);
+    // Fetch from providers (delegated to ProviderCoordinator)
+    this.log.info(
+      LogCategory.ORCHESTRATION,
+      'Fetching fresh events from providers',
+      'getEvents',
+      undefined,
+      LogPathway.DATA_INGESTION
+    );
 
-    // Merge provider events with runtime events
-    const events = [...providerEvents, ...this.runtimeEvents];
-
-    // Sort by timestamp (most recent first)
-    events.sort((a, b) => {
-      const timeA = a.timestamp instanceof Date ? a.timestamp.getTime() : new Date(a.timestamp).getTime();
-      const timeB = b.timestamp instanceof Date ? b.timestamp.getTime() : new Date(b.timestamp).getTime();
-      return timeB - timeA;
-    });
-
-    // Compute filter options
-    const filterOptions = this.computeFilterOptions(events);
-
-    // Cache
-    this.cache.set(repoPath, {
+    const providerEvents = await this.providerCoordinator.fetchFromProviders(
       repoPath,
-      events,
-      fetchedAt: new Date(),
-      filterOptions
-    });
+      this.eventMatcher
+    );
+
+    // Merge with runtime events (delegated to RuntimeEventManager)
+    const events = this.runtimeEventManager.mergeWithRuntimeEvents(providerEvents);
+
+    // Compute filter options (delegated to EventFilterService)
+    const filterOptions = this.filterService.computeFilterOptions(events);
+
+    // Cache (delegated to EventCacheService)
+    this.cacheService.setCachedEvents(repoPath, events, filterOptions);
 
     this.currentRepoPath = repoPath;
 
-    this.log.info(LogCategory.ORCHESTRATION, `Cached ${events.length} events (${providerEvents.length} from providers + ${this.runtimeEvents.length} runtime)`, 'getEvents', undefined, LogPathway.DATA_INGESTION);
+    this.log.info(
+      LogCategory.ORCHESTRATION,
+      `Cached ${events.length} events (${providerEvents.length} from providers + ${this.runtimeEventManager.getRuntimeEventCount()} runtime)`,
+      'getEvents',
+      undefined,
+      LogPathway.DATA_INGESTION
+    );
 
     return events;
   }
 
   /**
    * Get filtered events for a repository
-   *
-   * @param repoPath - Repository path
-   * @param filters - Filter state
-   * @param forceRefresh - Force cache invalidation
-   * @returns Filtered array of CanonicalEvents
    */
   async getFilteredEvents(
     repoPath: string,
     filters: FilterState,
     forceRefresh = false
   ): Promise<CanonicalEvent[]> {
-    this.log.info(LogCategory.ORCHESTRATION, `Getting filtered events for ${repoPath}`, 'getFilteredEvents');
+    this.log.info(
+      LogCategory.ORCHESTRATION,
+      `Getting filtered events for ${repoPath}`,
+      'getFilteredEvents'
+    );
 
     // Get all events (from cache or fetch)
     const allEvents = await this.getEvents(repoPath, forceRefresh);
 
-    // Apply filters
-    const filtered = this.applyFilters(allEvents, filters);
+    // Apply filters (delegated to EventFilterService)
+    const filtered = this.filterService.applyFilters(allEvents, filters);
 
-    this.log.info(LogCategory.ORCHESTRATION, `Filtered ${allEvents.length} → ${filtered.length} events`, 'getFilteredEvents');
+    this.log.info(
+      LogCategory.ORCHESTRATION,
+      `Filtered ${allEvents.length} → ${filtered.length} events`,
+      'getFilteredEvents'
+    );
 
     return filtered;
   }
 
   /**
    * Get both all events and filtered events for a repository
-   * Returns complete data needed for accurate UI rendering and counts
-   *
-   * @param repoPath - Repository path
-   * @param filters - Filter state (optional - uses persisted state if not provided)
-   * @param forceRefresh - Force cache invalidation
-   * @returns Object with allEvents, filteredEvents, and filterOptions
    */
   async getEventsWithFilters(
     repoPath: string,
@@ -329,7 +243,11 @@ export class DataOrchestrator {
     filterOptions: FilterOptions;
     appliedFilters: FilterState;
   }> {
-    this.log.info(LogCategory.ORCHESTRATION, `Getting events with filters for ${repoPath}`, 'getEventsWithFilters');
+    this.log.info(
+      LogCategory.ORCHESTRATION,
+      `Getting events with filters for ${repoPath}`,
+      'getEventsWithFilters'
+    );
 
     // Get all events (from cache or fetch)
     const allEvents = await this.getEvents(repoPath, forceRefresh);
@@ -337,20 +255,17 @@ export class DataOrchestrator {
     // Use provided filters OR get persisted filters for this repository
     const appliedFilters = filters || this.filterStateManager.getFilterState(repoPath);
 
-    // Apply filters
-    const filteredEvents = this.applyFilters(allEvents, appliedFilters);
+    // Apply filters (delegated to EventFilterService)
+    const filteredEvents = this.filterService.applyFilters(allEvents, appliedFilters);
 
-    // Get filter options (computed from all events, not filtered)
+    // Get filter options (delegated to EventFilterService)
     const filterOptions = await this.getFilterOptions(repoPath);
 
-    this.log.info(LogCategory.ORCHESTRATION, `Filtered ${allEvents.length} → ${filteredEvents.length} events`, 'getEventsWithFilters');
-
-    // DEBUG: Check if sources[] is present in events
-    const eventsWithSources = allEvents.filter(e => e.sources && e.sources.length > 0);
-    if (eventsWithSources.length > 0) {
-      const sampleEvent = eventsWithSources[0];
-    } else {
-    }
+    this.log.info(
+      LogCategory.ORCHESTRATION,
+      `Filtered ${allEvents.length} → ${filteredEvents.length} events`,
+      'getEventsWithFilters'
+    );
 
     return {
       allEvents,
@@ -362,65 +277,53 @@ export class DataOrchestrator {
 
   /**
    * Get filter options for a repository
-   * Computed from events, not fetched separately
-   *
-   * @param repoPath - Repository path
-   * @returns Filter options
    */
   async getFilterOptions(repoPath: string): Promise<FilterOptions> {
-    this.log.info(LogCategory.ORCHESTRATION, `Getting filter options for ${repoPath}`, 'getFilterOptions');
+    this.log.info(
+      LogCategory.ORCHESTRATION,
+      `Getting filter options for ${repoPath}`,
+      'getFilterOptions'
+    );
 
-    // Ensure we have data
-    const cached = this.cache.get(repoPath);
+    // Check cache
+    const cached = this.cacheService.getCachedData(repoPath);
     if (cached) {
       return cached.filterOptions;
     }
 
     // Fetch and compute
     const events = await this.getEvents(repoPath);
-    return this.computeFilterOptions(events);
+    return this.filterService.computeFilterOptions(events);
   }
 
   /**
-   * Invalidate cache for a repository
-   *
-   * @param repoPath - Repository path (or undefined to clear all)
+   * Invalidate cache for a repository (delegated to EventCacheService)
    */
   invalidateCache(repoPath?: string): void {
-    if (repoPath) {
-      this.log.info(LogCategory.ORCHESTRATION, `Invalidating cache for ${repoPath}`, 'invalidateCache');
-      this.cache.delete(repoPath);
-    } else {
-      this.log.info(LogCategory.ORCHESTRATION, 'Clearing all caches', 'invalidateCache');
-      this.cache.clear();
-    }
+    this.cacheService.invalidateCache(repoPath);
   }
 
   /**
-   * Update filter state for a repository (persists for session)
-   *
-   * @param repoPath - Repository path
-   * @param filters - New filter state
+   * Update filter state for a repository
    */
   updateFilterState(repoPath: string, filters: FilterState): void {
-    this.log.info(LogCategory.ORCHESTRATION, `Updating filter state for ${repoPath}`, 'updateFilterState');
+    this.log.info(
+      LogCategory.ORCHESTRATION,
+      `Updating filter state for ${repoPath}`,
+      'updateFilterState'
+    );
     this.filterStateManager.setFilterState(repoPath, filters);
   }
 
   /**
    * Get current filter state for a repository
-   *
-   * @param repoPath - Repository path
-   * @returns Current filter state
    */
   getFilterState(repoPath: string): FilterState {
     return this.filterStateManager.getFilterState(repoPath);
   }
 
   /**
-   * Reset filter state for a repository to "all visible"
-   *
-   * @param repoPath - Repository path
+   * Reset filter state for a repository
    */
   resetFilterState(repoPath: string): void {
     this.filterStateManager.resetFilterState(repoPath);
@@ -436,320 +339,61 @@ export class DataOrchestrator {
   /**
    * Get provider registry (for UI to toggle providers)
    */
-  getProviderRegistry(): ProviderRegistry {
-    return this.providerRegistry;
+  getProviderRegistry(): any {
+    return this.providerCoordinator.getProviderRegistry();
   }
 
   /**
-   * Enable or disable a provider and invalidate cache
+   * Enable or disable a provider (delegated to ProviderCoordinator)
    */
   setProviderEnabled(providerId: string, enabled: boolean): void {
-    this.log.info(LogCategory.ORCHESTRATION, `Setting provider ${providerId} enabled=${enabled}`, 'setProviderEnabled');
+    this.log.info(
+      LogCategory.ORCHESTRATION,
+      `Setting provider ${providerId} enabled=${enabled}`,
+      'setProviderEnabled'
+    );
 
-    this.providerRegistry.setProviderEnabled(providerId, enabled);
+    this.providerCoordinator.setProviderEnabled(providerId, enabled);
 
-    // Invalidate cache to trigger fresh fetch with new provider state
+    // Invalidate cache to trigger fresh fetch
     this.invalidateCache();
   }
 
   /**
-   * Check if a provider is enabled
+   * Check if a provider is enabled (delegated to ProviderCoordinator)
    */
   isProviderEnabled(providerId: string): boolean {
-    return this.providerRegistry.isProviderEnabled(providerId);
+    return this.providerCoordinator.isProviderEnabled(providerId);
   }
 
   /**
-   * Get list of enabled provider IDs
-   * Used to communicate active providers to frontend for sync mode availability
+   * Get list of enabled provider IDs (delegated to ProviderCoordinator)
    */
   getEnabledProviderIds(): string[] {
-    return this.providerRegistry.getEnabledProviders().map(p => p.id);
+    return this.providerCoordinator.getEnabledProviderIds();
   }
 
-  // ==========================================
-  // PRIVATE METHODS
-  // ==========================================
-
   /**
-   * Fetch events from all healthy providers and deduplicate
+   * Add a runtime event (delegated to RuntimeEventManager)
    */
-  private async fetchFromProviders(repoPath: string): Promise<CanonicalEvent[]> {
-    const providers = this.providerRegistry.getHealthyProviders();
-    const allEvents: CanonicalEvent[] = [];
+  addRuntimeEvent(event: CanonicalEvent): void {
+    this.runtimeEventManager.addRuntimeEvent(event);
 
-    this.log.info(LogCategory.ORCHESTRATION, `Fetching from ${providers.length} providers`, 'fetchFromProviders', undefined, LogPathway.DATA_INGESTION);
-
-    for (const provider of providers) {
-      try {
-        this.log.info(LogCategory.ORCHESTRATION, `Fetching from ${provider.id}`, 'fetchFromProviders', undefined, LogPathway.DATA_INGESTION);
-
-        const context: ProviderContext = {
-          repoPath,
-          workspaceRoot: repoPath,
-          activeFile: undefined
-        };
-
-        const events = await provider.fetchEvents(context);
-        allEvents.push(...events);
-
-        this.log.info(LogCategory.ORCHESTRATION, `Provider ${provider.id} returned ${events.length} events`, 'fetchFromProviders', undefined, LogPathway.DATA_INGESTION);
-
-      } catch (error) {
-        this.log.error(LogCategory.ORCHESTRATION, `Provider ${provider.id} failed: ${error}`, 'fetchFromProviders', undefined, LogPathway.DATA_INGESTION);
-        // Continue with other providers
-      }
+    // Invalidate cache to force re-merge with runtime events
+    if (this.currentRepoPath) {
+      this.invalidateCache(this.currentRepoPath);
     }
-
-    // ALWAYS deduplicate to ensure sources[] is populated
-    // This is critical for sync state detection even with single provider
-    this.log.info(LogCategory.ORCHESTRATION, `Deduplicating ${allEvents.length} events from ${providers.length} provider(s)`, 'fetchFromProviders', undefined, LogPathway.DATA_INGESTION);
-    const result = this.eventMatcher.deduplicateEvents(allEvents);
-    this.log.info(
-      LogCategory.ORCHESTRATION,
-      `Deduplication: ${result.stats.totalInput} → ${result.stats.totalOutput} events (${result.stats.duplicatesRemoved} duplicates, ${result.stats.mergedCount} merged)`,
-      'fetchFromProviders',
-      undefined,
-      LogPathway.DATA_INGESTION
-    );
-    return result.events;
   }
 
   /**
-   * Apply filters to events - Unified Selection with AND Logic
-   *
-   * Pure function: events[] + filters → filtered events[]
-   * NO transformation, just filtering
-   *
-   * AND Logic: Event must match ALL specified criteria to pass
-   * Undefined filter = show all (permissive)
-   *
-   * Multi-Provider Ready: Works with git, GitHub, agent-brain events
-   * Supports both legacy (branches, authors) and new (selectedBranches, selectedAuthors) field names
+   * Clear all runtime events (delegated to RuntimeEventManager)
    */
-  private applyFilters(events: CanonicalEvent[], filters: FilterState): CanonicalEvent[] {
-    this.log.info(LogCategory.ORCHESTRATION, `Applying filters to ${events.length} events`, 'applyFilters', filters, LogPathway.FILTER_APPLY);
+  clearRuntimeEvents(): void {
+    this.runtimeEventManager.clearRuntimeEvents();
 
-    let filteredCount = 0;
-    let rejectedByBranch = 0;
-    let rejectedByAuthor = 0;
-    let rejectedByType = 0;
-
-    const result = events.filter(event => {
-      // ========================================
-      // 1. BRANCH FILTER (Inclusion)
-      // ========================================
-      // Support both old (branches) and new (selectedBranches) field names
-      const branchFilter = filters.selectedBranches || filters.branches;
-      // IMPORTANT: Check for !== undefined, not &&, because empty array [] is truthy but means "show nothing"
-      if (branchFilter !== undefined && branchFilter.length > 0) {
-        const hasMatchingBranch = event.branches.some(
-          branch => branchFilter.includes(branch)
-        );
-        if (!hasMatchingBranch) {
-          rejectedByBranch++;
-          return false; // AND: fail if no branch match
-        }
-      } else if (branchFilter !== undefined && branchFilter.length === 0) {
-        // Empty array means "select none" - reject all events
-        rejectedByBranch++;
-        return false;
-      }
-
-      // ========================================
-      // 2. AUTHOR FILTER (Inclusion)
-      // ========================================
-      // Support both old (authors) and new (selectedAuthors) field names
-      const authorFilter = filters.selectedAuthors || filters.authors;
-      // IMPORTANT: Check for !== undefined, not &&, because empty array [] is truthy but means "show nothing"
-      if (authorFilter !== undefined && authorFilter.length > 0) {
-        const primaryAuthorMatches = authorFilter.includes(event.author.name);
-        const coAuthorMatches = event.coAuthors?.some(
-          ca => authorFilter.includes(ca.name)
-        );
-        if (!primaryAuthorMatches && !coAuthorMatches) {
-          rejectedByAuthor++;
-          return false; // AND: fail if no author match
-        }
-      } else if (authorFilter !== undefined && authorFilter.length === 0) {
-        // Empty array means "select none" - reject all events
-        rejectedByAuthor++;
-        return false;
-      }
-
-      // ========================================
-      // 3. EVENT TYPE FILTER (Inclusion + Legacy Exclusion Support)
-      // ========================================
-      // New inclusion model
-      // IMPORTANT: Check for !== undefined, not &&, because empty array [] is truthy but means "show nothing"
-      if (filters.selectedEventTypes !== undefined && filters.selectedEventTypes.length > 0) {
-        if (!filters.selectedEventTypes.includes(event.type)) {
-          rejectedByType++;
-          return false; // AND: fail if type not selected
-        }
-      } else if (filters.selectedEventTypes !== undefined && filters.selectedEventTypes.length === 0) {
-        // Empty array means "select none" - reject all events
-        rejectedByType++;
-        return false;
-      }
-      // Legacy exclusion model (for backward compatibility)
-      if (filters.excludedEventTypes && filters.excludedEventTypes.length > 0) {
-        if (filters.excludedEventTypes.includes(event.type)) {
-          rejectedByType++;
-          return false;
-        }
-      }
-
-      // ========================================
-      // 4. PROVIDER FILTER (Inclusion)
-      // ========================================
-      // Support both old (providers) and new (selectedProviders) field names
-      const providerFilter = filters.selectedProviders || filters.providers;
-      // IMPORTANT: Check for !== undefined, not &&, because empty array [] is truthy but means "show nothing"
-      if (providerFilter !== undefined && providerFilter.length > 0) {
-        if (!providerFilter.includes(event.providerId)) {
-          return false; // AND: fail if provider not selected
-        }
-      } else if (providerFilter !== undefined && providerFilter.length === 0) {
-        // Empty array means "select none" - reject all events
-        return false;
-      }
-
-      // ========================================
-      // 5. DATE RANGE FILTER
-      // ========================================
-      if (filters.dateRange) {
-        if (event.timestamp < filters.dateRange.start ||
-            event.timestamp > filters.dateRange.end) {
-          return false; // AND: fail if outside date range
-        }
-      }
-
-      // ========================================
-      // 6. SEARCH QUERY FILTER
-      // ========================================
-      // Search in title, description, and hash
-      if (filters.searchQuery) {
-        const query = filters.searchQuery.toLowerCase();
-        const titleMatch = event.title.toLowerCase().includes(query);
-        const descMatch = event.description?.toLowerCase().includes(query);
-        const hashMatch = event.hash?.toLowerCase().includes(query);
-
-        if (!titleMatch && !descMatch && !hashMatch) {
-          return false; // AND: fail if no search match
-        }
-      }
-
-      // ========================================
-      // 7. TAG FILTER (Inclusion)
-      // ========================================
-      // Support both old (tags) and new (selectedTags) field names
-      const tagFilter = filters.selectedTags || filters.tags;
-      if (tagFilter && tagFilter.length > 0) {
-        const hasMatchingTag = event.tags?.some(
-          tag => tagFilter.includes(tag)
-        );
-        if (!hasMatchingTag) {
-          return false; // AND: fail if no tag match
-        }
-      }
-
-      // ========================================
-      // 8. LABEL FILTER (Inclusion)
-      // ========================================
-      // Useful for GitHub issues/PRs, agent-brain categories
-      if (filters.selectedLabels && filters.selectedLabels.length > 0) {
-        const hasMatchingLabel = event.labels?.some(
-          label => filters.selectedLabels!.includes(label)
-        );
-        if (!hasMatchingLabel) {
-          return false; // AND: fail if no label match
-        }
-      }
-
-      // ========================================
-      // PASS: Event matches all specified criteria
-      // ========================================
-      filteredCount++;
-      return true;
-    });
-
-    this.log.info(
-      LogCategory.ORCHESTRATION,
-      `Filter results: ${result.length} passed (rejected: branch=${rejectedByBranch}, author=${rejectedByAuthor}, type=${rejectedByType})`,
-      'applyFilters',
-      undefined,
-      LogPathway.FILTER_APPLY
-    );
-
-    return result;
-  }
-
-  /**
-   * Compute filter options from events
-   * Analyzes events[] to build FilterOptions
-   */
-  private computeFilterOptions(events: CanonicalEvent[]): FilterOptions {
-    const branches = new Set<string>();
-    const authors = new Set<string>();
-    const types = new Set<EventType>();
-    const providers = new Set<string>();
-    const tags = new Set<string>();
-    const labels = new Set<string>();
-
-    let earliest: Date | undefined;
-    let latest: Date | undefined;
-
-    events.forEach(event => {
-      // Collect all branches (FLATTEN branches[] array)
-      event.branches.forEach(branch => branches.add(branch));
-
-      // Collect all authors (primary + co-authors)
-      authors.add(event.author.name);
-      event.coAuthors?.forEach(ca => authors.add(ca.name));
-
-      // Collect types and providers
-      types.add(event.type);
-      providers.add(event.providerId);
-
-      // Collect tags and labels
-      event.tags?.forEach(tag => tags.add(tag));
-      event.labels?.forEach(label => labels.add(label));
-
-      // Track date range
-      if (!earliest || event.timestamp < earliest) {
-        earliest = event.timestamp;
-      }
-      if (!latest || event.timestamp > latest) {
-        latest = event.timestamp;
-      }
-    });
-
-    return {
-      branches: Array.from(branches).sort(),
-      authors: Array.from(authors).sort(),
-      eventTypes: Array.from(types),
-      providers: Array.from(providers),
-      dateRange: {
-        earliest: earliest || new Date(),
-        latest: latest || new Date()
-      },
-      tags: tags.size > 0 ? Array.from(tags).sort() : undefined,
-      labels: labels.size > 0 ? Array.from(labels).sort() : undefined
-    };
-  }
-
-  /**
-   * Check if cache is valid for a repository
-   */
-  private isCacheValid(repoPath: string): boolean {
-    const cached = this.cache.get(repoPath);
-    if (!cached) {
-      return false;
+    if (this.currentRepoPath) {
+      this.invalidateCache(this.currentRepoPath);
     }
-
-    const age = Date.now() - cached.fetchedAt.getTime();
-    return age < this.cacheTTL;
   }
 
   /**
@@ -778,55 +422,16 @@ export class DataOrchestrator {
   }
 
   /**
-   * Add a runtime event (e.g., from session finalization)
-   * Runtime events are merged with provider events in real-time
-   *
-   * @param event - CanonicalEvent to add
-   */
-  addRuntimeEvent(event: CanonicalEvent): void {
-    this.log.info(
-      LogCategory.ORCHESTRATION,
-      `Adding runtime event: ${event.type} - ${event.title}`,
-      'addRuntimeEvent',
-      { eventId: event.id, type: event.type }
-    );
-
-    // Add to runtime events array
-    this.runtimeEvents.push(event);
-
-    // Invalidate cache to force re-merge with runtime events
-    if (this.currentRepoPath) {
-      this.invalidateCache(this.currentRepoPath);
-    }
-  }
-
-  /**
-   * Clear all runtime events
-   * Useful for testing or resetting state
-   */
-  clearRuntimeEvents(): void {
-    this.log.info(LogCategory.ORCHESTRATION, `Clearing ${this.runtimeEvents.length} runtime events`, 'clearRuntimeEvents');
-    this.runtimeEvents = [];
-    if (this.currentRepoPath) {
-      this.invalidateCache(this.currentRepoPath);
-    }
-  }
-
-  /**
    * Get provider settings with defaults
-   * Merges provided settings with defaults
-   * @private
    */
   private getProviderSettings(settings?: Partial<ProviderSettings>): ProviderSettings {
-    // Default settings match VSCode package.json defaults
     const defaults: ProviderSettings = {
-      gitLocal: true,        // Core functionality
-      github: false,         // Requires authentication
-      knowledgeEvents: true, // New feature we want users to see
-      sessionJournals: true  // New feature we want users to see
+      gitLocal: true,
+      github: false,
+      knowledgeEvents: true,
+      sessionJournals: true
     };
 
-    // Merge provided settings with defaults
     return {
       gitLocal: settings?.gitLocal ?? defaults.gitLocal,
       github: settings?.github ?? defaults.github,
@@ -840,8 +445,7 @@ export class DataOrchestrator {
    */
   async dispose(): Promise<void> {
     this.log.info(LogCategory.ORCHESTRATION, 'Disposing...', 'dispose');
-    this.cache.clear();
-    this.runtimeEvents = [];
-    // Provider registry cleanup would go here
+    this.cacheService.dispose();
+    this.runtimeEventManager.clearRuntimeEvents();
   }
 }

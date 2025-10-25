@@ -1,11 +1,21 @@
 /**
  * Template Cloner
  *
- * Handles shallow cloning of templates (bundled or user-created).
- * Cloning creates an independent copy with:
+ * Handles deep and shallow cloning of templates (bundled or user-created).
+ *
+ * **Deep Clone (default):**
  * - New template ID
  * - New item IDs
- * - Fresh audit log (starting with TEMPLATE_CLONED entry)
+ * - All items cloned
+ * - Audit log copied from source + TEMPLATE_CLONED entry added
+ * - Version history copied from source
+ * - Reference to source template ID
+ *
+ * **Shallow Clone:**
+ * - New template ID
+ * - New item IDs
+ * - All items cloned
+ * - Fresh audit log (only TEMPLATE_CLONED entry)
  * - No version history (starts at v1.0.0)
  * - Reference to source template ID
  */
@@ -34,6 +44,12 @@ export interface CloneTemplateOptions {
   /** Whether to copy tags (default: true) */
   copyTags?: boolean;
 
+  /** Whether to include audit log from source (default: true for deep clone) */
+  includeAuditLog?: boolean;
+
+  /** Whether to include version history from source (default: true for deep clone) */
+  includeVersionHistory?: boolean;
+
   /** Actor performing the clone */
   actor?: string;
 }
@@ -59,7 +75,10 @@ export class TemplateCloner {
   }
 
   /**
-   * Clone a template (shallow clone)
+   * Clone a template
+   * @param sourceTemplate - Template to clone
+   * @param options - Clone options (defaults to deep clone with audit log and version history)
+   * @returns Clone result with new template
    */
   cloneTemplate(
     sourceTemplate: MarketplaceTemplate,
@@ -102,7 +121,7 @@ export class TemplateCloner {
         id: newTemplateId,
         name: newName,
         description: options.newDescription || sourceTemplate.description,
-        version: '1.0.0', // Fresh start
+        version: options.includeVersionHistory ? sourceTemplate.version : '1.0.0',
         createdAt: now,
         updatedAt: now,
         category: sourceTemplate.category,
@@ -113,12 +132,20 @@ export class TemplateCloner {
         items: clonedItems,
         itemCount: clonedItems.length,
         scope: sourceTemplate.scope,
-        versionHistory: [], // Fresh version history
+        versionHistory: options.includeVersionHistory && sourceTemplate.versionHistory
+          ? [...sourceTemplate.versionHistory]
+          : [],
         auditLog: [],
         sourceTemplateId: sourceTemplate.id // Track origin
       };
 
-      // Create initial audit log entry
+      // Build audit log
+      if (options.includeAuditLog && sourceTemplate.auditLog) {
+        // Deep clone: copy existing audit log, then add clone entry
+        clonedTemplate.auditLog = [...sourceTemplate.auditLog];
+      }
+
+      // Add clone operation to audit log
       const auditEntry = this.auditLogger.createEntry({
         operation: AuditOperation.TEMPLATE_CLONED,
         actor,
@@ -129,7 +156,7 @@ export class TemplateCloner {
         }
       });
 
-      clonedTemplate.auditLog = [auditEntry];
+      clonedTemplate.auditLog?.push(auditEntry);
 
       return {
         success: true,

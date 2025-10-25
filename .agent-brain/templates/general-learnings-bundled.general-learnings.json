@@ -1,0 +1,26 @@
+{
+  "id": "bundled.general-learnings",
+  "name": "General Learnings",
+  "description": "Catch-all template for ad-hoc learnings captured during development sessions. This is the default location for emergent knowledge that doesn't belong in a specific template.",
+  "version": "1.0.0",
+  "createdAt": "2025-10-25T00:00:00.000Z",
+  "updatedAt": "2025-10-25T00:00:00.000Z",
+  "category": "learnings",
+  "tags": [
+    "learnings",
+    "general",
+    "session-capture"
+  ],
+  "author": {
+    "name": "Agent Brain Team",
+    "email": "team@agentbrain.dev"
+  },
+  "license": "MIT",
+  "source": "bundled",
+  "scope": "team",
+  "userEditable": true,
+  "items": [],
+  "itemCount": 0,
+  "auditLog": [],
+  "versionHistory": []
+}
