@@ -90,6 +90,19 @@ export class MaturityConfigPanel {
 
   /**
    * Render configuration panel content
+   *
+   * NOTE: The maturity context is a SINGLE unified configuration with 3 dimensions:
+   * - Complexity (Simple/Standard/Complex) - dropdown selection
+   * - Quadrant (1-25) - grid selection for Operator × Project maturity
+   * - Max items - slider
+   *
+   * You don't set separate quadrants per complexity level. Instead, you:
+   * 1. Select your complexity level (Simple/Standard/Complex)
+   * 2. Select ONE quadrant on the grid (your Operator × Project maturity)
+   * 3. Adjust max items if needed
+   * 4. Click "Apply Configuration" to save
+   *
+   * The complexity level affects which items are relevant, combined with the quadrant.
    */
   private renderConfigPanel(): string {
     return `

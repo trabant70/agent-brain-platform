@@ -1518,17 +1518,18 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: var(--vscode-button-secondaryBackground);
-  color: var(--vscode-button-secondaryForeground);
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
   border: none;
   border-radius: 3px;
   font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .btn-controls:hover {
-  background: var(--vscode-button-secondaryHoverBackground);
+  background: var(--vscode-button-hoverBackground);
 }
 
 .config-panel {
@@ -1581,12 +1582,12 @@
 
 .quadrant-grid-5x5 {
   display: grid;
-  grid-template-columns: 90px repeat(5, minmax(55px, 1fr));
-  grid-template-rows: repeat(5, 45px) auto auto;
-  gap: 6px;
-  max-width: 650px;
-  margin: 16px auto;
-  padding: 0 8px;
+  grid-template-columns: 65px repeat(5, minmax(48px, 1fr));
+  grid-template-rows: repeat(5, 40px) auto auto;
+  gap: 4px;
+  max-width: 100%;
+  margin: 12px 0;
+  padding: 0;
 }
 
 .grid-axis-y {
@@ -1594,13 +1595,13 @@
   grid-row: 1 / 6;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 11px;
+  justify-content: flex-start;
+  font-size: 10px;
   font-weight: 600;
   color: var(--vscode-descriptionForeground);
   writing-mode: vertical-lr;
   transform: rotate(180deg);
-  padding: 8px 0;
+  padding: 8px 0 8px 4px;
 }
 
 .grid-axis-x {
@@ -1617,8 +1618,8 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  padding-right: 12px;
-  font-size: 11px;
+  padding-right: 8px;
+  font-size: 10px;
   font-weight: 500;
   color: var(--vscode-descriptionForeground);
 }
@@ -1634,7 +1635,7 @@
 
 .grid-col-label {
   text-align: center;
-  font-size: 11px;
+  font-size: 10px;
   color: var(--vscode-descriptionForeground);
 }
 
@@ -1643,10 +1644,12 @@
   color: var(--vscode-button-secondaryForeground);
   border: 2px solid transparent;
   border-radius: 3px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
+  padding: 4px 2px;
+  min-width: 0;
 }
 
 .quadrant-btn:hover {
