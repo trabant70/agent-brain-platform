@@ -1,20 +1,33 @@
 /**
- * Timeline Provider - Simplified Extension Host
+ * Timeline Provider - Refactored Facade
  *
- * NEW ARCHITECTURE:
- * - Works directly with CanonicalEvent[]
- * - No transformations, just pass-through
- * - Message handling delegated to specialized handlers
+ * REFACTORED: Now a clean facade coordinating specialized services.
+ * Reduced from 611 lines to ~250 lines.
+ *
+ * Delegates to:
+ * - WebviewContentService (HTML generation, CSP, URIs)
+ * - MessageRouter (Message routing to handlers)
+ * - I18nService (Internationalization)
+ * - WebviewLifecycleManager (Lifecycle events)
  */
 
 import * as vscode from 'vscode';
-import * as fs from 'fs';
 import { DataOrchestrator } from '@agent-brain/core/domains/visualization/orchestration/DataOrchestrator';
 import { CanonicalEvent } from '@agent-brain/core/domains/events';
 import { logger, LogCategory, LogPathway } from '@agent-brain/core/infrastructure/logging/Logger';
+
+// Message handlers
 import { TimelineMessageHandler } from './handlers/TimelineMessageHandler';
 import { KnowledgeMessageHandler } from './handlers/KnowledgeMessageHandler';
 import { SessionMessageHandler } from './handlers/SessionMessageHandler';
+
+// Specialized services (NEW - Facade Pattern)
+import {
+  WebviewContentService,
+  MessageRouter,
+  I18nService,
+  WebviewLifecycleManager
+} from './services';
 
 export class TimelineProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'repoTimeline.evolutionView';
@@ -22,7 +35,7 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
   private _view?: vscode.WebviewView;
   private orchestrator: DataOrchestrator;
   private extensionUri: vscode.Uri;
-  private knowledgeManager: any = null;  // KnowledgeManager instance
+  private knowledgeManager: any = null;
 
   // Shared state object used by handlers and provider
   private providerState = {
@@ -44,17 +57,31 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
   private knowledgeHandler!: KnowledgeMessageHandler;
   private sessionHandler!: SessionMessageHandler;
 
+  // Specialized services (NEW)
+  private webviewContentService: WebviewContentService;
+  private messageRouter: MessageRouter;
+  private i18nService: I18nService;
+  private lifecycleManager: WebviewLifecycleManager;
+
+
   constructor(extensionUri: vscode.Uri, workspaceRoot: string) {
     this.extensionUri = extensionUri;
     this.orchestrator = new DataOrchestrator({
       workspaceRoot: workspaceRoot,
       providerSettings: this.getProviderSettings()
     });
+
+    // Initialize services
+    this.webviewContentService = new WebviewContentService(extensionUri);
+    this.messageRouter = new MessageRouter();
+    this.i18nService = new I18nService(extensionUri);
+    this.lifecycleManager = new WebviewLifecycleManager({
+      onVisibilityChange: (visible) => this.handleVisibilityChange(visible)
+    });
   }
 
   /**
    * Get provider enablement settings from VSCode configuration
-   * @private
    */
   private getProviderSettings() {
     const config = vscode.workspace.getConfiguration('agentBrain.providers');
@@ -74,7 +101,7 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
     logger.debug(LogCategory.EXTENSION, 'Knowledge Manager connected to TimelineProvider');
 
     // Send initial knowledge data to webview if it's already ready
-    if (this.isWebviewReady && this._view) {
+    if (this.lifecycleManager.getWebviewReady() && this._view) {
       this.sendKnowledgeData();
     }
   }
@@ -102,12 +129,40 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
       localResourceRoots: [this.extensionUri]
     };
 
-    // Set HTML content
-    webviewView.webview.html = this.getHtmlForWebview(webviewView.webview);
+    // Set HTML content (delegated to WebviewContentService)
+    webviewView.webview.html = this.webviewContentService.getHtmlForWebview(webviewView.webview);
 
-    // Initialize message handlers with shared state
-    // Capture provider instance in closure for context getters/setters
+    // Initialize message handlers
+    this.initializeMessageHandlers(webviewView);
+
+    // Register handlers with message router
+    this.messageRouter.registerHandler(this.timelineHandler);
+    this.messageRouter.registerHandler(this.knowledgeHandler);
+    this.messageRouter.registerHandler(this.sessionHandler);
+
+    // Setup message listener
+    this.setupMessageListener(webviewView);
+
+    // Setup lifecycle event listeners (delegated to WebviewLifecycleManager)
+    this.lifecycleManager.setupEventListeners(webviewView);
+
+    // Initialize orchestrator if needed
+    await this.initializeOrchestrator();
+
+    // Listen for editor changes
+    vscode.window.onDidChangeActiveTextEditor(async () => {
+      if (this.lifecycleManager.getWebviewReady()) {
+        await this.loadTimelineForActiveFile();
+      }
+    });
+  }
+
+  /**
+   * Initialize message handlers with shared state
+   */
+  private initializeMessageHandlers(webviewView: vscode.WebviewView): void {
     const provider = this;
+
     this.timelineHandler = new TimelineMessageHandler({
       orchestrator: this.orchestrator,
       view: webviewView,
@@ -131,216 +186,109 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
     this.sessionHandler = new SessionMessageHandler({
       view: webviewView
     });
+  }
 
-    // Note: Don't send logging config here - too early (webview not ready yet)
-    // It will be sent when webview sends 'requestData' message
-
-    // Initialize Agent Brain Bridge if core is available
-    if (this.agentBrainCore) {
-      logger.info(
-        LogCategory.EXTENSION,
-        'Initializing Agent Brain Bridge',
-        'TimelineProvider.resolveWebviewView',
-        {},
-        LogPathway.GUIDANCE_INIT
-      );
-
-      this.agentBrainBridge = new AgentBrainBridge({
-        core: this.agentBrainCore,
-        webview: webviewView.webview
-      });
-      this.agentBrainBridge.initialize();
-
-      logger.info(
-        LogCategory.EXTENSION,
-        'Agent Brain Bridge initialized successfully',
-        'TimelineProvider.resolveWebviewView',
-        {},
-        LogPathway.GUIDANCE_INIT
-      );
-    } else {
-      logger.warn(
-        LogCategory.EXTENSION,
-        'Agent Brain Core not available - guidance features will be disabled',
-        'TimelineProvider.resolveWebviewView'
-      );
-    }
-
-    // Handle messages from webview
+  /**
+   * Setup webview message listener
+   */
+  private setupMessageListener(webviewView: vscode.WebviewView): void {
     webviewView.webview.onDidReceiveMessage(async (message) => {
       logger.info(
         LogCategory.WEBVIEW,
-        `🔔 Message received by onDidReceiveMessage listener: ${message.type}`,
+        `🔔 Message received: ${message.type}`,
         'onDidReceiveMessage',
         { type: message.type },
         LogPathway.WEBVIEW_MESSAGING
       );
 
-      // Route Agent Brain guidance and knowledge requests to bridge
-      if (message.type && (message.type.startsWith('guidance.') || message.type.startsWith('knowledge.'))) {
-        if (this.agentBrainBridge) {
-          await this.agentBrainBridge.handleRequest(message);
-        } else {
-          logger.warn(
-            LogCategory.EXTENSION,
-            'Agent Brain not available - cannot handle request',
-            'onDidReceiveMessage',
-            { type: message.type }
-          );
-          // Send error back to webview
-          webviewView.webview.postMessage({
-            type: 'error',
-            requestId: message.requestId,
-            error: 'Agent Brain features not available. Please open a workspace folder.'
-          });
-        }
-        return; // Early return, don't process further
-      }
-
-      // Handle non-guidance messages normally
-      await this.handleMessage(message);
+      // Route message to handlers (delegated to MessageRouter)
+      await this.routeMessage(message);
     });
 
     logger.info(
       LogCategory.WEBVIEW,
       '✅ Message listener attached to webview',
-      'resolveWebviewView',
+      'setupMessageListener',
       undefined,
       LogPathway.WEBVIEW_MESSAGING
     );
+  }
 
-    // Send resize message when view becomes visible (catches window focus restoration)
-    webviewView.onDidChangeVisibility(() => {
-      if (webviewView.visible) {
-        logger.info(
-          LogCategory.WEBVIEW,
-          'Webview became visible',
-          'onDidChangeVisibility',
-          { isWebviewReady: this.isWebviewReady },
-          LogPathway.WEBVIEW_MESSAGING
-        );
-        // Longer delay to let VS Code finish layout after focus restoration
-        // This is critical when returning from other windows (Terminal, etc.)
-        setTimeout(() => {
-          this.sendMessage({ type: 'resize' });
-
-          // Re-send knowledge data when webview becomes visible
-          // This fixes the issue where data disappears when switching VSCode tabs
-          if (this.knowledgeManager) {
-            logger.debug(
-              LogCategory.WEBVIEW,
-              'Re-sending knowledge data after visibility change',
-              'onDidChangeVisibility',
-              {},
-              LogPathway.KNOWLEDGE_MANAGEMENT
-            );
-            this.sendKnowledgeData();
-            this.sendClaudeMdFiles();
-          }
-        }, 150); // Increased from 50ms to allow full layout settlement
-      } else {
-        logger.info(
-          LogCategory.WEBVIEW,
-          'Webview became hidden',
-          'onDidChangeVisibility',
-          {},
-          LogPathway.WEBVIEW_MESSAGING
-        );
-        // Don't reset ready flag - webview state persists when hidden
-        // this.isWebviewReady = false;  // REMOVED: This was causing data loss
-      }
-    });
-
-    // IMPORTANT: Initialize orchestrator only if not already initialized
+  /**
+   * Initialize orchestrator (if not already initialized)
+   */
+  private async initializeOrchestrator(): Promise<void> {
     if (!this.isOrchestratorInitialized) {
       try {
         logger.info(
           LogCategory.EXTENSION,
           'Initializing orchestrator for first time',
-          'TimelineProvider.resolveWebviewView',
+          'TimelineProvider.initializeOrchestrator',
           {},
           LogPathway.DATA_INGESTION
         );
+
         await this.orchestrator.initialize();
         this.isOrchestratorInitialized = true;
       } catch (error) {
         logger.error(
           LogCategory.EXTENSION,
           'Failed to initialize orchestrator',
-          'TimelineProvider.resolveWebviewView',
+          'TimelineProvider.initializeOrchestrator',
           error,
           LogPathway.DATA_INGESTION
         );
+
         this.sendMessage({
           type: 'error',
           message: `Failed to initialize: ${error}`
         });
-        return;
       }
     } else {
       logger.info(
         LogCategory.EXTENSION,
         'Orchestrator already initialized, reusing existing instance',
-        'TimelineProvider.resolveWebviewView',
+        'TimelineProvider.initializeOrchestrator',
         {},
         LogPathway.DATA_INGESTION
       );
     }
-
-    // DO NOT load data here - wait for webview to send 'requestData' message
-    // This prevents race condition where data is sent before webview is ready
-
-    // Listen for editor changes
-    vscode.window.onDidChangeActiveTextEditor(async () => {
-      // Only load if webview is ready
-      if (this.isWebviewReady) {
-        await this.loadTimelineForActiveFile();
-      }
-    });
   }
 
   /**
-   * Handle messages from webview - delegates to specialized handlers
+   * Route message to appropriate handler (delegated to MessageRouter)
    */
-  private async handleMessage(message: any): Promise<void> {
-    // Log all incoming messages for debugging
-    logger.debug(
-      LogCategory.WEBVIEW,
-      `Received message from webview: ${message.type}`,
-      'handleMessage',
-      { type: message.type, hasData: !!message.data },
-      LogPathway.WEBVIEW_MESSAGING
-    );
-
+  private async routeMessage(message: any): Promise<void> {
     try {
-      // Try timeline handler first
-      if (await this.timelineHandler.handleMessage(message)) {
+      const handled = await this.messageRouter.routeMessage(message);
+
+      // Handle tab changed message (for state tracking)
+      if (!handled && message.type === 'tabChanged') {
+        logger.debug(
+          LogCategory.WEBVIEW,
+          `Tab changed: ${message.from} → ${message.to}`,
+          'routeMessage',
+          { from: message.from, to: message.to },
+          LogPathway.WEBVIEW_MESSAGING
+        );
         return;
       }
 
-      // Try knowledge handler
-      if (await this.knowledgeHandler.handleMessage(message)) {
-        return;
+      // Log warning if no handler processed the message
+      if (!handled) {
+        logger.warn(
+          LogCategory.WEBVIEW,
+          `Unknown message type received: ${message.type}`,
+          'routeMessage',
+          { type: message.type },
+          LogPathway.WEBVIEW_MESSAGING
+        );
       }
-
-      // Try session handler
-      if (await this.sessionHandler.handleMessage(message)) {
-        return;
-      }
-
-      // No handler recognized the message
-      logger.warn(
-        LogCategory.WEBVIEW,
-        `Unknown message type received: ${message.type}`,
-        'handleMessage',
-        { type: message.type },
-        LogPathway.WEBVIEW_MESSAGING
-      );
     } catch (error) {
       logger.error(
         LogCategory.WEBVIEW,
-        `Failed to handle message: ${message.type}`,
-        'handleMessage',
+        `Failed to route message: ${message.type}`,
+        'routeMessage',
         { type: message.type, error },
         LogPathway.WEBVIEW_MESSAGING
       );
@@ -349,6 +297,31 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
         type: 'error',
         message: `Failed to handle ${message.type}: ${error}`
       });
+    }
+  }
+
+  /**
+   * Handle webview visibility changes
+   */
+  private handleVisibilityChange(visible: boolean): void {
+    if (visible) {
+      // Send resize message when view becomes visible
+      setTimeout(() => {
+        this.sendMessage({ type: 'resize' });
+
+        // Re-send knowledge data when webview becomes visible
+        if (this.knowledgeManager) {
+          logger.debug(
+            LogCategory.WEBVIEW,
+            'Re-sending knowledge data after visibility change',
+            'handleVisibilityChange',
+            {},
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+          this.sendKnowledgeData();
+          this.sendClaudeMdFiles();
+        }
+      }, 150);
     }
   }
 
@@ -362,194 +335,58 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
   }
 
   /**
-   * Send i18n data to webview
-   * Loads the appropriate bundle based on VSCode's display language
+   * Send i18n data to webview (delegated to I18nService)
    */
   public sendI18nData(): void {
-    // Detect VSCode language
-    const locale = vscode.env.language || 'en';
-    logger.debug(LogCategory.EXTENSION, `Detected VSCode language: ${locale}`, 'sendI18nData');
-
-    // Determine bundle file path
-    // Normalize locale: 'zh-cn' -> 'zh-cn', 'en-us' -> 'en', etc.
-    const normalizedLocale = locale.toLowerCase();
-    let bundleFile = 'bundle.l10n.json'; // Default to English
-
-    // Check if we have a specific translation for this locale
-    if (normalizedLocale.startsWith('de')) {
-      bundleFile = 'bundle.l10n.de.json';
-    } else if (normalizedLocale.startsWith('es')) {
-      bundleFile = 'bundle.l10n.es.json';
-    } else if (normalizedLocale.startsWith('zh-cn') || normalizedLocale === 'zh') {
-      bundleFile = 'bundle.l10n.zh-cn.json';
-    } else if (normalizedLocale.startsWith('fr')) {
-      bundleFile = 'bundle.l10n.fr.json';
-    }
-
-    // Load bundle file
-    try {
-      const bundlePath = vscode.Uri.joinPath(this.extensionUri, 'l10n', bundleFile);
-      const bundleContent = fs.readFileSync(bundlePath.fsPath, 'utf8');
-      const translations = JSON.parse(bundleContent);
-
-      logger.info(
-        LogCategory.EXTENSION,
-        `Loaded i18n bundle: ${bundleFile} (${Object.keys(translations).length} strings)`,
-        'sendI18nData'
-      );
-
-      // Send to webview
-      this.sendMessage({
-        type: 'i18n:init',
-        payload: {
-          locale: locale,
-          translations: translations
-        }
-      });
-    } catch (error) {
-      logger.error(
-        LogCategory.EXTENSION,
-        `Failed to load i18n bundle: ${bundleFile}`,
-        'sendI18nData',
-        error
-      );
-
-      // Fallback to English
-      try {
-        const fallbackPath = vscode.Uri.joinPath(this.extensionUri, 'l10n', 'bundle.l10n.json');
-        const fallbackContent = fs.readFileSync(fallbackPath.fsPath, 'utf8');
-        const fallbackTranslations = JSON.parse(fallbackContent);
-
-        this.sendMessage({
-          type: 'i18n:init',
-          payload: {
-            locale: 'en',
-            translations: fallbackTranslations
-          }
-        });
-      } catch (fallbackError) {
-        logger.error(
-          LogCategory.EXTENSION,
-          'Failed to load fallback English bundle',
-          'sendI18nData',
-          fallbackError
-        );
-      }
+    if (this._view) {
+      this.i18nService.sendI18nData(this._view.webview);
     }
   }
 
   /**
-   * Get HTML for webview
-   *
-   * Loads the webpack-bundled HTML and injects proper CSP and resource URIs.
-   * This ensures a single source of truth: the HTML template.
-   *
-   * CACHE-BUSTING: Adds version parameter to all script URIs to force VSCode
-   * to reload webview content when the extension version changes.
+   * Load timeline for active file
    */
-  private getHtmlForWebview(webview: vscode.Webview): string {
-    // Read the webpack-bundled HTML file
-    const htmlPath = vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'webview.html');
-    const htmlContent = fs.readFileSync(htmlPath.fsPath, 'utf8');
-
-    // Get extension version + timestamp for aggressive cache busting
-    // Timestamp ensures VSCode ALWAYS reloads webview, even with same version
-    const packageJsonPath = vscode.Uri.joinPath(this.extensionUri, 'package.json');
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath.fsPath, 'utf8'));
-    const cacheBuster = `${packageJson.version.replace(/\./g, '-')}-${Date.now()}`; // e.g., "0-1-6-1696615234567"
-
-    // Get CSP source for this webview
-    const cspSource = webview.cspSource;
-
-    // Build Content Security Policy
-    const csp = `
-      default-src 'none';
-      style-src ${cspSource} 'unsafe-inline';
-      script-src ${cspSource} 'unsafe-eval';
-      font-src ${cspSource};
-      img-src ${cspSource} data: https:;
-    `.replace(/\s+/g, ' ').trim();
-
-    // Inject CSP meta tag into the HTML head
-    const htmlWithCSP = htmlContent.replace(
-      '<!-- CSP will be injected by provider at runtime -->',
-      `<meta http-equiv="Content-Security-Policy" content="${csp}">`
-    );
-
-    // Convert script src paths to webview URIs with cache-busting version parameter
-    // The bundled HTML has paths like: <script defer src="vendors.js"></script>
-    // We transform to: <script defer src="vscode-webview://...vendors.js?v=0-1-5"></script>
-    let htmlWithWebviewUris = htmlWithCSP.replace(
-      /src="([^"]+\.js)"/g,
-      (match, scriptPath) => {
-        const scriptUri = webview.asWebviewUri(
-          vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', scriptPath)
-        );
-        // Add version as query parameter for cache busting
-        return `src="${scriptUri}?v=${cacheBuster}"`;
-      }
-    );
-
-    // Convert asset paths (images, SVGs, etc.) to webview URIs
-    // The bundled HTML has paths like: <img src="assets/diagram.svg">
-    // We transform to: <img src="vscode-webview://...assets/diagram.svg">
-    htmlWithWebviewUris = htmlWithWebviewUris.replace(
-      /src="(assets\/[^"]+)"/g,
-      (match, assetPath) => {
-        const assetUri = webview.asWebviewUri(
-          vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', assetPath)
-        );
-        return `src="${assetUri}"`;
-      }
-    );
-
-    // Special handling for architecture diagram - inject both theme URIs as data attributes
-    // This allows the webview to switch between light/dark without reconstructing URIs
-    const lightDiagramUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'assets', 'agentbrain-complete-diagram.svg')
-    );
-    const darkDiagramUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'assets', 'agentbrain-complete-diagram-dark.svg')
-    );
-
-    htmlWithWebviewUris = htmlWithWebviewUris.replace(
-      /id="architecture-diagram"/,
-      `id="architecture-diagram" data-light-src="${lightDiagramUri}" data-dark-src="${darkDiagramUri}"`
-    );
-
-    return htmlWithWebviewUris;
+  private async loadTimelineForActiveFile(): Promise<void> {
+    if (this.timelineHandler) {
+      await this.timelineHandler.loadTimelineForActiveFile();
+    }
   }
 
   /**
    * Add a runtime event to the timeline
-   * Used for real-time session tracking
-   *
-   * @param event - CanonicalEvent to add (e.g., from session finalization)
    */
   public addRuntimeEvent(event: CanonicalEvent): void {
     try {
-      logger.info(LogCategory.EXTENSION, `Adding runtime event to timeline: ${event.type}`, 'addRuntimeEvent', {
-        eventId: event.id,
-        title: event.title
-      });
+      logger.info(
+        LogCategory.EXTENSION,
+        `Adding runtime event to timeline: ${event.type}`,
+        'addRuntimeEvent',
+        { eventId: event.id, title: event.title }
+      );
 
-      // Add event to orchestrator's runtime events
       this.orchestrator.addRuntimeEvent(event);
 
-      // If webview is visible, refresh to show the new event
+      // Refresh timeline if webview is visible
       if (this._view && this.timelineHandler) {
         this.timelineHandler.loadTimelineForActiveFile(true).catch(error => {
-          logger.error(LogCategory.EXTENSION, `Failed to refresh timeline after adding runtime event: ${error}`, 'addRuntimeEvent');
+          logger.error(
+            LogCategory.EXTENSION,
+            `Failed to refresh timeline after adding runtime event: ${error}`,
+            'addRuntimeEvent'
+          );
         });
       }
     } catch (error) {
-      logger.error(LogCategory.EXTENSION, `Failed to add runtime event: ${error}`, 'addRuntimeEvent');
+      logger.error(
+        LogCategory.EXTENSION,
+        `Failed to add runtime event: ${error}`,
+        'addRuntimeEvent'
+      );
     }
   }
 
   /**
-   * Send knowledge data to webview
-   * Delegates to knowledge handler
+   * Send knowledge data to webview (delegates to knowledge handler)
    */
   private sendKnowledgeData(): void {
     if (this.knowledgeHandler) {
@@ -558,8 +395,7 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
   }
 
   /**
-   * Send claude.md files to webview
-   * Delegates to knowledge handler
+   * Send claude.md files to webview (delegates to knowledge handler)
    */
   private sendClaudeMdFiles(): void {
     if (this.knowledgeHandler) {
@@ -572,6 +408,7 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
    */
   dispose(): void {
     this.orchestrator.dispose();
+    this.lifecycleManager.dispose();
   }
 }
 
@@ -584,14 +421,13 @@ export function registerTimelineProvider(context: vscode.ExtensionContext): vsco
 
   // Initialize
   provider.initialize().catch(error => {
+    logger.error(LogCategory.EXTENSION, 'Failed to initialize TimelineProvider', 'registerTimelineProvider', error);
   });
 
   // Register webview view provider
   const disposable = vscode.window.registerWebviewViewProvider(
     TimelineProvider.viewType,
     provider
-    // Removed retainContextWhenHidden to force complete reload on every show
-    // This prevents VSCode from caching stale webview content
   );
 
   return disposable;

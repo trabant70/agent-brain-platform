@@ -992,11 +992,13 @@
 
 /* Template Section Header */
 .template-section-header {
-  background: var(--vscode-editor-background);
+  background: var(--vscode-sideBar-background);
   border-left: 4px solid var(--vscode-textLink-activeForeground);
+  border-bottom: 1px solid var(--vscode-panel-border);
   font-weight: 600;
   transition: background-color 0.15s ease;
   cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
 }
 
 .template-section-header:hover {
@@ -1004,8 +1006,8 @@
 }
 
 .template-section-header td {
-  padding-top: 12px !important;
-  padding-bottom: 12px !important;
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
 }
 
 .template-badge {
@@ -1020,6 +1022,10 @@
   letter-spacing: 0.5px;
 }
 
+.template-title {
+  color: var(--vscode-textLink-activeForeground);
+}
+
 .template-meta {
   display: flex;
   gap: 12px;
@@ -1031,7 +1037,7 @@
 
 .item-count {
   font-weight: 600;
-  color: var(--vscode-textLink-activeForeground);
+  color: #ff9500;
 }
 
 .version {
@@ -1061,6 +1067,11 @@
 .template-item-row td {
   padding-top: 8px !important;
   padding-bottom: 8px !important;
+}
+
+/* First item after template header - extra spacing */
+.template-section-header + .template-item-row td {
+  padding-top: 12px !important;
 }
 
 .item-indent {
@@ -1105,7 +1116,7 @@
   outline-offset: 1px;
 }
 
-/* Action Buttons in V1 Template Rows */
+/* Action Buttons in V1 Template Rows - Progressive Disclosure */
 .template-section-header .action-btn,
 .template-item-row .action-btn {
   padding: 4px 6px;
@@ -1114,9 +1125,17 @@
   border: none;
   cursor: pointer;
   font-size: 14px;
-  opacity: 0.7;
+  opacity: 0;
   transition: all 0.15s ease;
   border-radius: 3px;
+  pointer-events: none;
+}
+
+/* Show action buttons on row hover */
+.template-section-header:hover .action-btn,
+.template-item-row:hover .action-btn {
+  opacity: 0.7;
+  pointer-events: auto;
 }
 
 .template-section-header .action-btn:hover,
@@ -1402,30 +1421,36 @@
 
 /* Drop zones */
 .template-drop-zone {
-  display: none; /* Hidden by default */
+  display: table-row; /* Visible when template is expanded */
   transition: all 0.2s ease;
 }
 
 .template-drop-zone.drop-zone-active {
-  display: table-row;
   animation: dropZonePulse 0.5s ease-in-out infinite;
 }
 
 .drop-zone-cell {
-  padding: 20px;
+  padding: 12px;
   text-align: center;
-  background: var(--vscode-editor-background);
-  border: 2px dashed var(--vscode-textLink-activeForeground);
+  background: rgba(0, 212, 255, 0.03);
+  border: 1px dashed var(--vscode-panel-border);
   border-radius: 4px;
   transition: all 0.2s ease;
 }
 
 .drop-zone-active .drop-zone-cell {
-  background: var(--vscode-list-hoverBackground);
-  border-color: var(--vscode-focusBorder);
+  background: rgba(0, 212, 255, 0.15);
+  border: 2px dashed var(--vscode-focusBorder);
+  padding: 20px;
 }
 
 .drop-zone-indicator {
+  color: var(--vscode-descriptionForeground);
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.drop-zone-active .drop-zone-indicator {
   color: var(--vscode-textLink-activeForeground);
   font-weight: 600;
   font-size: 14px;
@@ -1438,4 +1463,15 @@
   50% {
     opacity: 0.7;
   }
+}
+
+/* Drop target indicators for reordering */
+.template-item-row.drop-target-before {
+  border-top: 3px solid var(--vscode-focusBorder);
+  margin-top: -3px;
+}
+
+.template-item-row.drop-target-after {
+  border-bottom: 3px solid var(--vscode-focusBorder);
+  margin-bottom: -3px;
 }

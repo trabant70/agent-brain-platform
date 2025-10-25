@@ -205,7 +205,9 @@ export class AuditLogViewer {
     }
 
     if (operation.includes('clone')) {
-      if (details.sourceTemplateId) {
+      if (details.sourceTemplateName) {
+        parts.push(`from <strong>"${this.escapeHtml(details.sourceTemplateName)}"</strong>`);
+      } else if (details.sourceTemplateId) {
         parts.push(`from <span style="font-family: monospace; background: var(--vscode-textCodeBlock-background); padding: 2px 4px; border-radius: 2px;">${this.escapeHtml(details.sourceTemplateId.substring(0, 8))}</span>`);
       }
       if (details.shallow !== undefined) {

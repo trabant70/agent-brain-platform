@@ -6,7 +6,7 @@
  * Items within expanded templates show their own details and actions.
  */
 
-import { MarketplaceTemplate, KnowledgeItem, KnowledgeType, getKnowledgeTypeLabel } from '../../../knowledge/types';
+import { MarketplaceTemplate, KnowledgeItem, KnowledgeType, getKnowledgeTypeLabel, getKnowledgeTypeIcon } from '../../../knowledge/types';
 import { webviewLogger, LogCategory, LogPathway } from '../../webview/WebviewLogger';
 
 export interface V1TemplatesTableCallbacks {
@@ -26,6 +26,7 @@ export interface V1TemplatesTableCallbacks {
   onUpdateItem: (templateId: string, itemId: string, updates: any) => void;
   onMoveItem: (itemId: string, fromTemplateId: string, toTemplateId: string) => void;
   onCopyItem: (itemId: string, fromTemplateId: string, toTemplateId: string) => void;
+  onReorderItem: (templateId: string, itemId: string, newIndex: number) => void;
 }
 
 export class V1TemplatesTableController {
@@ -131,7 +132,7 @@ export class V1TemplatesTableController {
         <span class="template-badge">📦 Template</span>
       </td>
       <td class="col-title">
-        <strong>${this.escapeHtml(template.name)}</strong>
+        <strong class="template-title">${this.escapeHtml(template.name)}</strong>
         <div class="template-meta">
           <span class="item-count">${itemCount} ${itemCount === 1 ? 'item' : 'items'}</span>
           ${template.version ? `<span class="version">v${this.escapeHtml(template.version)}</span>` : ''}
@@ -144,14 +145,14 @@ export class V1TemplatesTableController {
       </td>
       <td class="col-source">${template.source || 'user'}</td>
       <td class="col-actions">
-        <button class="action-btn" data-action="add-item" data-template-id="${template.id}" title="Add item to template">➕</button>
-        <button class="action-btn" data-action="create-version" data-template-id="${template.id}" title="Create version checkpoint">💾</button>
+        ${template.source === 'bundled' && !template.userEditable ? '' : '<button class="action-btn" data-action="add-item" data-template-id="' + template.id + '" title="Add item to template">➕</button>'}
+        ${template.source === 'bundled' ? '' : '<button class="action-btn" data-action="create-version" data-template-id="' + template.id + '" title="Create version checkpoint">💾</button>'}
         <button class="action-btn" data-action="clone" data-template-id="${template.id}" title="Clone template">📋</button>
         <button class="action-btn" data-action="inject-template" data-template-id="${template.id}" title="Inject template to file">📦</button>
-        <button class="action-btn" data-action="audit-log" data-template-id="${template.id}" title="View audit log">📊</button>
+        ${template.source === 'bundled' ? '' : '<button class="action-btn" data-action="audit-log" data-template-id="' + template.id + '" title="View audit log">📊</button>'}
         <button class="action-btn" data-action="export" data-template-id="${template.id}" title="Export template to JSON">📤</button>
-        <button class="action-btn" data-action="edit" data-template-id="${template.id}" title="Edit template">✏️</button>
-        <button class="action-btn danger" data-action="delete" data-template-id="${template.id}" title="Delete template">🗑️</button>
+        ${template.source === 'bundled' ? '' : '<button class="action-btn" data-action="edit" data-template-id="' + template.id + '" title="Edit template">✏️</button>'}
+        ${template.source === 'bundled' ? '' : '<button class="action-btn danger" data-action="delete" data-template-id="' + template.id + '" title="Delete template">🗑️</button>'}
       </td>
     `;
 
@@ -199,13 +200,18 @@ export class V1TemplatesTableController {
     row.draggable = true;
 
     const typeLabel = getKnowledgeTypeLabel(item.type as KnowledgeType);
+    const typeIcon = getKnowledgeTypeIcon(item.type as KnowledgeType);
+
+    // Check if template is bundled and not user-editable
+    const template = this.templates.find(t => t.id === templateId);
+    const isBundledNotEditable = template?.source === 'bundled' && !template?.userEditable;
 
     row.innerHTML = `
       <td class="col-select">
         <div class="item-indent"></div>
       </td>
       <td class="col-type">
-        <span class="type-badge">${this.escapeHtml(typeLabel)}</span>
+        <span class="type-badge">${typeIcon} ${this.escapeHtml(typeLabel)}</span>
       </td>
       <td class="col-title">${this.escapeHtml(item.title)}</td>
       <td class="col-scope">${this.escapeHtml(item.scope)}</td>
@@ -214,10 +220,10 @@ export class V1TemplatesTableController {
       </td>
       <td class="col-source">${item.source ? this.escapeHtml(item.source) : '-'}</td>
       <td class="col-actions">
-        <button class="action-btn" data-action="edit-inline" data-template-id="${templateId}" data-item-id="${item.id}" title="Edit item inline">📝</button>
+        ${isBundledNotEditable ? '' : '<button class="action-btn" data-action="edit-inline" data-template-id="' + templateId + '" data-item-id="' + item.id + '" title="Edit item inline">📝</button>'}
         <button class="action-btn" data-action="inject-item" data-template-id="${templateId}" data-item-id="${item.id}" title="Inject item to file">💉</button>
-        <button class="action-btn" data-action="edit" data-template-id="${templateId}" data-item-id="${item.id}" title="Edit item">✏️</button>
-        <button class="action-btn danger" data-action="delete" data-template-id="${templateId}" data-item-id="${item.id}" title="Delete item">🗑️</button>
+        ${isBundledNotEditable ? '' : '<button class="action-btn" data-action="edit" data-template-id="' + templateId + '" data-item-id="' + item.id + '" title="Edit item">✏️</button>'}
+        ${isBundledNotEditable ? '' : '<button class="action-btn danger" data-action="delete" data-template-id="' + templateId + '" data-item-id="' + item.id + '" title="Delete item">🗑️</button>'}
       </td>
     `;
 
@@ -238,6 +244,9 @@ export class V1TemplatesTableController {
     // Drag-drop event listeners
     row.addEventListener('dragstart', (e) => this.handleDragStart(e, templateId, item.id));
     row.addEventListener('dragend', (e) => this.handleDragEnd(e));
+    row.addEventListener('dragover', (e) => this.handleItemDragOver(e, templateId, item.id));
+    row.addEventListener('dragleave', (e) => this.handleItemDragLeave(e));
+    row.addEventListener('drop', (e) => this.handleItemDrop(e, templateId, item.id));
 
     return row;
   }
@@ -337,6 +346,43 @@ export class V1TemplatesTableController {
       );
     }
     this.render(this.templates);
+  }
+
+  /**
+   * Toggle all templates expanded/collapsed
+   */
+  toggleAllSections(): void {
+    const allExpanded = this.expandedTemplates.size === this.templates.length;
+
+    if (allExpanded) {
+      // Collapse all
+      this.expandedTemplates.clear();
+      webviewLogger.debug(
+        LogCategory.UI,
+        'All templates collapsed',
+        'V1TemplatesTableController.toggleAllSections',
+        { templateCount: this.templates.length },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+    } else {
+      // Expand all
+      this.templates.forEach(t => this.expandedTemplates.add(t.id));
+      webviewLogger.debug(
+        LogCategory.UI,
+        'All templates expanded',
+        'V1TemplatesTableController.toggleAllSections',
+        { templateCount: this.templates.length },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+    }
+
+    this.render(this.templates);
+
+    // Update button icon
+    const toggleBtn = document.getElementById('toggle-all-sections');
+    if (toggleBtn) {
+      toggleBtn.textContent = allExpanded ? '▶' : '▼';
+    }
   }
 
   /**
@@ -587,6 +633,137 @@ export class V1TemplatesTableController {
     document.querySelectorAll('.drop-zone-active').forEach(el => {
       el.classList.remove('drop-zone-active');
     });
+    document.querySelectorAll('.drop-target-before, .drop-target-after').forEach(el => {
+      el.classList.remove('drop-target-before', 'drop-target-after');
+    });
+  }
+
+  /**
+   * Handle drag over an item row (for reordering)
+   */
+  private handleItemDragOver(e: DragEvent, targetTemplateId: string, targetItemId: string): void {
+    if (!this.draggedItem) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const { templateId: sourceTemplateId, itemId: sourceItemId } = this.draggedItem;
+
+    // Only allow reordering within same template
+    if (sourceTemplateId !== targetTemplateId) {
+      return;
+    }
+
+    // Don't drop on self
+    if (sourceItemId === targetItemId) {
+      return;
+    }
+
+    // Set drop effect
+    e.dataTransfer!.dropEffect = 'move';
+
+    // Determine drop position (before or after target item)
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    const mouseY = e.clientY;
+
+    // Clear previous highlights
+    this.clearDropZoneHighlights();
+
+    // Add appropriate highlight
+    if (mouseY < midpoint) {
+      target.classList.add('drop-target-before');
+    } else {
+      target.classList.add('drop-target-after');
+    }
+  }
+
+  /**
+   * Handle drag leave from an item row
+   */
+  private handleItemDragLeave(e: DragEvent): void {
+    const target = e.currentTarget as HTMLElement;
+    target.classList.remove('drop-target-before', 'drop-target-after');
+  }
+
+  /**
+   * Handle drop on an item row (for reordering)
+   */
+  private handleItemDrop(e: DragEvent, targetTemplateId: string, targetItemId: string): void {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!this.draggedItem) return;
+
+    const { templateId: sourceTemplateId, itemId: sourceItemId } = this.draggedItem;
+
+    // Only allow reordering within same template
+    if (sourceTemplateId !== targetTemplateId) {
+      webviewLogger.debug(
+        LogCategory.UI,
+        'Cross-template drop on item ignored (use drop zone instead)',
+        'V1TemplatesTableController.handleItemDrop',
+        { sourceTemplateId, targetTemplateId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+      this.clearDropZoneHighlights();
+      return;
+    }
+
+    // Don't drop on self
+    if (sourceItemId === targetItemId) {
+      this.clearDropZoneHighlights();
+      this.draggedItem = null;
+      return;
+    }
+
+    // Find the template and items
+    const template = this.templates.find(t => t.id === targetTemplateId);
+    if (!template || !template.items) {
+      this.clearDropZoneHighlights();
+      this.draggedItem = null;
+      return;
+    }
+
+    // Find target item index
+    const targetIndex = template.items.findIndex(i => i.id === targetItemId);
+    if (targetIndex === -1) {
+      this.clearDropZoneHighlights();
+      this.draggedItem = null;
+      return;
+    }
+
+    // Determine drop position
+    const target = e.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    const mouseY = e.clientY;
+    const dropBefore = mouseY < midpoint;
+
+    // Calculate new index
+    let newIndex = dropBefore ? targetIndex : targetIndex + 1;
+
+    // Adjust if moving item down
+    const sourceIndex = template.items.findIndex(i => i.id === sourceItemId);
+    if (sourceIndex !== -1 && sourceIndex < newIndex) {
+      newIndex--;
+    }
+
+    webviewLogger.info(
+      LogCategory.UI,
+      'Item reordered within template',
+      'V1TemplatesTableController.handleItemDrop',
+      { templateId: targetTemplateId, itemId: sourceItemId, oldIndex: sourceIndex, newIndex, dropBefore },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    // Call reorder callback
+    this.callbacks.onReorderItem(targetTemplateId, sourceItemId, newIndex);
+
+    // Clean up
+    this.clearDropZoneHighlights();
+    this.draggedItem = null;
   }
 
   /**
