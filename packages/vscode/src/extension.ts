@@ -14,13 +14,13 @@ let knowledgeManager: KnowledgeManager | null = null;
 const log = createContextLogger(LogCategory.EXTENSION);
 
 export async function activate(context: vscode.ExtensionContext) {
-    const outputChannel = vscode.window.createOutputChannel('Repository Timeline');
+    const outputChannel = vscode.window.createOutputChannel('Agent Brain');
 
     // Configure Logger to use VSCode OutputChannel for all extension-side logging
     logger.setOutputChannel(outputChannel);
 
     log.info(LogCategory.EXTENSION, 'Starting extension activation');
-    outputChannel.appendLine('🚀 Activating Repository Timeline Extension...');
+    outputChannel.appendLine('🚀 Activating Agent Brain Extension...');
 
     try {
         // Get workspace root (single source of truth for paths)
@@ -76,7 +76,7 @@ export async function activate(context: vscode.ExtensionContext) {
                 log.error(LogCategory.UI, 'Failed to show timeline panel', 'showCommand', error);
                 outputChannel.appendLine(`❌ Failed to show timeline: ${error}`);
                 vscode.window.showErrorMessage(
-                    localize('error.showTimeline', 'Failed to show Repository Timeline. Please check the Output panel for details.')
+                    localize('error.showTimeline', 'Failed to show Agent Brain. Please check the Output panel for details.')
                 );
             }
         });
@@ -157,8 +157,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
         // Welcome message
         log.info(LogCategory.EXTENSION, 'Extension activation completed successfully');
-        outputChannel.appendLine('🎉 Repository Timeline Extension activated successfully!');
-        outputChannel.appendLine('💡 Use Command Palette: "Show Repository Timeline" to open the timeline');
+        outputChannel.appendLine('🎉 Agent Brain Extension activated successfully!');
+        outputChannel.appendLine('💡 Use Command Palette: "Show Agent Brain" to open the timeline');
 
     } catch (error) {
         log.error(LogCategory.EXTENSION, 'Extension activation failed', 'activate', error);
@@ -171,10 +171,10 @@ export async function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-    const outputChannel = vscode.window.createOutputChannel('Repository Timeline');
+    const outputChannel = vscode.window.createOutputChannel('Agent Brain');
 
     log.info(LogCategory.EXTENSION, 'Starting extension deactivation');
-    outputChannel.appendLine('👋 Deactivating Repository Timeline Extension...');
+    outputChannel.appendLine('👋 Deactivating Agent Brain Extension...');
 
     // Clean up resources
     if (timelineProvider) {

@@ -129,7 +129,7 @@ export class WelcomeViewProvider implements vscode.WebviewViewProvider {
         <p style="margin-bottom: 8px;">Open Agent Brain with:</p>
         <ul class="feature-list">
             <li><kbd>Ctrl+Shift+T</kbd> (Mac: <kbd>Cmd+Shift+T</kbd>)</li>
-            <li>Command Palette → "Show Repository Timeline"</li>
+            <li>Command Palette → "Show Agent Brain"</li>
         </ul>
         <p style="margin-top: 8px; font-size: 12px;">Opens in the bottom panel with 4 tabs: Timeline, Knowledge, Sessions, Support</p>
     </div>
