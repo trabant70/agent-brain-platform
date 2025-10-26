@@ -7,12 +7,13 @@
  */
 
 import { ThreadSpecOptions } from '../types';
+import { EnhancedThreadSpecOptions } from '../contracts';
 
 /**
  * Metadata storage for ThreadSpec decorators
- * Maps className.methodName → ThreadSpecOptions
+ * Maps className.methodName → ThreadSpecOptions | EnhancedThreadSpecOptions
  */
-export const threadSpecRegistry = new Map<string, ThreadSpecOptions>();
+export const threadSpecRegistry = new Map<string, ThreadSpecOptions | EnhancedThreadSpecOptions>();
 
 /**
  * ThreadSpec decorator
@@ -28,8 +29,23 @@ export const threadSpecRegistry = new Map<string, ThreadSpecOptions>();
  *   // Implementation
  * }
  * ```
+ *
+ * @example Enhanced with data contracts
+ * ```typescript
+ * @ThreadSpec({
+ *   threads: ['DATA_FLOW'],
+ *   expects: {
+ *     params: {
+ *       userId: { type: 'string', constraints: { pattern: /^[0-9a-f]{8}$/ } }
+ *     }
+ *   },
+ *   produces: {
+ *     returns: { type: 'object', shape: { id: { type: 'string', required: true } } }
+ *   }
+ * })
+ * ```
  */
-export function ThreadSpec(options: ThreadSpecOptions) {
+export function ThreadSpec(options: ThreadSpecOptions | EnhancedThreadSpecOptions) {
   return function (
     target: any,
     propertyKey: string,
@@ -49,15 +65,23 @@ export function ThreadSpec(options: ThreadSpecOptions) {
 /**
  * Get ThreadSpec metadata for a given context
  */
-export function getThreadSpec(context: string): ThreadSpecOptions | undefined {
+export function getThreadSpec(context: string): ThreadSpecOptions | EnhancedThreadSpecOptions | undefined {
   return threadSpecRegistry.get(context);
 }
 
 /**
  * Get all registered ThreadSpecs
  */
-export function getAllThreadSpecs(): Map<string, ThreadSpecOptions> {
+export function getAllThreadSpecs(): Map<string, ThreadSpecOptions | EnhancedThreadSpecOptions> {
   return new Map(threadSpecRegistry);
+}
+
+/**
+ * Check if a spec is enhanced (has data contracts)
+ */
+export function isEnhancedSpec(spec: ThreadSpecOptions | EnhancedThreadSpecOptions): spec is EnhancedThreadSpecOptions {
+  const enhanced = spec as EnhancedThreadSpecOptions;
+  return !!(enhanced.expects || enhanced.produces || enhanced.dataFlow || enhanced.invariants || enhanced.examples);
 }
 
 /**

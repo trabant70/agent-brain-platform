@@ -21,7 +21,10 @@
 export * from './types';
 
 // Decorators
-export { ThreadSpec, getThreadSpec, getAllThreadSpecs, clearThreadSpecRegistry, getContextsForThread, getThreadStats } from './decorators/ThreadSpec';
+export { ThreadSpec, getThreadSpec, getAllThreadSpecs, clearThreadSpecRegistry, getContextsForThread, getThreadStats, isEnhancedSpec } from './decorators/ThreadSpec';
+
+// Data Contracts
+export * from './contracts';
 
 // Configuration
 export { ThreadConfigManager, getGlobalThreadConfig, setGlobalThreadConfig, DEFAULT_CONFIG } from './ThreadConfig';
