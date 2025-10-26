@@ -7,6 +7,11 @@
 
 let currentLocale = 'en';
 let translations: Record<string, string> = {};
+let i18nInitialized = false;
+
+// Event listeners for i18n initialization
+type I18nListener = () => void;
+const i18nListeners: I18nListener[] = [];
 
 /**
  * Initialize i18n with locale from extension
@@ -16,7 +21,40 @@ let translations: Record<string, string> = {};
 export function initI18n(locale: string, strings: Record<string, string>): void {
     currentLocale = locale;
     translations = strings;
+    i18nInitialized = true;
     console.log(`[i18n] Initialized with locale: ${locale}, ${Object.keys(strings).length} strings loaded`);
+
+    // Notify all listeners that i18n is ready
+    i18nListeners.forEach(listener => {
+        try {
+            listener();
+        } catch (error) {
+            console.error('[i18n] Error in i18n listener:', error);
+        }
+    });
+}
+
+/**
+ * Register a listener to be called when i18n is initialized
+ * If i18n is already initialized, the listener is called immediately
+ * @param listener Callback function to call when i18n is ready
+ */
+export function onI18nReady(listener: I18nListener): void {
+    if (i18nInitialized) {
+        // Already initialized, call immediately
+        listener();
+    } else {
+        // Not yet initialized, add to listeners
+        i18nListeners.push(listener);
+    }
+}
+
+/**
+ * Check if i18n is initialized
+ * @returns true if i18n has been initialized with translations
+ */
+export function isI18nReady(): boolean {
+    return i18nInitialized;
 }
 
 /**

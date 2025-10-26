@@ -28,7 +28,7 @@ import { SchemaValidator } from '../../knowledge/validation/structure/SchemaVali
 import { XSSValidator } from '../../knowledge/validation/security/XSSValidator';
 import { PromptInjectionValidator } from '../../knowledge/validation/security/PromptInjectionValidator';
 import { UnicodeValidator } from '../../knowledge/validation/security/UnicodeValidator';
-import { t, tf } from '../webview/i18n';
+import { t, tf, onI18nReady } from '../webview/i18n';
 import { PathTraversalValidator } from '../../knowledge/validation/security/PathTraversalValidator';
 import { ContentSizeValidator } from '../../knowledge/validation/security/ContentSizeValidator';
 import { DuplicateIdValidator } from '../../knowledge/validation/business/DuplicateIdValidator';
@@ -128,6 +128,12 @@ export class KnowledgeViewController {
         this.currentMaturityContext = context;
         // Could add live preview here if needed
       }
+    });
+
+    // Re-render status bar when i18n is ready to ensure translations are applied
+    onI18nReady(() => {
+      console.log('[KnowledgeViewController] i18n ready, updating status bar with translations');
+      this.updateStatusBar();
     });
   }
 
