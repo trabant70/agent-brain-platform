@@ -57,9 +57,12 @@ export { FlexibleParser } from './analysis/parsers/FlexibleParser';
 export { AdaptiveControlCenter } from './ui/AdaptiveControlCenter';
 export { LevelSelector } from './ui/LevelSelector';
 
-// Multi-Tier System - Templates & Instructions
-export { AgentInstructionInjector } from './agent/AgentInstructionInjector';
-
 // Multi-Tier System - Migration & Monitoring
 export { LevelMigrationManager } from './migration/LevelMigrationManager';
 export { LevelMonitor } from './monitoring/LevelMonitor';
+
+// Data Correctness - Agent Integration
+export * from './agent';
+
+// Data Correctness - Configuration
+export * from './config';
