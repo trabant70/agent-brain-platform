@@ -28,3 +28,9 @@ export { ThreadConfigManager, getGlobalThreadConfig, setGlobalThreadConfig, DEFA
 
 // Runtime Logging
 export { ThreadLog, getGlobalThreadLog, setGlobalThreadLog, trackExecution } from './ThreadLog';
+
+// JSONL Logger
+export { ThreadLogger } from './logging/ThreadLogger';
+
+// Analysis
+export * from './analysis';
