@@ -153,6 +153,10 @@ const webviewConfig = {
         {
           from: path.resolve(__dirname, '../core/src/domains/knowledge/bundled-templates'),
           to: path.resolve(__dirname, 'dist/knowledge/bundled-templates')
+        },
+        {
+          from: path.resolve(__dirname, '../core/src/domains/knowledge/schemas'),
+          to: path.resolve(__dirname, 'dist/knowledge/schemas')
         }
       ]
     })

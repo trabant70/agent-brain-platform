@@ -20,15 +20,18 @@ export class KnowledgeFileService {
   private knowledgeBaseDir: string;
   private fileSystem: KnowledgeFileSystem;
   private templateEngine: TemplateEngine;
+  private extensionContext: vscode.ExtensionContext;
 
   constructor(
     private workspaceRoot: string,
     fileSystem: KnowledgeFileSystem,
-    templateEngine: TemplateEngine
+    templateEngine: TemplateEngine,
+    extensionContext: vscode.ExtensionContext
   ) {
     this.knowledgeBaseDir = path.join(workspaceRoot, '.agent-brain');
     this.fileSystem = fileSystem;
     this.templateEngine = templateEngine;
+    this.extensionContext = extensionContext;
   }
 
   /**
@@ -38,7 +41,8 @@ export class KnowledgeFileService {
   async ensureKnowledgeDirectory(): Promise<void> {
     const dirs = [
       this.knowledgeBaseDir,
-      path.join(this.knowledgeBaseDir, 'templates')  // Current: unified template storage
+      path.join(this.knowledgeBaseDir, 'templates'),  // Current: unified template storage
+      path.join(this.knowledgeBaseDir, 'schemas')     // Schema definitions for validation
     ];
 
     for (const dir of dirs) {
@@ -47,6 +51,61 @@ export class KnowledgeFileService {
       } catch (error) {
         // Directory might already exist
       }
+    }
+
+    // Copy schema file to user's workspace for easy reference
+    await this.copySchemaFile();
+  }
+
+  /**
+   * Copy marketplace template schema to .agent-brain/schemas/
+   * This makes the schema easily accessible to users for validation and documentation
+   */
+  private async copySchemaFile(): Promise<void> {
+    try {
+      const schemaFileName = 'marketplace-template.schema.json';
+      const schemaSourcePath = path.join(
+        this.extensionContext.extensionPath,
+        'dist',
+        'knowledge',
+        'schemas',
+        schemaFileName
+      );
+      const schemaDestPath = path.join(this.knowledgeBaseDir, 'schemas', schemaFileName);
+
+      // Check if source schema exists
+      const fs = require('fs');
+      if (!fs.existsSync(schemaSourcePath)) {
+        logger.warn(
+          LogCategory.EXTENSION,
+          `Schema file not found at ${schemaSourcePath}, skipping copy`,
+          'KnowledgeFileService.copySchemaFile',
+          {},
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        return;
+      }
+
+      // Copy schema file
+      const schemaContent = await vscode.workspace.fs.readFile(vscode.Uri.file(schemaSourcePath));
+      await vscode.workspace.fs.writeFile(vscode.Uri.file(schemaDestPath), schemaContent);
+
+      logger.info(
+        LogCategory.EXTENSION,
+        `Template schema copied to ${schemaDestPath}`,
+        'KnowledgeFileService.copySchemaFile',
+        { source: schemaSourcePath, destination: schemaDestPath },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+    } catch (error) {
+      // Non-critical error - log but don't fail initialization
+      logger.warn(
+        LogCategory.EXTENSION,
+        'Failed to copy schema file',
+        'KnowledgeFileService.copySchemaFile',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
     }
   }
 

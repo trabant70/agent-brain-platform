@@ -95,7 +95,8 @@ export class KnowledgeManager {
     this.knowledgeFileService = new KnowledgeFileService(
       workspaceRoot,
       this.fileSystem,
-      this.templateEngine
+      this.templateEngine,
+      extensionContext
     );
 
     this.templateFileService = new TemplateFileService(
