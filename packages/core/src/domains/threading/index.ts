@@ -46,3 +46,7 @@ export { LevelSelector } from './ui/LevelSelector';
 
 // Multi-Tier System - Templates & Instructions
 export { AgentInstructionInjector } from './agent/AgentInstructionInjector';
+
+// Multi-Tier System - Migration & Monitoring
+export { LevelMigrationManager } from './migration/LevelMigrationManager';
+export { LevelMonitor } from './monitoring/LevelMonitor';
