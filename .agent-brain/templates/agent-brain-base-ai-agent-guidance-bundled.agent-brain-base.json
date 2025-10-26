@@ -4,7 +4,7 @@
   "description": "Essential guidance for AI coding agents to maintain consistency, honesty, and effective knowledge capture across sessions.",
   "version": "1.0.0",
   "createdAt": "2025-10-23T00:00:00.000Z",
-  "updatedAt": "2025-10-24T22:07:18.883Z",
+  "updatedAt": "2025-10-26T09:10:31.574Z",
   "category": "onboarding",
   "tags": [
     "ai-agent",
@@ -88,6 +88,14 @@
           "injectionType": "template",
           "parentTemplateId": "bundled.agent-brain-base",
           "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
+        },
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+          "injectedAt": "2025-10-26T09:10:31.573Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "bundled.agent-brain-base",
+          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
         }
       ],
       "templateId": "bundled.agent-brain-base",
@@ -161,6 +169,14 @@
           "injectionType": "template",
           "parentTemplateId": "bundled.agent-brain-base",
           "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
+        },
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+          "injectedAt": "2025-10-26T09:10:31.573Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "bundled.agent-brain-base",
+          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
         }
       ],
       "templateId": "bundled.agent-brain-base",
@@ -230,6 +246,14 @@
         {
           "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
           "injectedAt": "2025-10-24T22:07:18.883Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "bundled.agent-brain-base",
+          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
+        },
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+          "injectedAt": "2025-10-26T09:10:31.574Z",
           "injectedBy": "user",
           "injectionType": "template",
           "parentTemplateId": "bundled.agent-brain-base",
@@ -308,6 +332,14 @@
           "injectionType": "template",
           "parentTemplateId": "bundled.agent-brain-base",
           "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
+        },
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+          "injectedAt": "2025-10-26T09:10:31.574Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "bundled.agent-brain-base",
+          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
         }
       ],
       "templateId": "bundled.agent-brain-base",
@@ -378,6 +410,14 @@
         {
           "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
           "injectedAt": "2025-10-24T22:07:18.883Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "bundled.agent-brain-base",
+          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
+        },
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+          "injectedAt": "2025-10-26T09:10:31.574Z",
           "injectedBy": "user",
           "injectionType": "template",
           "parentTemplateId": "bundled.agent-brain-base",
@@ -456,6 +496,14 @@
           "injectionType": "template",
           "parentTemplateId": "bundled.agent-brain-base",
           "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
+        },
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+          "injectedAt": "2025-10-26T09:10:31.574Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "bundled.agent-brain-base",
+          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
         }
       ],
       "templateId": "bundled.agent-brain-base",
@@ -525,6 +573,14 @@
         {
           "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
           "injectedAt": "2025-10-24T22:07:18.883Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "bundled.agent-brain-base",
+          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
+        },
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+          "injectedAt": "2025-10-26T09:10:31.574Z",
           "injectedBy": "user",
           "injectionType": "template",
           "parentTemplateId": "bundled.agent-brain-base",
@@ -599,6 +655,14 @@
         {
           "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
           "injectedAt": "2025-10-24T22:07:18.883Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "bundled.agent-brain-base",
+          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
+        },
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+          "injectedAt": "2025-10-26T09:10:31.574Z",
           "injectedBy": "user",
           "injectionType": "template",
           "parentTemplateId": "bundled.agent-brain-base",
@@ -1192,6 +1256,104 @@
     {
       "id": "audit-1761343638883-2fmax3qrv",
       "timestamp": "2025-10-24T22:07:18.883Z",
+      "operation": "template.injected",
+      "actor": "user",
+      "details": {
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+        "context": "8 items injected"
+      }
+    },
+    {
+      "id": "audit-1761469831573-jtdv47fvs",
+      "timestamp": "2025-10-26T09:10:31.573Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "golden-path-session-journals",
+        "itemTitle": "When to Create Session Journals",
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md"
+      }
+    },
+    {
+      "id": "audit-1761469831573-bkrczpgk8",
+      "timestamp": "2025-10-26T09:10:31.573Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "golden-path-learning-capture",
+        "itemTitle": "Immediate Learning Capture",
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md"
+      }
+    },
+    {
+      "id": "audit-1761469831574-braan0oga",
+      "timestamp": "2025-10-26T09:10:31.574Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "golden-path-context-survival",
+        "itemTitle": "Surviving Context Compaction with Plans",
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md"
+      }
+    },
+    {
+      "id": "audit-1761469831574-xknb3nddt",
+      "timestamp": "2025-10-26T09:10:31.574Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "best-practice-full-honesty",
+        "itemTitle": "Full Honesty and Transparency Protocol",
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md"
+      }
+    },
+    {
+      "id": "audit-1761469831574-yazka0thl",
+      "timestamp": "2025-10-26T09:10:31.574Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "best-practice-todo-hygiene",
+        "itemTitle": "TODO Hygiene - Never Silent TODOs",
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md"
+      }
+    },
+    {
+      "id": "audit-1761469831574-a92j5b68s",
+      "timestamp": "2025-10-26T09:10:31.574Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "best-practice-coming-back",
+        "itemTitle": "Coming Back from Diversions",
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md"
+      }
+    },
+    {
+      "id": "audit-1761469831574-mj12q5ogj",
+      "timestamp": "2025-10-26T09:10:31.574Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "guideline-knowledge-item-creation",
+        "itemTitle": "Knowledge Item Creation Quick Reference",
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md"
+      }
+    },
+    {
+      "id": "audit-1761469831574-54mtn7g8x",
+      "timestamp": "2025-10-26T09:10:31.574Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "gotcha-ai-agent-pitfalls",
+        "itemTitle": "Common AI Agent Pitfalls (2025 Research)",
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md"
+      }
+    },
+    {
+      "id": "audit-1761469831574-zz2ur0ydd",
+      "timestamp": "2025-10-26T09:10:31.574Z",
       "operation": "template.injected",
       "actor": "user",
       "details": {

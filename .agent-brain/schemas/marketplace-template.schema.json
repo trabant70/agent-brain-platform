@@ -1,0 +1,627 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://agent-brain-platform.com/schemas/marketplace-template.schema.json",
+  "title": "Agent Brain Marketplace Template",
+  "description": "Schema definition for Agent Brain knowledge marketplace templates. This schema validates the complete structure, types, and constraints for templates that can be imported, exported, and shared.",
+  "type": "object",
+  "required": ["id", "name", "description", "version", "category", "author", "license", "items"],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique template identifier (UUID or prefixed slug)",
+      "pattern": "^[a-z0-9][a-z0-9._-]*$",
+      "minLength": 3,
+      "maxLength": 100,
+      "examples": ["bundled.git-essentials", "user.my-react-patterns"]
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable template name",
+      "minLength": 3,
+      "maxLength": 100,
+      "examples": ["Git Essentials", "React Best Practices"]
+    },
+    "description": {
+      "type": "string",
+      "description": "Short description of the template (1-2 sentences)",
+      "minLength": 10,
+      "maxLength": 500,
+      "examples": ["Essential Git workflows and commands for daily development."]
+    },
+    "version": {
+      "type": "string",
+      "description": "Semantic version number (semver)",
+      "pattern": "^\\d+\\.\\d+(\\.\\d+)?$",
+      "examples": ["1.0", "2.1.0", "1.0.0"]
+    },
+    "createdAt": {
+      "description": "ISO 8601 timestamp or Date object when template was created",
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "examples": ["2025-01-15T10:30:00.000Z"]
+        },
+        {
+          "type": "object",
+          "description": "JavaScript Date object (runtime only)"
+        }
+      ]
+    },
+    "updatedAt": {
+      "description": "ISO 8601 timestamp or Date object when template was last updated",
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "date-time",
+          "examples": ["2025-01-20T14:45:00.000Z"]
+        },
+        {
+          "type": "object",
+          "description": "JavaScript Date object (runtime only)"
+        }
+      ]
+    },
+    "category": {
+      "type": "string",
+      "description": "Primary template category for classification",
+      "enum": [
+        "development",
+        "documentation",
+        "best-practices",
+        "architecture",
+        "testing",
+        "security",
+        "onboarding",
+        "workflows",
+        "general",
+        "custom"
+      ],
+      "examples": ["development", "best-practices"]
+    },
+    "tags": {
+      "type": "array",
+      "description": "Search and filter tags (lowercase, alphanumeric with hyphens)",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]+$",
+        "minLength": 2,
+        "maxLength": 30
+      },
+      "minItems": 0,
+      "maxItems": 20,
+      "uniqueItems": true,
+      "examples": [["git", "version-control", "workflow"]]
+    },
+    "author": {
+      "type": "object",
+      "description": "Template author information",
+      "required": ["name"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Author name or organization",
+          "minLength": 2,
+          "maxLength": 100,
+          "examples": ["John Doe", "Acme Corp"]
+        },
+        "email": {
+          "type": "string",
+          "description": "Author email address",
+          "format": "email",
+          "examples": ["john@example.com"]
+        },
+        "url": {
+          "type": "string",
+          "description": "Author website or profile URL",
+          "format": "uri",
+          "examples": ["https://github.com/johndoe"]
+        }
+      },
+      "examples": [
+        {
+          "name": "John Doe",
+          "email": "john@example.com",
+          "url": "https://github.com/johndoe"
+        }
+      ]
+    },
+    "license": {
+      "type": "string",
+      "description": "License identifier (SPDX or custom)",
+      "minLength": 2,
+      "maxLength": 50,
+      "examples": ["MIT", "Apache-2.0", "CC-BY-4.0", "Proprietary"]
+    },
+    "source": {
+      "type": "string",
+      "description": "Origin type of the template",
+      "enum": ["bundled", "user", "cloned", "imported"],
+      "examples": ["bundled", "user"]
+    },
+    "userEditable": {
+      "type": "boolean",
+      "description": "Whether the template can be edited (even if bundled)",
+      "default": false,
+      "examples": [true, false]
+    },
+    "items": {
+      "type": "array",
+      "description": "Array of knowledge items contained in this template",
+      "items": {
+        "$ref": "#/definitions/KnowledgeItem"
+      },
+      "minItems": 1,
+      "maxItems": 500
+    },
+    "itemCount": {
+      "type": "integer",
+      "description": "Convenience field for number of items (can be computed)",
+      "minimum": 0,
+      "examples": [5, 10]
+    },
+    "scope": {
+      "type": "string",
+      "description": "Visibility/applicability scope of the template",
+      "enum": ["personal", "team", "project", "organization", "public"],
+      "examples": ["team", "project"]
+    },
+    "versionHistory": {
+      "type": "array",
+      "description": "User-created version checkpoints",
+      "items": {
+        "$ref": "#/definitions/TemplateVersion"
+      }
+    },
+    "lastVersionedAt": {
+      "description": "When last version checkpoint was created",
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "object"
+        }
+      ]
+    },
+    "auditLog": {
+      "type": "array",
+      "description": "Complete audit trail of all changes",
+      "items": {
+        "$ref": "#/definitions/AuditLogEntry"
+      }
+    },
+    "sourceTemplateId": {
+      "type": "string",
+      "description": "If cloned, the source template ID",
+      "examples": ["bundled.git-essentials"]
+    },
+    "isInstalled": {
+      "type": "boolean",
+      "description": "Runtime flag - whether template is installed (not persisted)"
+    },
+    "installedAt": {
+      "type": "string",
+      "description": "Runtime field - installation timestamp (not persisted)",
+      "format": "date-time"
+    },
+    "installedItemIds": {
+      "type": "array",
+      "description": "Runtime field - IDs of created workspace items (not persisted)",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "definitions": {
+    "KnowledgeItem": {
+      "type": "object",
+      "description": "A single knowledge item (ADR, pattern, snippet, etc.)",
+      "required": ["id", "type", "scope", "title", "body", "tags", "path", "relativePath", "valid", "metadata"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier (UUID)",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+          "examples": ["550e8400-e29b-41d4-a716-446655440000"]
+        },
+        "type": {
+          "type": "string",
+          "description": "Knowledge item type",
+          "enum": [
+            "adr",
+            "design-pattern",
+            "anti-pattern",
+            "golden-path",
+            "best-practice",
+            "standard",
+            "convention",
+            "checklist",
+            "snippet",
+            "configuration",
+            "command",
+            "api-reference",
+            "learning",
+            "troubleshooting",
+            "gotcha",
+            "tip",
+            "template",
+            "guideline",
+            "workflow",
+            "runbook",
+            "custom"
+          ]
+        },
+        "scope": {
+          "type": "string",
+          "description": "Visibility/applicability scope",
+          "enum": ["personal", "team", "project", "organization", "public"]
+        },
+        "title": {
+          "type": "string",
+          "description": "Display title",
+          "minLength": 3,
+          "maxLength": 200,
+          "examples": ["Use Feature Branches for Development"]
+        },
+        "body": {
+          "type": "string",
+          "description": "Markdown content (without frontmatter)",
+          "minLength": 10,
+          "maxLength": 50000,
+          "examples": ["## Overview\n\nAlways create feature branches..."]
+        },
+        "source": {
+          "type": "string",
+          "description": "Optional genealogy path (e.g., 'auth.oauth.keycloak')",
+          "pattern": "^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$",
+          "examples": ["git.workflow.feature-branch"]
+        },
+        "tags": {
+          "type": "array",
+          "description": "User-defined tags for categorization",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$",
+            "minLength": 2,
+            "maxLength": 30
+          },
+          "uniqueItems": true,
+          "examples": [["git", "workflow", "best-practice"]]
+        },
+        "path": {
+          "type": "string",
+          "description": "Absolute file path",
+          "examples": ["/workspace/knowledge/git/feature-branches.md"]
+        },
+        "relativePath": {
+          "type": "string",
+          "description": "Path relative to workspace root",
+          "examples": ["knowledge/git/feature-branches.md"]
+        },
+        "valid": {
+          "type": "boolean",
+          "description": "Whether the file was successfully parsed"
+        },
+        "parseError": {
+          "type": "string",
+          "description": "Error message if parsing failed"
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Item metadata",
+          "required": ["createdAt", "updatedAt"],
+          "properties": {
+            "createdAt": {
+              "description": "When file was created",
+              "oneOf": [
+                {"type": "string", "format": "date-time"},
+                {"type": "object"}
+              ]
+            },
+            "updatedAt": {
+              "description": "When file was last modified",
+              "oneOf": [
+                {"type": "string", "format": "date-time"},
+                {"type": "object"}
+              ]
+            },
+            "author": {
+              "type": "string",
+              "description": "Optional author name",
+              "examples": ["John Doe"]
+            },
+            "version": {
+              "type": "number",
+              "description": "Optional version number",
+              "minimum": 1,
+              "examples": [1, 2]
+            },
+            "fileSize": {
+              "type": "integer",
+              "description": "File size in bytes",
+              "minimum": 0
+            }
+          }
+        },
+        "sourceTemplate": {
+          "type": "object",
+          "description": "Template provenance tracking",
+          "properties": {
+            "id": {"type": "string"},
+            "version": {"type": "string"},
+            "itemKey": {"type": "string"}
+          }
+        },
+        "templateId": {
+          "type": "string",
+          "description": "Which template owns this item"
+        },
+        "templateName": {
+          "type": "string",
+          "description": "Template name (denormalized for display)"
+        },
+        "injectedTo": {
+          "type": "array",
+          "description": "Where this item is currently injected",
+          "items": {
+            "$ref": "#/definitions/InjectionRecord"
+          }
+        },
+        "maturity": {
+          "$ref": "#/definitions/MaturityFootprint",
+          "description": "Maturity footprint defining where knowledge applies"
+        },
+        "relevance": {
+          "type": "number",
+          "description": "Base relevance score (0-1)",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.5
+        },
+        "capturedAt": {
+          "description": "When learning was captured",
+          "oneOf": [
+            {"type": "string", "format": "date-time"},
+            {"type": "object"}
+          ]
+        },
+        "capturedContext": {
+          "$ref": "#/definitions/MaturityContext",
+          "description": "Maturity context when learning was captured"
+        }
+      }
+    },
+    "TemplateVersion": {
+      "type": "object",
+      "description": "Version checkpoint snapshot",
+      "required": ["versionNumber", "description", "createdAt", "createdBy", "itemCount", "snapshot"],
+      "properties": {
+        "versionNumber": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+(\\.\\d+)?$",
+          "examples": ["1.0", "2.1.0"]
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 500
+        },
+        "createdAt": {
+          "oneOf": [
+            {"type": "string", "format": "date-time"},
+            {"type": "object"}
+          ]
+        },
+        "createdBy": {
+          "type": "string"
+        },
+        "itemCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "snapshot": {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {"$ref": "#/definitions/KnowledgeItem"}
+            },
+            "templateMetadata": {
+              "type": "object",
+              "properties": {
+                "name": {"type": "string"},
+                "description": {"type": "string"},
+                "tags": {"type": "array", "items": {"type": "string"}},
+                "category": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "AuditLogEntry": {
+      "type": "object",
+      "description": "Single audit log entry",
+      "required": ["id", "timestamp", "operation", "actor", "details"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$"
+        },
+        "timestamp": {
+          "oneOf": [
+            {"type": "string", "format": "date-time"},
+            {"type": "object"}
+          ]
+        },
+        "operation": {
+          "type": "string",
+          "enum": [
+            "template.created",
+            "template.cloned",
+            "template.renamed",
+            "template.deleted",
+            "template.exported",
+            "template.imported",
+            "template.versioned",
+            "template.restored",
+            "item.added",
+            "item.removed",
+            "item.updated",
+            "item.reordered",
+            "item.moved_from",
+            "item.moved_to",
+            "item.copied_to",
+            "template.injected",
+            "template.removed_from_file",
+            "item.injected",
+            "item.removed_from_file",
+            "metadata.updated",
+            "tags.updated",
+            "description.updated"
+          ]
+        },
+        "actor": {
+          "type": "string",
+          "examples": ["user", "system", "john@example.com"]
+        },
+        "details": {
+          "type": "object",
+          "description": "Operation-specific details"
+        },
+        "before": {
+          "description": "State before change (optional)"
+        },
+        "after": {
+          "description": "State after change (optional)"
+        }
+      }
+    },
+    "InjectionRecord": {
+      "type": "object",
+      "description": "Record of where an item is injected",
+      "required": ["filePath", "injectedAt", "injectedBy", "injectionType"],
+      "properties": {
+        "filePath": {"type": "string"},
+        "injectedAt": {
+          "oneOf": [
+            {"type": "string", "format": "date-time"},
+            {"type": "object"}
+          ]
+        },
+        "injectedBy": {"type": "string"},
+        "injectionType": {
+          "type": "string",
+          "enum": ["item", "template"]
+        },
+        "parentTemplateId": {"type": "string"},
+        "parentTemplateName": {"type": "string"}
+      }
+    },
+    "MaturityFootprint": {
+      "type": "object",
+      "description": "3D footprint defining where knowledge applies",
+      "required": ["operator", "project", "complexity"],
+      "properties": {
+        "operator": {
+          "$ref": "#/definitions/MaturityRange",
+          "description": "Operator maturity range (1=Novice, 5=Expert)"
+        },
+        "project": {
+          "$ref": "#/definitions/MaturityRange",
+          "description": "Project maturity range (1=Planning, 5=Mature)"
+        },
+        "complexity": {
+          "$ref": "#/definitions/MaturityRange",
+          "description": "Complexity range (1=Simple, 3=Complex)"
+        }
+      }
+    },
+    "MaturityRange": {
+      "type": "object",
+      "description": "Range along a single maturity dimension",
+      "required": ["min", "max"],
+      "properties": {
+        "min": {
+          "type": "integer",
+          "description": "Minimum level (inclusive)",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "max": {
+          "type": "integer",
+          "description": "Maximum level (inclusive)",
+          "minimum": 1,
+          "maximum": 5
+        }
+      }
+    },
+    "MaturityContext": {
+      "type": "object",
+      "description": "User's current working context",
+      "required": ["complexity", "quadrant"],
+      "properties": {
+        "complexity": {
+          "type": "string",
+          "enum": ["simple", "standard", "complex"]
+        },
+        "quadrant": {
+          "type": "integer",
+          "description": "Quadrant position (1-25 in 5x5 grid)",
+          "minimum": 1,
+          "maximum": 25
+        },
+        "maxItems": {
+          "type": "integer",
+          "description": "Maximum number of items to select",
+          "minimum": 1
+        }
+      }
+    }
+  },
+  "examples": [
+    {
+      "id": "bundled.git-essentials",
+      "name": "Git Essentials",
+      "description": "Essential Git workflows and commands for daily development work.",
+      "version": "1.0.0",
+      "createdAt": "2025-01-15T10:30:00.000Z",
+      "updatedAt": "2025-01-20T14:45:00.000Z",
+      "category": "development",
+      "tags": ["git", "version-control", "workflow"],
+      "author": {
+        "name": "Agent Brain Team",
+        "email": "team@agentbrain.dev",
+        "url": "https://github.com/agent-brain"
+      },
+      "license": "MIT",
+      "source": "bundled",
+      "scope": "project",
+      "items": [
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440000",
+          "type": "golden-path",
+          "scope": "team",
+          "title": "Feature Branch Workflow",
+          "body": "## Overview\n\nAlways create feature branches from main for new development.",
+          "source": "git.workflow",
+          "tags": ["git", "branching"],
+          "path": "/workspace/knowledge/git/feature-branch.md",
+          "relativePath": "knowledge/git/feature-branch.md",
+          "valid": true,
+          "metadata": {
+            "createdAt": "2025-01-15T10:30:00.000Z",
+            "updatedAt": "2025-01-15T10:30:00.000Z",
+            "author": "John Doe",
+            "version": 1
+          }
+        }
+      ]
+    }
+  ]
+}

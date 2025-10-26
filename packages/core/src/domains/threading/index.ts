@@ -34,3 +34,8 @@ export { ThreadLogger } from './logging/ThreadLogger';
 
 // Analysis
 export * from './analysis';
+
+// Multi-Tier System - Detection & Analysis
+export { MaturityDetector } from './detection/MaturityDetector';
+export { ResilientAnalyzer } from './analysis/ResilientAnalyzer';
+export { FlexibleParser } from './analysis/parsers/FlexibleParser';

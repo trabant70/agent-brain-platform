@@ -345,3 +345,280 @@ export interface BottleneckData {
   calls: number;
   trend?: 'improving' | 'stable' | 'degrading';
 }
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════
+ * MULTI-TIER THREADING SYSTEM TYPES
+ * ═══════════════════════════════════════════════════════════════════════
+ */
+
+/**
+ * Maturity Level Enum
+ * Progressive threading adoption levels
+ */
+export enum MaturityLevel {
+  OBSERVATION = 0,    // No code changes - observe existing logs
+  SEMANTIC = 1,       // [THREAD:X] prefixes in logs
+  ANNOTATION = 2,     // JSDoc @thread annotations
+  CONDITIONAL = 3,    // ThreadContext API
+  DECORATOR = 4       // Full @ThreadSpec/@ThreadLog decorators
+}
+
+/**
+ * Implementation Indicator
+ * Evidence of a specific maturity level in the codebase
+ */
+export interface ImplementationIndicator {
+  level: MaturityLevel;
+  filesWithPattern: string[];
+  totalOccurrences: number;
+  coverage: number;          // 0-1 percentage
+  confidence: number;        // 0-1 confidence score
+  examples: CodeExample[];
+}
+
+/**
+ * Code Example
+ * Sample code found during detection
+ */
+export interface CodeExample {
+  filePath: string;
+  lineNumber: number;
+  code: string;
+  context?: string;
+}
+
+/**
+ * Detection Result
+ * Result of maturity level detection
+ */
+export interface DetectionResult {
+  detectedLevel: MaturityLevel;
+  configuredLevel?: MaturityLevel;
+  coverage: CoverageReport;
+  inconsistencies: Inconsistency[];
+  recommendations: LevelRecommendation[];
+  timestamp: number;
+}
+
+/**
+ * Coverage Report
+ * Coverage statistics per level
+ */
+export interface CoverageReport {
+  overall: number;              // 0-1 overall coverage
+  byLevel: {
+    [MaturityLevel.OBSERVATION]?: number;
+    [MaturityLevel.SEMANTIC]?: number;
+    [MaturityLevel.ANNOTATION]?: number;
+    [MaturityLevel.CONDITIONAL]?: number;
+    [MaturityLevel.DECORATOR]?: number;
+  };
+  byFile: Map<string, FileCoverage>;
+  totalFiles: number;
+  filesWithThreading: number;
+}
+
+/**
+ * File Coverage
+ * Threading coverage for a single file
+ */
+export interface FileCoverage {
+  filePath: string;
+  level: MaturityLevel;
+  coverage: number;            // 0-1
+  patterns: string[];          // What patterns were found
+  linesWithThreading: number;
+  totalLines: number;
+}
+
+/**
+ * Inconsistency
+ * Mixed level implementations that should be standardized
+ */
+export interface Inconsistency {
+  type: 'mixed_levels' | 'incomplete_implementation' | 'format_variation';
+  description: string;
+  severity: 'low' | 'medium' | 'high';
+  files: string[];
+  suggestion: string;
+}
+
+/**
+ * Level Recommendation
+ * Suggested actions for improving threading maturity
+ */
+export interface LevelRecommendation {
+  action: 'upgrade' | 'standardize' | 'complete' | 'downgrade';
+  fromLevel: MaturityLevel;
+  toLevel: MaturityLevel;
+  reason: string;
+  benefits: string[];
+  effort: 'trivial' | 'small' | 'medium' | 'large';
+  priority: 'low' | 'medium' | 'high';
+}
+
+/**
+ * Parse Result
+ * Result from flexible parsing of logs/code
+ */
+export interface ParseResult {
+  threads: string[];
+  confidence: number;
+  format: 'strict' | 'flexible' | 'inferred';
+  variations: ThreadVariation[];
+  normalized: Map<string, string>;  // original -> normalized
+}
+
+/**
+ * Thread Variation
+ * Different ways threads are referenced in code
+ */
+export interface ThreadVariation {
+  original: string;
+  normalized: string;
+  occurrences: number;
+  locations: CodeExample[];
+}
+
+/**
+ * Migration Result
+ * Result of level migration operation
+ */
+export interface MigrationResult {
+  success: boolean;
+  fromLevel: MaturityLevel;
+  toLevel: MaturityLevel;
+  filesModified: string[];
+  backup?: BackupInfo;
+  errors: MigrationError[];
+  warnings: string[];
+  duration: number;
+}
+
+/**
+ * Backup Info
+ * Information about migration backup
+ */
+export interface BackupInfo {
+  path: string;
+  timestamp: number;
+  files: string[];
+  size: number;
+}
+
+/**
+ * Migration Error
+ * Error during migration
+ */
+export interface MigrationError {
+  file: string;
+  message: string;
+  stack?: string;
+  recoverable: boolean;
+}
+
+/**
+ * Health Report
+ * Overall system health assessment
+ */
+export interface HealthReport {
+  timestamp: number;
+  configuredLevel: MaturityLevel;
+  detectedLevel: MaturityLevel;
+  coverage: CoverageReport;
+  consistency: ConsistencyReport;
+  issues: HealthIssue[];
+  recommendations: LevelRecommendation[];
+  trend: 'improving' | 'stable' | 'degrading';
+  score: number;  // 0-100 health score
+}
+
+/**
+ * Consistency Report
+ * How consistent the threading implementation is
+ */
+export interface ConsistencyReport {
+  overallScore: number;  // 0-1
+  byFile: Map<string, FileConsistency>;
+  issues: ConsistencyIssue[];
+}
+
+/**
+ * File Consistency
+ * Consistency within a single file
+ */
+export interface FileConsistency {
+  filePath: string;
+  score: number;  // 0-1
+  dominantLevel: MaturityLevel;
+  mixedLevels: MaturityLevel[];
+  threadNameConsistency: number;  // 0-1
+  formatConsistency: number;  // 0-1
+}
+
+/**
+ * Consistency Issue
+ * Specific inconsistency found
+ */
+export interface ConsistencyIssue {
+  type: 'naming' | 'format' | 'level' | 'coverage';
+  description: string;
+  files: string[];
+  impact: 'low' | 'medium' | 'high';
+  fix?: string;
+}
+
+/**
+ * Health Issue
+ * Problem detected in health check
+ */
+export interface HealthIssue {
+  category: 'coverage' | 'consistency' | 'performance' | 'error';
+  severity: 'info' | 'warning' | 'error' | 'critical';
+  message: string;
+  details?: any;
+  fix?: string;
+}
+
+/**
+ * Agent Instructions
+ * Instructions for coding agents
+ */
+export interface AgentInstructions {
+  version: string;
+  level: MaturityLevel;
+  timestamp: string;
+  summary: string;
+  pattern: string;
+  example: string;
+  full: string;
+  validation: string;
+  fallbacks: string[];
+  examples: string[];
+}
+
+/**
+ * Level Template
+ * Template for implementing a specific level
+ */
+export interface LevelTemplate {
+  id: string;
+  name: string;
+  level: MaturityLevel;
+  instructions: string;
+  examples: CodeExample[];
+  validationRules: ValidationRules;
+  fallbackInstructions: string;
+}
+
+/**
+ * Validation Rules
+ * Rules for validating level implementation
+ */
+export interface ValidationRules {
+  required: string[];
+  optional: string[];
+  ignored: string[];
+  minimumCoverage?: number;
+}
