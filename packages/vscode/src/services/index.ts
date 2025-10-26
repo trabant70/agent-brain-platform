@@ -3,3 +3,4 @@
  */
 
 export { KnowledgeManager } from './KnowledgeManager';
+export { ThreadControlCenter } from './threading';

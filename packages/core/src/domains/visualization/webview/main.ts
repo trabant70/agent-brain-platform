@@ -262,8 +262,28 @@ function setupMessageHandling(): void {
                     break;
 
                 default:
+                    // Route threading messages to ThreadingViewController
+                    if (message.type.startsWith('threading:')) {
+                        const threadingController = (window as any).threadingController;
+                        if (threadingController && typeof threadingController.handleMessage === 'function') {
+                            threadingController.handleMessage(message);
+                            webviewLogger.debug(
+                                LogCategory.WEBVIEW,
+                                `Routed threading message to ThreadingViewController: ${message.type}`,
+                                'setupMessageHandling',
+                                { messageType: message.type }
+                            );
+                        } else {
+                            webviewLogger.warn(
+                                LogCategory.WEBVIEW,
+                                `ThreadingViewController not available for threading message: ${message.type}`,
+                                'setupMessageHandling',
+                                { messageType: message.type }
+                            );
+                        }
+                    }
                     // Route V1 Template Sections messages to KnowledgeViewController
-                    if (message.type.startsWith('v1:')) {
+                    else if (message.type.startsWith('v1:')) {
                         const knowledgeController = (window as any).knowledgeController;
                         if (knowledgeController && typeof knowledgeController.handleMessage === 'function') {
                             knowledgeController.handleMessage(message);

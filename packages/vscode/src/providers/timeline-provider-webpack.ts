@@ -36,6 +36,7 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
   private orchestrator: DataOrchestrator;
   private extensionUri: vscode.Uri;
   private knowledgeManager: any = null;
+  private threadControlCenter: any = null;
 
   // Shared state object used by handlers and provider
   private providerState = {
@@ -103,6 +104,23 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
     // Send initial knowledge data to webview if it's already ready
     if (this.lifecycleManager.getWebviewReady() && this._view) {
       this.sendKnowledgeData();
+    }
+  }
+
+  /**
+   * Set the thread control center instance
+   */
+  public setThreadControlCenter(controlCenter: any): void {
+    this.threadControlCenter = controlCenter;
+    logger.debug(LogCategory.EXTENSION, 'Thread Control Center connected to TimelineProvider');
+
+    // Send initial threading state to webview if it's already ready
+    if (this.lifecycleManager.getWebviewReady() && this._view) {
+      const state = this.threadControlCenter.getState();
+      this.sendMessage({
+        type: 'threading:state',
+        payload: state
+      });
     }
   }
 
@@ -260,6 +278,22 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
    */
   private async routeMessage(message: any): Promise<void> {
     try {
+      // Handle threading messages
+      if (message.type && message.type.startsWith('threading:')) {
+        if (this.threadControlCenter) {
+          await this.threadControlCenter.handleWebviewMessage(message);
+          return;
+        } else {
+          logger.warn(
+            LogCategory.WEBVIEW,
+            'Threading message received but no ThreadControlCenter available',
+            'routeMessage',
+            { type: message.type }
+          );
+          return;
+        }
+      }
+
       const handled = await this.messageRouter.routeMessage(message);
 
       // Handle tab changed message (for state tracking)
@@ -328,7 +362,7 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
   /**
    * Send message to webview
    */
-  private sendMessage(message: any): void {
+  public sendMessage(message: any): void {
     if (this._view) {
       this._view.webview.postMessage(message);
     }

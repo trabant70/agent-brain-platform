@@ -4,13 +4,14 @@ import * as nls from 'vscode-nls';
 import { TimelineProvider } from './providers/timeline-provider-webpack';
 import { WelcomeViewProvider } from './providers/WelcomeViewProvider';
 import { logger, LogCategory, createContextLogger } from '@agent-brain/core/infrastructure/logging/Logger';
-import { KnowledgeManager } from './services';
+import { KnowledgeManager, ThreadControlCenter } from './services';
 
 // Initialize localization
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 
 let timelineProvider: TimelineProvider | null = null;
 let knowledgeManager: KnowledgeManager | null = null;
+let threadControlCenter: ThreadControlCenter | null = null;
 const log = createContextLogger(LogCategory.EXTENSION);
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -99,6 +100,76 @@ export async function activate(context: vscode.ExtensionContext) {
 
         log.info(LogCategory.EXTENSION, 'Timeline commands registered successfully');
         outputChannel.appendLine('✅ Timeline commands registered');
+
+        // Initialize Threading Control Center
+        log.debug(LogCategory.EXTENSION, 'Initializing Threading Control Center', 'threading');
+        outputChannel.appendLine('🧵 Initializing Threading Control Center...');
+
+        if (workspaceRoot && workspaceRoot !== '.') {
+            threadControlCenter = new ThreadControlCenter(workspaceRoot, context);
+
+            log.info(LogCategory.EXTENSION, 'Threading Control Center initialized successfully');
+            outputChannel.appendLine('✅ Threading Control Center initialized');
+
+            // Connect to timeline provider for webview communication
+            if (timelineProvider) {
+                // Set up bidirectional communication
+                threadControlCenter.setWebviewMessageCallback((message) => {
+                    timelineProvider?.sendMessage(message);
+                });
+                timelineProvider.setThreadControlCenter(threadControlCenter);
+                log.debug(LogCategory.EXTENSION, 'Threading Control Center connected to Timeline Provider');
+            }
+
+            // Register threading commands
+            const toggleThreadingCommand = vscode.commands.registerCommand(
+                'agentBrain.threading.toggle',
+                async () => {
+                    log.info(LogCategory.EXTENSION, 'Toggle threading command executed');
+                    outputChannel.appendLine('🧵 Toggling threading system...');
+                    await threadControlCenter?.toggleThreading();
+                }
+            );
+            context.subscriptions.push(toggleThreadingCommand);
+
+            const startSessionCommand = vscode.commands.registerCommand(
+                'agentBrain.threading.startSession',
+                async () => {
+                    log.info(LogCategory.EXTENSION, 'Start threading session command executed');
+                    outputChannel.appendLine('🧵 Starting threading session...');
+
+                    const mode = await vscode.window.showQuickPick(
+                        ['development', 'debugging', 'learning'],
+                        { placeHolder: 'Select threading mode' }
+                    ) as 'development' | 'debugging' | 'learning' | undefined;
+
+                    if (mode) {
+                        await threadControlCenter?.startSession(mode);
+                    }
+                }
+            );
+            context.subscriptions.push(startSessionCommand);
+
+            const endSessionCommand = vscode.commands.registerCommand(
+                'agentBrain.threading.endSession',
+                async () => {
+                    log.info(LogCategory.EXTENSION, 'End threading session command executed');
+                    outputChannel.appendLine('🧵 Ending threading session...');
+                    await threadControlCenter?.endSession();
+                }
+            );
+            context.subscriptions.push(endSessionCommand);
+
+            log.info(LogCategory.EXTENSION, 'Threading commands registered successfully');
+            outputChannel.appendLine('✅ Threading commands registered');
+
+            context.subscriptions.push({
+                dispose: () => threadControlCenter?.dispose()
+            });
+        } else {
+            log.warn(LogCategory.EXTENSION, 'No workspace folder found, skipping Threading Control Center');
+            outputChannel.appendLine('⚠️ No workspace folder found, Threading disabled');
+        }
 
         // Initialize Knowledge Management System
         log.debug(LogCategory.EXTENSION, 'Initializing Knowledge Manager', 'knowledge');

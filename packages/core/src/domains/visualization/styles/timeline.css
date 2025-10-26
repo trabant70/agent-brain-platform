@@ -19,4 +19,6 @@
 @import url('./components/range-selector.css');
 @import url('./components/modal.css');
 @import url('./components/sessions.css');
+@import url('./components/knowledge.css');
+@import url('./components/threading.css');
 @import url('./themes/cosmic.css');

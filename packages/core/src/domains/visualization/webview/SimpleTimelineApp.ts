@@ -19,6 +19,7 @@ import { UIControllerManager } from '../ui/UIControllerManager';
 import { TabManager } from '../ui/TabManager';
 import { KnowledgeViewController } from '../ui/KnowledgeViewController';
 import { SessionViewController } from '../ui/SessionViewController';
+import { ThreadingViewController } from '../ui/threading/ThreadingViewController';
 import { webviewLogger, LogCategory, LogPathway } from './WebviewLogger';
 
 // Specialized services (NEW - Facade Pattern)
@@ -55,6 +56,7 @@ export class SimpleTimelineApp {
     private tabManager: TabManager;
     private knowledgeController: KnowledgeViewController;
     private sessionController: SessionViewController;
+    private threadingController: ThreadingViewController;
     private currentEvents: CanonicalEvent[] = [];
     private currentFilterOptions: FilterOptions | null = null;
     private currentAppliedFilters: any = null;  // Current filter state for branch visibility
@@ -174,6 +176,38 @@ export class SimpleTimelineApp {
         if (this.tabManager.getActiveTab() === 'sessions') {
             webviewLogger.info(LogCategory.UI, 'Sessions tab is active on initialization - requesting data', 'constructor', undefined, LogPathway.KNOWLEDGE_MANAGEMENT);
             this.sessionController.requestInitialLoad();
+        }
+
+        // Initialize threading controller
+        webviewLogger.info(LogCategory.UI, 'Creating ThreadingViewController...', 'constructor');
+        this.threadingController = new ThreadingViewController();
+        webviewLogger.info(LogCategory.UI, 'ThreadingViewController created', 'constructor', { hasController: !!this.threadingController });
+
+        // Make threading controller globally accessible BEFORE initialize
+        (window as any).threadingController = this.threadingController;
+        webviewLogger.info(LogCategory.UI, 'Threading controller assigned to window', 'constructor', {
+            onWindow: !!(window as any).threadingController,
+            onThis: !!this.threadingController
+        });
+
+        this.threadingController.initialize((message) => {
+            // Forward threading messages to extension
+            if (window.vscode) {
+                window.vscode.postMessage(message);
+            }
+        });
+
+        webviewLogger.info(LogCategory.UI, 'Threading controller initialized', 'constructor', {
+            onWindow: !!(window as any).threadingController,
+            onThis: !!this.threadingController
+        });
+
+        // If threading tab is already active (restored from localStorage), request initial data
+        if (this.tabManager.getActiveTab() === 'threading') {
+            webviewLogger.info(LogCategory.UI, 'Threading tab is active on initialization - requesting data', 'constructor');
+            if (window.vscode) {
+                window.vscode.postMessage({ type: 'threading:get-state' });
+            }
         }
 
         // Setup brush callback for range selector
