@@ -30,6 +30,9 @@ export * from './contracts';
 // Tracking System
 export * from './tracking';
 
+// Validation System
+export * from './validation';
+
 // Configuration
 export { ThreadConfigManager, getGlobalThreadConfig, setGlobalThreadConfig, DEFAULT_CONFIG } from './ThreadConfig';
 

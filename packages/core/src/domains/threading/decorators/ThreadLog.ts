@@ -15,6 +15,8 @@ import { getThreadSpec, isEnhancedSpec } from './ThreadSpec';
 import { ExecutionTracker, generateExecutionId, createTrackingProxy } from '../tracking/ExecutionTracker';
 import { getInstance as getThreadLogger } from '../logging/ThreadLogger';
 import { ContractViolation } from '../types';
+import { getGlobalContractValidator } from '../validation/ContractValidator';
+import { ContractExpectations, ContractProductions } from '../contracts';
 
 /**
  * ThreadLog Decorator
@@ -97,9 +99,9 @@ export function ThreadLog(...threads: string[]) {
           mutations: tracker.getMutations()
         });
 
-        // Validate output contracts (Phase 3 - not yet implemented)
+        // Validate output contracts
         if (spec.produces) {
-          const violations = await validateOutputContracts(result, spec.produces, context);
+          const violations = await validateOutputContracts(result, args, this, spec.produces, context);
           violations.forEach(v => tracker.logContractViolation(v));
         }
 
@@ -173,33 +175,34 @@ export function ThreadLog(...threads: string[]) {
 
 /**
  * Validate input contracts
- * (Phase 3 implementation - placeholder for now)
  */
 async function validateInputContracts(
   args: any[],
-  expects: any,
+  expects: ContractExpectations,
   context: string
 ): Promise<ContractViolation[]> {
-  // TODO: Implement in Phase 3
-  return [];
+  const validator = getGlobalContractValidator();
+  const result = validator.validateInputs(args, expects, context);
+  return result.violations;
 }
 
 /**
  * Validate output contracts
- * (Phase 3 implementation - placeholder for now)
  */
 async function validateOutputContracts(
   result: any,
-  produces: any,
+  args: any[],
+  thisContext: any,
+  produces: ContractProductions,
   context: string
 ): Promise<ContractViolation[]> {
-  // TODO: Implement in Phase 3
-  return [];
+  const validator = getGlobalContractValidator();
+  const validationResult = validator.validateOutputs(result, args, thisContext, produces, context);
+  return validationResult.violations;
 }
 
 /**
  * Check preconditions
- * (Phase 3 implementation - placeholder for now)
  */
 async function checkPreconditions(
   preconditions: string[],
@@ -207,13 +210,14 @@ async function checkPreconditions(
   thisContext: any,
   context: string
 ): Promise<ContractViolation[]> {
-  // TODO: Implement in Phase 3
-  return [];
+  const validator = getGlobalContractValidator();
+  const data = { args, this: thisContext };
+  const result = validator.validateInvariants(preconditions, data, `${context}.preconditions`);
+  return result.violations;
 }
 
 /**
  * Check postconditions
- * (Phase 3 implementation - placeholder for now)
  */
 async function checkPostconditions(
   postconditions: string[],
@@ -222,13 +226,14 @@ async function checkPostconditions(
   thisContext: any,
   context: string
 ): Promise<ContractViolation[]> {
-  // TODO: Implement in Phase 3
-  return [];
+  const validator = getGlobalContractValidator();
+  const data = { args, result, this: thisContext };
+  const validationResult = validator.validateInvariants(postconditions, data, `${context}.postconditions`);
+  return validationResult.violations;
 }
 
 /**
  * Check invariants
- * (Phase 3 implementation - placeholder for now)
  */
 async function checkInvariants(
   invariants: string[],
@@ -237,6 +242,8 @@ async function checkInvariants(
   thisContext: any,
   context: string
 ): Promise<ContractViolation[]> {
-  // TODO: Implement in Phase 3
-  return [];
+  const validator = getGlobalContractValidator();
+  const data = { args, result, this: thisContext };
+  const validationResult = validator.validateInvariants(invariants, data, `${context}.invariants`);
+  return validationResult.violations;
 }
