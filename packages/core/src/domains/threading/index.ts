@@ -43,3 +43,6 @@ export { FlexibleParser } from './analysis/parsers/FlexibleParser';
 // Multi-Tier System - UI & Control
 export { AdaptiveControlCenter } from './ui/AdaptiveControlCenter';
 export { LevelSelector } from './ui/LevelSelector';
+
+// Multi-Tier System - Templates & Instructions
+export { AgentInstructionInjector } from './agent/AgentInstructionInjector';
