@@ -2,9 +2,11 @@
  * ThreadingViewController - Main controller for Threading tab
  *
  * Manages the threading dashboard, timeline visualization, and analysis panels.
+ * Integrates with Phase 2 pattern detection and analysis system.
  */
 
 import { t } from '../../webview/i18n';
+import type { AnalysisReport, DetectedPattern, AnalysisInsight, Recommendation } from '../../../threading/types';
 
 export interface ThreadingViewState {
   enabled: boolean;
@@ -109,19 +111,40 @@ export class ThreadingViewController {
           <!-- Analysis Panels -->
           <div class="threading-analysis-section">
             <div class="threading-panels">
+              <!-- Patterns -->
+              <div class="threading-panel">
+                <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                  <h4 style="margin: 0;">${t('threading.patterns')}</h4>
+                  <button id="analyze-now-btn" class="btn-secondary" style="font-size: 12px; padding: 4px 12px;">
+                    Analyze Now
+                  </button>
+                </div>
+                <div id="threading-patterns" class="panel-content">
+                  <p class="empty-state-text">${t('threading.noPatterns')}</p>
+                </div>
+              </div>
+
+              <!-- Insights -->
+              <div class="threading-panel">
+                <h4>${t('threading.insights')}</h4>
+                <div id="threading-insights" class="panel-content">
+                  <p class="empty-state-text">${t('threading.noInsights')}</p>
+                </div>
+              </div>
+
+              <!-- Recommendations -->
+              <div class="threading-panel">
+                <h4>${t('threading.recommendations')}</h4>
+                <div id="threading-recommendations" class="panel-content">
+                  <p class="empty-state-text">${t('threading.noRecommendations')}</p>
+                </div>
+              </div>
+
               <!-- Bottlenecks -->
               <div class="threading-panel">
                 <h4>${t('threading.bottlenecks')}</h4>
                 <div id="threading-bottlenecks" class="panel-content">
                   <p class="empty-state-text">${t('threading.noBottlenecks')}</p>
-                </div>
-              </div>
-
-              <!-- Patterns -->
-              <div class="threading-panel">
-                <h4>${t('threading.patterns')}</h4>
-                <div id="threading-patterns" class="panel-content">
-                  <p class="empty-state-text">${t('threading.noPatterns')}</p>
                 </div>
               </div>
             </div>
@@ -230,20 +253,50 @@ export class ThreadingViewController {
   }
 
   /**
-   * Render analysis results
+   * Render analysis results from AnalysisReport
    */
-  private renderAnalysis(data: any): void {
-    // Update bottlenecks
-    const bottlenecks = document.getElementById('threading-bottlenecks');
-    if (bottlenecks && data.bottlenecks) {
-      bottlenecks.innerHTML = this.renderBottlenecks(data.bottlenecks);
-    }
+  private renderAnalysis(report: AnalysisReport | any): void {
+    // Handle both AnalysisReport and legacy format
+    const analysisData = report as AnalysisReport;
 
     // Update patterns
     const patterns = document.getElementById('threading-patterns');
-    if (patterns && data.patterns) {
-      patterns.innerHTML = this.renderPatterns(data.patterns);
+    if (patterns && analysisData.patterns) {
+      patterns.innerHTML = this.renderPatterns(analysisData.patterns);
     }
+
+    // Update insights
+    const insights = document.getElementById('threading-insights');
+    if (insights && analysisData.insights) {
+      insights.innerHTML = this.renderInsights(analysisData.insights);
+    }
+
+    // Update recommendations
+    const recommendations = document.getElementById('threading-recommendations');
+    if (recommendations && analysisData.recommendations) {
+      recommendations.innerHTML = this.renderRecommendations(analysisData.recommendations);
+    }
+
+    // Update bottlenecks (legacy support)
+    const bottlenecks = document.getElementById('threading-bottlenecks');
+    if (bottlenecks) {
+      // Check if data has bottlenecks in legacy format or new format
+      const bottleneckData = (report as any).bottlenecks || [];
+      bottlenecks.innerHTML = this.renderBottlenecks(bottleneckData);
+    }
+
+    // Show summary if available
+    if (analysisData.summary) {
+      this.showAnalysisSummary(analysisData.summary);
+    }
+  }
+
+  /**
+   * Show analysis summary notification
+   */
+  private showAnalysisSummary(summary: string): void {
+    console.log('[ThreadingViewController] Analysis Summary:\n', summary);
+    // Could show a toast notification here
   }
 
   /**
@@ -281,21 +334,63 @@ export class ThreadingViewController {
   /**
    * Render detected patterns
    */
-  private renderPatterns(patterns: any[]): string {
+  private renderPatterns(patterns: DetectedPattern[]): string {
     if (!patterns || patterns.length === 0) {
       return `<p class="empty-state-text">${t('threading.noPatterns')}</p>`;
     }
 
-    return patterns.map(p => `
-      <div class="pattern-card">
-        <div class="pattern-header">
-          <span class="pattern-name">${p.name}</span>
-          <span class="pattern-confidence">${(p.confidence * 100).toFixed(0)}%</span>
+    return patterns.map(p => {
+      const impactColor = this.getImpactColor(p.impact);
+      const impactIcon = this.getImpactIcon(p.impact);
+
+      return `
+        <div class="pattern-card pattern-${p.impact}">
+          <div class="pattern-header">
+            <div class="pattern-title">
+              <span class="pattern-icon">${impactIcon}</span>
+              <span class="pattern-name">${this.escapeHtml(p.name)}</span>
+              <span class="pattern-type" style="font-size: 11px; color: var(--vscode-descriptionForeground);">${p.type}</span>
+            </div>
+            <div class="pattern-badges">
+              <span class="pattern-confidence" style="background: rgba(0, 255, 136, 0.15); padding: 2px 8px; border-radius: 3px; font-size: 11px;">
+                ${(p.confidence * 100).toFixed(0)}% confidence
+              </span>
+              <span class="pattern-impact" style="background: ${impactColor}; padding: 2px 8px; border-radius: 3px; font-size: 11px; color: white; font-weight: 600;">
+                ${p.impact.toUpperCase()}
+              </span>
+            </div>
+          </div>
+
+          <p class="pattern-description" style="margin: 8px 0; line-height: 1.5;">
+            ${this.escapeHtml(p.description)}
+          </p>
+
+          ${p.affectedFunctions && p.affectedFunctions.length > 0 ? `
+            <div class="pattern-affected" style="margin: 8px 0; font-size: 12px;">
+              <strong>Affected:</strong>
+              <code style="background: rgba(0, 212, 255, 0.05); padding: 2px 6px; border-radius: 3px;">
+                ${p.affectedFunctions.join(', ')}
+              </code>
+            </div>
+          ` : ''}
+
+          ${p.evidence?.recommendation ? `
+            <div class="pattern-recommendation" style="margin-top: 12px; padding: 12px; background: rgba(0, 212, 255, 0.05); border-left: 3px solid rgba(0, 212, 255, 0.5); border-radius: 3px;">
+              <div style="font-weight: 600; margin-bottom: 4px; font-size: 12px;">💡 Recommendation</div>
+              <div style="font-size: 12px; line-height: 1.5;">${this.escapeHtml(p.evidence.recommendation)}</div>
+            </div>
+          ` : ''}
+
+          <details class="pattern-evidence" style="margin-top: 8px; font-size: 12px;">
+            <summary style="cursor: pointer; color: var(--vscode-textLink-foreground); user-select: none;">
+              View Evidence
+            </summary>
+            <pre style="margin-top: 8px; padding: 8px; background: var(--vscode-editor-background); border-radius: 3px; overflow-x: auto; font-size: 11px;">
+${JSON.stringify(p.evidence, null, 2)}</pre>
+          </details>
         </div>
-        <p class="pattern-description">${p.description}</p>
-        ${p.recommendation ? `<p class="pattern-recommendation">${p.recommendation}</p>` : ''}
-      </div>
-    `).join('');
+      `;
+    }).join('');
   }
 
   /**
@@ -326,6 +421,41 @@ export class ThreadingViewController {
         payload: {}
       });
     });
+
+    // Analyze Now button
+    const analyzeBtn = document.getElementById('analyze-now-btn');
+    analyzeBtn?.addEventListener('click', () => {
+      this.requestAnalysis();
+    });
+  }
+
+  /**
+   * Request analysis from backend
+   */
+  private requestAnalysis(): void {
+    console.log('[ThreadingViewController] Requesting analysis');
+    this.sendMessage({
+      type: 'threading:analyze',
+      payload: {}
+    });
+  }
+
+  /**
+   * Export analysis report to JSON
+   */
+  exportAnalysisReport(report: AnalysisReport): void {
+    const dataStr = JSON.stringify(report, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `threading-analysis-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+
+    URL.revokeObjectURL(url);
+
+    console.log('[ThreadingViewController] Analysis report exported');
   }
 
   /**
@@ -334,6 +464,188 @@ export class ThreadingViewController {
   private sendMessage(message: any): void {
     if (this.messageHandler) {
       this.messageHandler(message);
+    }
+  }
+
+  /**
+   * Get color for impact level
+   */
+  private getImpactColor(impact: 'low' | 'medium' | 'high' | 'critical'): string {
+    switch (impact) {
+      case 'critical': return '#d32f2f';
+      case 'high': return '#ff6b35';
+      case 'medium': return '#ffb700';
+      case 'low': return '#00897b';
+      default: return '#757575';
+    }
+  }
+
+  /**
+   * Get icon for impact level
+   */
+  private getImpactIcon(impact: 'low' | 'medium' | 'high' | 'critical'): string {
+    switch (impact) {
+      case 'critical': return '🔴';
+      case 'high': return '🟠';
+      case 'medium': return '🟡';
+      case 'low': return '🟢';
+      default: return '⚪';
+    }
+  }
+
+  /**
+   * Escape HTML to prevent XSS
+   */
+  private escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  /**
+   * Render analysis insights
+   */
+  private renderInsights(insights: AnalysisInsight[]): string {
+    if (!insights || insights.length === 0) {
+      return `<p class="empty-state-text">${t('threading.noInsights')}</p>`;
+    }
+
+    return `
+      <div class="insights-container">
+        ${insights.map(insight => {
+          const severityColor = this.getSeverityColor(insight.severity);
+          const categoryIcon = this.getCategoryIcon(insight.category);
+
+          return `
+            <div class="insight-card insight-${insight.severity}">
+              <div class="insight-header">
+                <span class="insight-icon">${categoryIcon}</span>
+                <span class="insight-title">${this.escapeHtml(insight.title)}</span>
+                <span class="insight-severity" style="background: ${severityColor}; padding: 2px 8px; border-radius: 3px; font-size: 11px; color: white;">
+                  ${insight.severity.toUpperCase()}
+                </span>
+              </div>
+              <p class="insight-description" style="margin: 8px 0; font-size: 12px; line-height: 1.5;">
+                ${this.escapeHtml(insight.description)}
+              </p>
+              ${insight.rootCause ? `
+                <div class="insight-root-cause" style="margin-top: 8px; padding: 8px; background: rgba(255, 107, 53, 0.05); border-left: 3px solid rgba(255, 107, 53, 0.5); border-radius: 3px; font-size: 12px;">
+                  <strong>Root Cause:</strong> ${this.escapeHtml(insight.rootCause)}
+                </div>
+              ` : ''}
+              ${insight.relatedPatterns && insight.relatedPatterns.length > 0 ? `
+                <div class="insight-related" style="margin-top: 8px; font-size: 11px; color: var(--vscode-descriptionForeground);">
+                  Related patterns: ${insight.relatedPatterns.join(', ')}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  /**
+   * Render recommendations
+   */
+  private renderRecommendations(recommendations: Recommendation[]): string {
+    if (!recommendations || recommendations.length === 0) {
+      return `<p class="empty-state-text">${t('threading.noRecommendations')}</p>`;
+    }
+
+    return `
+      <div class="recommendations-container">
+        ${recommendations.map((rec, index) => {
+          const priorityColor = this.getPriorityColor(rec.priority);
+          const priorityIcon = this.getPriorityIcon(rec.priority);
+
+          return `
+            <div class="recommendation-card recommendation-${rec.priority}">
+              <div class="recommendation-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span class="recommendation-number" style="background: rgba(0, 212, 255, 0.15); padding: 4px 8px; border-radius: 50%; font-weight: 600; font-size: 12px; min-width: 28px; text-align: center;">
+                    ${index + 1}
+                  </span>
+                  <span class="recommendation-icon">${priorityIcon}</span>
+                  <span class="recommendation-title" style="font-weight: 600;">${this.escapeHtml(rec.title)}</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <span class="recommendation-priority" style="background: ${priorityColor}; padding: 2px 8px; border-radius: 3px; font-size: 11px; color: white;">
+                    ${rec.priority.toUpperCase()}
+                  </span>
+                  <span class="recommendation-effort" style="background: rgba(128, 128, 128, 0.2); padding: 2px 8px; border-radius: 3px; font-size: 11px;">
+                    ${rec.effort}
+                  </span>
+                </div>
+              </div>
+              <p class="recommendation-description" style="margin: 12px 0; font-size: 13px; line-height: 1.5;">
+                ${this.escapeHtml(rec.description)}
+              </p>
+              ${rec.steps && rec.steps.length > 0 ? `
+                <div class="recommendation-steps" style="margin-top: 12px;">
+                  <div style="font-weight: 600; margin-bottom: 8px; font-size: 12px;">Steps:</div>
+                  <ol style="margin: 0; padding-left: 20px; font-size: 12px; line-height: 1.6;">
+                    ${rec.steps.map(step => `<li>${this.escapeHtml(step)}</li>`).join('')}
+                  </ol>
+                </div>
+              ` : ''}
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  /**
+   * Get color for severity
+   */
+  private getSeverityColor(severity: 'info' | 'warning' | 'error' | 'critical'): string {
+    switch (severity) {
+      case 'critical': return '#d32f2f';
+      case 'error': return '#ff6b35';
+      case 'warning': return '#ffb700';
+      case 'info': return '#0288d1';
+      default: return '#757575';
+    }
+  }
+
+  /**
+   * Get icon for category
+   */
+  private getCategoryIcon(category: 'performance' | 'error' | 'memory' | 'cache' | 'architecture'): string {
+    switch (category) {
+      case 'performance': return '⚡';
+      case 'error': return '❌';
+      case 'memory': return '💾';
+      case 'cache': return '📦';
+      case 'architecture': return '🏗️';
+      default: return '📊';
+    }
+  }
+
+  /**
+   * Get color for priority
+   */
+  private getPriorityColor(priority: 'low' | 'medium' | 'high' | 'urgent'): string {
+    switch (priority) {
+      case 'urgent': return '#d32f2f';
+      case 'high': return '#ff6b35';
+      case 'medium': return '#ffb700';
+      case 'low': return '#00897b';
+      default: return '#757575';
+    }
+  }
+
+  /**
+   * Get icon for priority
+   */
+  private getPriorityIcon(priority: 'low' | 'medium' | 'high' | 'urgent'): string {
+    switch (priority) {
+      case 'urgent': return '🚨';
+      case 'high': return '⚠️';
+      case 'medium': return '📌';
+      case 'low': return '💡';
+      default: return '📋';
     }
   }
 }
