@@ -39,3 +39,7 @@ export * from './analysis';
 export { MaturityDetector } from './detection/MaturityDetector';
 export { ResilientAnalyzer } from './analysis/ResilientAnalyzer';
 export { FlexibleParser } from './analysis/parsers/FlexibleParser';
+
+// Multi-Tier System - UI & Control
+export { AdaptiveControlCenter } from './ui/AdaptiveControlCenter';
+export { LevelSelector } from './ui/LevelSelector';

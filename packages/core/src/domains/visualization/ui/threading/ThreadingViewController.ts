@@ -3,28 +3,40 @@
  *
  * Manages the threading dashboard, timeline visualization, and analysis panels.
  * Integrates with Phase 2 pattern detection and analysis system.
+ * Phase 2: Multi-tier support with AdaptiveControlCenter and LevelSelector.
  */
 
 import { t } from '../../webview/i18n';
-import type { AnalysisReport, DetectedPattern, AnalysisInsight, Recommendation } from '../../../threading/types';
+import type { AnalysisReport, DetectedPattern, AnalysisInsight, Recommendation, MaturityLevel, DetectionResult } from '../../../threading/types';
+import { AdaptiveControlCenter } from '../../../threading/ui/AdaptiveControlCenter';
+import { LevelSelector } from '../../../threading/ui/LevelSelector';
 
 export interface ThreadingViewState {
   enabled: boolean;
   mode: 'disabled' | 'development' | 'debugging' | 'learning';
   activeThreads: string[];
   sessionActive: boolean;
+  // Multi-tier state
+  multiTierEnabled?: boolean;
+  detectedLevel?: MaturityLevel;
+  targetLevel?: MaturityLevel;
+  showLevelSelector?: boolean;
 }
 
 export class ThreadingViewController {
   private state: ThreadingViewState;
   private messageHandler: ((message: any) => void) | null = null;
+  private controlCenter: AdaptiveControlCenter | null = null;
+  private levelSelector: LevelSelector | null = null;
 
   constructor() {
     this.state = {
       enabled: false,
       mode: 'disabled',
       activeThreads: [],
-      sessionActive: false
+      sessionActive: false,
+      multiTierEnabled: false,
+      showLevelSelector: false
     };
   }
 
@@ -66,7 +78,74 @@ export class ThreadingViewController {
         this.state.sessionActive = false;
         this.updateStatusPanel();
         break;
+
+      // Multi-tier system messages
+      case 'threading:detection-result':
+        this.handleDetectionResult(message.payload);
+        break;
+
+      case 'threading:level-changed':
+        this.handleLevelChanged(message.payload);
+        break;
     }
+  }
+
+  /**
+   * Handle detection result from maturity detector
+   */
+  private async handleDetectionResult(result: DetectionResult): Promise<void> {
+    this.state.detectedLevel = result.detectedLevel;
+    this.state.targetLevel = result.configuredLevel;
+
+    // Initialize control center if workspace path available
+    if ((window as any).workspacePath) {
+      this.controlCenter = new AdaptiveControlCenter({
+        workspacePath: (window as any).workspacePath,
+        targetLevel: result.configuredLevel,
+        autoDetect: true
+      });
+
+      const controlState = await this.controlCenter.initialize();
+
+      // Initialize level selector
+      this.levelSelector = new LevelSelector({
+        currentLevel: result.detectedLevel,
+        targetLevel: result.configuredLevel,
+        onLevelSelect: (level) => {
+          this.sendMessage({
+            type: 'threading:set-target-level',
+            payload: { level }
+          });
+        }
+      });
+    }
+
+    // Re-render to show control center
+    this.renderMultiTierSection();
+  }
+
+  /**
+   * Handle level change notification
+   */
+  private handleLevelChanged(payload: { from: MaturityLevel; to: MaturityLevel }): void {
+    this.state.detectedLevel = payload.to;
+
+    // Re-initialize level selector
+    if (this.levelSelector) {
+      this.levelSelector = new LevelSelector({
+        currentLevel: payload.to,
+        targetLevel: this.state.targetLevel,
+        onLevelSelect: (level) => {
+          this.sendMessage({
+            type: 'threading:set-target-level',
+            payload: { level }
+          });
+        }
+      });
+    }
+
+    // Re-render multi-tier section
+    this.renderMultiTierSection();
   }
 
   /**
@@ -92,6 +171,11 @@ export class ThreadingViewController {
         <!-- Status Panel -->
         <div class="threading-status-panel" id="threading-status-panel">
           ${this.renderStatusPanel()}
+        </div>
+
+        <!-- Multi-Tier Control Center and Level Selector -->
+        <div class="threading-multi-tier-section" id="threading-multi-tier">
+          <!-- Will be populated by renderMultiTierSection() -->
         </div>
 
         <!-- Main Content Area -->
@@ -646,6 +730,133 @@ ${JSON.stringify(p.evidence, null, 2)}</pre>
       case 'medium': return '📌';
       case 'low': return '💡';
       default: return '📋';
+    }
+  }
+
+  /**
+   * Render multi-tier section (control center and level selector)
+   */
+  private renderMultiTierSection(): void {
+    const container = document.getElementById('threading-multi-tier');
+    if (!container) {
+      console.warn('[ThreadingViewController] Multi-tier container not found');
+      return;
+    }
+
+    let html = '';
+
+    // Render control center if initialized
+    if (this.controlCenter) {
+      html += `
+        <div class="multi-tier-control-center">
+          ${this.controlCenter.renderHTML()}
+        </div>
+      `;
+    }
+
+    // Render level selector if enabled
+    if (this.state.showLevelSelector && this.levelSelector) {
+      html += `
+        <div class="multi-tier-level-selector">
+          <button class="btn btn-secondary" id="toggle-level-selector">
+            ${this.state.showLevelSelector ? 'Hide' : 'Show'} Level Selector
+          </button>
+          <div id="level-selector-content" style="margin-top: 16px;">
+            ${this.levelSelector.renderHTML()}
+          </div>
+        </div>
+      `;
+    }
+
+    container.innerHTML = html || '<p class="empty-state-text">Multi-tier system not initialized</p>';
+
+    // Attach event listeners for multi-tier controls
+    this.attachMultiTierListeners();
+  }
+
+  /**
+   * Attach event listeners for multi-tier controls
+   */
+  private attachMultiTierListeners(): void {
+    // Upgrade actions
+    document.querySelectorAll('[data-action="start-upgrade"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const targetLevel = this.state.targetLevel;
+        if (targetLevel !== undefined) {
+          this.sendMessage({
+            type: 'threading:start-upgrade',
+            payload: { targetLevel }
+          });
+        }
+      });
+    });
+
+    // View guide actions
+    document.querySelectorAll('[data-action="view-guide"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const level = (e.target as HTMLElement).dataset.level;
+        this.sendMessage({
+          type: 'threading:view-guide',
+          payload: { level: level ? parseInt(level) : undefined }
+        });
+      });
+    });
+
+    // Use detected level action
+    document.querySelectorAll('[data-action="use-detected"]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (this.state.detectedLevel !== undefined) {
+          this.sendMessage({
+            type: 'threading:set-target-level',
+            payload: { level: this.state.detectedLevel }
+          });
+        }
+      });
+    });
+
+    // Level upgrade/downgrade actions
+    document.querySelectorAll('[data-action="upgrade"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const level = parseInt((e.target as HTMLElement).dataset.level || '0');
+        this.sendMessage({
+          type: 'threading:set-target-level',
+          payload: { level }
+        });
+      });
+    });
+
+    document.querySelectorAll('[data-action="downgrade"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const level = parseInt((e.target as HTMLElement).dataset.level || '0');
+        this.sendMessage({
+          type: 'threading:set-target-level',
+          payload: { level }
+        });
+      });
+    });
+
+    // Apply recommendation actions
+    document.querySelectorAll('[data-action="apply-recommendation"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const recId = (e.target as HTMLElement).dataset.recId;
+        this.sendMessage({
+          type: 'threading:apply-recommendation',
+          payload: { recommendationId: recId }
+        });
+      });
+    });
+
+    // Toggle level selector
+    const toggleBtn = document.getElementById('toggle-level-selector');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        this.state.showLevelSelector = !this.state.showLevelSelector;
+        const content = document.getElementById('level-selector-content');
+        if (content) {
+          content.style.display = this.state.showLevelSelector ? 'block' : 'none';
+        }
+        toggleBtn.textContent = this.state.showLevelSelector ? 'Hide Level Selector' : 'Show Level Selector';
+      });
     }
   }
 }
