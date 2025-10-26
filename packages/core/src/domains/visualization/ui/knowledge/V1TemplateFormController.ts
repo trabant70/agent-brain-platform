@@ -246,14 +246,27 @@ export class V1TemplateFormController {
         <div class="form-group">
           <label for="item-type" style="display: block; margin-bottom: 4px; font-weight: 600;">${t('label.type')}</label>
           <select id="item-type" required style="width: 100%; padding: 8px; background: var(--vscode-dropdown-background); color: var(--vscode-dropdown-foreground); border: 1px solid var(--vscode-dropdown-border); border-radius: 2px;">
-            <option value="golden-path">${t('type.goldenPath')}</option>
-            <option value="pattern">${t('type.pattern')}</option>
             <option value="adr">${t('type.adr')}</option>
+            <option value="design-pattern">${t('type.designPattern')}</option>
+            <option value="anti-pattern">${t('type.antiPattern')}</option>
+            <option value="golden-path">${t('type.goldenPath')}</option>
             <option value="best-practice">${t('type.bestPractice')}</option>
             <option value="standard">${t('type.standard')}</option>
-            <option value="learning">${t('type.learning')}</option>
+            <option value="convention">${t('type.convention')}</option>
+            <option value="checklist">${t('type.checklist')}</option>
             <option value="snippet">${t('type.snippet')}</option>
-            <option value="api-spec">${t('type.apiSpec')}</option>
+            <option value="configuration">${t('type.configuration')}</option>
+            <option value="command">${t('type.command')}</option>
+            <option value="api-reference">${t('type.apiReference')}</option>
+            <option value="learning">${t('type.learning')}</option>
+            <option value="troubleshooting">${t('type.troubleshooting')}</option>
+            <option value="gotcha">${t('type.gotcha')}</option>
+            <option value="tip">${t('type.tip')}</option>
+            <option value="template">${t('type.template')}</option>
+            <option value="guideline">${t('type.guideline')}</option>
+            <option value="workflow">${t('type.workflow')}</option>
+            <option value="runbook">${t('type.runbook')}</option>
+            <option value="custom">${t('type.custom')}</option>
           </select>
         </div>
         <div class="form-group">
@@ -314,14 +327,27 @@ export class V1TemplateFormController {
         <div class="form-group">
           <label for="edit-item-type" style="display: block; margin-bottom: 4px; font-weight: 600;">${t('label.type')}</label>
           <select id="edit-item-type" required style="width: 100%; padding: 8px; background: var(--vscode-dropdown-background); color: var(--vscode-dropdown-foreground); border: 1px solid var(--vscode-dropdown-border); border-radius: 2px;">
-            <option value="golden-path" ${item.type === 'golden-path' ? 'selected' : ''}>${t('type.goldenPath')}</option>
-            <option value="pattern" ${item.type === 'pattern' ? 'selected' : ''}>${t('type.pattern')}</option>
             <option value="adr" ${item.type === 'adr' ? 'selected' : ''}>${t('type.adr')}</option>
+            <option value="design-pattern" ${item.type === 'design-pattern' ? 'selected' : ''}>${t('type.designPattern')}</option>
+            <option value="anti-pattern" ${item.type === 'anti-pattern' ? 'selected' : ''}>${t('type.antiPattern')}</option>
+            <option value="golden-path" ${item.type === 'golden-path' ? 'selected' : ''}>${t('type.goldenPath')}</option>
             <option value="best-practice" ${item.type === 'best-practice' ? 'selected' : ''}>${t('type.bestPractice')}</option>
             <option value="standard" ${item.type === 'standard' ? 'selected' : ''}>${t('type.standard')}</option>
-            <option value="learning" ${item.type === 'learning' ? 'selected' : ''}>${t('type.learning')}</option>
+            <option value="convention" ${item.type === 'convention' ? 'selected' : ''}>${t('type.convention')}</option>
+            <option value="checklist" ${item.type === 'checklist' ? 'selected' : ''}>${t('type.checklist')}</option>
             <option value="snippet" ${item.type === 'snippet' ? 'selected' : ''}>${t('type.snippet')}</option>
-            <option value="api-spec" ${item.type === 'api-spec' ? 'selected' : ''}>${t('type.apiSpec')}</option>
+            <option value="configuration" ${item.type === 'configuration' ? 'selected' : ''}>${t('type.configuration')}</option>
+            <option value="command" ${item.type === 'command' ? 'selected' : ''}>${t('type.command')}</option>
+            <option value="api-reference" ${item.type === 'api-reference' ? 'selected' : ''}>${t('type.apiReference')}</option>
+            <option value="learning" ${item.type === 'learning' ? 'selected' : ''}>${t('type.learning')}</option>
+            <option value="troubleshooting" ${item.type === 'troubleshooting' ? 'selected' : ''}>${t('type.troubleshooting')}</option>
+            <option value="gotcha" ${item.type === 'gotcha' ? 'selected' : ''}>${t('type.gotcha')}</option>
+            <option value="tip" ${item.type === 'tip' ? 'selected' : ''}>${t('type.tip')}</option>
+            <option value="template" ${item.type === 'template' ? 'selected' : ''}>${t('type.template')}</option>
+            <option value="guideline" ${item.type === 'guideline' ? 'selected' : ''}>${t('type.guideline')}</option>
+            <option value="workflow" ${item.type === 'workflow' ? 'selected' : ''}>${t('type.workflow')}</option>
+            <option value="runbook" ${item.type === 'runbook' ? 'selected' : ''}>${t('type.runbook')}</option>
+            <option value="custom" ${item.type === 'custom' ? 'selected' : ''}>${t('type.custom')}</option>
           </select>
         </div>
         <div class="form-group">
