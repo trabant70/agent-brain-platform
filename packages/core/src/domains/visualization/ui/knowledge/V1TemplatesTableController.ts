@@ -8,6 +8,7 @@
 
 import { MarketplaceTemplate, KnowledgeItem, KnowledgeType, getKnowledgeTypeLabel, getKnowledgeTypeIcon } from '../../../knowledge/types';
 import { webviewLogger, LogCategory, LogPathway } from '../../webview/WebviewLogger';
+import { t } from '../../webview/i18n';
 
 export interface V1TemplatesTableCallbacks {
   onCreateTemplate: () => void;
@@ -124,7 +125,7 @@ export class V1TemplatesTableController {
 
     row.innerHTML = `
       <td class="col-select">
-        <button class="expand-btn" data-template-id="${template.id}" title="${isExpanded ? 'Collapse' : 'Expand'} template">
+        <button class="expand-btn" data-template-id="${template.id}" title="${isExpanded ? t('tooltip.collapseTemplate') : t('tooltip.expandTemplate')}">
           ${expandIcon}
         </button>
       </td>
@@ -136,7 +137,7 @@ export class V1TemplatesTableController {
         <div class="template-meta">
           <span class="item-count">${itemCount} ${itemCount === 1 ? 'item' : 'items'}</span>
           ${template.version ? `<span class="version">v${this.escapeHtml(template.version)}</span>` : ''}
-          ${template.lastVersionedAt ? `<span class="last-versioned" title="Last version checkpoint">Last versioned: ${this.formatDate(template.lastVersionedAt)}</span>` : ''}
+          ${template.lastVersionedAt ? `<span class="last-versioned" title="${t('tooltip.lastVersionCheckpoint')}">Last versioned: ${this.formatDate(template.lastVersionedAt)}</span>` : ''}
         </div>
       </td>
       <td class="col-scope">${template.scope || '-'}</td>
@@ -145,14 +146,14 @@ export class V1TemplatesTableController {
       </td>
       <td class="col-source">${template.source || 'user'}</td>
       <td class="col-actions">
-        ${template.source === 'bundled' && !template.userEditable ? '' : '<button class="action-btn" data-action="add-item" data-template-id="' + template.id + '" title="Add item to template">➕</button>'}
-        ${template.source === 'bundled' ? '' : '<button class="action-btn" data-action="create-version" data-template-id="' + template.id + '" title="Create version checkpoint">💾</button>'}
-        <button class="action-btn" data-action="clone" data-template-id="${template.id}" title="Clone template">📋</button>
-        <button class="action-btn" data-action="inject-template" data-template-id="${template.id}" title="Inject template to file">📦</button>
-        ${template.source === 'bundled' ? '' : '<button class="action-btn" data-action="audit-log" data-template-id="' + template.id + '" title="View audit log">📊</button>'}
-        <button class="action-btn" data-action="export" data-template-id="${template.id}" title="Export template to JSON">📤</button>
-        ${template.source === 'bundled' ? '' : '<button class="action-btn" data-action="edit" data-template-id="' + template.id + '" title="Edit template">✏️</button>'}
-        ${template.source === 'bundled' ? '' : '<button class="action-btn danger" data-action="delete" data-template-id="' + template.id + '" title="Delete template">🗑️</button>'}
+        ${template.source === 'bundled' && !template.userEditable ? '' : '<button class="action-btn" data-action="add-item" data-template-id="' + template.id + '" title="' + t('tooltip.addItemToTemplate') + '">➕</button>'}
+        ${template.source === 'bundled' ? '' : '<button class="action-btn" data-action="create-version" data-template-id="' + template.id + '" title="' + t('tooltip.createVersionCheckpoint') + '">💾</button>'}
+        <button class="action-btn" data-action="clone" data-template-id="${template.id}" title="${t('template.cloneTemplate')}">📋</button>
+        <button class="action-btn" data-action="inject-template" data-template-id="${template.id}" title="${t('tooltip.injectTemplateToFile')}">📦</button>
+        ${template.source === 'bundled' ? '' : '<button class="action-btn" data-action="audit-log" data-template-id="' + template.id + '" title="' + t('tooltip.viewAuditLog') + '">📊</button>'}
+        <button class="action-btn" data-action="export" data-template-id="${template.id}" title="${t('tooltip.exportTemplateToJSON')}">📤</button>
+        ${template.source === 'bundled' ? '' : '<button class="action-btn" data-action="edit" data-template-id="' + template.id + '" title="' + t('tooltip.editTemplate') + '">✏️</button>'}
+        ${template.source === 'bundled' ? '' : '<button class="action-btn danger" data-action="delete" data-template-id="' + template.id + '" title="' + t('tooltip.deleteTemplate') + '">🗑️</button>'}
       </td>
     `;
 
@@ -220,10 +221,10 @@ export class V1TemplatesTableController {
       </td>
       <td class="col-source">${item.source ? this.escapeHtml(item.source) : '-'}</td>
       <td class="col-actions">
-        ${isBundledNotEditable ? '' : '<button class="action-btn" data-action="edit-inline" data-template-id="' + templateId + '" data-item-id="' + item.id + '" title="Edit item inline">📝</button>'}
-        <button class="action-btn" data-action="inject-item" data-template-id="${templateId}" data-item-id="${item.id}" title="Inject item to file">💉</button>
-        ${isBundledNotEditable ? '' : '<button class="action-btn" data-action="edit" data-template-id="' + templateId + '" data-item-id="' + item.id + '" title="Edit item">✏️</button>'}
-        ${isBundledNotEditable ? '' : '<button class="action-btn danger" data-action="delete" data-template-id="' + templateId + '" data-item-id="' + item.id + '" title="Delete item">🗑️</button>'}
+        ${isBundledNotEditable ? '' : '<button class="action-btn" data-action="edit-inline" data-template-id="' + templateId + '" data-item-id="' + item.id + '" title="' + t('tooltip.editItemInline') + '">📝</button>'}
+        <button class="action-btn" data-action="inject-item" data-template-id="${templateId}" data-item-id="${item.id}" title="${t('tooltip.injectItemToFile')}">💉</button>
+        ${isBundledNotEditable ? '' : '<button class="action-btn" data-action="edit" data-template-id="' + templateId + '" data-item-id="' + item.id + '" title="' + t('tooltip.editItem') + '">✏️</button>'}
+        ${isBundledNotEditable ? '' : '<button class="action-btn danger" data-action="delete" data-template-id="' + templateId + '" data-item-id="' + item.id + '" title="' + t('tooltip.deleteItem') + '">🗑️</button>'}
       </td>
     `;
 
@@ -278,12 +279,12 @@ export class V1TemplatesTableController {
         </select>
       </td>
       <td class="col-tags">
-        <input type="text" id="edit-tags-${item.id}" class="inline-edit-input" value="${item.tags?.join(', ') || ''}" placeholder="tag1, tag2, tag3" />
+        <input type="text" id="edit-tags-${item.id}" class="inline-edit-input" value="${item.tags?.join(', ') || ''}" placeholder="${t('input.tagsPlaceholder')}" />
       </td>
       <td class="col-source">${item.source ? this.escapeHtml(item.source) : '-'}</td>
       <td class="col-actions">
-        <button class="action-btn" data-action="save-edit" data-template-id="${templateId}" data-item-id="${item.id}" title="Save changes">💾</button>
-        <button class="action-btn" data-action="cancel-edit" data-template-id="${templateId}" data-item-id="${item.id}" title="Cancel editing">❌</button>
+        <button class="action-btn" data-action="save-edit" data-template-id="${templateId}" data-item-id="${item.id}" title="${t('tooltip.saveChanges')}">💾</button>
+        <button class="action-btn" data-action="cancel-edit" data-template-id="${templateId}" data-item-id="${item.id}" title="${t('tooltip.cancelEditing')}">❌</button>
       </td>
     `;
 

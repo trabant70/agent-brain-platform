@@ -28,6 +28,7 @@ import { SchemaValidator } from '../../knowledge/validation/structure/SchemaVali
 import { XSSValidator } from '../../knowledge/validation/security/XSSValidator';
 import { PromptInjectionValidator } from '../../knowledge/validation/security/PromptInjectionValidator';
 import { UnicodeValidator } from '../../knowledge/validation/security/UnicodeValidator';
+import { t, tf } from '../webview/i18n';
 import { PathTraversalValidator } from '../../knowledge/validation/security/PathTraversalValidator';
 import { ContentSizeValidator } from '../../knowledge/validation/security/ContentSizeValidator';
 import { DuplicateIdValidator } from '../../knowledge/validation/business/DuplicateIdValidator';
@@ -802,12 +803,12 @@ export class KnowledgeViewController {
     const itemCount = document.getElementById('knowledge-item-count');
 
     if (statusText) {
-      statusText.textContent = 'Ready';
+      statusText.textContent = t('status.ready');
     }
 
     if (itemCount) {
       // V1 system shows template count instead of item count
-      itemCount.textContent = `${this.state.templates.length} templates`;
+      itemCount.textContent = tf('knowledge.templatesCount', { count: this.state.templates.length });
     }
   }
 

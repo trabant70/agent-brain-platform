@@ -11,6 +11,7 @@
 
 import { ModalDialog } from './ModalDialog';
 import { webviewLogger, LogCategory, LogPathway } from '../webview/WebviewLogger';
+import { t, tf } from '../webview/i18n';
 
 /**
  * Session Journal interface (from SessionFileSystem)
@@ -407,12 +408,12 @@ export class SessionViewController {
           <div class="empty-state">
             <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
             <div style="font-weight: 600; margin-bottom: 8px;">
-              ${this.state.sessions.length === 0 ? 'No Session Journals Found' : 'No Matching Sessions'}
+              ${this.state.sessions.length === 0 ? t('session.noSessionsFound') : t('session.noMatchingSessions')}
             </div>
             <div style="color: var(--vscode-descriptionForeground);">
               ${this.state.sessions.length === 0
-                ? 'Session journals are created by coding agents to track work across multiple prompts.'
-                : 'Try adjusting your search or filter criteria.'}
+                ? t('session.emptyStateDescription')
+                : t('session.adjustFilters')}
             </div>
           </div>
         </td>
@@ -612,7 +613,7 @@ export class SessionViewController {
           <span>📅 ${new Date(session.startTime).toLocaleString()}</span>
           <span>⏱️ ${this.formatDuration(session.startTime, session.endTime)}</span>
           ${session.filesModified && session.filesModified.length > 0
-            ? `<span>📁 ${session.filesModified.length} files</span>`
+            ? `<span>📁 ${tf('session.filesCount', { count: session.filesModified.length })}</span>`
             : ''}
         </div>
       </div>
@@ -625,14 +626,14 @@ export class SessionViewController {
       <div style="padding: 20px; padding-left: 24px;">
         ${session.summary ? `
           <div class="session-summary" style="margin-bottom: 20px;">
-            <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Summary</h3>
+            <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">${t('session.summary')}</h3>
             <p style="margin: 0; line-height: 1.5;">${this.escapeHtml(session.summary)}</p>
           </div>
         ` : ''}
 
         ${session.tags && session.tags.length > 0 ? `
           <div class="session-tags" style="margin-bottom: 20px;">
-            <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Tags</h3>
+            <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">${t('session.tags')}</h3>
             <div class="tag-list" style="display: flex; flex-wrap: wrap; gap: 4px;">
               ${session.tags.map(t => `<span class="tag-badge" style="display: inline-block; padding: 2px 8px; background: rgba(0, 255, 136, 0.15); color: var(--sessions-secondary); border: 1px solid rgba(0, 255, 136, 0.3); border-radius: 3px; font-size: 11px;">${this.escapeHtml(t)}</span>`).join('')}
             </div>
@@ -641,7 +642,7 @@ export class SessionViewController {
 
         ${session.filesModified && session.filesModified.length > 0 ? `
           <div class="session-files" style="margin-bottom: 20px;">
-            <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Files Modified</h3>
+            <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">${t('session.filesModified')}</h3>
             <ul class="file-list" style="list-style: none; padding: 0; margin: 0;">
               ${session.filesModified.map(f => `<li style="padding: 4px 0; font-family: var(--vscode-editor-font-family); font-size: 12px;"><code style="background: rgba(0, 212, 255, 0.05); padding: 2px 6px; border-radius: 3px;">${this.escapeHtml(f)}</code></li>`).join('')}
             </ul>
@@ -650,7 +651,7 @@ export class SessionViewController {
 
         ${session.knowledgeItemsUsed && session.knowledgeItemsUsed.length > 0 ? `
           <div class="session-knowledge" style="margin-bottom: 20px;">
-            <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Knowledge Items Used</h3>
+            <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">${t('session.knowledgeItemsUsed')}</h3>
             <ul class="knowledge-list" style="list-style: none; padding: 0; margin: 0;">
               ${session.knowledgeItemsUsed.map(k => `<li style="padding: 4px 0; font-size: 12px;">${this.escapeHtml(k)}</li>`).join('')}
             </ul>
@@ -658,7 +659,7 @@ export class SessionViewController {
         ` : ''}
 
         <div class="session-content">
-          <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">Session Notes</h3>
+          <h3 style="font-size: 14px; font-weight: 600; margin: 0 0 8px 0;">${t('session.sessionNotes')}</h3>
           <div class="markdown-content" style="line-height: 1.6; font-size: 13px;">${this.renderMarkdown(session.content)}</div>
         </div>
       </div>
@@ -669,7 +670,7 @@ export class SessionViewController {
       content: content.outerHTML,
       buttons: [
         {
-          label: '📂 Open File',
+          label: t('session.openFile'),
           primary: true,
           onClick: () => {
             if (this.sendMessage) {
@@ -681,14 +682,14 @@ export class SessionViewController {
           }
         },
         {
-          label: '📋 Copy Path',
+          label: t('session.copyPath'),
           primary: false,
           onClick: () => {
             navigator.clipboard.writeText(session.filePath);
             webviewLogger.info(LogCategory.UI, 'Session file path copied to clipboard', 'showSessionDetail');
           }
         },
-        { label: 'Close', primary: false }
+        { label: t('session.close'), primary: false }
       ],
       width: '800px'
     });
@@ -753,7 +754,7 @@ export class SessionViewController {
     );
 
     if (this.statusText) {
-      this.statusText.textContent = 'Refreshing...';
+      this.statusText.textContent = t('session.refreshing');
     }
 
     if (this.sendMessage) {
@@ -800,7 +801,7 @@ export class SessionViewController {
    */
   private updateStatusBar(): void {
     if (this.statusText) {
-      this.statusText.textContent = 'Ready';
+      this.statusText.textContent = t('status.ready');
     }
 
     if (this.sessionsCount) {
@@ -808,9 +809,13 @@ export class SessionViewController {
       const filtered = this.state.filteredSessions.length;
 
       if (total === filtered) {
-        this.sessionsCount.textContent = `${total} session${total !== 1 ? 's' : ''}`;
+        this.sessionsCount.textContent = total === 1
+          ? tf('session.sessionsCount', { count: total })
+          : tf('session.sessionsCountPlural', { count: total });
       } else {
-        this.sessionsCount.textContent = `${filtered} of ${total} session${total !== 1 ? 's' : ''}`;
+        this.sessionsCount.textContent = total === 1
+          ? tf('session.filteredCount', { filtered, total })
+          : tf('session.filteredCountPlural', { filtered, total });
       }
     }
   }

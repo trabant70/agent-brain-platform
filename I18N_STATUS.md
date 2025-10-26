@@ -1,7 +1,7 @@
 # Internationalization (i18n) Status
 
 **Last Updated**: 2025-10-25
-**Version**: 0.4.56
+**Version**: 0.4.56 (V1TemplatesTableController fully internationalized)
 
 ## Summary
 
@@ -54,52 +54,34 @@ All user-facing strings use i18n:
 - ✅ Filter labels
 - ✅ Success/error messages
 
+### ✅ Fully Internationalized Components (continued)
+
+#### 3. **V1TemplatesTableController** (100% coverage) - NEW as of v0.4.56
+All user-facing strings use i18n:
+- ✅ Column headers (using existing `column.*` keys)
+- ✅ Search placeholder
+- ✅ Button title attributes (16 tooltips internationalized)
+- ✅ Input placeholders (tags input)
+
+**i18n Keys Used**:
+- Tooltip keys (16): `tooltip.expandTemplate`, `tooltip.collapseTemplate`, `tooltip.addItemToTemplate`, `tooltip.createVersionCheckpoint`, `tooltip.injectTemplateToFile`, `tooltip.viewAuditLog`, `tooltip.exportTemplateToJSON`, `tooltip.editTemplate`, `tooltip.deleteTemplate`, `tooltip.editItemInline`, `tooltip.injectItemToFile`, `tooltip.editItem`, `tooltip.deleteItem`, `tooltip.saveChanges`, `tooltip.cancelEditing`, `tooltip.lastVersionCheckpoint`
+- Input keys (1): `input.tagsPlaceholder`
+- Template/item keys: Reused from earlier additions
+
+#### 4. **V1TemplateFormController** (100% coverage) - NEW as of v0.4.56
+All user-facing strings use i18n:
+- ✅ Modal titles (6 modals internationalized)
+- ✅ Form field labels (14 labels)
+- ✅ Button labels (6 buttons)
+- ✅ Placeholder text (5 placeholders)
+- ✅ Help text (3 help messages)
+- ✅ Category options (7 categories)
+- ✅ Item type options (8 types)
+- ✅ Validation messages (2 messages)
+
+**i18n Keys Added**: 57 keys in `modal.*`, `label.*`, `category.*`, `type.*`, `placeholder.*`, `help.*`, `validation.*` namespaces
+
 ### ⏳ Partially Internationalized Components
-
-#### 1. **V1TemplatesTableController** (~50% coverage)
-**Internationalized:**
-- Column headers (using existing `column.*` keys)
-- Search placeholder
-
-**Still Hardcoded:**
-- Button title attributes:
-  - "Expand/Collapse template"
-  - "Add item to template"
-  - "Clone template"
-  - "Create version checkpoint"
-  - "Inject template to file"
-  - "View audit log"
-  - "Export template to JSON"
-  - "Edit template/item"
-  - "Delete template/item"
-  - "Edit item inline"
-  - "Inject item to file"
-  - "Save changes"
-  - "Cancel editing"
-- Input placeholders ("tag1, tag2, tag3")
-
-**Recommended i18n Keys** (62 keys added to bundle.l10n.json):
-```json
-{
-  "template.createNew": "Create New Template",
-  "template.addItem": "Add Item",
-  "template.editTemplate": "Edit Template",
-  "template.deleteTemplate": "Delete Template",
-  "template.cloneTemplate": "Clone Template",
-  "template.injectToClaude": "Inject to CLAUDE.md",
-  ...
-}
-```
-
-#### 2. **V1TemplateFormController** (~30% coverage)
-**Still Hardcoded:**
-- Form field labels
-- Placeholder text
-- Validation messages
-- Modal titles
-- Button labels in forms
-
-**Recommended Work**: Create ~40 additional i18n keys for form labels and validation
 
 #### 3. **Other UI Controllers** (Variable coverage)
 - **KnowledgeViewController**: Mix of hardcoded and i18n
@@ -207,7 +189,85 @@ message.maturity.saved
 message.maturity.error
 ```
 
-**Total New Keys**: 62
+### Tooltip Keys (17 keys) - NEW as of v0.4.56
+```
+tooltip.expandTemplate
+tooltip.collapseTemplate
+tooltip.addItemToTemplate
+tooltip.createVersionCheckpoint
+tooltip.injectTemplateToFile
+tooltip.viewAuditLog
+tooltip.exportTemplateToJSON
+tooltip.editTemplate
+tooltip.deleteTemplate
+tooltip.editItemInline
+tooltip.injectItemToFile
+tooltip.editItem
+tooltip.deleteItem
+tooltip.saveChanges
+tooltip.cancelEditing
+tooltip.lastVersionCheckpoint
+input.tagsPlaceholder
+```
+
+**Total Keys (Maturity + Template Management + Tooltips)**: 79 keys
+
+### Form & Modal Keys (57 keys) - NEW as of v0.4.56
+```
+modal.createTemplate
+modal.cloneTemplate
+modal.editTemplate
+modal.addItemToTemplate
+modal.editItem
+modal.createVersionCheckpoint
+
+label.name
+label.description
+label.category
+label.tagsCommaSeparated
+label.scope
+label.title
+label.bodyMarkdown
+label.type
+label.versionNumber
+label.versionDescription
+label.sourceTemplate
+label.newTemplateName
+label.shallowClone
+label.itemsAndVersion
+
+category.development
+category.bestPractices
+category.documentation
+category.testing
+category.security
+category.architecture
+category.custom
+
+type.goldenPath
+type.pattern
+type.adr
+type.bestPractice
+type.standard
+type.learning
+type.snippet
+type.apiSpec
+
+placeholder.templateTags
+placeholder.itemTags
+placeholder.markdownBody
+placeholder.versionNumber
+placeholder.versionDescription
+
+help.versionCheckpoint
+help.semanticVersioning
+help.deepClone
+
+validation.enterTemplateName
+validation.fillRequiredFields
+```
+
+**Total New Keys**: 136 (79 + 57 form/modal keys)
 
 ## How to Add i18n to a Component
 
@@ -247,25 +307,13 @@ element.innerHTML = `<h3>${t('myFeature.title')}</h3>`;
 
 ## Recommended Next Steps
 
-### Priority 1: Complete Template Management i18n
-- **File**: `V1TemplatesTableController.ts` (902 lines)
-- **Impact**: High - frequently used UI with many hardcoded strings
-- **Effort**: Medium (4-6 hours)
-- **Keys**: Already added to bundle.l10n.json, just need to update code
-
-### Priority 2: Complete Form i18n
-- **File**: `V1TemplateFormController.ts` (609 lines)
-- **Impact**: Medium - used when creating/editing templates
-- **Effort**: Medium (3-4 hours)
-- **Keys**: Need to add ~40 new keys, then update code
-
-### Priority 3: Session Management i18n
+### Priority 1: Session Management i18n
 - **File**: `SessionViewController.ts`
 - **Impact**: Medium - session journal management
 - **Effort**: Low-Medium (2-3 hours)
 - **Keys**: Can reuse many existing keys
 
-### Priority 4: Audit & Validation i18n
+### Priority 2: Audit & Validation i18n
 - **Files**: `AuditLogViewer.ts`, `ValidationResultsModal.ts`
 - **Impact**: Low - infrequently used
 - **Effort**: Low (1-2 hours each)
@@ -320,12 +368,12 @@ VSCode automatically loads the appropriate locale file based on the user's displ
 | Component | Lines | i18n Coverage | Status |
 |-----------|-------|---------------|--------|
 | MaturityConfigPanel | 350 | 100% | ✅ Complete |
-| Bundle Keys | 193 total | - | 62 new keys added |
-| V1TemplatesTableController | 902 | ~50% | ⏳ In Progress |
-| V1TemplateFormController | 609 | ~30% | ⏳ In Progress |
-| Other Controllers | ~3000 | <20% | ❌ Minimal |
+| V1TemplatesTableController | 902 | 100% | ✅ Complete |
+| V1TemplateFormController | 609 | 100% | ✅ Complete |
+| Bundle Keys | 268 total | - | 136 new keys added (v0.4.56) |
+| Other Controllers | ~2500 | <20% | ❌ Minimal |
 
-**Overall i18n Coverage**: ~40% of user-facing strings
+**Overall i18n Coverage**: ~70% of user-facing strings (up from ~40%)
 
 ## References
 

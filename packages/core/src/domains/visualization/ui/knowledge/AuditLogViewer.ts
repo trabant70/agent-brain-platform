@@ -7,6 +7,7 @@
 
 import { ModalDialog } from '../ModalDialog';
 import { webviewLogger, LogCategory, LogPathway } from '../../webview/WebviewLogger';
+import { t, tf } from '../../webview/i18n';
 
 export interface AuditLogEntry {
   id: string;
@@ -34,11 +35,11 @@ export class AuditLogViewer {
     const modal = new ModalDialog();
 
     await modal.show({
-      title: `Audit Log: ${templateName}`,
+      title: tf('modal.auditLog', { name: templateName }),
       content: this.renderAuditLog(auditLog),
       buttons: [
         {
-          label: 'Close',
+          label: t('action.close'),
           primary: false,
           onClick: () => {}
         }
@@ -66,10 +67,10 @@ export class AuditLogViewer {
         <table class="audit-log-table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
           <thead style="position: sticky; top: 0; background: var(--vscode-editor-background); z-index: 1;">
             <tr style="border-bottom: 2px solid var(--vscode-panel-border);">
-              <th style="text-align: left; padding: 12px 8px; font-weight: 600; color: var(--vscode-descriptionForeground);">Timestamp</th>
-              <th style="text-align: left; padding: 12px 8px; font-weight: 600; color: var(--vscode-descriptionForeground);">Operation</th>
-              <th style="text-align: left; padding: 12px 8px; font-weight: 600; color: var(--vscode-descriptionForeground);">Actor</th>
-              <th style="text-align: left; padding: 12px 8px; font-weight: 600; color: var(--vscode-descriptionForeground);">Details</th>
+              <th style="text-align: left; padding: 12px 8px; font-weight: 600; color: var(--vscode-descriptionForeground);">${t('column.timestamp')}</th>
+              <th style="text-align: left; padding: 12px 8px; font-weight: 600; color: var(--vscode-descriptionForeground);">${t('column.operation')}</th>
+              <th style="text-align: left; padding: 12px 8px; font-weight: 600; color: var(--vscode-descriptionForeground);">${t('column.actor')}</th>
+              <th style="text-align: left; padding: 12px 8px; font-weight: 600; color: var(--vscode-descriptionForeground);">${t('column.details')}</th>
             </tr>
           </thead>
           <tbody>
@@ -87,7 +88,7 @@ export class AuditLogViewer {
     const timestamp = this.formatTimestamp(entry.timestamp);
     const operation = this.formatOperation(entry.operation);
     const details = this.formatDetails(entry.details, entry.operation);
-    const actor = this.escapeHtml(entry.actor || 'system');
+    const actor = this.escapeHtml(entry.actor || t('audit.actorSystem'));
 
     return `
       <tr style="border-bottom: 1px solid var(--vscode-panel-border);">
@@ -117,10 +118,10 @@ export class AuditLogViewer {
       <div class="empty-state" style="text-align: center; padding: 60px 20px;">
         <div style="font-size: 48px; margin-bottom: 16px;">📊</div>
         <div style="font-size: 16px; color: var(--vscode-descriptionForeground); margin-bottom: 8px;">
-          No audit log entries yet
+          ${t('audit.noEntriesYet')}
         </div>
         <div style="font-size: 13px; color: var(--vscode-descriptionForeground);">
-          Operations on this template will be tracked here
+          ${t('audit.operationsTrackedHere')}
         </div>
       </div>
     `;
@@ -191,7 +192,7 @@ export class AuditLogViewer {
         parts.push(`<span style="color: var(--vscode-textLink-foreground);">[${this.escapeHtml(details.itemType)}]</span>`);
       }
       if (details.itemCount !== undefined) {
-        parts.push(`${details.itemCount} items`);
+        parts.push(tf('audit.itemCount', { count: details.itemCount }));
       }
     }
 
@@ -206,12 +207,12 @@ export class AuditLogViewer {
 
     if (operation.includes('clone')) {
       if (details.sourceTemplateName) {
-        parts.push(`from <strong>"${this.escapeHtml(details.sourceTemplateName)}"</strong>`);
+        parts.push(`${t('audit.from')} <strong>"${this.escapeHtml(details.sourceTemplateName)}"</strong>`);
       } else if (details.sourceTemplateId) {
-        parts.push(`from <span style="font-family: monospace; background: var(--vscode-textCodeBlock-background); padding: 2px 4px; border-radius: 2px;">${this.escapeHtml(details.sourceTemplateId.substring(0, 8))}</span>`);
+        parts.push(`${t('audit.from')} <span style="font-family: monospace; background: var(--vscode-textCodeBlock-background); padding: 2px 4px; border-radius: 2px;">${this.escapeHtml(details.sourceTemplateId.substring(0, 8))}</span>`);
       }
       if (details.shallow !== undefined) {
-        parts.push(details.shallow ? '<span style="color: var(--vscode-descriptionForeground);">(shallow)</span>' : '<span style="color: var(--vscode-descriptionForeground);">(deep)</span>');
+        parts.push(details.shallow ? `<span style="color: var(--vscode-descriptionForeground);">(${t('audit.shallow')})</span>` : `<span style="color: var(--vscode-descriptionForeground);">(${t('audit.deep')})</span>`);
       }
     }
 

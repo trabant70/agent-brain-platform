@@ -248,6 +248,9 @@
   "category.testing": "Testing",
   "category.security": "Security",
   "category.architecture": "Architecture",
+  "category.onboarding": "Onboarding",
+  "category.workflows": "Workflows",
+  "category.general": "General",
   "category.custom": "Custom",
 
   "type.goldenPath": "Golden Path",

@@ -9,6 +9,7 @@ import { ClaudeMdFile } from '../../../knowledge/types';
 import { AccordionTemplates } from './templates/accordion-templates';
 import { MarkdownRenderer } from './utils/MarkdownRenderer';
 import { webviewLogger, LogCategory, LogPathway } from '../../webview/WebviewLogger';
+import { t, tf } from '../../webview/i18n';
 
 export interface AccordionState {
   claudeMdFiles: ClaudeMdFile[];
@@ -155,8 +156,8 @@ export class ClaudeMdAccordionController {
 
         contentHTML += `<div class="templates-section">`;
         contentHTML += `<div class="templates-header">
-          Applied Templates (${file.templates.length})
-          ${hasDuplicates ? '<span class="template-warning" title="Duplicate templates detected">⚠️ Duplicates</span>' : ''}
+          ${tf('template.appliedTemplates', { count: file.templates.length })}
+          ${hasDuplicates ? `<span class="template-warning" title="${t('template.duplicatesDetected')}">${t('template.duplicatesWarning')}</span>` : ''}
         </div>`;
         contentHTML += file.templates.map((template, idx) => {
           const isDuplicate = duplicateIds.includes(template.templateId) &&
@@ -165,21 +166,21 @@ export class ClaudeMdAccordionController {
           <div class="template-section ${isDuplicate ? 'template-duplicate' : ''}">
             <div class="template-header">
               <div class="template-info">
-                <div class="template-name-label">Template:</div>
+                <div class="template-name-label">${t('template.templateLabel')}</div>
                 <div class="template-name-value">${MarkdownRenderer.escapeHtml(template.templateName)}</div>
-                ${isDuplicate ? '<div class="duplicate-badge">Duplicate</div>' : ''}
+                ${isDuplicate ? `<div class="duplicate-badge">${t('template.duplicateBadge')}</div>` : ''}
               </div>
               <button class="remove-template-btn"
                       data-template-id="${template.templateId}"
                       data-file-path="${file.path}"
                       data-template-index="${idx}"
-                      title="Remove template '${MarkdownRenderer.escapeHtml(template.templateName)}'">
-                Remove
+                      title="${tf('template.removeTooltip', { name: MarkdownRenderer.escapeHtml(template.templateName) })}">
+                ${t('action.remove')}
               </button>
             </div>
             <div class="template-meta">
-              <span class="template-id" title="Template ID">ID: ${MarkdownRenderer.escapeHtml(template.templateId.substring(0, 20))}...</span>
-              <span class="template-lines">Lines ${template.startLine}-${template.endLine}</span>
+              <span class="template-id" title="${t('template.templateIdTooltip')}">${t('template.idPrefix')} ${MarkdownRenderer.escapeHtml(template.templateId.substring(0, 20))}...</span>
+              <span class="template-lines">${tf('template.linesRange', { start: template.startLine, end: template.endLine })}</span>
             </div>
           </div>
         `;
@@ -216,7 +217,7 @@ export class ClaudeMdAccordionController {
           );
 
           this.callbacks.onShowNotification(
-            `Selected ${file.relativePath} as target for knowledge items`,
+            tf('template.selectedFileNotification', { path: file.relativePath }),
             'info',
             2000
           );

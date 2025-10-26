@@ -29,7 +29,15 @@
       "Bash(grep:*)",
       "Bash(unzip:*)",
       "Bash(npm run:*)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(git checkout:*)",
+      "Bash(for file in V1TemplatesTableController.ts V1TemplateFormController.ts KnowledgeViewController.ts)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(vsce package:*)",
+      "Bash(npx @vscode/vsce package:*)",
+      "Bash(pkill:*)",
+      "Bash(tee:*)",
+      "Bash(git restore:*)"
     ],
     "deny": [],
     "ask": []

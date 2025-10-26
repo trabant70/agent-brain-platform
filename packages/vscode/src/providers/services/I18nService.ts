@@ -21,20 +21,28 @@ export class I18nService {
    * Loads the appropriate bundle based on VSCode's display language
    */
   sendI18nData(webview: vscode.Webview): void {
+    console.log('[I18nService] sendI18nData() called');
+    logger.info(LogCategory.EXTENSION, '[I18nService] sendI18nData() called', 'I18nService.sendI18nData');
+
     // Detect VSCode language
     const locale = this.detectLocale();
+    console.log('[I18nService] Detected VSCode language:', locale);
     logger.debug(LogCategory.EXTENSION, `Detected VSCode language: ${locale}`, 'I18nService.sendI18nData');
 
     // Determine bundle file path
     const bundleFile = this.getBundleFileForLocale(locale);
+    console.log('[I18nService] Bundle file to load:', bundleFile);
 
     // Load and send translations
     const translations = this.loadTranslations(bundleFile);
+    console.log('[I18nService] Loaded translations:', translations ? `${Object.keys(translations).length} keys` : 'null');
 
     if (translations) {
+      console.log('[I18nService] Sending translations to webview via postMessage');
       this.sendTranslationsToWebview(webview, locale, translations);
     } else {
       // Fallback to English
+      console.log('[I18nService] Translations failed to load, falling back to English');
       this.handleFallback(webview);
     }
   }
@@ -130,12 +138,28 @@ export class I18nService {
     locale: string,
     translations: Record<string, string>
   ): void {
-    webview.postMessage({
+    console.log('[I18nService] sendTranslationsToWebview() called with:', {
+      locale,
+      translationsCount: Object.keys(translations).length,
+      sampleKeys: Object.keys(translations).slice(0, 5)
+    });
+
+    const message = {
       type: 'i18n:init',
       payload: {
         locale: locale,
         translations: translations
       }
-    });
+    };
+
+    console.log('[I18nService] Calling webview.postMessage() with type:', message.type);
+    webview.postMessage(message);
+    console.log('[I18nService] webview.postMessage() completed');
+
+    logger.info(
+      LogCategory.EXTENSION,
+      `Sent i18n data to webview: ${locale}, ${Object.keys(translations).length} translations`,
+      'I18nService.sendTranslationsToWebview'
+    );
   }
 }

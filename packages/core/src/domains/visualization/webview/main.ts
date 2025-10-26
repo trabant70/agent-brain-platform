@@ -164,19 +164,32 @@ function setupResizeObserver(): void {
  * Setup message handling
  */
 function setupMessageHandling(): void {
+    console.log('[main.ts] setupMessageHandling() called - message listener being attached');
     window.addEventListener('message', async event => {
         const message = event.data;
+        console.log('[main.ts] Message received:', message.type, message);
 
         try {
             switch (message.type) {
                 case 'i18n:init':
                     // Initialize internationalization with locale and translations
-                    initI18n(message.payload.locale, message.payload.translations);
-                    webviewLogger.info(
-                        LogCategory.WEBVIEW,
-                        `i18n initialized with locale: ${message.payload.locale}`,
-                        'setupMessageHandling'
-                    );
+                    console.log('[main.ts] Received i18n:init message:', {
+                        locale: message.payload?.locale,
+                        translationsCount: message.payload?.translations ? Object.keys(message.payload.translations).length : 0,
+                        hasPayload: !!message.payload,
+                        payloadKeys: message.payload ? Object.keys(message.payload) : []
+                    });
+
+                    if (message.payload && message.payload.locale && message.payload.translations) {
+                        initI18n(message.payload.locale, message.payload.translations);
+                        webviewLogger.info(
+                            LogCategory.WEBVIEW,
+                            `i18n initialized with locale: ${message.payload.locale}, ${Object.keys(message.payload.translations).length} keys`,
+                            'setupMessageHandling'
+                        );
+                    } else {
+                        console.error('[main.ts] i18n:init message missing required fields!', message);
+                    }
                     break;
 
                 case 'loggingConfig':
