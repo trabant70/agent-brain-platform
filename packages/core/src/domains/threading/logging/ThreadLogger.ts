@@ -116,4 +116,48 @@ export class ThreadLogger {
   static toJSONL(entries: LogEntry[]): string {
     return entries.map(entry => JSON.stringify(entry)).join('\n') + '\n';
   }
+
+  /**
+   * Log a single entry
+   * Convenience method for logging individual entries
+   */
+  async log(entry: any): Promise<void> {
+    if (!this.fileWriter) {
+      // No writer configured, skip
+      return;
+    }
+
+    // Add session ID if in active session
+    const enrichedEntry = this.session && !entry.session
+      ? { ...entry, session: this.session.id }
+      : entry;
+
+    // Convert to JSONL
+    const line = JSON.stringify(enrichedEntry);
+
+    // Write to file
+    await this.fileWriter.writeLines([line]);
+  }
+}
+
+/**
+ * Global ThreadLogger instance (singleton)
+ */
+let globalThreadLogger: ThreadLogger | null = null;
+
+/**
+ * Get global ThreadLogger instance
+ */
+export function getInstance(): ThreadLogger {
+  if (!globalThreadLogger) {
+    globalThreadLogger = new ThreadLogger();
+  }
+  return globalThreadLogger;
+}
+
+/**
+ * Set global ThreadLogger instance
+ */
+export function setInstance(logger: ThreadLogger): void {
+  globalThreadLogger = logger;
 }

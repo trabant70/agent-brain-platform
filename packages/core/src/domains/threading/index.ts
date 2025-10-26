@@ -22,9 +22,13 @@ export * from './types';
 
 // Decorators
 export { ThreadSpec, getThreadSpec, getAllThreadSpecs, clearThreadSpecRegistry, getContextsForThread, getThreadStats, isEnhancedSpec } from './decorators/ThreadSpec';
+export { ThreadLog as ThreadLogDecorator } from './decorators/ThreadLog';
 
 // Data Contracts
 export * from './contracts';
+
+// Tracking System
+export * from './tracking';
 
 // Configuration
 export { ThreadConfigManager, getGlobalThreadConfig, setGlobalThreadConfig, DEFAULT_CONFIG } from './ThreadConfig';

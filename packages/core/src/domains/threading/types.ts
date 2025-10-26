@@ -622,3 +622,200 @@ export interface ValidationRules {
   ignored: string[];
   minimumCoverage?: number;
 }
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════
+ * DATA CORRECTNESS EXTENSION TYPES
+ * ═══════════════════════════════════════════════════════════════════════
+ */
+
+/**
+ * Value Snapshot
+ * Captured state of a value at a point in time
+ */
+export interface ValueSnapshot {
+  value: any;                    // Actual value (may be redacted/truncated)
+  type: TypeCapture;              // Type information
+  shape?: ShapeCapture;           // Shape information (for objects/arrays)
+  preview?: string;               // Human-readable preview
+  size?: number;                  // Size in bytes (approximate)
+  timestamp: number;              // When captured
+  redacted?: boolean;             // Whether value was redacted for privacy
+  truncated?: boolean;            // Whether value was truncated
+}
+
+/**
+ * Type Capture
+ * Captured type information
+ */
+export interface TypeCapture {
+  primitive: string;              // typeof result
+  constructor?: string;           // Constructor name
+  custom?: string;                // Custom type name
+  isArray: boolean;
+  isPromise: boolean;
+  isNull: boolean;
+  isUndefined: boolean;
+}
+
+/**
+ * Shape Capture
+ * Captured shape information for objects/arrays
+ */
+export interface ShapeCapture {
+  keys?: string[];                // Object keys
+  depth: number;                  // Nesting depth
+  arrayLength?: number;           // Array length
+  itemType?: string;              // Array item type (if consistent)
+  structure?: Record<string, any>; // Nested structure (depth-limited)
+}
+
+/**
+ * Entry Point
+ * Function entry information for tracking
+ */
+export interface EntryPoint {
+  args: any[];
+  thisContext: any;
+  timestamp: number;
+  threads: string[];
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Exit Point
+ * Function exit information for tracking
+ */
+export interface ExitPoint {
+  result: any;
+  timestamp: number;
+  mutations?: Mutation[];
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Entry Capture
+ * Captured entry state
+ */
+export interface EntryCapture {
+  args: ValueSnapshot[];
+  thisContext?: ValueSnapshot;
+  timestamp: number;
+  threads: string[];
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Exit Capture
+ * Captured exit state
+ */
+export interface ExitCapture {
+  result: ValueSnapshot;
+  timestamp: number;
+  duration: number;
+  mutations: Mutation[];
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Transformation
+ * Captured data transformation
+ */
+export interface Transformation {
+  from: string;                   // Source path (e.g., 'args[0].userId')
+  to: string;                     // Destination path (e.g., 'result.id')
+  timestamp: number;
+  beforeValue: ValueSnapshot;
+  afterValue: ValueSnapshot;
+  transformType?: string;         // Type of transformation (map, filter, etc.)
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Mutation
+ * Captured mutation to context/state
+ */
+export interface Mutation {
+  path: string;                   // Path to mutated value
+  timestamp: number;
+  beforeValue: ValueSnapshot;
+  afterValue: ValueSnapshot;
+  mutationType: 'set' | 'delete' | 'push' | 'splice' | 'other';
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Contract Violation
+ * Violation of data contract
+ */
+export interface ContractViolation {
+  type: 'input' | 'output' | 'precondition' | 'postcondition' | 'invariant';
+  paramName?: string;
+  expected: string;               // Human-readable expectation
+  actual: string;                 // What was actually encountered
+  value?: ValueSnapshot;
+  message: string;
+  path?: string;                  // Path to violating value
+  severity: 'info' | 'warning' | 'error' | 'critical';
+  agentMessage?: string;          // Agent-friendly explanation
+}
+
+/**
+ * Execution Trace
+ * Complete trace of function execution
+ */
+export interface ExecutionTrace {
+  executionId: string;
+  context: string;                // Function context
+  entry: EntryCapture;
+  exit?: ExitCapture;
+  error?: ErrorCapture;
+  transformations: Transformation[];
+  mutations: Mutation[];
+  violations: ContractViolation[];
+  dataFlow?: DataFlowDiagram;
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Error Capture
+ * Captured error state
+ */
+export interface ErrorCapture {
+  error: Error;
+  state: ValueSnapshot;           // Context state at error
+  timestamp: number;
+  stackTrace?: string;
+}
+
+/**
+ * Data Flow Diagram
+ * Visual representation of data flow through function
+ */
+export interface DataFlowDiagram {
+  nodes: DataFlowNode[];
+  edges: DataFlowEdge[];
+}
+
+/**
+ * Data Flow Node
+ * Node in data flow diagram
+ */
+export interface DataFlowNode {
+  id: string;
+  label: string;
+  type: 'input' | 'output' | 'transformation' | 'validation' | 'mutation';
+  value?: ValueSnapshot;
+  timestamp?: number;
+}
+
+/**
+ * Data Flow Edge
+ * Edge in data flow diagram
+ */
+export interface DataFlowEdge {
+  from: string;                   // Node ID
+  to: string;                     // Node ID
+  label?: string;
+  transformationType?: string;
+}
