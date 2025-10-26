@@ -4,7 +4,7 @@
  * Provides fast, indexed storage for knowledge items.
  * Maintains indexes for efficient filtering by type, scope, and tags.
  *
- * NOTE: All templates (both user-created and bundled) are managed by MarketplaceManager.
+ * NOTE: Templates with embedded items are managed by TemplateStore (V1 system).
  */
 
 import {

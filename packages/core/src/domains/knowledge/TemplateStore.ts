@@ -1,8 +1,8 @@
 /**
  * Template Store
  *
- * Unified storage for templates with embedded items.
- * Replaces the separation of KnowledgeStore (items) and MarketplaceManager (templates).
+ * Unified storage for templates with embedded items (V1 system).
+ * Templates contain all their knowledge items, not stored separately.
  *
  * Key responsibilities:
  * - Store templates with embedded items (not separate)

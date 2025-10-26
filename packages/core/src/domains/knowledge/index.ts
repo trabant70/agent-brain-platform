@@ -12,8 +12,7 @@ export { KnowledgeStore } from './KnowledgeStore';
 export { KnowledgeFileSystem } from './KnowledgeFileSystem';
 export { TemplateEngine } from './TemplateEngine';
 
-// Marketplace (Phase 1-2)
-export { MarketplaceManager } from './MarketplaceManager';
+// Template Management (V1)
 export { TemplateRegistry } from './TemplateRegistry';
 export { TemplateInstaller } from './TemplateInstaller';
 
@@ -48,12 +47,6 @@ export type {
   CloneResult,
   CloneMetadata
 } from './TemplateCloner';
-
-export { TemplateMigration } from './TemplateMigration';
-export type {
-  MigrationResult,
-  MigrationOptions
-} from './TemplateMigration';
 
 // 3D Maturity-Based Filtering
 export { MaturitySelector } from './MaturitySelector';
