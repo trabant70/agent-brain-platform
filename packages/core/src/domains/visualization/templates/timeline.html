@@ -34,6 +34,13 @@
                 </svg>
                 AB Support
             </button>
+            <button class="tab-button" data-tab="threading" aria-label="Threading and Debugging view" aria-selected="false">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="flex-shrink: 0;">
+                    <path d="M2 3h12v2H2V3zm0 4h12v2H2V7zm0 4h12v2H2v-2zm1-7v10h10V4H3z" opacity="0.5"/>
+                    <path d="M5 5l4 3-4 3V5z"/>
+                </svg>
+                AB Threading
+            </button>
         </div>
 
         <!-- Tab Contents -->
@@ -396,6 +403,14 @@
                 </div>
             </div>
             <!-- End AB Support Tab -->
+
+            <!-- AB Threading Tab -->
+            <div id="tab-threading" class="tab-content" aria-hidden="true">
+                <div id="threading-content">
+                    <!-- Content will be rendered by ThreadingViewController -->
+                </div>
+            </div>
+            <!-- End AB Threading Tab -->
         </div>
         <!-- End Tab Contents -->
     </div>

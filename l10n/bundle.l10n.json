@@ -379,5 +379,36 @@
   "session.sessionsCount": "{count} session",
   "session.sessionsCountPlural": "{count} sessions",
   "session.filteredCount": "{filtered} of {total} session",
-  "session.filteredCountPlural": "{filtered} of {total} sessions"
+  "session.filteredCountPlural": "{filtered} of {total} sessions",
+
+  "tab.threading": "AB Threading",
+
+  "threading.timeline": "Thread Timeline",
+  "threading.bottlenecks": "Bottlenecks",
+  "threading.patterns": "Detected Patterns",
+  "threading.noData": "No threading data available",
+  "threading.enableThreading": "Enable threading to start collecting execution data",
+  "threading.noBottlenecks": "No bottlenecks detected",
+  "threading.noPatterns": "No patterns detected",
+  "threading.loadingThreads": "Loading threads...",
+  "threading.timelineComingSoon": "Timeline visualization coming soon",
+
+  "threading.toggleThreading": "Toggle threading system",
+  "threading.startSession": "Start Session",
+  "threading.sessionActive": "Session Active",
+  "threading.enable": "Enable",
+  "threading.disable": "Disable",
+  "threading.disabled": "Threading Disabled",
+  "threading.mode": "Mode",
+  "threading.activeThreads": "Active Threads",
+  "threading.threads": "Threads",
+  "threading.function": "Function",
+  "threading.avg": "Avg",
+  "threading.max": "Max",
+  "threading.calls": "Calls",
+
+  "threading.mode.disabled": "Disabled",
+  "threading.mode.development": "Development",
+  "threading.mode.debugging": "Debugging",
+  "threading.mode.learning": "Learning"
 }

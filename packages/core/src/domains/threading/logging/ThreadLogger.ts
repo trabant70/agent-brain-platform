@@ -76,7 +76,7 @@ export class ThreadLogger {
     }
 
     // Add session ID to entries if in active session
-    const enriched Entries = entries.map(entry => {
+    const enrichedEntries = entries.map(entry => {
       if (this.session && !entry.session) {
         return { ...entry, session: this.session.id };
       }
