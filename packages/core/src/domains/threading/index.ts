@@ -33,6 +33,9 @@ export * from './tracking';
 // Validation System
 export * from './validation';
 
+// Visualization System
+export * from './visualization';
+
 // Configuration
 export { ThreadConfigManager, getGlobalThreadConfig, setGlobalThreadConfig, DEFAULT_CONFIG } from './ThreadConfig';
 
