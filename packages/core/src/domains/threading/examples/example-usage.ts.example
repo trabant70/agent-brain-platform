@@ -1,0 +1,568 @@
+/**
+ * Threading System - Example Usage
+ *
+ * This file demonstrates practical usage of the threading system
+ * in a real-world application scenario.
+ */
+
+import {
+  ThreadSpec,
+  ThreadLog,
+  ThreadLogger,
+  ThreadAnalyzer,
+  trackExecution,
+  type ThreadConfig,
+  type AnalysisReport
+} from '../index';
+
+// ============================================================================
+// EXAMPLE 1: Setting up the Threading System
+// ============================================================================
+
+/**
+ * Initialize threading system with configuration
+ */
+export function initializeThreadingSystem() {
+  // Create logger instance
+  const logger = new ThreadLogger({
+    logPath: '.threading/logs',
+    enabled: true,
+    buffer: {
+      enabled: true,
+      size: 100,
+      flushInterval: 5000 // Flush every 5 seconds
+    },
+    rotation: {
+      maxSize: '10MB',
+      maxAge: '7d',
+      compress: true
+    }
+  });
+
+  // Set as global logger
+  ThreadLog.setGlobalLogger(logger);
+
+  console.log('[Threading] System initialized');
+  console.log('[Threading] Logs will be written to:', logger.getLogPath());
+
+  return logger;
+}
+
+// ============================================================================
+// EXAMPLE 2: Using @ThreadSpec Decorator
+// ============================================================================
+
+/**
+ * Example: API Controller with threading decorators
+ */
+class UserController {
+  /**
+   * Get user by ID - critical user-facing endpoint
+   */
+  @ThreadSpec({
+    threads: ['API', 'DATA_FLOW'],
+    timing: {
+      min: 5,      // Should take at least 5ms (network + DB)
+      max: 200,    // Should complete within 200ms
+      budget: 100  // Performance budget: 100ms
+    },
+    memory: {
+      max: 5 * 1024 * 1024 // Max 5MB per request
+    },
+    tags: ['api', 'user-facing', 'critical']
+  })
+  async getUser(userId: string): Promise<User> {
+    // Simulate database query
+    const user = await this.findUserInDatabase(userId);
+
+    // Simulate data transformation
+    const enrichedUser = await this.enrichUserData(user);
+
+    return enrichedUser;
+  }
+
+  /**
+   * Batch process users - background job
+   */
+  @ThreadSpec({
+    threads: ['BACKGROUND_JOB', 'DATA_PROCESSING'],
+    timing: {
+      max: 60000 // 60 seconds max
+    },
+    memory: {
+      max: 100 * 1024 * 1024 // 100MB for batch processing
+    },
+    tags: ['batch', 'non-critical']
+  })
+  async processUserBatch(userIds: string[]): Promise<void> {
+    for (const userId of userIds) {
+      await this.processUser(userId);
+    }
+  }
+
+  // Helper methods (not decorated)
+  private async findUserInDatabase(userId: string): Promise<User> {
+    // Database logic here
+    return { id: userId, name: 'Test User', email: 'test@example.com' };
+  }
+
+  private async enrichUserData(user: User): Promise<User> {
+    // Enrichment logic here
+    return { ...user, profileComplete: true };
+  }
+
+  private async processUser(userId: string): Promise<void> {
+    // Processing logic here
+  }
+}
+
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  profileComplete?: boolean;
+}
+
+// ============================================================================
+// EXAMPLE 3: Manual Execution Tracking
+// ============================================================================
+
+/**
+ * Track execution without decorators
+ */
+export async function manualTrackingExample() {
+  // Track a simple async operation
+  const result = await trackExecution(
+    'fetchDataFromAPI',
+    ['API', 'EXTERNAL'],
+    async () => {
+      const response = await fetch('https://api.example.com/data');
+      return response.json();
+    }
+  );
+
+  return result;
+}
+
+/**
+ * Track execution with error handling
+ */
+export async function trackWithErrorHandling() {
+  try {
+    return await trackExecution(
+      'riskyOperation',
+      ['DATA_FLOW', 'CRITICAL'],
+      async () => {
+        // Operation that might fail
+        const result = await performRiskyOperation();
+        return result;
+      }
+    );
+  } catch (error) {
+    // Error is automatically logged
+    console.error('Operation failed:', error);
+    throw error;
+  }
+}
+
+async function performRiskyOperation(): Promise<any> {
+  // Simulated risky operation
+  if (Math.random() > 0.7) {
+    throw new Error('Random failure occurred');
+  }
+  return { success: true };
+}
+
+// ============================================================================
+// EXAMPLE 4: Analyzing Logs
+// ============================================================================
+
+/**
+ * Analyze threading logs and generate report
+ */
+export async function analyzeThreadingLogs(logFilePath: string): Promise<AnalysisReport> {
+  // Read log file
+  const fs = require('fs');
+  const logData = fs.readFileSync(logFilePath, 'utf-8');
+
+  // Parse JSONL entries
+  const entries = logData
+    .trim()
+    .split('\n')
+    .map((line: string) => JSON.parse(line));
+
+  console.log(`[Analysis] Loaded ${entries.length} log entries`);
+
+  // Create analyzer
+  const analyzer = new ThreadAnalyzer({
+    enabledDetectors: ['all'], // Enable all pattern detectors
+    sensitivity: 'medium',
+    minSampleSize: 10,
+    parallelAnalysis: true
+  });
+
+  // Run analysis
+  const report = await analyzer.analyze(entries);
+
+  console.log('[Analysis] Results:');
+  console.log(`  - Patterns detected: ${report.patterns.length}`);
+  console.log(`  - Insights generated: ${report.insights.length}`);
+  console.log(`  - Recommendations: ${report.recommendations.length}`);
+
+  // Log critical patterns
+  const criticalPatterns = report.patterns.filter(p => p.impact === 'critical');
+  if (criticalPatterns.length > 0) {
+    console.warn(`[Analysis] ⚠️  ${criticalPatterns.length} CRITICAL patterns detected!`);
+    criticalPatterns.forEach(pattern => {
+      console.warn(`  - ${pattern.name}: ${pattern.description}`);
+    });
+  }
+
+  return report;
+}
+
+/**
+ * Analyze with custom configuration
+ */
+export async function customAnalysis(entries: any[]) {
+  // Focus on memory and cache patterns only
+  const analyzer = new ThreadAnalyzer({
+    enabledDetectors: ['memory_leak', 'cache_pattern'],
+    sensitivity: 'high',
+    minSampleSize: 5 // Lower threshold for testing
+  });
+
+  const report = await analyzer.analyze(entries);
+
+  // Extract specific recommendations
+  const urgentRecommendations = report.recommendations.filter(
+    r => r.priority === 'urgent'
+  );
+
+  return {
+    report,
+    urgent: urgentRecommendations
+  };
+}
+
+// ============================================================================
+// EXAMPLE 5: Production Monitoring Setup
+// ============================================================================
+
+/**
+ * Production-ready threading configuration
+ */
+export function setupProductionThreading() {
+  const logger = new ThreadLogger({
+    logPath: '/var/log/app/threading',
+    enabled: true,
+    buffer: {
+      enabled: true,
+      size: 500,  // Larger buffer for production
+      flushInterval: 10000  // Flush every 10 seconds
+    },
+    rotation: {
+      maxSize: '50MB',  // Larger log files
+      maxAge: '30d',    // Keep 30 days
+      compress: true
+    }
+  });
+
+  ThreadLog.setGlobalLogger(logger);
+
+  // Enable sampling in production (1 in 100 calls)
+  ThreadLog.setSamplingRate(100);
+
+  // Setup periodic analysis
+  setupPeriodicAnalysis(logger);
+
+  return logger;
+}
+
+/**
+ * Run analysis every hour in production
+ */
+function setupPeriodicAnalysis(logger: ThreadLogger) {
+  const analyzer = new ThreadAnalyzer({
+    sensitivity: 'medium',
+    minSampleSize: 50  // Higher threshold for production
+  });
+
+  // Run every hour
+  setInterval(async () => {
+    try {
+      console.log('[Threading] Running periodic analysis...');
+
+      // Get recent log entries (last hour)
+      const entries = await logger.getRecentEntries(3600000); // 1 hour in ms
+
+      if (entries.length < 50) {
+        console.log('[Threading] Not enough data for analysis');
+        return;
+      }
+
+      const report = await analyzer.analyze(entries);
+
+      // Check for critical issues
+      const critical = report.patterns.filter(p => p.impact === 'critical');
+      if (critical.length > 0) {
+        await sendAlerts(critical);
+      }
+
+      // Save report
+      const fs = require('fs');
+      const reportPath = `/var/log/app/threading/analysis-${Date.now()}.json`;
+      fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
+
+      console.log(`[Threading] Analysis complete. Report saved to ${reportPath}`);
+    } catch (error) {
+      console.error('[Threading] Analysis failed:', error);
+    }
+  }, 3600000); // Every hour
+}
+
+async function sendAlerts(patterns: any[]): Promise<void> {
+  // Integrate with your alerting system
+  console.error('⚠️  CRITICAL PATTERNS DETECTED:');
+  patterns.forEach(p => console.error(`  - ${p.name}: ${p.description}`));
+
+  // Example: Send to Slack, PagerDuty, etc.
+  // await slackClient.sendMessage({ text: `Critical patterns detected: ${patterns.length}` });
+}
+
+// ============================================================================
+// EXAMPLE 6: Testing with Sample Data
+// ============================================================================
+
+/**
+ * Generate sample threading logs for testing
+ */
+export function generateSampleLogs(): any[] {
+  const entries = [];
+  const contexts = ['getUserData', 'processOrder', 'sendEmail'];
+
+  // Generate 100 sample entries
+  for (let i = 0; i < 100; i++) {
+    const context = contexts[i % contexts.length];
+    const timestamp = Date.now() - (100 - i) * 1000;
+
+    // Entry
+    entries.push({
+      type: 'entry',
+      context,
+      threads: ['DATA_FLOW'],
+      timestamp,
+      args: [{ id: `user-${i}` }]
+    });
+
+    // Exit (with increasing duration to simulate degradation)
+    entries.push({
+      type: 'exit',
+      context,
+      threads: ['DATA_FLOW'],
+      timestamp: timestamp + 50 + i * 2, // Duration increases over time
+      duration: 50 + i * 2,
+      memoryDelta: 1024 * (1 + i * 0.1) // Memory grows slightly
+    });
+  }
+
+  return entries;
+}
+
+/**
+ * Test pattern detection with sample data
+ */
+export async function testPatternDetection() {
+  const entries = generateSampleLogs();
+
+  const analyzer = new ThreadAnalyzer({
+    sensitivity: 'high',
+    minSampleSize: 10
+  });
+
+  const report = await analyzer.analyze(entries);
+
+  console.log('=== Test Analysis Results ===');
+  console.log('Patterns detected:', report.patterns.length);
+
+  report.patterns.forEach(pattern => {
+    console.log(`\n${pattern.name} (${pattern.type})`);
+    console.log(`  Impact: ${pattern.impact}`);
+    console.log(`  Confidence: ${(pattern.confidence * 100).toFixed(0)}%`);
+    console.log(`  Description: ${pattern.description}`);
+    if (pattern.evidence?.recommendation) {
+      console.log(`  💡 ${pattern.evidence.recommendation}`);
+    }
+  });
+
+  return report;
+}
+
+// ============================================================================
+// EXAMPLE 7: Integration with Express.js
+// ============================================================================
+
+/**
+ * Express middleware for threading
+ */
+export function threadingMiddleware() {
+  return (req: any, res: any, next: any) => {
+    const startTime = Date.now();
+    const context = `${req.method} ${req.path}`;
+
+    // Log entry
+    ThreadLog.logEntry(context, ['API', 'HTTP'], [
+      { method: req.method, path: req.path, query: req.query }
+    ]);
+
+    // Override res.send to log exit
+    const originalSend = res.send;
+    res.send = function(data: any) {
+      const duration = Date.now() - startTime;
+
+      ThreadLog.logExit(context, ['API', 'HTTP'], duration, {
+        statusCode: res.statusCode,
+        contentLength: data?.length
+      });
+
+      return originalSend.call(this, data);
+    };
+
+    next();
+  };
+}
+
+/**
+ * Express error handler with threading
+ */
+export function threadingErrorHandler() {
+  return (err: Error, req: any, res: any, next: any) => {
+    const context = `${req.method} ${req.path}`;
+
+    // Log error
+    ThreadLog.logError(context, ['API', 'HTTP'], err);
+
+    res.status(500).json({ error: err.message });
+  };
+}
+
+// Example Express app setup
+export function setupExpressApp() {
+  const express = require('express');
+  const app = express();
+
+  // Initialize threading
+  initializeThreadingSystem();
+
+  // Add threading middleware
+  app.use(threadingMiddleware());
+
+  // Your routes here
+  app.get('/api/users/:id', async (req: any, res: any) => {
+    const controller = new UserController();
+    const user = await controller.getUser(req.params.id);
+    res.json(user);
+  });
+
+  // Error handling
+  app.use(threadingErrorHandler());
+
+  return app;
+}
+
+// ============================================================================
+// EXAMPLE 8: CLI Analysis Tool
+// ============================================================================
+
+/**
+ * CLI tool for analyzing threading logs
+ */
+export async function runCLIAnalysis(args: string[]) {
+  const logFile = args[0] || '.threading/logs/latest.jsonl';
+
+  console.log('Threading System - Log Analyzer');
+  console.log('================================\n');
+  console.log(`Analyzing: ${logFile}\n`);
+
+  try {
+    const report = await analyzeThreadingLogs(logFile);
+
+    // Print summary
+    console.log('\n📊 SUMMARY');
+    console.log(report.summary);
+
+    // Print patterns by impact
+    console.log('\n🔍 PATTERNS DETECTED');
+    const byImpact = {
+      critical: report.patterns.filter(p => p.impact === 'critical'),
+      high: report.patterns.filter(p => p.impact === 'high'),
+      medium: report.patterns.filter(p => p.impact === 'medium'),
+      low: report.patterns.filter(p => p.impact === 'low')
+    };
+
+    Object.entries(byImpact).forEach(([impact, patterns]) => {
+      if (patterns.length > 0) {
+        console.log(`\n${impact.toUpperCase()}: ${patterns.length}`);
+        patterns.forEach(p => {
+          console.log(`  • ${p.name}: ${p.description}`);
+        });
+      }
+    });
+
+    // Print top recommendations
+    console.log('\n💡 TOP RECOMMENDATIONS');
+    report.recommendations.slice(0, 5).forEach((rec, i) => {
+      console.log(`\n${i + 1}. [${rec.priority.toUpperCase()}] ${rec.title}`);
+      console.log(`   ${rec.description}`);
+      console.log(`   Effort: ${rec.effort} | Impact: ${rec.impact}`);
+    });
+
+    // Export report
+    const fs = require('fs');
+    const outputFile = `analysis-report-${Date.now()}.json`;
+    fs.writeFileSync(outputFile, JSON.stringify(report, null, 2));
+    console.log(`\n✅ Full report exported to: ${outputFile}`);
+
+  } catch (error) {
+    console.error('\n❌ Analysis failed:', error);
+    process.exit(1);
+  }
+}
+
+// ============================================================================
+// USAGE EXAMPLES
+// ============================================================================
+
+/**
+ * Run all examples
+ */
+export async function runAllExamples() {
+  console.log('=== Threading System Examples ===\n');
+
+  // 1. Initialize
+  console.log('1. Initializing threading system...');
+  const logger = initializeThreadingSystem();
+
+  // 2. Test pattern detection
+  console.log('\n2. Testing pattern detection...');
+  await testPatternDetection();
+
+  // 3. Manual tracking
+  console.log('\n3. Testing manual tracking...');
+  try {
+    await manualTrackingExample();
+  } catch (error) {
+    console.log('External API call skipped (expected in test environment)');
+  }
+
+  // 4. Flush logs
+  console.log('\n4. Flushing logs...');
+  await logger.flush();
+
+  console.log('\n✅ All examples completed!');
+}
+
+// Run examples if executed directly
+if (require.main === module) {
+  runAllExamples().catch(console.error);
+}
