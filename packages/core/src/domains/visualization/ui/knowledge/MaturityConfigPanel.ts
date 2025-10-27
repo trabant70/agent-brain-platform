@@ -8,6 +8,7 @@
 import { DomainComplexity } from '../../../knowledge/types';
 import { FramingTemplates } from '../../../knowledge/FramingTemplates';
 import { t } from '../../webview/i18n';
+import { ModalDialog } from '../ModalDialog';
 
 export interface MaturityContext {
   complexity: DomainComplexity;
@@ -26,7 +27,6 @@ export interface MaturityConfigCallbacks {
 export class MaturityConfigPanel {
   private container: HTMLElement | null = null;
   private currentContext: MaturityContext;
-  private isExpanded: boolean = false;
 
   constructor(private callbacks: MaturityConfigCallbacks) {
     this.currentContext = {
@@ -49,7 +49,7 @@ export class MaturityConfigPanel {
 
   /**
    * Render the maturity configuration section
-   * Returns collapsible panel with Controls button (consistent with timeline modal pattern)
+   * Returns header with Controls button that opens proper modal dialog
    */
   render(): HTMLElement {
     const section = document.createElement('div');
@@ -63,11 +63,6 @@ export class MaturityConfigPanel {
         <button class="btn-controls" id="maturity-controls-toggle" title="${t('maturity.contextConfiguration')}">
           <span class="codicon codicon-settings-gear"></span> ${t('button.controls')}
         </button>
-      </div>
-
-      <!-- Modal configuration panel (hidden by default, uses CSS 'open' class like timeline) -->
-      <div id="maturity-config-panel" class="config-panel">
-        ${this.renderConfigPanel()}
       </div>
     `;
 
@@ -235,98 +230,14 @@ export class MaturityConfigPanel {
   private attachEventListeners(): void {
     if (!this.container) return;
 
-    // Controls toggle button - uses CSS class pattern like timeline
+    // Controls toggle button - opens modal dialog
     const controlsToggle = this.container.querySelector('#maturity-controls-toggle') as HTMLButtonElement;
-    const configPanel = this.container.querySelector('#maturity-config-panel') as HTMLElement;
 
-    controlsToggle?.addEventListener('click', (e) => {
-      e.stopPropagation(); // Prevent immediate close from document click
-      this.togglePanel();
-    });
-
-    // Close panel when clicking outside (consistent with timeline behavior)
-    document.addEventListener('click', (e) => {
-      if (this.isExpanded && configPanel && !configPanel.contains(e.target as Node) &&
-          !controlsToggle?.contains(e.target as Node)) {
-        this.hidePanel();
-      }
-    });
-
-    // Complexity selector
-    const complexitySelect = this.container.querySelector('#complexity-select') as HTMLSelectElement;
-    complexitySelect?.addEventListener('change', (e) => {
-      this.currentContext.complexity = (e.target as HTMLSelectElement).value as DomainComplexity;
-      this.notifyContextChanged();
-      this.updateContextSummary();
-    });
-
-    // Quadrant buttons
-    const quadrantButtons = this.container.querySelectorAll('.quadrant-btn');
-    console.log('[MaturityConfigPanel] Attached event listeners to', quadrantButtons.length, 'quadrant buttons');
-
-    quadrantButtons.forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const target = e.target as HTMLElement;
-        const quadrant = parseInt(target.dataset.quadrant || '13');
-        console.log('[MaturityConfigPanel] Quadrant clicked:', quadrant, 'Previous:', this.currentContext.quadrant);
-
-        this.currentContext.quadrant = quadrant;
-        this.notifyContextChanged();
-
-        // Re-render to update selection
-        this.rerenderQuadrantGrid();
-        this.updateContextSummary();
-
-        console.log('[MaturityConfigPanel] Updated to quadrant:', this.currentContext.quadrant);
-      });
-    });
-
-    // Max items slider
-    const maxItemsSlider = this.container.querySelector('#max-items-slider') as HTMLInputElement;
-    const maxItemsValue = this.container.querySelector('#max-items-value') as HTMLElement;
-
-    maxItemsSlider?.addEventListener('input', (e) => {
-      const value = parseInt((e.target as HTMLInputElement).value);
-      this.currentContext.maxItems = value;
-      if (maxItemsValue) maxItemsValue.textContent = value.toString();
-      this.notifyContextChanged();
-    });
-
-    // Reset button
-    const resetBtn = this.container.querySelector('#reset-defaults') as HTMLButtonElement;
-    resetBtn?.addEventListener('click', () => {
-      this.resetToDefaults();
-    });
-
-    // Apply button
-    const applyBtn = this.container.querySelector('#apply-config') as HTMLButtonElement;
-    applyBtn?.addEventListener('click', () => {
-      this.applyConfiguration();
+    controlsToggle?.addEventListener('click', () => {
+      this.showModal();
     });
   }
 
-  /**
-   * Re-render just the quadrant grid (for selection updates)
-   */
-  private rerenderQuadrantGrid(): void {
-    if (!this.container) return;
-
-    const quadrantButtons = this.container.querySelectorAll('.quadrant-btn');
-    quadrantButtons.forEach(btn => {
-      const quadrant = parseInt((btn as HTMLElement).dataset.quadrant || '0');
-      if (quadrant === this.currentContext.quadrant) {
-        btn.classList.add('selected');
-      } else {
-        btn.classList.remove('selected');
-      }
-    });
-
-    // Update grid label
-    const gridLabel = this.container.querySelector('.grid-label strong');
-    if (gridLabel) {
-      gridLabel.textContent = this.getQuadrantLabel();
-    }
-  }
 
   /**
    * Update context summary in header
@@ -356,9 +267,122 @@ export class MaturityConfigPanel {
       quadrant: 13,
       maxItems: 25
     };
-    this.render();
     this.notifyContextChanged();
     this.updateContextSummary();
+  }
+
+  /**
+   * Show configuration modal dialog
+   */
+  private async showModal(): Promise<void> {
+    const modal = new ModalDialog();
+
+    try {
+      await modal.show({
+        title: t('maturity.contextConfiguration'),
+        content: this.renderConfigPanel(),
+        buttons: [
+          {
+            label: t('button.resetToDefaults', 'Reset to Defaults'),
+            onClick: () => {
+              this.resetToDefaults();
+              // Re-render modal content with updated values
+              const modalBody = document.querySelector('.modal-body');
+              if (modalBody) {
+                modalBody.innerHTML = this.renderConfigPanel();
+                this.attachModalEventListeners();
+              }
+            }
+          },
+          {
+            label: t('button.cancel', 'Cancel'),
+            onClick: () => modal.close()
+          },
+          {
+            label: t('button.save', 'Save'),
+            primary: true,
+            onClick: () => {
+              this.applyConfiguration();
+              modal.close();
+            }
+          }
+        ],
+        width: '750px'
+      });
+
+      // Attach event listeners to modal content
+      setTimeout(() => {
+        this.attachModalEventListeners();
+      }, 0);
+    } catch (error) {
+      console.error('[MaturityConfigPanel] Modal error:', error);
+    }
+  }
+
+  /**
+   * Attach event listeners to modal content
+   */
+  private attachModalEventListeners(): void {
+    // Complexity selector
+    const complexitySelect = document.querySelector('#complexity-select') as HTMLSelectElement;
+    complexitySelect?.addEventListener('change', (e) => {
+      this.currentContext.complexity = (e.target as HTMLSelectElement).value as DomainComplexity;
+      this.notifyContextChanged();
+      this.updateContextSummary();
+    });
+
+    // Quadrant buttons
+    const quadrantButtons = document.querySelectorAll('.quadrant-btn');
+    console.log('[MaturityConfigPanel] Attached event listeners to', quadrantButtons.length, 'quadrant buttons');
+
+    quadrantButtons.forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const target = e.target as HTMLElement;
+        const quadrant = parseInt(target.dataset.quadrant || '13');
+        console.log('[MaturityConfigPanel] Quadrant clicked:', quadrant, 'Previous:', this.currentContext.quadrant);
+
+        this.currentContext.quadrant = quadrant;
+        this.notifyContextChanged();
+
+        // Re-render to update selection
+        this.rerenderQuadrantGridInModal();
+        this.updateContextSummary();
+
+        console.log('[MaturityConfigPanel] Updated to quadrant:', this.currentContext.quadrant);
+      });
+    });
+
+    // Max items slider
+    const maxItemsSlider = document.querySelector('#max-items-slider') as HTMLInputElement;
+    const maxItemsValue = document.querySelector('#max-items-value') as HTMLElement;
+
+    maxItemsSlider?.addEventListener('input', (e) => {
+      const value = parseInt((e.target as HTMLInputElement).value);
+      this.currentContext.maxItems = value;
+      if (maxItemsValue) maxItemsValue.textContent = value.toString();
+      this.notifyContextChanged();
+    });
+  }
+
+  /**
+   * Re-render just the quadrant grid in modal (for selection updates)
+   */
+  private rerenderQuadrantGridInModal(): void {
+    const quadrantButtons = document.querySelectorAll('.quadrant-btn');
+    quadrantButtons.forEach(btn => {
+      const quadrant = parseInt((btn as HTMLElement).dataset.quadrant || '0');
+      if (quadrant === this.currentContext.quadrant) {
+        btn.classList.add('selected');
+      } else {
+        btn.classList.remove('selected');
+      }
+    });
+
+    // Update grid label
+    const gridLabel = document.querySelector('.grid-label strong');
+    if (gridLabel) {
+      gridLabel.textContent = this.getQuadrantLabel();
+    }
   }
 
   /**
@@ -366,41 +390,5 @@ export class MaturityConfigPanel {
    */
   private applyConfiguration(): void {
     this.callbacks.onSaveContext(this.currentContext);
-
-    // Hide panel after applying
-    this.hidePanel();
-  }
-
-  /**
-   * Toggle panel visibility (consistent with timeline Controls pattern)
-   */
-  private togglePanel(): void {
-    if (this.isExpanded) {
-      this.hidePanel();
-    } else {
-      this.showPanel();
-    }
-  }
-
-  /**
-   * Show configuration panel
-   */
-  private showPanel(): void {
-    const configPanel = this.container?.querySelector('#maturity-config-panel') as HTMLElement;
-    if (configPanel) {
-      configPanel.classList.add('open');
-      this.isExpanded = true;
-    }
-  }
-
-  /**
-   * Hide configuration panel
-   */
-  private hidePanel(): void {
-    const configPanel = this.container?.querySelector('#maturity-config-panel') as HTMLElement;
-    if (configPanel) {
-      configPanel.classList.remove('open');
-      this.isExpanded = false;
-    }
   }
 }

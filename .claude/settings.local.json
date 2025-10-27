@@ -37,7 +37,19 @@
       "Bash(npx @vscode/vsce package:*)",
       "Bash(pkill:*)",
       "Bash(tee:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(for key in \"threading.insights\" \"threading.recommendations\" \"threading.noInsights\" \"threading.noRecommendations\")",
+      "Bash(do)",
+      "Bash(if grep -q \"\"\"$key\"\":\" /mnt/c/projects/agent-brain-platform/packages/vscode/l10n/bundle.l10n.json)",
+      "Bash(then)",
+      "Bash(echo:*)",
+      "Bash(else)",
+      "Bash(fi)",
+      "Bash(for file in packages/vscode/l10n/bundle.l10n.*.json)",
+      "Bash(for file in packages/vscode/l10n/bundle.l10n*.json)",
+      "Bash(for file in /mnt/c/projects/agent-brain-platform/packages/vscode/l10n/bundle.l10n*.json)",
+      "Bash(tail:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

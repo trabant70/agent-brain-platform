@@ -55,6 +55,11 @@ export class ModalDialog {
     private modal: HTMLElement | null = null;
     private resolve: ((value: any) => void) | null = null;
     private reject: ((reason?: any) => void) | null = null;
+    private isDragging: boolean = false;
+    private dragStartX: number = 0;
+    private dragStartY: number = 0;
+    private modalStartX: number = 0;
+    private modalStartY: number = 0;
 
     constructor() {
         // Ensure only one modal at a time
@@ -328,6 +333,12 @@ export class ModalDialog {
             closeBtn.addEventListener('mouseleave', () => {
                 closeBtn.style.opacity = '0.7';
             });
+
+            // Enable dragging by modal header (find the parent header div)
+            const header = closeBtn.parentElement;
+            if (header) {
+                this.enableDragging(header);
+            }
         }
 
         // Wire up submit button
@@ -542,6 +553,12 @@ export class ModalDialog {
             closeBtn.addEventListener('mouseleave', () => {
                 closeBtn.style.opacity = '0.7';
             });
+
+            // Enable dragging by modal header (find the parent header div)
+            const header = closeBtn.parentElement;
+            if (header) {
+                this.enableDragging(header);
+            }
         }
     }
 
@@ -625,10 +642,74 @@ export class ModalDialog {
     }
 
     /**
+     * Enable modal dragging by header
+     */
+    private enableDragging(headerElement: HTMLElement): void {
+        headerElement.style.cursor = 'move';
+        headerElement.style.userSelect = 'none';
+
+        headerElement.addEventListener('mousedown', (e: MouseEvent) => {
+            // Don't start drag if clicking on close button
+            if ((e.target as HTMLElement).id === 'modal-close-x') {
+                return;
+            }
+
+            this.isDragging = true;
+            this.dragStartX = e.clientX;
+            this.dragStartY = e.clientY;
+
+            // Get current modal position
+            if (this.modal) {
+                const rect = this.modal.getBoundingClientRect();
+                this.modalStartX = rect.left;
+                this.modalStartY = rect.top;
+
+                // Remove centering, set absolute position
+                this.modal.style.position = 'fixed';
+                this.modal.style.left = `${rect.left}px`;
+                this.modal.style.top = `${rect.top}px`;
+                this.modal.style.transform = 'none';
+            }
+
+            // Add document-level listeners
+            document.addEventListener('mousemove', this.handleDragMove);
+            document.addEventListener('mouseup', this.handleDragEnd);
+        });
+    }
+
+    /**
+     * Handle drag movement
+     */
+    private handleDragMove = (e: MouseEvent): void => {
+        if (!this.isDragging || !this.modal) return;
+
+        const deltaX = e.clientX - this.dragStartX;
+        const deltaY = e.clientY - this.dragStartY;
+
+        const newX = this.modalStartX + deltaX;
+        const newY = this.modalStartY + deltaY;
+
+        this.modal.style.left = `${newX}px`;
+        this.modal.style.top = `${newY}px`;
+    };
+
+    /**
+     * Handle drag end
+     */
+    private handleDragEnd = (): void => {
+        this.isDragging = false;
+
+        document.removeEventListener('mousemove', this.handleDragMove);
+        document.removeEventListener('mouseup', this.handleDragEnd);
+    };
+
+    /**
      * Clean up modal and overlay
      */
     private cleanup(): void {
         document.removeEventListener('keydown', this.handleKeyDown);
+        document.removeEventListener('mousemove', this.handleDragMove);
+        document.removeEventListener('mouseup', this.handleDragEnd);
 
         if (this.overlay) {
             this.overlay.remove();
@@ -638,6 +719,7 @@ export class ModalDialog {
         this.modal = null;
         this.resolve = null;
         this.reject = null;
+        this.isDragging = false;
     }
 }
 

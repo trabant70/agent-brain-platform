@@ -106,28 +106,5 @@
   "message.success.removed": "Plantilla eliminada exitosamente",
   "message.error.generic": "Ocurrió un error",
   "message.error.notFound": "Elemento no encontrado",
-  "message.error.invalidData": "Datos inválidos proporcionados",
-
-  "threading.insights": "Perspectivas",
-  "threading.noInsights": "No hay perspectivas disponibles",
-  "threading.recommendations": "Recomendaciones",
-  "threading.noRecommendations": "No hay recomendaciones disponibles",
-
-  "maturity.operator.beginner": "Principiante",
-  "maturity.operator.competent": "Competente",
-  "maturity.operator.advanced": "Avanzado",
-
-  "maturity.project.testing": "Pruebas",
-  "maturity.project.production": "Producción",
-
-  "maturity.complexity": "Complejidad",
-  "maturity.complexity.any": "Cualquiera",
-  "maturity.clearRange": "Limpiar Rango",
-  "maturity.selectAll": "Seleccionar Todo",
-
-  "maturity.rangeSelector.title": "Rango de Madurez",
-  "maturity.rangeSelector.help": "Seleccione qué niveles de madurez de operador y proyecto aplican a este elemento",
-  "maturity.rangeSelector.noSelection": "No hay rango seleccionado - el elemento aplica a todos los contextos",
-
-  "tooltip.showDetails": "Mostrar detalles"
+  "message.error.invalidData": "Datos inválidos proporcionados"
 }

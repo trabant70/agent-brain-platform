@@ -106,28 +106,5 @@
   "message.success.removed": "Vorlage erfolgreich entfernt",
   "message.error.generic": "Ein Fehler ist aufgetreten",
   "message.error.notFound": "Element nicht gefunden",
-  "message.error.invalidData": "Ungültige Daten bereitgestellt",
-
-  "threading.insights": "Erkenntnisse",
-  "threading.noInsights": "Keine Erkenntnisse verfügbar",
-  "threading.recommendations": "Empfehlungen",
-  "threading.noRecommendations": "Keine Empfehlungen verfügbar",
-
-  "maturity.operator.beginner": "Anfänger",
-  "maturity.operator.competent": "Kompetent",
-  "maturity.operator.advanced": "Fortgeschritten",
-
-  "maturity.project.testing": "Testing",
-  "maturity.project.production": "Produktion",
-
-  "maturity.complexity": "Komplexität",
-  "maturity.complexity.any": "Beliebig",
-  "maturity.clearRange": "Bereich löschen",
-  "maturity.selectAll": "Alle auswählen",
-
-  "maturity.rangeSelector.title": "Reifegrad-Bereich",
-  "maturity.rangeSelector.help": "Wählen Sie aus, für welche Operator- und Projekt-Reifegradstufen dieses Element gilt",
-  "maturity.rangeSelector.noSelection": "Kein Bereich ausgewählt - Element gilt für alle Kontexte",
-
-  "tooltip.showDetails": "Details anzeigen"
+  "message.error.invalidData": "Ungültige Daten bereitgestellt"
 }

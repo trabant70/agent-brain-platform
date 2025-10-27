@@ -106,28 +106,5 @@
   "message.success.removed": "模板移除成功",
   "message.error.generic": "发生错误",
   "message.error.notFound": "未找到项目",
-  "message.error.invalidData": "提供的数据无效",
-
-  "threading.insights": "洞察",
-  "threading.noInsights": "无可用洞察",
-  "threading.recommendations": "建议",
-  "threading.noRecommendations": "无可用建议",
-
-  "maturity.operator.beginner": "初学者",
-  "maturity.operator.competent": "胜任",
-  "maturity.operator.advanced": "高级",
-
-  "maturity.project.testing": "测试",
-  "maturity.project.production": "生产",
-
-  "maturity.complexity": "复杂度",
-  "maturity.complexity.any": "任意",
-  "maturity.clearRange": "清除范围",
-  "maturity.selectAll": "全选",
-
-  "maturity.rangeSelector.title": "成熟度范围",
-  "maturity.rangeSelector.help": "选择此项目适用的操作员和项目成熟度级别",
-  "maturity.rangeSelector.noSelection": "未选择范围 - 项目适用于所有上下文",
-
-  "tooltip.showDetails": "显示详情"
+  "message.error.invalidData": "提供的数据无效"
 }
