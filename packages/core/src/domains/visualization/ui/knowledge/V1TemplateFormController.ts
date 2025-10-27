@@ -296,7 +296,8 @@ export class V1TemplateFormController {
       }
     });
 
-    await modal.show({
+    // Don't await - show modal and continue to inject selector
+    const modalPromise = modal.show({
       title: t('modal.addItemToTemplate'),
       content,
       buttons: [
@@ -319,14 +320,19 @@ export class V1TemplateFormController {
       width: '600px'
     });
 
-    // Render maturity range selector into container
-    const container = document.getElementById('maturity-range-selector-container-add');
-    if (container && this.maturityRangeSelector) {
-      const selectorElement = this.maturityRangeSelector.render();
-      container.appendChild(selectorElement);
-      // Reset for new item
-      this.currentMaturityFootprint = undefined;
-    }
+    // Render maturity range selector immediately after modal opens (use setTimeout to wait for DOM)
+    setTimeout(() => {
+      const container = document.getElementById('maturity-range-selector-container-add');
+      if (container && this.maturityRangeSelector) {
+        const selectorElement = this.maturityRangeSelector.render();
+        container.appendChild(selectorElement);
+        // Reset for new item
+        this.currentMaturityFootprint = undefined;
+      }
+    }, 0);
+
+    // Now await the modal to close
+    await modalPromise;
   }
 
   /**
@@ -394,7 +400,8 @@ export class V1TemplateFormController {
       }
     });
 
-    await modal.show({
+    // Don't await - show modal and continue to inject selector
+    const modalPromise = modal.show({
       title: tf('modal.editItem', { title: item.title }),
       content,
       buttons: [
@@ -417,18 +424,23 @@ export class V1TemplateFormController {
       width: '600px'
     });
 
-    // Render maturity range selector into container and set initial value
-    const container = document.getElementById('maturity-range-selector-container');
-    if (container && this.maturityRangeSelector) {
-      const selectorElement = this.maturityRangeSelector.render();
-      container.appendChild(selectorElement);
+    // Render maturity range selector immediately after modal opens (use setTimeout to wait for DOM)
+    setTimeout(() => {
+      const container = document.getElementById('maturity-range-selector-container');
+      if (container && this.maturityRangeSelector) {
+        const selectorElement = this.maturityRangeSelector.render();
+        container.appendChild(selectorElement);
 
-      // Set initial footprint from item if it exists
-      if (item.maturity) {
-        this.maturityRangeSelector.setFootprint(item.maturity);
-        this.currentMaturityFootprint = item.maturity;
+        // Set initial footprint from item if it exists
+        if (item.maturity) {
+          this.maturityRangeSelector.setFootprint(item.maturity);
+          this.currentMaturityFootprint = item.maturity;
+        }
       }
-    }
+    }, 0);
+
+    // Now await the modal to close
+    await modalPromise;
   }
 
   /**
