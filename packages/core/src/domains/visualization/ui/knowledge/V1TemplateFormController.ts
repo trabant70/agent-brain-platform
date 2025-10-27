@@ -5,10 +5,11 @@
  * and version creation modals. Uses the ModalDialog component.
  */
 
-import { MarketplaceTemplate, TemplateCategory } from '../../../knowledge/types';
+import { MarketplaceTemplate, TemplateCategory, MaturityFootprint } from '../../../knowledge/types';
 import { ModalDialog } from '../ModalDialog';
 import { webviewLogger, LogCategory, LogPathway } from '../../webview/WebviewLogger';
 import { t, tf } from '../../webview/i18n';
+import { MaturityRangeSelector } from './MaturityRangeSelector';
 
 export interface V1TemplateFormCallbacks {
   onSendMessage: (message: any) => void;
@@ -16,6 +17,9 @@ export interface V1TemplateFormCallbacks {
 }
 
 export class V1TemplateFormController {
+  private currentMaturityFootprint: MaturityFootprint | undefined;
+  private maturityRangeSelector: MaturityRangeSelector | null = null;
+
   constructor(private callbacks: V1TemplateFormCallbacks) {
     webviewLogger.info(
       LogCategory.UI,
@@ -281,8 +285,16 @@ export class V1TemplateFormController {
           <label for="item-tags" style="display: block; margin-bottom: 4px; font-weight: 600;">${t('label.tagsCommaSeparated')}</label>
           <input type="text" id="item-tags" placeholder="${t('placeholder.itemTags')}" style="width: 100%; padding: 8px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); border-radius: 2px;" />
         </div>
+        <div id="maturity-range-selector-container-add"></div>
       </div>
     `;
+
+    // Create maturity range selector
+    this.maturityRangeSelector = new MaturityRangeSelector({
+      onRangeChanged: (footprint) => {
+        this.currentMaturityFootprint = footprint;
+      }
+    });
 
     await modal.show({
       title: t('modal.addItemToTemplate'),
@@ -306,6 +318,15 @@ export class V1TemplateFormController {
       ],
       width: '600px'
     });
+
+    // Render maturity range selector into container
+    const container = document.getElementById('maturity-range-selector-container-add');
+    if (container && this.maturityRangeSelector) {
+      const selectorElement = this.maturityRangeSelector.render();
+      container.appendChild(selectorElement);
+      // Reset for new item
+      this.currentMaturityFootprint = undefined;
+    }
   }
 
   /**
@@ -362,8 +383,16 @@ export class V1TemplateFormController {
           <label for="edit-item-tags" style="display: block; margin-bottom: 4px; font-weight: 600;">${t('label.tagsCommaSeparated')}</label>
           <input type="text" id="edit-item-tags" placeholder="${t('placeholder.itemTags')}" value="${this.escapeHtml((item.tags || []).join(', '))}" style="width: 100%; padding: 8px; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); border-radius: 2px;" />
         </div>
+        <div id="maturity-range-selector-container"></div>
       </div>
     `;
+
+    // Create maturity range selector
+    this.maturityRangeSelector = new MaturityRangeSelector({
+      onRangeChanged: (footprint) => {
+        this.currentMaturityFootprint = footprint;
+      }
+    });
 
     await modal.show({
       title: tf('modal.editItem', { title: item.title }),
@@ -387,6 +416,19 @@ export class V1TemplateFormController {
       ],
       width: '600px'
     });
+
+    // Render maturity range selector into container and set initial value
+    const container = document.getElementById('maturity-range-selector-container');
+    if (container && this.maturityRangeSelector) {
+      const selectorElement = this.maturityRangeSelector.render();
+      container.appendChild(selectorElement);
+
+      // Set initial footprint from item if it exists
+      if (item.maturity) {
+        this.maturityRangeSelector.setFootprint(item.maturity);
+        this.currentMaturityFootprint = item.maturity;
+      }
+    }
   }
 
   /**
@@ -535,7 +577,8 @@ export class V1TemplateFormController {
         body: formData['item-body'],
         type: formData['item-type'],
         scope: formData['item-scope'],
-        tags
+        tags,
+        maturity: this.currentMaturityFootprint
       }
     });
 
@@ -543,7 +586,7 @@ export class V1TemplateFormController {
       LogCategory.UI,
       'Add item message sent',
       'V1TemplateFormController.addItemToTemplate',
-      { templateId, title: formData['item-title'] },
+      { templateId, title: formData['item-title'], maturity: this.currentMaturityFootprint },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
   }
@@ -565,7 +608,8 @@ export class V1TemplateFormController {
         body: formData['edit-item-body'],
         type: formData['edit-item-type'],
         scope: formData['edit-item-scope'],
-        tags
+        tags,
+        maturity: this.currentMaturityFootprint
       }
     });
 
@@ -573,7 +617,7 @@ export class V1TemplateFormController {
       LogCategory.UI,
       'Edit item message sent',
       'V1TemplateFormController.editItem',
-      { templateId, itemId, title: formData['edit-item-title'] },
+      { templateId, itemId, title: formData['edit-item-title'], maturity: this.currentMaturityFootprint },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
   }

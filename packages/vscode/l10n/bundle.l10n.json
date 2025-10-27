@@ -390,10 +390,6 @@
   "threading.enableThreading": "Enable threading to start collecting execution data",
   "threading.noBottlenecks": "No bottlenecks detected",
   "threading.noPatterns": "No patterns detected",
-  "threading.insights": "Insights",
-  "threading.noInsights": "No insights available",
-  "threading.recommendations": "Recommendations",
-  "threading.noRecommendations": "No recommendations available",
   "threading.loadingThreads": "Loading threads...",
   "threading.timelineComingSoon": "Timeline visualization coming soon",
 

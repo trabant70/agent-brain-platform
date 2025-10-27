@@ -6,7 +6,7 @@
  * Items within expanded templates show their own details and actions.
  */
 
-import { MarketplaceTemplate, KnowledgeItem, KnowledgeType, getKnowledgeTypeLabel, getKnowledgeTypeIcon } from '../../../knowledge/types';
+import { MarketplaceTemplate, KnowledgeItem, KnowledgeType, getKnowledgeTypeLabel, getKnowledgeTypeIcon, MaturityFootprint } from '../../../knowledge/types';
 import { webviewLogger, LogCategory, LogPathway } from '../../webview/WebviewLogger';
 import { t } from '../../webview/i18n';
 
@@ -144,7 +144,9 @@ export class V1TemplatesTableController {
       <td class="col-tags">
         ${template.tags?.map(t => `<span class="tag">${this.escapeHtml(t)}</span>`).join(' ') || '-'}
       </td>
-      <td class="col-source">${template.source || 'user'}</td>
+      <td class="col-maturity">
+        <span style="font-size: 11px; color: var(--vscode-descriptionForeground);">-</span>
+      </td>
       <td class="col-actions">
         ${template.source === 'bundled' && !template.userEditable ? '' : '<button class="action-btn" data-action="add-item" data-template-id="' + template.id + '" title="' + t('tooltip.addItemToTemplate') + '">➕</button>'}
         ${template.source === 'bundled' ? '' : '<button class="action-btn" data-action="create-version" data-template-id="' + template.id + '" title="' + t('tooltip.createVersionCheckpoint') + '">💾</button>'}
@@ -219,7 +221,11 @@ export class V1TemplatesTableController {
       <td class="col-tags">
         ${item.tags?.map(t => `<span class="tag">${this.escapeHtml(t)}</span>`).join(' ') || '-'}
       </td>
-      <td class="col-source">${item.source ? this.escapeHtml(item.source) : '-'}</td>
+      <td class="col-maturity" style="position: relative;">
+        ${this.renderMaturityIndicators(item.maturity)}
+        <button class="info-btn" style="margin-left: 4px; padding: 0 4px; font-size: 10px; cursor: pointer; border: 1px solid var(--vscode-button-border); background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border-radius: 2px;" title="${t('tooltip.showDetails')}">ⓘ</button>
+        ${template ? this.renderInfoPopup(item, template) : ''}
+      </td>
       <td class="col-actions">
         ${isBundledNotEditable ? '' : '<button class="action-btn" data-action="edit-inline" data-template-id="' + templateId + '" data-item-id="' + item.id + '" title="' + t('tooltip.editItemInline') + '">📝</button>'}
         <button class="action-btn" data-action="inject-item" data-template-id="${templateId}" data-item-id="${item.id}" title="${t('tooltip.injectItemToFile')}">💉</button>
@@ -241,6 +247,25 @@ export class V1TemplatesTableController {
         }
       });
     });
+
+    // Info button event listener
+    const infoBtn = row.querySelector('.info-btn');
+    const infoPopup = row.querySelector('.item-info-popup') as HTMLElement;
+    if (infoBtn && infoPopup) {
+      infoBtn.addEventListener('mouseenter', () => {
+        infoPopup.style.display = 'block';
+      });
+      infoBtn.addEventListener('mouseleave', () => {
+        setTimeout(() => {
+          if (!infoPopup.matches(':hover')) {
+            infoPopup.style.display = 'none';
+          }
+        }, 100);
+      });
+      infoPopup.addEventListener('mouseleave', () => {
+        infoPopup.style.display = 'none';
+      });
+    }
 
     // Drag-drop event listeners
     row.addEventListener('dragstart', (e) => this.handleDragStart(e, templateId, item.id));
@@ -281,7 +306,9 @@ export class V1TemplatesTableController {
       <td class="col-tags">
         <input type="text" id="edit-tags-${item.id}" class="inline-edit-input" value="${item.tags?.join(', ') || ''}" placeholder="${t('input.tagsPlaceholder')}" />
       </td>
-      <td class="col-source">${item.source ? this.escapeHtml(item.source) : '-'}</td>
+      <td class="col-maturity">
+        ${this.renderMaturityIndicators(item.maturity)}
+      </td>
       <td class="col-actions">
         <button class="action-btn" data-action="save-edit" data-template-id="${templateId}" data-item-id="${item.id}" title="${t('tooltip.saveChanges')}">💾</button>
         <button class="action-btn" data-action="cancel-edit" data-template-id="${templateId}" data-item-id="${item.id}" title="${t('tooltip.cancelEditing')}">❌</button>
@@ -899,5 +926,75 @@ export class V1TemplatesTableController {
     return scopes.map(s =>
       `<option value="${s.value}" ${s.value === currentScope ? 'selected' : ''}>${s.label}</option>`
     ).join('');
+  }
+
+  /**
+   * Render maturity indicators for an item
+   */
+  private renderMaturityIndicators(maturity: MaturityFootprint | undefined): string {
+    if (!maturity) {
+      return '<span style="font-size: 11px; color: var(--vscode-descriptionForeground);">All</span>';
+    }
+
+    const { operator, project, complexity } = maturity;
+
+    // Create compact visual indicators
+    const operatorRange = operator.min === operator.max ? `${operator.min}` : `${operator.min}-${operator.max}`;
+    const projectRange = project.min === project.max ? `${project.min}` : `${project.min}-${project.max}`;
+    const complexityMap: Record<number, string> = { 1: 'S', 2: 'M', 3: 'C' };
+    let complexityStr = 'Any';
+    if (complexity.min === complexity.max) {
+      complexityStr = complexityMap[complexity.min] || 'Any';
+    } else if (complexity.min !== 1 || complexity.max !== 3) {
+      complexityStr = `${complexityMap[complexity.min]}-${complexityMap[complexity.max]}`;
+    }
+
+    return `
+      <div class="maturity-indicators" style="display: flex; flex-direction: column; gap: 2px; font-size: 10px;">
+        <div class="maturity-indicator" style="display: flex; align-items: center; gap: 4px;">
+          <span style="color: var(--vscode-descriptionForeground); min-width: 16px;">Op:</span>
+          <span style="background: var(--vscode-button-background); padding: 1px 4px; border-radius: 2px; font-weight: 600;">${operatorRange}</span>
+        </div>
+        <div class="maturity-indicator" style="display: flex; align-items: center; gap: 4px;">
+          <span style="color: var(--vscode-descriptionForeground); min-width: 16px;">Pr:</span>
+          <span style="background: var(--vscode-button-background); padding: 1px 4px; border-radius: 2px; font-weight: 600;">${projectRange}</span>
+        </div>
+        ${complexityStr !== 'Any' ? `
+          <div class="maturity-indicator" style="display: flex; align-items: center; gap: 4px;">
+            <span style="color: var(--vscode-descriptionForeground); min-width: 16px;">Cx:</span>
+            <span style="background: var(--vscode-button-background); padding: 1px 4px; border-radius: 2px; font-weight: 600;">${complexityStr}</span>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  /**
+   * Render info popup for item details
+   */
+  private renderInfoPopup(item: KnowledgeItem, template: MarketplaceTemplate): string {
+    const maturity = item.maturity;
+    let maturityText = 'All contexts';
+    if (maturity) {
+      const opRange = maturity.operator.min === maturity.operator.max
+        ? `${maturity.operator.min}`
+        : `${maturity.operator.min}-${maturity.operator.max}`;
+      const prRange = maturity.project.min === maturity.project.max
+        ? `${maturity.project.min}`
+        : `${maturity.project.min}-${maturity.project.max}`;
+      const cxRange = maturity.complexity.min === maturity.complexity.max
+        ? `${maturity.complexity.min}`
+        : `${maturity.complexity.min}-${maturity.complexity.max}`;
+      maturityText = `Operator: ${opRange}, Project: ${prRange}, Complexity: ${cxRange}`;
+    }
+
+    return `
+      <div class="item-info-popup" style="position: absolute; z-index: 1000; background: var(--vscode-editorHoverWidget-background); border: 1px solid var(--vscode-editorHoverWidget-border); border-radius: 4px; padding: 8px; font-size: 12px; min-width: 200px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: none;">
+        <div style="margin-bottom: 4px;"><strong>Source:</strong> ${this.escapeHtml(item.source || template.source || 'user')}</div>
+        <div style="margin-bottom: 4px;"><strong>Template:</strong> ${this.escapeHtml(template.name)}</div>
+        <div style="margin-bottom: 4px;"><strong>Maturity:</strong> ${maturityText}</div>
+        ${item.id ? `<div style="margin-bottom: 4px;"><strong>ID:</strong> ${this.escapeHtml(item.id)}</div>` : ''}
+      </div>
+    `;
   }
 }

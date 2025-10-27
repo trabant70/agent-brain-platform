@@ -111,5 +111,23 @@
   "threading.insights": "Aperçus",
   "threading.noInsights": "Aucun aperçu disponible",
   "threading.recommendations": "Recommandations",
-  "threading.noRecommendations": "Aucune recommandation disponible"
+  "threading.noRecommendations": "Aucune recommandation disponible",
+
+  "maturity.operator.beginner": "Débutant",
+  "maturity.operator.competent": "Compétent",
+  "maturity.operator.advanced": "Avancé",
+
+  "maturity.project.testing": "Tests",
+  "maturity.project.production": "Production",
+
+  "maturity.complexity": "Complexité",
+  "maturity.complexity.any": "Tous",
+  "maturity.clearRange": "Effacer la Plage",
+  "maturity.selectAll": "Tout Sélectionner",
+
+  "maturity.rangeSelector.title": "Plage de Maturité",
+  "maturity.rangeSelector.help": "Sélectionnez les niveaux de maturité de l'opérateur et du projet auxquels cet élément s'applique",
+  "maturity.rangeSelector.noSelection": "Aucune plage sélectionnée - l'élément s'applique à tous les contextes",
+
+  "tooltip.showDetails": "Afficher les détails"
 }
