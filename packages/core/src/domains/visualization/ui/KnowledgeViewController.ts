@@ -135,6 +135,7 @@ export class KnowledgeViewController {
       onSaveContext: (context) => this.saveMaturityContext(context),
       onContextChanged: (context) => {
         this.currentMaturityContext = context;
+        this.v1TemplatesTableController.setMaturityContext(context);
         // Could add live preview here if needed
       }
     });
@@ -332,11 +333,17 @@ export class KnowledgeViewController {
         );
         break;
 
+      // V2 Dynamic Injection Preview
+      case 'v1:preview-injection-data':
+        this.handlePreviewInjectionResponse(message.payload);
+        break;
+
       // Maturity-based filtering
       case 'maturity:context-data':
         if (this.maturityConfigPanel && message.payload.context) {
           this.currentMaturityContext = message.payload.context;
           this.maturityConfigPanel.setContext(message.payload.context);
+          this.v1TemplatesTableController.setMaturityContext(message.payload.context);
         }
         webviewLogger.debug(
           LogCategory.UI,
@@ -351,6 +358,7 @@ export class KnowledgeViewController {
         if (this.maturityConfigPanel && message.payload.context) {
           this.currentMaturityContext = message.payload.context;
           this.maturityConfigPanel.setContext(message.payload.context);
+          this.v1TemplatesTableController.setMaturityContext(message.payload.context);
         }
         webviewLogger.info(
           LogCategory.UI,
@@ -493,7 +501,7 @@ export class KnowledgeViewController {
   /**
    * Handle inject template action
    */
-  private handleInjectTemplate(templateId: string): void {
+  private async handleInjectTemplate(templateId: string): Promise<void> {
     const focusedFile = this.accordionController.getSelectedFile();
     if (!focusedFile) {
       this.notifications.show({
@@ -504,16 +512,24 @@ export class KnowledgeViewController {
       return;
     }
 
+    // Request preview data from extension
     this.notifications.show({
       type: 'info',
-      message: 'Injecting template...',
+      message: 'Generating injection preview...',
       duration: 2000
     });
 
+    // Request preview with current maturity context
     this.sendMessage({
-      type: 'v1:inject-template',
-      payload: { templateId, filePath: focusedFile }
+      type: 'v1:preview-template-injection',
+      payload: {
+        templateId,
+        filePath: focusedFile,
+        maturityContext: this.currentMaturityContext
+      }
     });
+
+    // Response will be handled in handlePreviewInjectionResponse
   }
 
   /**
@@ -535,7 +551,7 @@ export class KnowledgeViewController {
   /**
    * Handle inject item action
    */
-  private handleInjectItem(templateId: string, itemId: string): void {
+  private async handleInjectItem(templateId: string, itemId: string): Promise<void> {
     const focusedFile = this.accordionController.getSelectedFile();
     if (!focusedFile) {
       this.notifications.show({
@@ -546,6 +562,8 @@ export class KnowledgeViewController {
       return;
     }
 
+    // For single item injection, skip preview and inject directly
+    // (Preview is more useful for full template injection with multiple items)
     this.notifications.show({
       type: 'info',
       message: 'Injecting item...',
@@ -1111,6 +1129,68 @@ export class KnowledgeViewController {
   // ============================================
   // V2 Dynamic Injection Helper Methods
   // ============================================
+
+  /**
+   * Handle preview injection response from extension
+   * Shows the preview dialog and sends injection request if confirmed
+   */
+  private async handlePreviewInjectionResponse(payload: any): Promise<void> {
+    const { preview, templateId, filePath } = payload;
+
+    if (!preview) {
+      this.notifications.show({
+        type: 'error',
+        message: 'Failed to generate injection preview',
+        duration: 3000
+      });
+      return;
+    }
+
+    webviewLogger.info(
+      LogCategory.UI,
+      'Showing injection preview dialog',
+      'KnowledgeViewController.handlePreviewInjectionResponse',
+      { templateId, matchedItems: preview.matchedItems.length, excludedItems: preview.excludedItems.length },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    // Show preview dialog and wait for user decision
+    const { confirmed, includeAllItems } = await this.showInjectionPreview(preview);
+
+    if (!confirmed) {
+      this.notifications.show({
+        type: 'info',
+        message: 'Injection cancelled',
+        duration: 2000
+      });
+      return;
+    }
+
+    // User confirmed - send injection request
+    this.notifications.show({
+      type: 'info',
+      message: 'Injecting template...',
+      duration: 2000
+    });
+
+    this.sendMessage({
+      type: 'v1:inject-template-confirmed',
+      payload: {
+        templateId,
+        filePath,
+        includeAllItems,
+        maturityContext: this.currentMaturityContext
+      }
+    });
+
+    webviewLogger.info(
+      LogCategory.UI,
+      'Injection confirmed and request sent',
+      'KnowledgeViewController.handlePreviewInjectionResponse',
+      { templateId, includeAllItems },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+  }
 
   /**
    * Show injection preview dialog before injecting

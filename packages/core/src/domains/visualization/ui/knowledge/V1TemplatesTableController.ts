@@ -6,9 +6,12 @@
  * Items within expanded templates show their own details and actions.
  */
 
-import { MarketplaceTemplate, KnowledgeItem, KnowledgeType, getKnowledgeTypeLabel, getKnowledgeTypeIcon, MaturityFootprint } from '../../../knowledge/types';
+import { MarketplaceTemplate, KnowledgeItem, KnowledgeType, getKnowledgeTypeLabel, getKnowledgeTypeIcon, MaturityFootprint, MaturityContext } from '../../../knowledge/types';
 import { webviewLogger, LogCategory, LogPathway } from '../../webview/WebviewLogger';
 import { t } from '../../webview/i18n';
+import { TemplateMatchBadge } from './TemplateMatchBadge';
+import { MaturityFilterEngine } from '../../../knowledge/MaturityFilterEngine';
+import type { MatchStats } from '../../../knowledge/GroupTypes';
 
 export interface V1TemplatesTableCallbacks {
   onCreateTemplate: () => void;
@@ -35,6 +38,8 @@ export class V1TemplatesTableController {
   private expandedTemplates: Set<string> = new Set();
   private inlineEditingItem: { templateId: string; itemId: string } | null = null;
   private draggedItem: { templateId: string; itemId: string } | null = null;
+  private maturityContext: MaturityContext | null = null;
+  private maturityFilterEngine: MaturityFilterEngine = new MaturityFilterEngine();
 
   constructor(private callbacks: V1TemplatesTableCallbacks) {
     webviewLogger.info(
@@ -44,6 +49,17 @@ export class V1TemplatesTableController {
       undefined,
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
+  }
+
+  /**
+   * Set the current maturity context for match calculation
+   */
+  setMaturityContext(context: MaturityContext | null): void {
+    this.maturityContext = context;
+    // Re-render to update match badges
+    if (this.templates.length > 0) {
+      this.render(this.templates);
+    }
   }
 
   /**
@@ -145,7 +161,7 @@ export class V1TemplatesTableController {
         ${template.tags?.map(t => `<span class="tag">${this.escapeHtml(t)}</span>`).join(' ') || '-'}
       </td>
       <td class="col-maturity">
-        <span style="font-size: 11px; color: var(--vscode-descriptionForeground);">-</span>
+        <span class="maturity-badge-container" data-template-id="${template.id}"></span>
       </td>
       <td class="col-actions">
         ${template.source === 'bundled' && !template.userEditable ? '' : '<button class="action-btn" data-action="add-item" data-template-id="' + template.id + '" title="' + t('tooltip.addItemToTemplate') + '">➕</button>'}
@@ -155,13 +171,29 @@ export class V1TemplatesTableController {
         ${template.source === 'bundled' ? '' : '<button class="action-btn" data-action="audit-log" data-template-id="' + template.id + '" title="' + t('tooltip.viewAuditLog') + '">📊</button>'}
         <button class="action-btn" data-action="export" data-template-id="${template.id}" title="${t('tooltip.exportTemplateToJSON')}">📤</button>
         ${template.source === 'bundled' ? '' : '<button class="action-btn" data-action="edit" data-template-id="' + template.id + '" title="' + t('tooltip.editTemplate') + '">✏️</button>'}
-        ${template.source === 'bundled' ? '' : '<button class="action-btn danger" data-action="delete" data-template-id="' + template.id + '" title="' + t('tooltip.deleteTemplate') + '">🗑️</button>'}
+        ${template.source === 'bundled' ? '' : '<button class="action-btn danger" data-template-id="' + template.id + '" title="' + t('tooltip.deleteTemplate') + '">🗑️</button>'}
       </td>
     `;
 
     // Event listeners
     const expandBtn = row.querySelector('.expand-btn');
     expandBtn?.addEventListener('click', () => this.toggleTemplate(template.id));
+
+    // Add match badge if maturity context is available
+    const matchStats = this.calculateMatchStats(template);
+    if (matchStats) {
+      const badgeContainer = row.querySelector('.maturity-badge-container');
+      if (badgeContainer) {
+        const badge = TemplateMatchBadge.render({ stats: matchStats, format: 'compact' });
+        badgeContainer.appendChild(badge);
+      }
+    } else {
+      // Show dash if no maturity context
+      const badgeContainer = row.querySelector('.maturity-badge-container');
+      if (badgeContainer) {
+        badgeContainer.innerHTML = '<span style="font-size: 11px; color: var(--vscode-descriptionForeground);">-</span>';
+      }
+    }
 
     const actionButtons = row.querySelectorAll('.action-btn');
     actionButtons.forEach(btn => {
@@ -498,6 +530,32 @@ export class V1TemplatesTableController {
         </td>
       </tr>
     `;
+  }
+
+  /**
+   * Calculate match statistics for a template based on current maturity context
+   */
+  private calculateMatchStats(template: MarketplaceTemplate): MatchStats | null {
+    if (!this.maturityContext || !template.items || template.items.length === 0) {
+      return null;
+    }
+
+    let matchedCount = 0;
+    for (const item of template.items) {
+      if (this.maturityFilterEngine.matchesContext(item, this.maturityContext)) {
+        matchedCount++;
+      }
+    }
+
+    const totalItems = template.items.length;
+    const matchPercentage = (matchedCount / totalItems) * 100;
+
+    return {
+      totalItems,
+      matchedItems: matchedCount,
+      excludedItems: totalItems - matchedCount,
+      matchPercentage
+    };
   }
 
   /**

@@ -5,6 +5,8 @@ import { TimelineProvider } from './providers/timeline-provider-webpack';
 import { WelcomeViewProvider } from './providers/WelcomeViewProvider';
 import { logger, LogCategory, createContextLogger } from '@agent-brain/core/infrastructure/logging/Logger';
 import { KnowledgeManager, ThreadControlCenter } from './services';
+import { FocusValidationService } from './services/knowledge/FocusValidationService';
+import { ClaudeMdScanner, TemplateEngine, KnowledgeStore } from '@agent-brain/core/domains/knowledge';
 
 // Initialize localization
 const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
@@ -12,6 +14,7 @@ const localize = nls.config({ messageFormat: nls.MessageFormat.file })();
 let timelineProvider: TimelineProvider | null = null;
 let knowledgeManager: KnowledgeManager | null = null;
 let threadControlCenter: ThreadControlCenter | null = null;
+let focusValidationService: FocusValidationService | null = null;
 const log = createContextLogger(LogCategory.EXTENSION);
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -186,6 +189,36 @@ export async function activate(context: vscode.ExtensionContext) {
             if (timelineProvider) {
                 timelineProvider.setKnowledgeManager(knowledgeManager);
                 log.debug(LogCategory.EXTENSION, 'Knowledge Manager connected to Timeline Provider');
+            }
+
+            // Initialize Focus Validation Service
+            log.debug(LogCategory.EXTENSION, 'Initializing Focus Validation Service', 'validation');
+            outputChannel.appendLine('✅ Initializing Focus Validation Service...');
+
+            try {
+                // Get the TemplateEngine from KnowledgeManager if available
+                const templateStore = (knowledgeManager as any).templateStore as KnowledgeStore;
+                const templateEngine = new TemplateEngine(templateStore);
+                const scanner = new ClaudeMdScanner(templateEngine);
+
+                focusValidationService = new FocusValidationService(scanner, {
+                    validateOnSave: true,
+                    validateOnTabSwitch: false, // Can be heavy, disabled by default
+                    validateOnClose: true,
+                    validateOnBlur: false,
+                    showWarnings: true,
+                    autoFix: false
+                });
+
+                log.info(LogCategory.EXTENSION, 'Focus Validation Service initialized successfully');
+                outputChannel.appendLine('✅ Focus Validation Service initialized');
+
+                context.subscriptions.push({
+                    dispose: () => focusValidationService?.dispose()
+                });
+            } catch (error) {
+                log.error(LogCategory.EXTENSION, 'Failed to initialize Focus Validation Service', 'initialization', error);
+                outputChannel.appendLine(`⚠️ Focus Validation Service initialization failed: ${error}`);
             }
 
             context.subscriptions.push({
