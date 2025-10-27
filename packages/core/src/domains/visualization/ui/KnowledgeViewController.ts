@@ -1199,9 +1199,11 @@ export class KnowledgeViewController {
    * Shows the preview dialog and sends injection request if confirmed
    */
   private async handlePreviewInjectionResponse(payload: any): Promise<void> {
+    console.log('[KnowledgeViewController] handlePreviewInjectionResponse called with payload:', payload);
     const { preview, templateId, filePath } = payload;
 
     if (!preview) {
+      console.error('[KnowledgeViewController] No preview in payload');
       this.notifications.show({
         type: 'error',
         message: 'Failed to generate injection preview',
@@ -1209,6 +1211,13 @@ export class KnowledgeViewController {
       });
       return;
     }
+
+    console.log('[KnowledgeViewController] Preview data:', {
+      templateId,
+      matchedItems: preview.matchedItems?.length,
+      excludedItems: preview.excludedItems?.length,
+      totalItems: preview.totalItems
+    });
 
     webviewLogger.info(
       LogCategory.UI,
@@ -1218,8 +1227,10 @@ export class KnowledgeViewController {
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
 
+    console.log('[KnowledgeViewController] About to call showInjectionPreview');
     // Show preview dialog and wait for user decision
     const { confirmed, includeAllItems } = await this.showInjectionPreview(preview);
+    console.log('[KnowledgeViewController] showInjectionPreview returned:', { confirmed, includeAllItems });
 
     if (!confirmed) {
       this.notifications.show({
@@ -1261,16 +1272,22 @@ export class KnowledgeViewController {
    * Returns promise that resolves with user's choice (includeAllItems)
    */
   async showInjectionPreview(preview: InjectionPreview): Promise<{ confirmed: boolean; includeAllItems: boolean }> {
+    console.log('[KnowledgeViewController] showInjectionPreview called, dialog exists:', !!this.injectionPreviewDialog);
+
     if (!this.injectionPreviewDialog) {
+      console.error('[KnowledgeViewController] No injection preview dialog available!');
       return { confirmed: false, includeAllItems: false };
     }
 
     return new Promise((resolve) => {
+      console.log('[KnowledgeViewController] Calling injectionPreviewDialog.show()');
       this.injectionPreviewDialog!.show(preview, {
         onConfirm: (includeAllItems: boolean) => {
+          console.log('[KnowledgeViewController] User confirmed injection, includeAllItems:', includeAllItems);
           resolve({ confirmed: true, includeAllItems });
         },
         onCancel: () => {
+          console.log('[KnowledgeViewController] User cancelled injection');
           resolve({ confirmed: false, includeAllItems: false });
         }
       });

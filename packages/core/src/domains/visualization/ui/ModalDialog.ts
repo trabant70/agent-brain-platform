@@ -126,13 +126,18 @@ export class ModalDialog {
      * Show a custom modal with HTML content
      */
     async show(options: ModalShowOptions): Promise<void> {
+        console.log('[ModalDialog] show() called with options:', { title: options.title, width: options.width, buttonCount: options.buttons?.length });
         return new Promise((resolve, reject) => {
             this.resolve = resolve;
             this.reject = reject;
 
+            console.log('[ModalDialog] Creating overlay');
             this.createOverlay();
+            console.log('[ModalDialog] Creating custom modal');
             this.createCustomModal(options);
+            console.log('[ModalDialog] Attaching event listeners');
             this.attachEventListeners();
+            console.log('[ModalDialog] Modal should now be visible');
         });
     }
 

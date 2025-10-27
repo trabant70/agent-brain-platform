@@ -24,7 +24,8 @@ import {
   MarketplaceTemplate,
   KnowledgeItem,
   TemplateSource,
-  AuditOperation
+  AuditOperation,
+  MaturityFootprint
 } from './types';
 import { AuditLogger } from './AuditLogger';
 
@@ -98,7 +99,7 @@ export class TemplateCloner {
       if (options.includeItems !== false) {
         for (const sourceItem of sourceTemplate.items) {
           const newItemId = this.generateItemId();
-          const clonedItem: KnowledgeItem = {
+          let clonedItem: KnowledgeItem = {
             ...sourceItem,
             id: newItemId,
             templateId: newTemplateId,
@@ -111,6 +112,9 @@ export class TemplateCloner {
             tags: [...sourceItem.tags],
             injectedTo: [] // New clone is not injected anywhere
           };
+
+          // Ensure cloned item has a maturity footprint (add global default if missing)
+          clonedItem = this.ensureMaturityFootprint(clonedItem);
 
           clonedItems.push(clonedItem);
         }
@@ -224,7 +228,7 @@ export class TemplateCloner {
 
       const clonedItems: KnowledgeItem[] = selectedItems.map(sourceItem => {
         const newItemId = this.generateItemId();
-        return {
+        let clonedItem: KnowledgeItem = {
           ...sourceItem,
           id: newItemId,
           templateId: newTemplateId,
@@ -237,6 +241,9 @@ export class TemplateCloner {
           tags: [...sourceItem.tags],
           injectedTo: []
         };
+
+        // Ensure cloned item has a maturity footprint (add global default if missing)
+        return this.ensureMaturityFootprint(clonedItem);
       });
 
       const clonedTemplate: MarketplaceTemplate = {
@@ -380,6 +387,32 @@ export class TemplateCloner {
   // ==========================================================================
   // PRIVATE HELPER METHODS
   // ==========================================================================
+
+  /**
+   * Create a default "global" maturity footprint
+   * Applies to all operator levels, project phases, and complexity levels
+   */
+  private createGlobalMaturityFootprint(): MaturityFootprint {
+    return {
+      operator: { min: 1, max: 5 },    // Novice to Expert
+      project: { min: 1, max: 5 },     // Planning to Mature
+      complexity: { min: 1, max: 3 }   // Simple to Complex
+    };
+  }
+
+  /**
+   * Ensure an item has a maturity footprint
+   * If the item doesn't have one, add the global default
+   */
+  private ensureMaturityFootprint(item: KnowledgeItem): KnowledgeItem {
+    if (!item.maturity) {
+      return {
+        ...item,
+        maturity: this.createGlobalMaturityFootprint()
+      };
+    }
+    return item;
+  }
 
   private generateTemplateId(name: string, source: TemplateSource): string {
     const slug = name

@@ -41,16 +41,22 @@ export class InjectionPreviewDialog {
     preview: InjectionPreview,
     callbacks: InjectionPreviewCallbacks
   ): Promise<void> {
+    console.log('[InjectionPreviewDialog] show() called with preview:', preview);
     const modal = new ModalDialog();
+    console.log('[InjectionPreviewDialog] ModalDialog created');
 
     try {
-      await modal.show({
+      console.log('[InjectionPreviewDialog] Calling modal.show() - NOT awaiting');
+      // Call modal.show() without await - the modal will display immediately
+      // and the promise will resolve when user closes it
+      const modalPromise = modal.show({
         title: t('injection.previewTitle', 'Preview Knowledge Injection'),
         content: this.renderPreviewContent(preview),
         buttons: [
           {
             label: t('button.cancel', 'Cancel'),
             onClick: () => {
+              console.log('[InjectionPreviewDialog] Cancel button clicked');
               callbacks.onCancel();
               modal.close();
             }
@@ -59,6 +65,7 @@ export class InjectionPreviewDialog {
             label: t('injection.injectMatchedOnly', 'Inject Matched Items'),
             primary: true,
             onClick: () => {
+              console.log('[InjectionPreviewDialog] Inject Matched button clicked');
               callbacks.onConfirm(false);
               modal.close();
             }
@@ -66,6 +73,7 @@ export class InjectionPreviewDialog {
           {
             label: t('injection.injectAll', 'Inject All Items'),
             onClick: () => {
+              console.log('[InjectionPreviewDialog] Inject All button clicked');
               callbacks.onConfirm(true);
               modal.close();
             }
@@ -74,10 +82,16 @@ export class InjectionPreviewDialog {
         width: '800px'
       });
 
-      // Attach event listeners after modal renders
+      // Attach event listeners after modal renders (next tick)
       setTimeout(() => {
+        console.log('[InjectionPreviewDialog] Attaching event listeners');
         this.attachEventListeners(modal, preview);
       }, 0);
+
+      // Now await for the modal to be closed by user
+      console.log('[InjectionPreviewDialog] Waiting for user decision');
+      await modalPromise;
+      console.log('[InjectionPreviewDialog] modal.show() completed - user made decision');
     } catch (error) {
       console.error('[InjectionPreviewDialog] Error showing preview:', error);
       throw error;
