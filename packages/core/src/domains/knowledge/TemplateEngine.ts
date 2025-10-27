@@ -680,7 +680,9 @@ export class TemplateEngine {
 
     for (const line of allLines) {
       // Track fenced code blocks (```)
-      if (line.trim().match(/^```/)) {
+      // Must be ONLY ``` followed by optional language identifier, not inline code like ```text```
+      const trimmed = line.trim();
+      if (trimmed.match(/^```[a-z0-9]*$/i)) {
         inFencedCodeBlock = !inFencedCodeBlock;
         continue;
       }
