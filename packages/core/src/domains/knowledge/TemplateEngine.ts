@@ -672,14 +672,32 @@ export class TemplateEngine {
       }
     }
 
-    // Count AGENT-BRAIN markers (ignore code block detection - markers are HTML comments, not code)
+    // Count AGENT-BRAIN markers (excluding those in code blocks/examples)
     const allLines = content.split('\n');
     let v1StartCount = 0;
     let v1EndCount = 0;
+    let inFencedCodeBlock = false;
 
     for (const line of allLines) {
+      // Track fenced code blocks (```)
+      if (line.trim().match(/^```/)) {
+        inFencedCodeBlock = !inFencedCodeBlock;
+        continue;
+      }
+
+      // Skip lines inside fenced code blocks
+      if (inFencedCodeBlock) {
+        continue;
+      }
+
+      // Skip lines with inline code that contains markers (backticks around marker)
+      // Match patterns like: `<!-- AGENT-BRAIN:...:START -->` or **text**:`marker`
+      if (line.match(/`[^`]*<!--\s*AGENT-BRAIN:[^`]+`/)) {
+        continue;
+      }
+
       // Count V1 AGENT-BRAIN markers (both template and item level)
-      // HTML comment markers are never part of code blocks, so no need to skip
+      // Only count actual markers, not documentation examples
       if (line.match(/<!--\s*AGENT-BRAIN:(template-[^:]+|item-[^:]+):START\s*-->/)) {
         v1StartCount++;
       }
