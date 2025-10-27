@@ -1481,11 +1481,12 @@
    ============================================================================= */
 
 .maturity-section {
+  position: relative; /* For absolute positioning of config-panel modal */
   margin-bottom: 20px;
   background: var(--vscode-editor-background);
   border: 1px solid var(--vscode-panel-border);
   border-radius: 4px;
-  overflow: hidden;
+  overflow: visible; /* Changed from hidden to allow modal dropdown to overflow */
 }
 
 .maturity-header {
@@ -1532,9 +1533,26 @@
   background: var(--vscode-button-hoverBackground);
 }
 
+/* Configuration Panel - Modal/Dropdown Pattern (consistent with timeline Controls) */
 .config-panel {
+  display: none; /* Hidden by default */
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
   padding: 16px;
-  border-top: 1px solid var(--vscode-panel-border);
+  background: var(--vscode-dropdown-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* Open state - show the panel as a dropdown modal */
+.config-panel.open {
+  display: block;
 }
 
 .maturity-config-body {

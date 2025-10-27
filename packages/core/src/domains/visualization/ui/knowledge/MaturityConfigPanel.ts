@@ -49,7 +49,7 @@ export class MaturityConfigPanel {
 
   /**
    * Render the maturity configuration section
-   * Returns collapsible panel with Controls button (consistent with timeline)
+   * Returns collapsible panel with Controls button (consistent with timeline modal pattern)
    */
   render(): HTMLElement {
     const section = document.createElement('div');
@@ -65,8 +65,8 @@ export class MaturityConfigPanel {
         </button>
       </div>
 
-      <!-- Collapsible configuration panel (hidden by default) -->
-      <div id="maturity-config-panel" class="config-panel" style="display: none;">
+      <!-- Modal configuration panel (hidden by default, uses CSS 'open' class like timeline) -->
+      <div id="maturity-config-panel" class="config-panel">
         ${this.renderConfigPanel()}
       </div>
     `;
@@ -235,13 +235,21 @@ export class MaturityConfigPanel {
   private attachEventListeners(): void {
     if (!this.container) return;
 
-    // Controls toggle button
+    // Controls toggle button - uses CSS class pattern like timeline
     const controlsToggle = this.container.querySelector('#maturity-controls-toggle') as HTMLButtonElement;
     const configPanel = this.container.querySelector('#maturity-config-panel') as HTMLElement;
 
-    controlsToggle?.addEventListener('click', () => {
-      this.isExpanded = !this.isExpanded;
-      configPanel.style.display = this.isExpanded ? 'block' : 'none';
+    controlsToggle?.addEventListener('click', (e) => {
+      e.stopPropagation(); // Prevent immediate close from document click
+      this.togglePanel();
+    });
+
+    // Close panel when clicking outside (consistent with timeline behavior)
+    document.addEventListener('click', (e) => {
+      if (this.isExpanded && configPanel && !configPanel.contains(e.target as Node) &&
+          !controlsToggle?.contains(e.target as Node)) {
+        this.hidePanel();
+      }
     });
 
     // Complexity selector
@@ -359,10 +367,39 @@ export class MaturityConfigPanel {
   private applyConfiguration(): void {
     this.callbacks.onSaveContext(this.currentContext);
 
-    // Collapse panel after applying
+    // Hide panel after applying
+    this.hidePanel();
+  }
+
+  /**
+   * Toggle panel visibility (consistent with timeline Controls pattern)
+   */
+  private togglePanel(): void {
+    if (this.isExpanded) {
+      this.hidePanel();
+    } else {
+      this.showPanel();
+    }
+  }
+
+  /**
+   * Show configuration panel
+   */
+  private showPanel(): void {
     const configPanel = this.container?.querySelector('#maturity-config-panel') as HTMLElement;
     if (configPanel) {
-      configPanel.style.display = 'none';
+      configPanel.classList.add('open');
+      this.isExpanded = true;
+    }
+  }
+
+  /**
+   * Hide configuration panel
+   */
+  private hidePanel(): void {
+    const configPanel = this.container?.querySelector('#maturity-config-panel') as HTMLElement;
+    if (configPanel) {
+      configPanel.classList.remove('open');
       this.isExpanded = false;
     }
   }
