@@ -34,6 +34,12 @@ import { ContentSizeValidator } from '../../knowledge/validation/security/Conten
 import { DuplicateIdValidator } from '../../knowledge/validation/business/DuplicateIdValidator';
 import { MaturityConfigPanel, type MaturityContext } from './knowledge/MaturityConfigPanel';
 
+// V2 Dynamic Injection Components
+import { InjectionPreviewDialog } from './knowledge/InjectionPreviewDialog';
+import { InjectionStatusBadge } from './knowledge/InjectionStatusBadge';
+import { TemplateMatchBadge } from './knowledge/TemplateMatchBadge';
+import type { InjectionPreview, MatchStats } from '../../knowledge/GroupTypes';
+
 export interface KnowledgeViewState {
   claudeMdFiles: ClaudeMdFile[];
   templates: MarketplaceTemplate[];
@@ -54,6 +60,9 @@ export class KnowledgeViewController {
   // Maturity-based filtering
   private maturityConfigPanel: MaturityConfigPanel | null = null;
   private currentMaturityContext: MaturityContext | null = null;
+
+  // V2 Dynamic Injection Components
+  private injectionPreviewDialog: InjectionPreviewDialog | null = null;
 
   constructor() {
     this.state = {
@@ -129,6 +138,9 @@ export class KnowledgeViewController {
         // Could add live preview here if needed
       }
     });
+
+    // Initialize V2 injection preview dialog
+    this.injectionPreviewDialog = new InjectionPreviewDialog();
 
     // Re-render status bar and maturity panel when i18n is ready to ensure translations are applied
     onI18nReady(() => {
@@ -1094,6 +1106,65 @@ export class KnowledgeViewController {
       const panel = this.maturityConfigPanel.render();
       container.insertBefore(panel, container.firstChild);
     }
+  }
+
+  // ============================================
+  // V2 Dynamic Injection Helper Methods
+  // ============================================
+
+  /**
+   * Show injection preview dialog before injecting
+   * Returns promise that resolves with user's choice (includeAllItems)
+   */
+  async showInjectionPreview(preview: InjectionPreview): Promise<{ confirmed: boolean; includeAllItems: boolean }> {
+    if (!this.injectionPreviewDialog) {
+      return { confirmed: false, includeAllItems: false };
+    }
+
+    return new Promise((resolve) => {
+      this.injectionPreviewDialog!.show(preview, {
+        onConfirm: (includeAllItems: boolean) => {
+          resolve({ confirmed: true, includeAllItems });
+        },
+        onCancel: () => {
+          resolve({ confirmed: false, includeAllItems: false });
+        }
+      });
+    });
+  }
+
+  /**
+   * Create injection status badge element
+   */
+  createStatusBadge(status: any, options?: any): HTMLElement {
+    return InjectionStatusBadge.render({
+      status,
+      ...options
+    });
+  }
+
+  /**
+   * Create template match badge element
+   */
+  createMatchBadge(stats: MatchStats, options?: any): HTMLElement {
+    return TemplateMatchBadge.render({
+      stats,
+      ...options
+    });
+  }
+
+  /**
+   * Create inline match indicator
+   */
+  createInlineMatchIndicator(stats: MatchStats): HTMLElement {
+    return TemplateMatchBadge.renderInline(stats);
+  }
+
+  /**
+   * Create match bar visualization
+   */
+  createMatchBar(stats: MatchStats, width?: number): HTMLElement {
+    return TemplateMatchBadge.renderMatchBar(stats, width);
   }
 }
 

@@ -53,3 +53,13 @@ export { MaturitySelector } from './MaturitySelector';
 export { MaturityConfigManager } from './MaturityConfigManager';
 export { FramingTemplates } from './FramingTemplates';
 export type { FramingTemplate } from './FramingTemplates';
+
+// Dynamic Injection Management System (V2)
+export * from './GroupTypes';
+export { ClaudeMdScanner } from './ClaudeMdScanner';
+export { ScanController } from './ScanController';
+export type { ScanControllerCallbacks } from './ScanController';
+export { MaturityFilterEngine } from './MaturityFilterEngine';
+export { FocusUpdateHandler } from './FocusUpdateHandler';
+export type { FocusUpdateConfig, ValidationResult, FocusUpdateCallbacks } from './FocusUpdateHandler';
+export { GroupOperationsService } from './GroupOperationsService';
