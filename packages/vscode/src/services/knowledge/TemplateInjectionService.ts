@@ -113,15 +113,16 @@ export class TemplateInjectionService {
     }
 
     // Prepare template content with matching items only
+    // NOTE: We only use template-level markers (not individual item markers)
+    // since templates are removed as a whole unit. This makes the system
+    // more resilient to tag corruption and easier to manually clean up.
     const templateMarker = `template-${templateId}`;
     let templateContent = `\n<!-- AGENT-BRAIN:${templateMarker}:START -->\n`;
     templateContent += `<!-- Template: ${template.name} (${matchingItems.length} of ${template.items.length} items) -->\n\n`;
 
     for (const item of matchingItems) {
-      const itemMarker = `item-${item.id}`;
-      templateContent += `<!-- AGENT-BRAIN:${itemMarker}:START -->\n`;
-      templateContent += `${item.body}\n`;
-      templateContent += `<!-- AGENT-BRAIN:${itemMarker}:END -->\n\n`;
+      // No individual item markers - just the content
+      templateContent += `${item.body}\n\n`;
     }
 
     templateContent += `<!-- AGENT-BRAIN:${templateMarker}:END -->\n`;

@@ -92,15 +92,12 @@ export class TemplateEngine {
       // Generate template-level markers
       const markers = this.generateTemplateMarkers(template.id, template.name);
 
-      // Generate content for all items with individual markers
+      // Generate content for all items WITHOUT individual markers
+      // NOTE: We only use template-level markers since templates are removed
+      // as a whole unit. This makes the system more resilient to tag corruption.
       const itemsContent = template.items.map(item => {
-        const itemMarkers = this.generateItemMarkers(item.id, item.title);
         const icon = getKnowledgeTypeIcon(item.type);
-        return [
-          itemMarkers.start,
-          item.body,
-          itemMarkers.end
-        ].join('\n');
+        return item.body;
       }).join('\n\n');
 
       // Build the template section
