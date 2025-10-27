@@ -130,7 +130,7 @@ export class V1TemplatesTableController {
         </button>
       </td>
       <td class="col-type">
-        <span class="template-badge">📦 Template</span>
+        <span class="template-badge">💉 Template</span>
       </td>
       <td class="col-title">
         <strong class="template-title">${this.escapeHtml(template.name)}</strong>
@@ -151,7 +151,7 @@ export class V1TemplatesTableController {
         ${template.source === 'bundled' && !template.userEditable ? '' : '<button class="action-btn" data-action="add-item" data-template-id="' + template.id + '" title="' + t('tooltip.addItemToTemplate') + '">➕</button>'}
         ${template.source === 'bundled' ? '' : '<button class="action-btn" data-action="create-version" data-template-id="' + template.id + '" title="' + t('tooltip.createVersionCheckpoint') + '">💾</button>'}
         <button class="action-btn" data-action="clone" data-template-id="${template.id}" title="${t('template.cloneTemplate')}">📋</button>
-        <button class="action-btn" data-action="inject-template" data-template-id="${template.id}" title="${t('tooltip.injectTemplateToFile')}">📦</button>
+        <button class="action-btn" data-action="inject-template" data-template-id="${template.id}" title="${t('tooltip.injectTemplateToFile')}">💉</button>
         ${template.source === 'bundled' ? '' : '<button class="action-btn" data-action="audit-log" data-template-id="' + template.id + '" title="' + t('tooltip.viewAuditLog') + '">📊</button>'}
         <button class="action-btn" data-action="export" data-template-id="${template.id}" title="${t('tooltip.exportTemplateToJSON')}">📤</button>
         ${template.source === 'bundled' ? '' : '<button class="action-btn" data-action="edit" data-template-id="' + template.id + '" title="' + t('tooltip.editTemplate') + '">✏️</button>'}
@@ -488,12 +488,12 @@ export class V1TemplatesTableController {
     tbody.innerHTML = `
       <tr class="knowledge-empty-state">
         <td colspan="7" style="text-align: center; padding: 40px;">
-          <div style="font-size: 48px; margin-bottom: 16px;">📦</div>
+          <div style="font-size: 48px; margin-bottom: 16px;">💉</div>
           <div style="font-size: 16px; color: var(--vscode-descriptionForeground); margin-bottom: 8px;">
             No V1 templates yet
           </div>
           <div style="font-size: 14px; color: var(--vscode-descriptionForeground);">
-            Click "📦 Create Template" to create your first template
+            Click "💉 Create Template" to create your first template
           </div>
         </td>
       </tr>

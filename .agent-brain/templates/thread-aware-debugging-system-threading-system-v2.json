@@ -40,7 +40,16 @@
       },
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
-      "injectedTo": []
+      "injectedTo": [
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+          "injectedAt": "2025-10-27T10:13:24.828Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "threading-system-v2",
+          "parentTemplateName": "Thread-Aware Debugging System"
+        }
+      ]
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440002",
@@ -61,7 +70,16 @@
       },
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
-      "injectedTo": []
+      "injectedTo": [
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+          "injectedAt": "2025-10-27T10:13:24.828Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "threading-system-v2",
+          "parentTemplateName": "Thread-Aware Debugging System"
+        }
+      ]
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440003",
@@ -82,7 +100,16 @@
       },
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
-      "injectedTo": []
+      "injectedTo": [
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+          "injectedAt": "2025-10-27T10:13:24.828Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "threading-system-v2",
+          "parentTemplateName": "Thread-Aware Debugging System"
+        }
+      ]
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440004",
@@ -104,7 +131,16 @@
       },
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
-      "injectedTo": []
+      "injectedTo": [
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+          "injectedAt": "2025-10-27T10:13:24.828Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "threading-system-v2",
+          "parentTemplateName": "Thread-Aware Debugging System"
+        }
+      ]
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440005",
@@ -125,7 +161,16 @@
       },
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
-      "injectedTo": []
+      "injectedTo": [
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+          "injectedAt": "2025-10-27T10:13:24.828Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "threading-system-v2",
+          "parentTemplateName": "Thread-Aware Debugging System"
+        }
+      ]
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440006",
@@ -146,7 +191,16 @@
       },
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
-      "injectedTo": []
+      "injectedTo": [
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+          "injectedAt": "2025-10-27T10:13:24.828Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "threading-system-v2",
+          "parentTemplateName": "Thread-Aware Debugging System"
+        }
+      ]
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440007",
@@ -168,7 +222,16 @@
       },
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
-      "injectedTo": []
+      "injectedTo": [
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+          "injectedAt": "2025-10-27T10:13:24.828Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "threading-system-v2",
+          "parentTemplateName": "Thread-Aware Debugging System"
+        }
+      ]
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440008",
@@ -189,7 +252,16 @@
       },
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
-      "injectedTo": []
+      "injectedTo": [
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+          "injectedAt": "2025-10-27T10:13:24.828Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "threading-system-v2",
+          "parentTemplateName": "Thread-Aware Debugging System"
+        }
+      ]
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440009",
@@ -210,7 +282,16 @@
       },
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
-      "injectedTo": []
+      "injectedTo": [
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+          "injectedAt": "2025-10-27T10:13:24.828Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "threading-system-v2",
+          "parentTemplateName": "Thread-Aware Debugging System"
+        }
+      ]
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440010",
@@ -231,11 +312,141 @@
       },
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
-      "injectedTo": []
+      "injectedTo": [
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+          "injectedAt": "2025-10-27T10:13:24.828Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "threading-system-v2",
+          "parentTemplateName": "Thread-Aware Debugging System"
+        }
+      ]
     }
   ],
   "createdAt": "2025-01-26T10:00:00.000Z",
-  "updatedAt": "2025-01-26T10:00:00.000Z",
-  "auditLog": [],
+  "updatedAt": "2025-10-27T10:13:24.828Z",
+  "auditLog": [
+    {
+      "id": "audit-1761560004828-pl65zv0kf",
+      "timestamp": "2025-10-27T10:13:24.828Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "550e8400-e29b-41d4-a716-446655440001",
+        "itemTitle": "Threading System Architecture",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761560004828-jtrwqi7km",
+      "timestamp": "2025-10-27T10:13:24.828Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "550e8400-e29b-41d4-a716-446655440002",
+        "itemTitle": "Threading Configuration Schema",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761560004828-09j0klhh8",
+      "timestamp": "2025-10-27T10:13:24.828Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "550e8400-e29b-41d4-a716-446655440003",
+        "itemTitle": "ThreadSpec Decorator Implementation",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761560004828-42t4ibj9f",
+      "timestamp": "2025-10-27T10:13:24.828Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "550e8400-e29b-41d4-a716-446655440004",
+        "itemTitle": "ThreadLog Decorator with Delta Detection",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761560004828-h9i0jnka7",
+      "timestamp": "2025-10-27T10:13:24.828Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "550e8400-e29b-41d4-a716-446655440005",
+        "itemTitle": "Thread Control Center API",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761560004828-kv17lh5le",
+      "timestamp": "2025-10-27T10:13:24.828Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "550e8400-e29b-41d4-a716-446655440006",
+        "itemTitle": "Debugging Workflow with Threading",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761560004828-j75q5zykl",
+      "timestamp": "2025-10-27T10:13:24.828Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "550e8400-e29b-41d4-a716-446655440007",
+        "itemTitle": "ThreadAnalyzer - Async Pattern Detection",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761560004828-mhxi78pbl",
+      "timestamp": "2025-10-27T10:13:24.828Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "550e8400-e29b-41d4-a716-446655440008",
+        "itemTitle": "Best Practices for Threading System",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761560004828-nu0mxqq6p",
+      "timestamp": "2025-10-27T10:13:24.828Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "550e8400-e29b-41d4-a716-446655440009",
+        "itemTitle": "Threading CLI Commands",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761560004828-emtsjwbtt",
+      "timestamp": "2025-10-27T10:13:24.828Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "550e8400-e29b-41d4-a716-446655440010",
+        "itemTitle": "Threading System Troubleshooting",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761560004828-kwehh3oj5",
+      "timestamp": "2025-10-27T10:13:24.828Z",
+      "operation": "template.injected",
+      "actor": "user",
+      "details": {
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+        "context": "10 items injected"
+      }
+    }
+  ],
   "versionHistory": []
 }

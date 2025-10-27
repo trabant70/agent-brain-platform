@@ -203,6 +203,13 @@ export class TemplateOperationsService {
   }
 
   /**
+   * Check if template is read-only (bundled and not user-editable)
+   */
+  private isTemplateReadOnly(template: MarketplaceTemplate | undefined): boolean {
+    return template?.source === TemplateSource.BUNDLED && !template.userEditable;
+  }
+
+  /**
    * Add item to template
    */
   async addItemToTemplate(templateId: string, options: {
@@ -213,8 +220,8 @@ export class TemplateOperationsService {
     tags: string[];
   }): Promise<KnowledgeItem> {
     const template = this.templateStore.getTemplate(templateId);
-    if (template?.source === TemplateSource.BUNDLED) {
-      throw new Error(`Cannot add items to bundled template "${template.name}" - bundled templates are read-only. Clone the template first to make changes.`);
+    if (this.isTemplateReadOnly(template)) {
+      throw new Error(`Cannot add items to bundled template "${template?.name}" - bundled templates are read-only. Clone the template first to make changes.`);
     }
 
     const item = this.templateStore.addItemToTemplate(
@@ -255,8 +262,8 @@ export class TemplateOperationsService {
     tags?: string[];
   }): Promise<void> {
     const template = this.templateStore.getTemplate(templateId);
-    if (template?.source === TemplateSource.BUNDLED) {
-      throw new Error(`Cannot update items in bundled template "${template.name}" - bundled templates are read-only. Clone the template first to make changes.`);
+    if (this.isTemplateReadOnly(template)) {
+      throw new Error(`Cannot update items in bundled template "${template?.name}" - bundled templates are read-only. Clone the template first to make changes.`);
     }
 
     const success = this.templateStore.updateItem(templateId, itemId, updates, 'user');
@@ -298,7 +305,7 @@ export class TemplateOperationsService {
       throw new Error(`Template ${templateId} not found`);
     }
 
-    if (template?.source === TemplateSource.BUNDLED) {
+    if (this.isTemplateReadOnly(template)) {
       throw new Error(`Cannot delete items from bundled template "${template.name}" - bundled templates are read-only. Clone the template first to make changes.`);
     }
 
