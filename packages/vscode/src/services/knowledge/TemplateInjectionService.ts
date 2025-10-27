@@ -342,17 +342,29 @@ export class TemplateInjectionService {
 
     // Use provided context or current context
     const effectiveContext = context || this.currentMaturityContext;
-    if (!effectiveContext) {
-      throw new Error('No maturity context available for preview');
+
+    let matched: any[];
+    let excluded: any[];
+
+    if (effectiveContext) {
+      // Filter items using MaturityFilterEngine
+      const coreContext = this.toCoreContext(effectiveContext);
+      const filterResult = this.maturityFilterEngine.filterItems(
+        template.items,
+        coreContext
+      );
+      matched = filterResult.matched;
+      excluded = filterResult.excluded;
+    } else {
+      // No maturity context - include all items as matched
+      matched = template.items.map(item => ({
+        itemId: item.id,
+        itemTitle: item.title,
+        distance: 0,
+        relevanceScore: 1.0
+      }));
+      excluded = [];
     }
-
-    const coreContext = this.toCoreContext(effectiveContext);
-
-    // Filter items using MaturityFilterEngine
-    const { matched, excluded } = this.maturityFilterEngine.filterItems(
-      template.items,
-      coreContext
-    );
 
     // Generate markers for preview
     const groupId = `${groupType.toLowerCase()}-${templateId}`;
@@ -390,7 +402,7 @@ export class TemplateInjectionService {
    * Uses V2 group markers with metadata
    */
   async injectMaturityGroup(
-    options: GroupInjectionOptions & { targetFilePath: string }
+    options: GroupInjectionOptions & { targetFilePath: string; maturityContext?: MaturityContext; includeAllItems?: boolean }
   ): Promise<void> {
     const {
       groupType,
@@ -398,14 +410,16 @@ export class TemplateInjectionService {
       itemIds,
       replaceExisting = false,
       metadata = {},
-      targetFilePath
+      targetFilePath,
+      maturityContext,
+      includeAllItems = false
     } = options;
 
     logger.info(
       LogCategory.EXTENSION,
       'Injecting maturity group',
       'TemplateInjectionService.injectMaturityGroup',
-      { groupType, groupId, itemCount: itemIds.length, targetFilePath },
+      { groupType, groupId, itemCount: itemIds.length, targetFilePath, includeAllItems },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
 
@@ -436,11 +450,31 @@ export class TemplateInjectionService {
     }
 
     // Get items from store
-    const items: KnowledgeItem[] = [];
-    for (const itemId of itemIds) {
-      const item = this.templateStore.getItem(itemId);
-      if (item) {
-        items.push(item);
+    let items: KnowledgeItem[] = [];
+
+    if (itemIds.length > 0) {
+      // Use provided item IDs
+      for (const itemId of itemIds) {
+        const item = this.templateStore.getItem(itemId);
+        if (item) {
+          items.push(item);
+        }
+      }
+    } else if (groupType === GroupType.TEMPLATE) {
+      // For templates with no specific itemIds, get all items from the template
+      const template = this.templateStore.getTemplate(groupId);
+      if (!template || !template.items) {
+        throw new Error(`Template ${groupId} not found or has no items`);
+      }
+
+      if (includeAllItems || !maturityContext) {
+        // Include all items (no filtering)
+        items = template.items;
+      } else {
+        // Filter items based on maturity context
+        const coreContext = this.toCoreContext(maturityContext);
+        const { matched } = this.maturityFilterEngine.filterItems(template.items, coreContext);
+        items = template.items.filter(item => matched.some(m => m.itemId === item.id));
       }
     }
 
