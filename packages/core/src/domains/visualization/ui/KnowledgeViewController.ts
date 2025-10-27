@@ -888,7 +888,20 @@ export class KnowledgeViewController {
     const itemCount = document.getElementById('knowledge-item-count');
 
     if (statusText) {
-      statusText.textContent = t('status.ready');
+      // Calculate scan statistics
+      const filesScanned = this.state.claudeMdFiles.length;
+      const totalInjections = this.state.claudeMdFiles.reduce((sum, file) => sum + (file.templates?.length || 0), 0);
+      const filesWithWarnings = this.state.claudeMdFiles.filter(f => f.hasConflicts || (f.conflicts && f.conflicts.length > 0)).length;
+
+      if (filesScanned > 0) {
+        let statusParts = [`${filesScanned} file(s) scanned`, `${totalInjections} injection(s)`];
+        if (filesWithWarnings > 0) {
+          statusParts.push(`⚠️ ${filesWithWarnings} warning(s)`);
+        }
+        statusText.textContent = statusParts.join(' • ');
+      } else {
+        statusText.textContent = t('status.ready');
+      }
     }
 
     if (itemCount) {
