@@ -33,8 +33,11 @@ import {
   TemplateRegistry,
   TemplateInstaller,
   MaturityContext,
-  MaturityConfigManager
+  MaturityConfigManager,
+  GroupType
 } from '@agent-brain/core/domains/knowledge';
+
+import type { InjectionPreview } from '@agent-brain/core/domains/knowledge/GroupTypes';
 
 import { KnowledgeEventStorage } from '@agent-brain/core/domains/events';
 import { logger, LogCategory, LogPathway } from '@agent-brain/core/infrastructure/logging/Logger';
@@ -401,6 +404,43 @@ export class KnowledgeManager {
 
   async removeV1Template(templateId: string, targetFilePath: string): Promise<void> {
     await this.templateInjectionService.removeTemplate(templateId, targetFilePath);
+  }
+
+  /**
+   * Preview maturity-based template injection
+   * Returns preview data showing which items match the current context
+   */
+  async previewMaturityInjection(
+    templateId: string,
+    context?: MaturityContext
+  ): Promise<InjectionPreview> {
+    return await this.templateInjectionService.previewMaturityGroupInjection(
+      templateId,
+      GroupType.TEMPLATE,
+      context
+    );
+  }
+
+  /**
+   * Inject template with maturity-based filtering
+   * Only injects items that match the provided maturity context
+   */
+  async injectMaturityTemplate(
+    templateId: string,
+    targetFilePath: string,
+    maturityContext?: MaturityContext,
+    includeAllItems: boolean = false
+  ): Promise<void> {
+    await this.templateInjectionService.injectMaturityGroup({
+      groupType: GroupType.TEMPLATE,
+      groupId: templateId,
+      itemIds: [], // Will be filtered by service
+      targetFilePath,
+      maturityContext,
+      replaceExisting: false,
+      includeAllItems
+    });
+    await this.templateFileService.saveTemplatesToFiles(this.templateStore);
   }
 
   // ==========================================================================

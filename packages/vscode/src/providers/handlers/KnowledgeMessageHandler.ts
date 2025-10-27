@@ -86,6 +86,14 @@ export class KnowledgeMessageHandler {
         await this.handleV1InjectTemplate(message.payload);
         return true;
 
+      case 'v1:preview-template-injection':
+        await this.handleV1PreviewTemplateInjection(message.payload);
+        return true;
+
+      case 'v1:inject-template-confirmed':
+        await this.handleV1InjectTemplateConfirmed(message.payload);
+        return true;
+
       case 'v1:export-template':
         await this.handleV1ExportTemplate(message.payload);
         return true;
@@ -786,6 +794,136 @@ export class KnowledgeMessageHandler {
       this.context.view?.webview.postMessage({
         type: 'v1:error',
         payload: { message: error.message, operation: 'inject-template' }
+      });
+    }
+  }
+
+  /**
+   * Handle v1:preview-template-injection - Generate preview for maturity-based injection
+   */
+  private async handleV1PreviewTemplateInjection(payload: {
+    templateId: string;
+    filePath?: string;
+    maturityContext?: any;
+  }): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling v1:preview-template-injection',
+        'KnowledgeMessageHandler.handleV1PreviewTemplateInjection',
+        { templateId: payload.templateId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      // Get target file path (use focused file if not provided)
+      let targetFilePath = payload.filePath;
+      if (!targetFilePath) {
+        const activeEditor = vscode.window.activeTextEditor;
+        if (!activeEditor) {
+          throw new Error('No file is currently open');
+        }
+        targetFilePath = activeEditor.document.uri.fsPath;
+      }
+
+      // Generate preview using maturity context
+      const preview = await this.context.knowledgeManager.previewMaturityInjection(
+        payload.templateId,
+        payload.maturityContext
+      );
+
+      // Send preview data back to webview
+      this.context.view?.webview.postMessage({
+        type: 'v1:preview-injection-data',
+        payload: {
+          preview,
+          templateId: payload.templateId,
+          filePath: targetFilePath
+        }
+      });
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'Preview generated successfully',
+        'KnowledgeMessageHandler.handleV1PreviewTemplateInjection',
+        { templateId: payload.templateId, matchedItems: preview.matchedItems.length, excludedItems: preview.excludedItems.length },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to generate injection preview',
+        'KnowledgeMessageHandler.handleV1PreviewTemplateInjection',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to generate preview: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'preview-template-injection' }
+      });
+    }
+  }
+
+  /**
+   * Handle v1:inject-template-confirmed - Execute maturity-based injection after user confirmation
+   */
+  private async handleV1InjectTemplateConfirmed(payload: {
+    templateId: string;
+    filePath: string;
+    includeAllItems: boolean;
+    maturityContext?: any;
+  }): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling v1:inject-template-confirmed',
+        'KnowledgeMessageHandler.handleV1InjectTemplateConfirmed',
+        { templateId: payload.templateId, includeAllItems: payload.includeAllItems },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      // Execute maturity-based injection
+      await this.context.knowledgeManager.injectMaturityTemplate(
+        payload.templateId,
+        payload.filePath,
+        payload.maturityContext,
+        payload.includeAllItems
+      );
+
+      // Refresh claude.md file statistics
+      await this.sendClaudeMdFiles();
+
+      const itemsType = payload.includeAllItems ? 'all items' : 'matched items only';
+      vscode.window.showInformationMessage(`Template injected (${itemsType}) to ${payload.filePath}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:inject-template-success',
+        payload: { templateId: payload.templateId, filePath: payload.filePath }
+      });
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'Template injected successfully with maturity filtering',
+        'KnowledgeMessageHandler.handleV1InjectTemplateConfirmed',
+        { templateId: payload.templateId, includeAllItems: payload.includeAllItems },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to inject template',
+        'KnowledgeMessageHandler.handleV1InjectTemplateConfirmed',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to inject template: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'inject-template-confirmed' }
       });
     }
   }
