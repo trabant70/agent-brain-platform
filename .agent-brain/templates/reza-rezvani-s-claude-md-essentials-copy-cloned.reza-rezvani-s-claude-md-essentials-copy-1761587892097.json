@@ -1,0 +1,673 @@
+{
+  "id": "cloned.reza-rezvani-s-claude-md-essentials-copy-1761587892097",
+  "name": "Reza Rezvani's CLAUDE.md Essentials (Copy)",
+  "description": "10 game-changing CLAUDE.md entries from Reza Rezvani that transform AI coding sessions into a superpower.",
+  "version": "1.0.0",
+  "createdAt": "2025-10-27T17:58:12.097Z",
+  "updatedAt": "2025-10-27T17:58:12.097Z",
+  "category": "best-practices",
+  "tags": [
+    "claude-md",
+    "ai-agent",
+    "workflow",
+    "best-practices",
+    "reza-rezvani"
+  ],
+  "author": {
+    "name": "Reza Rezvani",
+    "url": "https://medium.com/@reza.rezvani"
+  },
+  "license": "CC-BY-4.0",
+  "source": "cloned",
+  "items": [
+    {
+      "id": "item-1761587892097-g3ovn1eg6",
+      "type": "guideline",
+      "scope": "team",
+      "title": "Architecture Blueprint - The 10,000-Foot View",
+      "body": "# Architecture Blueprint - The 10,000-Foot View\n\n**Original concept by Reza Rezvani**\n\n## Purpose\nProvide the high-level system architecture upfront so AI agents always code with the grand plan in mind.\n\n## What to Include\n\n**Tech Stack:**\n- Frontend framework (React, Vue, etc.)\n- Backend framework (Express, Django, etc.)\n- Database (PostgreSQL, MongoDB, SQLite, etc.)\n- Key libraries and their purposes\n\n**System Layers:**\n- How components communicate\n- API endpoints and protocols\n- Authentication/authorization flow\n- Data flow from UI to database\n\n**Design Patterns:**\n- MVC, MVVM, or other architectural pattern\n- Module organization\n- Separation of concerns\n\n## Example\n```markdown\n## Architecture\n\nFull-stack app with React frontend and Express backend:\n- **Frontend**: React 19 SPA (Vite), component-based UI\n- **Backend**: Express.js REST API, MVC pattern\n- **Database**: PostgreSQL with tables for users, posts, comments\n- **Communication**: Frontend calls backend at http://localhost:3001/api/\n- **Auth**: JWT tokens stored in httpOnly cookies\n```\n\n## Benefits\n- Prevents mixing patterns or misplacing files\n- Ensures code fits the system design\n- AI sees the forest, not just trees\n- Reduces architectural drift\n\n## Keep Updated\nWhenever you complete a major refactor, update this section. Tell the AI: \"Update the Architecture Blueprint in CLAUDE.md to reflect our new structure.\"",
+      "tags": [
+        "architecture",
+        "system-design",
+        "documentation"
+      ],
+      "path": "",
+      "relativePath": "",
+      "valid": true,
+      "metadata": {
+        "createdAt": "2025-10-27T17:58:12.097Z",
+        "updatedAt": "2025-10-27T17:58:12.097Z",
+        "author": "Reza Rezvani",
+        "version": 1
+      },
+      "injectedTo": [],
+      "templateId": "cloned.reza-rezvani-s-claude-md-essentials-copy-1761587892097",
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
+    },
+    {
+      "id": "item-1761587892097-z80kmq33h",
+      "type": "guideline",
+      "scope": "team",
+      "title": "Command Center - Never Forget How to Build",
+      "body": "# Command Center - Never Forget How to Build\n\n**Original concept by Reza Rezvani**\n\n## Purpose\nDocument all common commands so AI agents never ask \"How do I run this?\" and can execute the right commands automatically.\n\n## What to Include\n\n**Development:**\n- Start dev server\n- Build for production\n- Run in watch mode\n\n**Testing:**\n- Run all tests\n- Run specific test suites\n- Generate coverage reports\n\n**Quality:**\n- Lint code\n- Format code\n- Type checking\n\n**Deployment:**\n- Build artifacts\n- Deploy commands\n- Environment setup\n\n## Example Template\n```markdown\n## Commands\n\n**Development:**\n- `npm run dev` - Start development server (auto-reload)\n- `npm run build` - Build for production (outputs to dist/)\n\n**Testing:**\n- `npm run test` - Run test suite (Jest with coverage)\n- `npm run test:watch` - Run tests in watch mode\n\n**Quality:**\n- `npm run lint` - Lint with ESLint\n- `npm run format` - Format with Prettier\n\n**Environment:**\n- Node 18+ required\n- Copy .env.example to .env before first run\n```\n\n## Pro Tips\n- Include tool versions if setup is finicky\n- Note any environment prerequisites\n- Document safe commands that don't need permission\n- Add deployment steps if applicable\n\n## Result\nAI will use correct commands automatically, no more guessing or \"it works on my machine\" issues.",
+      "tags": [
+        "commands",
+        "cli",
+        "workflow",
+        "reference"
+      ],
+      "path": "",
+      "relativePath": "",
+      "valid": true,
+      "metadata": {
+        "createdAt": "2025-10-27T17:58:12.097Z",
+        "updatedAt": "2025-10-27T17:58:12.097Z",
+        "author": "Reza Rezvani",
+        "version": 1
+      },
+      "injectedTo": [],
+      "templateId": "cloned.reza-rezvani-s-claude-md-essentials-copy-1761587892097",
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
+    },
+    {
+      "id": "item-1761587892097-7c7vd2y46",
+      "type": "standard",
+      "scope": "team",
+      "title": "Style Guide Sheriff - Enforce Consistency",
+      "body": "# Style Guide Sheriff - Enforce Consistency\n\n**Original concept by Reza Rezvani**\n\n## Purpose\nKeep code style consistent across all contributions, whether human or AI-generated.\n\n## Core Style Elements\n\n**Syntax:**\n- Module system (ES6 import/export vs CommonJS)\n- Modern features (ES6+ preferred)\n- Language-specific conventions\n\n**Formatting:**\n- Indentation (2 spaces, 4 spaces, tabs)\n- Quote style (single, double)\n- Semicolons (use or omit)\n- Line length limits\n\n**Naming Conventions:**\n- Variables: camelCase\n- Functions: camelCase\n- Classes/Components: PascalCase\n- Constants: UPPER_SNAKE_CASE\n- Files: kebab-case or PascalCase\n\n**Patterns:**\n- Prefer functional over class components (React)\n- Async/await over promises.then()\n- Avoid deprecated APIs\n\n## Example\n```markdown\n## Code Style\n\n- **Syntax**: ES6+ modules, arrow functions\n- **Format**: 2-space indent, single quotes, no semicolons\n- **Naming**: camelCase for vars/functions, PascalCase for components\n- **Patterns**: Functional components with hooks (React)\n- **Linting**: Must pass ESLint with zero warnings\n```\n\n## Extended Guidelines\n\n**Comments & Documentation:**\n- JSDoc format for public APIs\n- Explain \"why\" not \"what\" in comments\n- Remove commented-out code before commit\n\n**Commit Messages:**\n- Conventional commits (feat:, fix:, docs:)\n- Include ticket IDs if applicable\n- One-line summary, details after blank line\n\n## Result\nAI outputs will conform to style automatically, pass linters, and look uniform with human-written code.",
+      "tags": [
+        "style-guide",
+        "formatting",
+        "conventions",
+        "consistency"
+      ],
+      "path": "",
+      "relativePath": "",
+      "valid": true,
+      "metadata": {
+        "createdAt": "2025-10-27T17:58:12.097Z",
+        "updatedAt": "2025-10-27T17:58:12.097Z",
+        "author": "Reza Rezvani",
+        "version": 1
+      },
+      "injectedTo": [],
+      "templateId": "cloned.reza-rezvani-s-claude-md-essentials-copy-1761587892097",
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
+    },
+    {
+      "id": "item-1761587892097-erx8np17s",
+      "type": "best-practice",
+      "scope": "team",
+      "title": "Test Bench Coach - Make Testing First-Class",
+      "body": "# Test Bench Coach - Make Testing First-Class\n\n**Original concept by Reza Rezvani**\n\n## Philosophy\nFor every feature or bugfix, write or update tests as part of the workflow. Testing is not optional.\n\n## Testing Mindset\n\n**Test-Driven Development:**\n- Consider writing tests first (or immediately after)\n- Red-Green-Refactor cycle\n- Tests as specification\n\n**Coverage Goals:**\n- High coverage on core logic (services, reducers, utilities)\n- Include edge cases and error states\n- Focus on behavior, not implementation\n\n**Test Types:**\n- Unit tests for pure functions\n- Integration tests for API endpoints\n- Component tests for UI (React Testing Library)\n- E2E tests for critical user flows\n\n## Framework Specifics\n```markdown\n## Testing Instructions\n\n**Framework**: Jest for unit tests, React Testing Library for components\n\n**Approach**:\n- Always include tests for new features\n- Fix bugs by first writing a failing test\n- Run `npm run test` before considering task done\n\n**Test Structure**:\n- Use `describe` blocks for modules\n- Use `it('should...')` for behaviors\n- Keep tests focused and readable\n\n**Edge Cases**:\n- Test invalid inputs\n- Test empty/null states\n- Test error conditions\n- Test boundary values\n```\n\n## Pro Tips\n- Ask AI to generate additional edge case tests\n- Leverage AI's tireless nature for exhaustive testing\n- Include property-based tests for critical logic\n- AI can think of tests you might forget at 2 AM\n\n## Result\nAI will auto-suggest test files after implementing features, write comprehensive test suites, and catch edge cases proactively.",
+      "tags": [
+        "testing",
+        "tdd",
+        "quality",
+        "coverage"
+      ],
+      "path": "",
+      "relativePath": "",
+      "valid": true,
+      "metadata": {
+        "createdAt": "2025-10-27T17:58:12.097Z",
+        "updatedAt": "2025-10-27T17:58:12.097Z",
+        "author": "Reza Rezvani",
+        "version": 1
+      },
+      "injectedTo": [],
+      "templateId": "cloned.reza-rezvani-s-claude-md-essentials-copy-1761587892097",
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
+    },
+    {
+      "id": "item-1761587892097-343kbeq6w",
+      "type": "best-practice",
+      "scope": "team",
+      "title": "Error Handling Mantra - Debug Like a Pro",
+      "body": "# Error Handling Mantra - Debug Like a Pro\n\n**Original concept by Reza Rezvani**\n\n## Core Principles\n\n### 1. Diagnose, Don't Guess\n- Analyze root cause step-by-step\n- Check assumptions and inputs\n- Review relevant code paths\n- Use systematic approach, not random fixes\n\n### 2. Graceful Handling\n- Use try/catch around async operations\n- Return user-friendly error messages\n- Provide fallback values when appropriate\n- Fail fast on bad input\n\n### 3. Helpful Logging\n- Include context in error logs\n- Log at appropriate levels (error, warn, info)\n- Avoid log spam in production\n- Make errors traceable\n\n### 4. No Silent Failures\n- Never swallow exceptions silently\n- Either throw, log, or handle explicitly\n- Make failures visible\n- Surface errors to monitoring systems\n\n## Implementation Guide\n```markdown\n## Error Handling\n\n**When Error Occurs**:\n1. Explain possible causes step-by-step\n2. Check assumptions and data flow\n3. Propose fix with reasoning\n4. Add safeguards to prevent recurrence\n\n**Code Patterns**:\n- Wrap risky operations in try/catch\n- Validate inputs before processing\n- Use Error Boundaries (React)\n- Return meaningful error codes/messages\n\n**Debugging Strategy**:\n- Add targeted console.debug statements\n- Consider binary search through git history\n- Isolate the issue before fixing\n- Test the fix against multiple scenarios\n```\n\n## Pro Tips\n- Add React Error Boundaries around API-calling components\n- Include error handling in test cases\n- Document known edge cases that cause errors\n- Stop after 3 failed attempts and reassess approach\n\n## Result\nAI will catch its own mistakes more often, add proper error handling proactively, and debug systematically rather than guessing.",
+      "tags": [
+        "error-handling",
+        "debugging",
+        "reliability",
+        "logging"
+      ],
+      "path": "",
+      "relativePath": "",
+      "valid": true,
+      "metadata": {
+        "createdAt": "2025-10-27T17:58:12.097Z",
+        "updatedAt": "2025-10-27T17:58:12.097Z",
+        "author": "Reza Rezvani",
+        "version": 1
+      },
+      "injectedTo": [],
+      "templateId": "cloned.reza-rezvani-s-claude-md-essentials-copy-1761587892097",
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
+    },
+    {
+      "id": "item-1761587892097-fh6nnzrkq",
+      "type": "standard",
+      "scope": "team",
+      "title": "Clean Code Commandments - Write Maintainable Code",
+      "body": "# Clean Code Commandments - Write Maintainable Code\n\n**Original concept by Reza Rezvani**\n\n## The Commandments\n\n### 1. Function Size Limits\n- Aim for functions ≤ 50 lines\n- Break large functions into smaller helpers\n- Each function should fit on one screen\n\n### 2. Single Responsibility\n- Each function/module has one clear purpose\n- Don't lump unrelated logic together\n- If function does two things, split it\n\n### 3. Descriptive Naming\n- Use clear, specific names\n- Avoid generic names: `tmp`, `data`, `handleStuff`\n- Prefer: `calculateInvoiceTotal` over `doCalc`\n- Names should reveal intent\n\n### 4. DRY Principle (Don't Repeat Yourself)\n- No duplicate code\n- Refactor similar logic into shared functions\n- If copying code, consider abstraction\n\n### 5. Meaningful Comments\n- Explain non-obvious logic\n- Don't comment self-explanatory code\n- Remove commented-out code\n- Update comments when code changes\n\n### 6. Code Organization\n- Group related functions\n- Logical file structure\n- Separate concerns (UI, logic, data)\n- Consistent module patterns\n\n## Example Guidelines\n```markdown\n## Clean Code\n\n**Function Rules**:\n- Max 50 lines per function\n- Single responsibility only\n- Descriptive names (calculateTotal not doStuff)\n\n**Code Quality**:\n- DRY - no duplication\n- Comments explain \"why\" not \"what\"\n- Remove debug code and commented lines\n\n**Organization**:\n- Group related functions\n- Consistent import order\n- Logical file structure\n```\n\n## Anti-Patterns to Avoid\n- Functions over 100 lines\n- Generic variable names\n- Nested ternaries (> 2 levels)\n- Deep nesting (> 3 levels)\n- Magic numbers (use constants)\n- God objects/classes\n\n## Result\nAI will self-correct during coding, refactor large functions automatically, spot code duplication, and produce clean, maintainable code by default.",
+      "tags": [
+        "clean-code",
+        "maintainability",
+        "refactoring",
+        "best-practices"
+      ],
+      "path": "",
+      "relativePath": "",
+      "valid": true,
+      "metadata": {
+        "createdAt": "2025-10-27T17:58:12.097Z",
+        "updatedAt": "2025-10-27T17:58:12.097Z",
+        "author": "Reza Rezvani",
+        "version": 1
+      },
+      "injectedTo": [],
+      "templateId": "cloned.reza-rezvani-s-claude-md-essentials-copy-1761587892097",
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
+    },
+    {
+      "id": "item-1761587892097-k5s0a7laj",
+      "type": "guideline",
+      "scope": "team",
+      "title": "Security Sentry - Code with Security in Mind",
+      "body": "# Security Sentry - Code with Security in Mind\n\n**Original concept by Reza Rezvani**\n\n## Critical Security Practices\n\n### Input Validation\n- Validate ALL inputs (users, APIs, files)\n- Never trust user input\n- Check format, length, type\n- Whitelist valid inputs\n\n### Authentication & Authorization\n- Hash passwords with bcrypt (never plain text)\n- Use salt with hashing\n- Implement rate limiting on login\n- Account lockout after failed attempts\n- Validate JWT signatures\n- Check permissions before actions\n\n### Database Safety\n- Use parameterized queries or ORM\n- NEVER concatenate user input in SQL\n- Prevent SQL injection\n- Use least privilege for DB users\n\n### XSS & CSRF Protection\n- Sanitize HTML content (use DOMPurify)\n- Escape user-generated content\n- Use CSRF tokens for state-changing forms\n- Set secure HTTP headers\n- Avoid dangerouslySetInnerHTML unless sanitized\n\n### Dependencies & Code Execution\n- Avoid eval() and Function()\n- Don't execute dynamic code from users\n- Keep dependencies updated\n- Check for known vulnerabilities\n- Prefer built-in solutions over risky packages\n\n## Example Security Guide\n```markdown\n## Security Guidelines\n\n**Input Handling**:\n- Validate all user inputs (email format, length, type)\n- Sanitize HTML with DOMPurify before rendering\n- Never trust external data\n\n**Authentication**:\n- Hash passwords with bcrypt (12 rounds minimum)\n- No plain text passwords EVER\n- Rate limit login attempts (5 per 15 min)\n- Use httpOnly cookies for tokens\n\n**Database**:\n- Parameterized queries only\n- No string concatenation in SQL\n- Use ORM for complex queries\n\n**API Security**:\n- HTTPS only in production\n- Validate JWT signatures\n- Check authorization for every endpoint\n- Return generic error messages (don't leak info)\n```\n\n## Common Vulnerabilities to Prevent\n- SQL Injection\n- XSS (Cross-Site Scripting)\n- CSRF (Cross-Site Request Forgery)\n- Authentication bypass\n- Path traversal\n- Insecure direct object references\n- Mass assignment\n- Sensitive data exposure\n\n## Result\nAI will catch security issues proactively, refuse insecure implementations, suggest security improvements, and act as a security reviewer for every line of code.",
+      "tags": [
+        "security",
+        "authentication",
+        "xss",
+        "sql-injection",
+        "validation"
+      ],
+      "path": "",
+      "relativePath": "",
+      "valid": true,
+      "metadata": {
+        "createdAt": "2025-10-27T17:58:12.097Z",
+        "updatedAt": "2025-10-27T17:58:12.097Z",
+        "author": "Reza Rezvani",
+        "version": 1
+      },
+      "injectedTo": [],
+      "templateId": "cloned.reza-rezvani-s-claude-md-essentials-copy-1761587892097",
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
+    },
+    {
+      "id": "item-1761587892097-05el2ql3i",
+      "type": "convention",
+      "scope": "team",
+      "title": "Teamwork Protocol - Collaborate Effectively",
+      "body": "# Teamwork Protocol - Collaborate Effectively\n\n**Original concept by Reza Rezvani**\n\n## Purpose\nAlign AI coding with team collaboration conventions - from Git etiquette to documentation standards.\n\n## Git Workflow\n\n**Branching Strategy**:\n- Feature branches off `dev` or `main`\n- Branch naming: `feature/login-form`, `fix/api-timeout`\n- Never commit directly to protected branches\n- Delete branches after merge\n\n**Commit Messages**:\n- Use conventional commits: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`\n- Include ticket IDs: `feat(auth): add OAuth support (TICKET-123)`\n- One-line summary (50 chars), details after blank line\n- Imperative mood: \"Add feature\" not \"Added feature\"\n\n**Pull Requests**:\n- Create PR when feature complete\n- Write clear description of changes\n- Tag relevant reviewers\n- Link to tickets/issues\n- Ensure CI/CD passes before requesting review\n\n## Documentation Standards\n\n**Code Documentation**:\n- Document public APIs and functions\n- Update README when behavior changes\n- Keep CHANGELOG.md current\n- Document new endpoints in API docs\n\n**Comments**:\n- Explain complex logic\n- Document workarounds with context\n- Add TODOs with ticket references\n- Keep comments up-to-date\n\n## Example Protocol\n```markdown\n## Collaboration Workflow\n\n**Git Flow**:\n- Branch from `dev` for features\n- Naming: `feature/name` or `fix/name`\n- Commit format: `type(scope): message (TICKET-ID)`\n- PR required for merging to `dev` or `main`\n\n**Documentation**:\n- Update API docs for new endpoints\n- Add CHANGELOG entry for notable changes\n- Document breaking changes prominently\n- Keep README examples current\n\n**Code Review**:\n- All PRs need 1 approval minimum\n- Address review comments before merge\n- Run linter and tests before requesting review\n- Keep PRs focused and reasonably sized\n```\n\n## Communication Standards\n\n**Commit Messages**:\n- Clear and descriptive\n- Follow team conventions\n- Include context for future maintainers\n\n**PR Descriptions**:\n- What changed and why\n- Testing performed\n- Screenshots for UI changes\n- Migration steps if needed\n\n**Documentation Updates**:\n- Same PR as code changes\n- Cover user-facing changes\n- Update examples and tutorials\n\n## Result\nAI will format commits correctly, update documentation automatically, create proper PRs, and follow team workflows seamlessly.",
+      "tags": [
+        "git",
+        "collaboration",
+        "workflow",
+        "documentation",
+        "pull-requests"
+      ],
+      "path": "",
+      "relativePath": "",
+      "valid": true,
+      "metadata": {
+        "createdAt": "2025-10-27T17:58:12.097Z",
+        "updatedAt": "2025-10-27T17:58:12.097Z",
+        "author": "Reza Rezvani",
+        "version": 1
+      },
+      "injectedTo": [],
+      "templateId": "cloned.reza-rezvani-s-claude-md-essentials-copy-1761587892097",
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
+    },
+    {
+      "id": "item-1761587892097-usittq6th",
+      "type": "best-practice",
+      "scope": "team",
+      "title": "Edge-Case Oracle - Think Beyond the Happy Path",
+      "body": "# Edge-Case Oracle - Think Beyond the Happy Path\n\n**Original concept by Reza Rezvani**\n\n## Philosophy\nFor any non-trivial feature, systematically consider edge cases and handle them explicitly.\n\n## Categories of Edge Cases\n\n### Empty or Null Inputs\n- Empty arrays/lists\n- Null/undefined values\n- Empty strings\n- Missing required fields\n- Zero values\n\n### Boundary Conditions\n- Maximum values (overflow)\n- Minimum values (underflow)\n- Very large numbers\n- Very long strings/arrays\n- Negative numbers where unexpected\n\n### Invalid States\n- End date before start date\n- Negative quantities\n- Division by zero\n- Invalid enum values\n- Malformed data\n\n### Concurrency Issues\n- Two users editing same data\n- Race conditions\n- Lock contention\n- Stale data reads\n\n### External Dependencies\n- API timeouts\n- Network failures\n- Third-party service downtime\n- Rate limiting\n- Invalid responses\n\n## Edge Case Protocol\n```markdown\n## Edge Case Considerations\n\n**Always Consider**:\n- Empty/null inputs (empty array, missing fields, zero)\n- Boundary values (max/min, overflow, very long text)\n- Invalid states (dates out of order, negative values)\n- Concurrent access (multiple users, race conditions)\n- External failures (API down, network timeout)\n\n**How to Handle**:\n1. Identify edge case during design\n2. Decide: handle gracefully or fail fast\n3. Implement check or validation\n4. Add test case for the edge condition\n5. Document if behavior is non-obvious\n\n**Fail Fast vs Graceful**:\n- Fail fast: Throw error on bad input (development)\n- Graceful: Return safe default, log warning (production)\n```\n\n## Example Edge Cases\n\n**Date Range Picker**:\n- End date before start date → Swap them\n- Same start and end date → Valid (single day)\n- Dates in far future/past → Validate reasonable range\n\n**Financial Calculations**:\n- Empty transaction array → Return 0\n- Negative amounts → Throw error or handle as refund\n- Floating point precision → Use decimal library\n\n**User Input**:\n- Extra whitespace → Trim\n- Special characters → Sanitize\n- Too long → Truncate or reject\n- Empty required field → Show validation error\n\n## Implementation Strategy\n\n**During Planning**:\n1. List potential edge cases\n2. Decide handling strategy for each\n3. Add test cases to verify\n\n**During Coding**:\n- Add input validation\n- Implement error handling\n- Document assumptions\n- Use defensive programming\n\n**During Testing**:\n- Test each edge case explicitly\n- Verify error messages are helpful\n- Check logging is appropriate\n\n## Result\nAI will proactively identify edge cases (\"What if the array is empty?\"), implement checks without being asked, and suggest additional test cases for robustness.",
+      "tags": [
+        "edge-cases",
+        "validation",
+        "robustness",
+        "defensive-programming"
+      ],
+      "path": "",
+      "relativePath": "",
+      "valid": true,
+      "metadata": {
+        "createdAt": "2025-10-27T17:58:12.097Z",
+        "updatedAt": "2025-10-27T17:58:12.097Z",
+        "author": "Reza Rezvani",
+        "version": 1
+      },
+      "injectedTo": [],
+      "templateId": "cloned.reza-rezvani-s-claude-md-essentials-copy-1761587892097",
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
+    },
+    {
+      "id": "item-1761587892097-gc7vcptk3",
+      "type": "golden-path",
+      "scope": "team",
+      "title": "Agentic Workflow Guardrails - Plan, Execute, Verify",
+      "body": "# Agentic Workflow Guardrails - Plan, Execute, Verify\n\n**Original concept by Reza Rezvani**\n\n## Philosophy\nFor complex, multi-step tasks, break them down systematically and verify each step rather than jumping in headfirst.\n\n## The 3-Phase Approach\n\n### Phase 1: Analysis\n- Understand the requirements fully\n- Identify constraints and dependencies\n- Research relevant patterns or solutions\n- Ask clarifying questions if anything is unclear\n\n### Phase 2: Planning\n- Create structured plan or outline\n- Break into logical steps/modules\n- Identify risks and edge cases\n- Get user approval before coding\n\n### Phase 3: Implementation\n- Execute plan incrementally\n- Verify each chunk before moving on\n- Run tests after each logical unit\n- Adjust plan if something doesn't work\n\n## Workflow Guidelines\n```markdown\n## Complex Task Workflow\n\n**Step 1: Analysis & Planning**\n- For multi-step tasks, output a clear plan first\n- List steps, modules, or phases\n- Identify dependencies and order\n- Use extended reasoning for complex decisions\n\n**Step 2: Get Approval**\n- Present plan for review\n- Wait for user confirmation\n- Incorporate feedback\n- Only proceed after approval\n\n**Step 3: Incremental Implementation**\n- Implement in logical chunks\n- After each chunk: verify alignment with plan\n- Run relevant tests\n- Commit working code before next chunk\n\n**Step 4: Error Recovery**\n- If solution isn't working, backtrack and rethink\n- Don't stubbornly persist with failing approach\n- Consider alternative approaches\n- Ask for guidance if stuck after 2-3 attempts\n\n**Step 5: Review & Polish**\n- Ensure all plan items completed\n- Run full test suite\n- Check documentation is updated\n- Review for clean code principles\n```\n\n## When to Use This Workflow\n\n**Always Plan For**:\n- Features with 3+ significant components\n- Architectural changes\n- Database migrations\n- Refactoring large modules\n- New integrations (OAuth, payment APIs, etc.)\n- Security-critical features\n\n**Quick Implementation OK For**:\n- Small bug fixes\n- Style/formatting changes\n- Adding simple tests\n- Documentation updates\n\n## Extended Reasoning\n\n**Use \"Think Harder\" When**:\n- Designing complex algorithms\n- Making architectural decisions\n- Debugging mysterious issues\n- Optimizing performance\n- Resolving conflicting requirements\n\nBetter to spend more tokens on solid approach than rush into flawed code.\n\n## Example Workflow\n\n**Task**: Add OAuth2 login flow\n\n**Phase 1 - Plan** (AI outputs):\n```markdown\n1. Set up OAuth provider (Google)\n2. Create callback endpoint /auth/google/callback\n3. Handle token exchange and validation\n4. Store user session\n5. Add refresh token logic\n6. Update frontend with \"Sign in with Google\" button\n7. Add tests for auth flow\n```\n\n**Phase 2 - User approves plan** (adds refresh token requirement)\n\n**Phase 3 - Implement incrementally**:\n- Step 1: OAuth config ✓ (test: config loads)\n- Step 2: Callback endpoint ✓ (test: route responds)\n- Step 3: Token exchange ✓ (test: validates token)\n- etc.\n\n## Pro Tips\n\n**Document Plans**:\n- Save plan to PLAN.md file\n- Reference later with @filename\n- Keeps context size manageable\n\n**Custom Trigger Words**:\n- \"Let's brainstorm\" → Enter planning mode\n- \"Think harder\" → Use extended reasoning\n- \"Ship it\" → Final review and merge\n\n**Sub-Agent Strategies**:\n- Spin up specialized agents for testing, review, etc.\n- Coordinate multiple agents for parallel work\n- Use appropriate agent for task type\n\n## Result\nAI will propose structured plans, get your approval before major work, implement incrementally with verification, and recover intelligently from failures. Code quality and success rate dramatically improve.",
+      "tags": [
+        "workflow",
+        "planning",
+        "agentic-ai",
+        "incremental-development",
+        "verification"
+      ],
+      "path": "",
+      "relativePath": "",
+      "valid": true,
+      "metadata": {
+        "createdAt": "2025-10-27T17:58:12.097Z",
+        "updatedAt": "2025-10-27T17:58:12.097Z",
+        "author": "Reza Rezvani",
+        "version": 1
+      },
+      "injectedTo": [],
+      "templateId": "cloned.reza-rezvani-s-claude-md-essentials-copy-1761587892097",
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
+    }
+  ],
+  "itemCount": 10,
+  "scope": "team",
+  "versionHistory": [],
+  "auditLog": [
+    {
+      "id": "audit-1761343521969-if1beetmq",
+      "timestamp": "2025-10-24T22:05:21.969Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "guideline-architecture-blueprint",
+        "itemTitle": "Architecture Blueprint - The 10,000-Foot View",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761343521969-10o2aj0nm",
+      "timestamp": "2025-10-24T22:05:21.970Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "guideline-command-center",
+        "itemTitle": "Command Center - Never Forget How to Build",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761343521970-4nhqk2oov",
+      "timestamp": "2025-10-24T22:05:21.970Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "standard-style-guide-sheriff",
+        "itemTitle": "Style Guide Sheriff - Enforce Consistency",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761343521970-jzm80l5vx",
+      "timestamp": "2025-10-24T22:05:21.970Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "best-practice-test-bench-coach",
+        "itemTitle": "Test Bench Coach - Make Testing First-Class",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761343521970-vrr5ipioe",
+      "timestamp": "2025-10-24T22:05:21.970Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "best-practice-error-handling-mantra",
+        "itemTitle": "Error Handling Mantra - Debug Like a Pro",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761343521970-6thtbkqy5",
+      "timestamp": "2025-10-24T22:05:21.970Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "standard-clean-code-commandments",
+        "itemTitle": "Clean Code Commandments - Write Maintainable Code",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761343521970-16vxnqqg6",
+      "timestamp": "2025-10-24T22:05:21.970Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "guideline-security-sentry",
+        "itemTitle": "Security Sentry - Code with Security in Mind",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761343521970-n4e7uvdb6",
+      "timestamp": "2025-10-24T22:05:21.970Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "convention-teamwork-protocol",
+        "itemTitle": "Teamwork Protocol - Collaborate Effectively",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761343521970-6woa7to6u",
+      "timestamp": "2025-10-24T22:05:21.970Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "best-practice-edge-case-oracle",
+        "itemTitle": "Edge-Case Oracle - Think Beyond the Happy Path",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761343521970-tmavwf66o",
+      "timestamp": "2025-10-24T22:05:21.970Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "golden-path-agentic-workflow",
+        "itemTitle": "Agentic Workflow Guardrails - Plan, Execute, Verify",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761343521970-2c85pfgyr",
+      "timestamp": "2025-10-24T22:05:21.970Z",
+      "operation": "template.injected",
+      "actor": "user",
+      "details": {
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+        "context": "10 items injected"
+      }
+    },
+    {
+      "id": "audit-1761469834179-up4zm2fc1",
+      "timestamp": "2025-10-26T09:10:34.179Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "guideline-architecture-blueprint",
+        "itemTitle": "Architecture Blueprint - The 10,000-Foot View",
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md"
+      }
+    },
+    {
+      "id": "audit-1761469834179-enhxrzjuj",
+      "timestamp": "2025-10-26T09:10:34.179Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "guideline-command-center",
+        "itemTitle": "Command Center - Never Forget How to Build",
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md"
+      }
+    },
+    {
+      "id": "audit-1761469834179-rblcmt53e",
+      "timestamp": "2025-10-26T09:10:34.179Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "standard-style-guide-sheriff",
+        "itemTitle": "Style Guide Sheriff - Enforce Consistency",
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md"
+      }
+    },
+    {
+      "id": "audit-1761469834179-kcy6tht19",
+      "timestamp": "2025-10-26T09:10:34.179Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "best-practice-test-bench-coach",
+        "itemTitle": "Test Bench Coach - Make Testing First-Class",
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md"
+      }
+    },
+    {
+      "id": "audit-1761469834179-vc9fq0906",
+      "timestamp": "2025-10-26T09:10:34.179Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "best-practice-error-handling-mantra",
+        "itemTitle": "Error Handling Mantra - Debug Like a Pro",
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md"
+      }
+    },
+    {
+      "id": "audit-1761469834179-6xi0efwgv",
+      "timestamp": "2025-10-26T09:10:34.179Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "standard-clean-code-commandments",
+        "itemTitle": "Clean Code Commandments - Write Maintainable Code",
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md"
+      }
+    },
+    {
+      "id": "audit-1761469834179-j4q70hqt2",
+      "timestamp": "2025-10-26T09:10:34.179Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "guideline-security-sentry",
+        "itemTitle": "Security Sentry - Code with Security in Mind",
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md"
+      }
+    },
+    {
+      "id": "audit-1761469834179-ny642mksm",
+      "timestamp": "2025-10-26T09:10:34.179Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "convention-teamwork-protocol",
+        "itemTitle": "Teamwork Protocol - Collaborate Effectively",
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md"
+      }
+    },
+    {
+      "id": "audit-1761469834179-4xuukv6ay",
+      "timestamp": "2025-10-26T09:10:34.179Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "best-practice-edge-case-oracle",
+        "itemTitle": "Edge-Case Oracle - Think Beyond the Happy Path",
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md"
+      }
+    },
+    {
+      "id": "audit-1761469834179-n30ejqbjd",
+      "timestamp": "2025-10-26T09:10:34.179Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "golden-path-agentic-workflow",
+        "itemTitle": "Agentic Workflow Guardrails - Plan, Execute, Verify",
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md"
+      }
+    },
+    {
+      "id": "audit-1761469834179-db2afigpd",
+      "timestamp": "2025-10-26T09:10:34.179Z",
+      "operation": "template.injected",
+      "actor": "user",
+      "details": {
+        "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+        "context": "10 items injected"
+      }
+    },
+    {
+      "id": "audit-1761587892097-hj8h24lyr",
+      "timestamp": "2025-10-27T17:58:12.097Z",
+      "operation": "template.cloned",
+      "actor": "user",
+      "details": {
+        "sourceTemplateId": "bundled.reza-rezvani-essentials",
+        "sourceTemplateName": "Reza Rezvani's CLAUDE.md Essentials",
+        "context": "Cloned from \"Reza Rezvani's CLAUDE.md Essentials\" with 10 items"
+      }
+    }
+  ],
+  "sourceTemplateId": "bundled.reza-rezvani-essentials"
+}

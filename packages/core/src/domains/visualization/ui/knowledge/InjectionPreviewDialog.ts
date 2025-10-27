@@ -188,20 +188,22 @@ export class InjectionPreviewDialog {
    * Render a matched item with its reasons
    */
   private renderMatchedItem(match: MatchReason): string {
-    const dimensionIcons = this.getDimensionIcons(match.dimensions);
+    const dimensionIcons = match.dimensions ? this.getDimensionIcons(match.dimensions) : '';
 
     return `
       <div class="item-card matched">
         <div class="item-header">
           <span class="item-icon">✅</span>
-          <span class="item-id">${match.itemId}</span>
-          <span class="dimension-icons">${dimensionIcons}</span>
+          <span class="item-id">${this.escapeHtml(match.itemId)}</span>
+          ${dimensionIcons ? `<span class="dimension-icons">${dimensionIcons}</span>` : ''}
         </div>
-        <div class="item-reasons">
-          ${match.reasons.map(reason => `
-            <div class="reason-tag success">${this.escapeHtml(reason)}</div>
-          `).join('')}
-        </div>
+        ${match.reasons && match.reasons.length > 0 ? `
+          <div class="item-reasons">
+            ${match.reasons.map(reason => `
+              <div class="reason-tag success">${this.escapeHtml(reason)}</div>
+            `).join('')}
+          </div>
+        ` : ''}
       </div>
     `;
   }
@@ -210,20 +212,22 @@ export class InjectionPreviewDialog {
    * Render an excluded item with its reasons
    */
   private renderExcludedItem(match: MatchReason): string {
-    const dimensionIcons = this.getDimensionIcons(match.dimensions);
+    const dimensionIcons = match.dimensions ? this.getDimensionIcons(match.dimensions) : '';
 
     return `
       <div class="item-card excluded">
         <div class="item-header">
           <span class="item-icon">⭕</span>
-          <span class="item-id">${match.itemId}</span>
-          <span class="dimension-icons">${dimensionIcons}</span>
+          <span class="item-id">${this.escapeHtml(match.itemId)}</span>
+          ${dimensionIcons ? `<span class="dimension-icons">${dimensionIcons}</span>` : ''}
         </div>
-        <div class="item-reasons">
-          ${match.reasons.map(reason => `
-            <div class="reason-tag warning">${this.escapeHtml(reason)}</div>
-          `).join('')}
-        </div>
+        ${match.reasons && match.reasons.length > 0 ? `
+          <div class="item-reasons">
+            ${match.reasons.map(reason => `
+              <div class="reason-tag warning">${this.escapeHtml(reason)}</div>
+            `).join('')}
+          </div>
+        ` : ''}
       </div>
     `;
   }

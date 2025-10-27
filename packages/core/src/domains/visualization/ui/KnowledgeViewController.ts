@@ -340,6 +340,7 @@ export class KnowledgeViewController {
 
       // V2 Dynamic Injection Preview
       case 'v1:preview-injection-data':
+        console.log('[KnowledgeViewController] Received v1:preview-injection-data message:', message);
         this.handlePreviewInjectionResponse(message.payload);
         break;
 
@@ -507,8 +508,13 @@ export class KnowledgeViewController {
    * Handle inject template action
    */
   private async handleInjectTemplate(templateId: string): Promise<void> {
+    console.log('[KnowledgeViewController] handleInjectTemplate called with templateId:', templateId);
+
     const focusedFile = this.accordionController.getSelectedFile();
+    console.log('[KnowledgeViewController] focusedFile:', focusedFile);
+
     if (!focusedFile) {
+      console.warn('[KnowledgeViewController] No file selected');
       this.notifications.show({
         type: 'warning',
         message: 'Please select a claude.md file first',
@@ -518,6 +524,7 @@ export class KnowledgeViewController {
     }
 
     // Request preview data from extension
+    console.log('[KnowledgeViewController] Showing toast notification');
     this.notifications.show({
       type: 'info',
       message: 'Generating injection preview...',
@@ -525,14 +532,17 @@ export class KnowledgeViewController {
     });
 
     // Request preview with current maturity context
-    this.sendMessage({
+    const message = {
       type: 'v1:preview-template-injection',
       payload: {
         templateId,
         filePath: focusedFile,
         maturityContext: this.currentMaturityContext
       }
-    });
+    };
+    console.log('[KnowledgeViewController] Sending message to extension:', message);
+    this.sendMessage(message);
+    console.log('[KnowledgeViewController] Message sent, awaiting response via v1:preview-injection-data');
 
     // Response will be handled in handlePreviewInjectionResponse
   }

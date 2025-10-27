@@ -87,10 +87,12 @@ export class KnowledgeMessageHandler {
         return true;
 
       case 'v1:preview-template-injection':
+        console.log('[KnowledgeMessageHandler] Received v1:preview-template-injection:', message.payload);
         await this.handleV1PreviewTemplateInjection(message.payload);
         return true;
 
       case 'v1:inject-template-confirmed':
+        console.log('[KnowledgeMessageHandler] Received v1:inject-template-confirmed:', message.payload);
         await this.handleV1InjectTemplateConfirmed(message.payload);
         return true;
 
@@ -807,6 +809,8 @@ export class KnowledgeMessageHandler {
     maturityContext?: any;
   }): Promise<void> {
     try {
+      console.log('[KnowledgeMessageHandler] handleV1PreviewTemplateInjection started with payload:', payload);
+
       logger.debug(
         LogCategory.EXTENSION,
         'Handling v1:preview-template-injection',
@@ -817,29 +821,43 @@ export class KnowledgeMessageHandler {
 
       // Get target file path (use focused file if not provided)
       let targetFilePath = payload.filePath;
+      console.log('[KnowledgeMessageHandler] Initial targetFilePath:', targetFilePath);
+
       if (!targetFilePath) {
+        console.log('[KnowledgeMessageHandler] No filePath in payload, checking active editor');
         const activeEditor = vscode.window.activeTextEditor;
         if (!activeEditor) {
+          console.error('[KnowledgeMessageHandler] No active editor found');
           throw new Error('No file is currently open');
         }
         targetFilePath = activeEditor.document.uri.fsPath;
+        console.log('[KnowledgeMessageHandler] Got targetFilePath from active editor:', targetFilePath);
       }
 
       // Generate preview using maturity context
+      console.log('[KnowledgeMessageHandler] Calling previewMaturityInjection...');
       const preview = await this.context.knowledgeManager.previewMaturityInjection(
         payload.templateId,
         payload.maturityContext
       );
+      console.log('[KnowledgeMessageHandler] Preview generated:', {
+        matchedItems: preview.matchedItems?.length,
+        excludedItems: preview.excludedItems?.length,
+        totalItems: preview.totalItems
+      });
 
       // Send preview data back to webview
-      this.context.view?.webview.postMessage({
+      const responseMessage = {
         type: 'v1:preview-injection-data',
         payload: {
           preview,
           templateId: payload.templateId,
           filePath: targetFilePath
         }
-      });
+      };
+      console.log('[KnowledgeMessageHandler] Sending response to webview:', responseMessage);
+      this.context.view?.webview.postMessage(responseMessage);
+      console.log('[KnowledgeMessageHandler] Response sent to webview');
 
       logger.info(
         LogCategory.EXTENSION,
