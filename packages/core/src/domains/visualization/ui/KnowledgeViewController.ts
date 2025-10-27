@@ -894,9 +894,12 @@ export class KnowledgeViewController {
       const filesWithWarnings = this.state.claudeMdFiles.filter(f => f.hasConflicts || (f.conflicts && f.conflicts.length > 0)).length;
 
       if (filesScanned > 0) {
-        let statusParts = [`${filesScanned} file(s) scanned`, `${totalInjections} injection(s)`];
+        let statusParts = [
+          tf('knowledge.scan.filesScanned', { count: filesScanned }),
+          tf('knowledge.scan.injections', { count: totalInjections })
+        ];
         if (filesWithWarnings > 0) {
-          statusParts.push(`⚠️ ${filesWithWarnings} warning(s)`);
+          statusParts.push(tf('knowledge.scan.warnings', { count: filesWithWarnings }));
         }
         statusText.textContent = statusParts.join(' • ');
       } else {
