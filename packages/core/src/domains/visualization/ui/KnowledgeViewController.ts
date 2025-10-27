@@ -130,10 +130,11 @@ export class KnowledgeViewController {
       }
     });
 
-    // Re-render status bar when i18n is ready to ensure translations are applied
+    // Re-render status bar and maturity panel when i18n is ready to ensure translations are applied
     onI18nReady(() => {
-      console.log('[KnowledgeViewController] i18n ready, updating status bar with translations');
+      console.log('[KnowledgeViewController] i18n ready, updating UI with translations');
       this.updateStatusBar();
+      this.renderMaturityPanel();  // Re-render maturity panel to apply translations
     });
   }
 

@@ -7,7 +7,7 @@
 
 import { DomainComplexity } from '../../../knowledge/types';
 import { FramingTemplates } from '../../../knowledge/FramingTemplates';
-import { t, onI18nReady } from '../../webview/i18n';
+import { t } from '../../webview/i18n';
 
 export interface MaturityContext {
   complexity: DomainComplexity;
@@ -34,14 +34,7 @@ export class MaturityConfigPanel {
       quadrant: 13,  // Center of grid (Mid/Development)
       maxItems: 25
     };
-
-    // Re-render when i18n is ready to ensure translations are applied
-    onI18nReady(() => {
-      if (this.container) {
-        console.log('[MaturityConfigPanel] i18n ready, re-rendering to apply translations');
-        this.render();
-      }
-    });
+    // Note: i18n re-rendering is handled by KnowledgeViewController.onI18nReady()
   }
 
   /**
