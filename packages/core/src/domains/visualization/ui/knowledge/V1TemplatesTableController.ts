@@ -10,8 +10,9 @@ import { MarketplaceTemplate, KnowledgeItem, KnowledgeType, getKnowledgeTypeLabe
 import { webviewLogger, LogCategory, LogPathway } from '../../webview/WebviewLogger';
 import { t } from '../../webview/i18n';
 import { TemplateMatchBadge } from './TemplateMatchBadge';
+import { InjectionStatusBadge } from './InjectionStatusBadge';
 import { MaturityFilterEngine } from '../../../knowledge/MaturityFilterEngine';
-import type { MatchStats } from '../../../knowledge/GroupTypes';
+import type { MatchStats, InjectionStatus } from '../../../knowledge/GroupTypes';
 
 export interface V1TemplatesTableCallbacks {
   onCreateTemplate: () => void;
@@ -40,6 +41,7 @@ export class V1TemplatesTableController {
   private draggedItem: { templateId: string; itemId: string } | null = null;
   private maturityContext: MaturityContext | null = null;
   private maturityFilterEngine: MaturityFilterEngine = new MaturityFilterEngine();
+  private injectionStatusMap: Map<string, InjectionStatus> = new Map();
 
   constructor(private callbacks: V1TemplatesTableCallbacks) {
     webviewLogger.info(
@@ -57,6 +59,18 @@ export class V1TemplatesTableController {
   setMaturityContext(context: MaturityContext | null): void {
     this.maturityContext = context;
     // Re-render to update match badges
+    if (this.templates.length > 0) {
+      this.render(this.templates);
+    }
+  }
+
+  /**
+   * Set injection status for templates
+   * @param statusMap Map of templateId to InjectionStatus
+   */
+  setInjectionStatus(statusMap: Map<string, InjectionStatus>): void {
+    this.injectionStatusMap = statusMap;
+    // Re-render to update status badges
     if (this.templates.length > 0) {
       this.render(this.templates);
     }
@@ -147,6 +161,7 @@ export class V1TemplatesTableController {
       </td>
       <td class="col-type">
         <span class="template-badge">💉 Template</span>
+        <span class="injection-status-badge-container" data-template-id="${template.id}"></span>
       </td>
       <td class="col-title">
         <strong class="template-title">${this.escapeHtml(template.name)}</strong>
@@ -193,6 +208,14 @@ export class V1TemplatesTableController {
       if (badgeContainer) {
         badgeContainer.innerHTML = '<span style="font-size: 11px; color: var(--vscode-descriptionForeground);">-</span>';
       }
+    }
+
+    // Add injection status badge if status is available
+    const injectionStatus = this.injectionStatusMap.get(template.id);
+    const statusBadgeContainer = row.querySelector('.injection-status-badge-container');
+    if (statusBadgeContainer && injectionStatus) {
+      const statusBadge = InjectionStatusBadge.renderCompact(injectionStatus);
+      statusBadgeContainer.appendChild(statusBadge);
     }
 
     const actionButtons = row.querySelectorAll('.action-btn');

@@ -15,6 +15,7 @@ import {
   KnowledgeScope,
   MarketplaceTemplate
 } from '../../knowledge/types';
+import { InjectionStatus } from '../../knowledge/GroupTypes';
 import { NotificationManager } from './NotificationManager';
 import { ModalDialog } from './ModalDialog';
 import { webviewLogger, LogCategory, LogPathway } from '../webview/WebviewLogger';
@@ -184,6 +185,8 @@ export class KnowledgeViewController {
       case 'v1:templates-data':
         this.state.templates = message.payload.templates || [];
         this.v1TemplatesTableController.render(this.state.templates);
+        // Update injection status based on current claude.md files
+        this.updateInjectionStatus(this.state.claudeMdFiles);
         webviewLogger.info(
           LogCategory.UI,
           'V1 templates data received and rendered',
@@ -255,6 +258,8 @@ export class KnowledgeViewController {
           message: `Template injected to ${message.payload.filePath}`,
           duration: 3000
         });
+        // Request fresh claude.md files to update injection status
+        this.scanClaudeMdFiles();
         break;
 
       case 'v1:export-success':
@@ -810,12 +815,55 @@ export class KnowledgeViewController {
     // Restore scroll positions after rendering
     this.accordionController.restoreScrollPositions();
 
+    // Update injection status for all templates
+    this.updateInjectionStatus(files);
+
     webviewLogger.info(
       LogCategory.UI,
       'Claude.md files loaded and rendered via controller',
       'KnowledgeViewController.loadClaudeMdFiles',
       {
         filesLoaded: this.state.claudeMdFiles.length
+      },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+  }
+
+  /**
+   * Update injection status for all templates based on claude.md files
+   */
+  private updateInjectionStatus(files: ClaudeMdFile[]): void {
+    // Extract all injected template IDs from claude.md files
+    const injectedTemplateIds = new Set<string>();
+    for (const file of files) {
+      if (file.templates && file.templates.length > 0) {
+        for (const templateSection of file.templates) {
+          injectedTemplateIds.add(templateSection.templateId);
+        }
+      }
+    }
+
+    // Build injection status map for all templates
+    const statusMap = new Map<string, InjectionStatus>();
+    for (const template of this.state.templates) {
+      if (injectedTemplateIds.has(template.id)) {
+        statusMap.set(template.id, InjectionStatus.INJECTED);
+      } else {
+        statusMap.set(template.id, InjectionStatus.NOT_INJECTED);
+      }
+    }
+
+    // Update the table controller
+    this.v1TemplatesTableController.setInjectionStatus(statusMap);
+
+    webviewLogger.debug(
+      LogCategory.UI,
+      'Injection status updated for templates',
+      'KnowledgeViewController.updateInjectionStatus',
+      {
+        totalTemplates: this.state.templates.length,
+        injectedCount: injectedTemplateIds.size,
+        notInjectedCount: this.state.templates.length - injectedTemplateIds.size
       },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
