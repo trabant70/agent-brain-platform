@@ -6,7 +6,7 @@
  * Phase 2: Multi-tier support with AdaptiveControlCenter and LevelSelector.
  */
 
-import { t } from '../../webview/i18n';
+import { t, onI18nReady } from '../../webview/i18n';
 import type { AnalysisReport, DetectedPattern, AnalysisInsight, Recommendation, MaturityLevel, DetectionResult } from '../../../threading/types';
 import { AdaptiveControlCenter } from '../../../threading/ui/AdaptiveControlCenter';
 import { LevelSelector } from '../../../threading/ui/LevelSelector';
@@ -38,6 +38,16 @@ export class ThreadingViewController {
       multiTierEnabled: false,
       showLevelSelector: false
     };
+
+    // Re-render when i18n is ready to ensure translations are applied
+    onI18nReady(() => {
+      console.log('[ThreadingViewController] i18n ready in constructor, checking if render needed');
+      const container = document.getElementById('threading-content');
+      if (container && container.innerHTML) {
+        console.log('[ThreadingViewController] Container already has content, re-rendering with translations');
+        this.render();
+      }
+    });
   }
 
   /**
@@ -46,7 +56,12 @@ export class ThreadingViewController {
   initialize(onMessage: (message: any) => void): void {
     this.messageHandler = onMessage;
     this.setupEventListeners();
-    this.render();
+
+    // Wait for i18n to be ready before rendering
+    onI18nReady(() => {
+      console.log('[ThreadingViewController] i18n ready, rendering with translations');
+      this.render();
+    });
 
     // Request initial state from backend
     this.sendMessage({ type: 'threading:get-state', payload: {} });
@@ -286,7 +301,7 @@ export class ThreadingViewController {
    */
   private renderThreadCheckboxes(): string {
     // Placeholder - will be populated from backend config
-    return '<p class="empty-state-text">${t(\'threading.loadingThreads\')}</p>';
+    return `<p class="empty-state-text">${t('threading.loadingThreads')}</p>`;
   }
 
   /**
