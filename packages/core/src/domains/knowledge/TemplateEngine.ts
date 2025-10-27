@@ -409,6 +409,16 @@ export class TemplateEngine {
     for (const line of lines) {
       lineNumber++;
 
+      // Skip lines with inline code that contains markers (backticks around marker)
+      // Match patterns like: `<!-- AGENT-BRAIN:...:START -->` or **text**:`marker`
+      if (line.match(/`[^`]*<!--\s*AGENT-BRAIN:[^`]+`/)) {
+        // Don't process this line for markers, but do collect it as content if we're inside a section
+        if (sectionStack.length > 0) {
+          sectionStack[sectionStack.length - 1].sectionLines.push(line);
+        }
+        continue;
+      }
+
       // Check for V1 AGENT-BRAIN template marker
       const v1TemplateMatch = line.match(/<!--\s*AGENT-BRAIN:(template-[^:]+):START\s*-->/);
       if (v1TemplateMatch) {
