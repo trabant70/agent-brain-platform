@@ -22,6 +22,7 @@ import {
 } from './types';
 import { KnowledgeStore } from './KnowledgeStore';
 import { logger, LogCategory, LogPathway } from '../../infrastructure/logging/Logger';
+import { GroupType, GroupMarker } from './GroupTypes';
 
 /**
  * Marker type for injection
@@ -57,6 +58,202 @@ export class TemplateEngine {
       start: `<!-- AGENT-BRAIN:${itemId}:START -->`,
       end: `<!-- AGENT-BRAIN:${itemId}:END -->`
     };
+  }
+
+  // ============================================
+  // V2 Multi-Group Marker Management
+  // ============================================
+
+  /**
+   * Generate V2 group markers with extended metadata support
+   * Format: <!-- AGENT-BRAIN-GROUP-START: TYPE=X ID=Y [KEY=VALUE...] -->
+   *
+   * Examples:
+   * - TEMPLATE: <!-- AGENT-BRAIN-GROUP-START: TYPE=TEMPLATE ID=template-123 VERSION=1.0 -->
+   * - OPERATOR_RANGE: <!-- AGENT-BRAIN-GROUP-START: TYPE=OPERATOR_RANGE ID=mid-senior RANGE=3-4 -->
+   * - CATCHMENT: <!-- AGENT-BRAIN-GROUP-START: TYPE=CATCHMENT ID=q13-standard STATUS=IN -->
+   */
+  generateGroupMarkers(
+    groupType: GroupType,
+    id: string,
+    metadata?: Partial<GroupMarker>
+  ): { start: string; end: string } {
+    // Build metadata string
+    const metaParts = [`TYPE=${groupType}`, `ID=${id}`];
+
+    if (metadata?.version) {
+      metaParts.push(`VERSION=${metadata.version}`);
+    }
+    if (metadata?.range) {
+      metaParts.push(`RANGE=${metadata.range}`);
+    }
+    if (metadata?.status) {
+      metaParts.push(`STATUS=${metadata.status}`);
+    }
+    if (metadata?.injectedAt) {
+      metaParts.push(`INJECTED_AT=${metadata.injectedAt}`);
+    }
+    if (metadata?.itemCount !== undefined) {
+      metaParts.push(`ITEM_COUNT=${metadata.itemCount}`);
+    }
+
+    const metaString = metaParts.join(' ');
+
+    return {
+      start: `<!-- AGENT-BRAIN-GROUP-START: ${metaString} -->`,
+      end: `<!-- AGENT-BRAIN-GROUP-END: ${metaString.split(' ').slice(0, 2).join(' ')} -->`
+    };
+  }
+
+  /**
+   * Parse V2 group markers from content
+   * Returns array of parsed group sections with metadata
+   */
+  parseGroupMarkers(content: string): Array<{
+    groupType: GroupType;
+    id: string;
+    metadata: Partial<GroupMarker>;
+    startMarker: string;
+    endMarker: string;
+    content: string;
+    startLine: number;
+    endLine: number;
+  }> {
+    const groups: Array<any> = [];
+    const lines = content.split('\n');
+
+    let currentGroup: any = null;
+    let groupLines: string[] = [];
+    let lineNumber = 0;
+
+    for (const line of lines) {
+      lineNumber++;
+
+      // Check for V2 group start marker
+      const startMatch = line.match(/<!--\s*AGENT-BRAIN-GROUP-START:\s*(.+?)\s*-->/);
+      if (startMatch) {
+        const metaString = startMatch[1];
+        const metadata = this.parseGroupMetadata(metaString);
+
+        currentGroup = {
+          groupType: metadata.type,
+          id: metadata.id,
+          metadata,
+          startMarker: line.trim(),
+          startLine: lineNumber
+        };
+        groupLines = [];
+        continue;
+      }
+
+      // Check for V2 group end marker
+      const endMatch = line.match(/<!--\s*AGENT-BRAIN-GROUP-END:\s*(.+?)\s*-->/);
+      if (endMatch && currentGroup) {
+        groups.push({
+          ...currentGroup,
+          endMarker: line.trim(),
+          content: groupLines.join('\n').trim(),
+          endLine: lineNumber
+        });
+        currentGroup = null;
+        groupLines = [];
+        continue;
+      }
+
+      // Collect content between markers
+      if (currentGroup) {
+        groupLines.push(line);
+      }
+    }
+
+    return groups;
+  }
+
+  /**
+   * Parse metadata from group marker string
+   * Input: "TYPE=TEMPLATE ID=template-123 VERSION=1.0"
+   * Output: { type: 'TEMPLATE', id: 'template-123', version: '1.0' }
+   */
+  private parseGroupMetadata(metaString: string): any {
+    const metadata: any = {};
+    const parts = metaString.split(/\s+/);
+
+    for (const part of parts) {
+      const [key, value] = part.split('=');
+      if (key && value) {
+        const normalizedKey = key.toLowerCase();
+        if (normalizedKey === 'type') {
+          metadata.type = value as GroupType;
+        } else if (normalizedKey === 'id') {
+          metadata.id = value;
+        } else if (normalizedKey === 'version') {
+          metadata.version = value;
+        } else if (normalizedKey === 'range') {
+          metadata.range = value;
+        } else if (normalizedKey === 'status') {
+          metadata.status = value;
+        } else if (normalizedKey === 'injected_at') {
+          metadata.injectedAt = value;
+        } else if (normalizedKey === 'item_count') {
+          metadata.itemCount = parseInt(value, 10);
+        }
+      }
+    }
+
+    return metadata;
+  }
+
+  /**
+   * Parse all marker types (V1 and V2) for unified scanning
+   * Returns unified format combining legacy and new markers
+   */
+  parseAllMarkers(content: string): Array<{
+    id: string;
+    name?: string;
+    type: MarkerType | GroupType;
+    startMarker: string;
+    endMarker: string;
+    content: string;
+    startLine: number;
+    endLine: number;
+    metadata?: any;
+  }> {
+    const allMarkers: Array<any> = [];
+
+    // Parse V1 markers (AGENT-BRAIN:id:START/END)
+    const v1Markers = this.parseV1Markers(content);
+    for (const v1 of v1Markers) {
+      allMarkers.push({
+        id: v1.id,
+        name: v1.name,
+        type: v1.type,
+        startMarker: v1.startMarker,
+        endMarker: v1.endMarker,
+        content: v1.content,
+        startLine: v1.startLine,
+        endLine: v1.endLine
+      });
+    }
+
+    // Parse V2 group markers (AGENT-BRAIN-GROUP-START/END)
+    const v2Groups = this.parseGroupMarkers(content);
+    for (const v2 of v2Groups) {
+      allMarkers.push({
+        id: v2.id,
+        type: v2.groupType,
+        startMarker: v2.startMarker,
+        endMarker: v2.endMarker,
+        content: v2.content,
+        startLine: v2.startLine,
+        endLine: v2.endLine,
+        metadata: v2.metadata
+      });
+    }
+
+    // Sort by startLine
+    allMarkers.sort((a, b) => a.startLine - b.startLine);
+
+    return allMarkers;
   }
 
   /**
