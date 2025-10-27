@@ -106,5 +106,10 @@
   "message.success.removed": "Modèle retiré avec succès",
   "message.error.generic": "Une erreur s'est produite",
   "message.error.notFound": "Élément non trouvé",
-  "message.error.invalidData": "Données invalides fournies"
+  "message.error.invalidData": "Données invalides fournies",
+
+  "threading.insights": "Aperçus",
+  "threading.noInsights": "Aucun aperçu disponible",
+  "threading.recommendations": "Recommandations",
+  "threading.noRecommendations": "Aucune recommandation disponible"
 }

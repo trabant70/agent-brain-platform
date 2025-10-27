@@ -106,5 +106,10 @@
   "message.success.removed": "Plantilla eliminada exitosamente",
   "message.error.generic": "Ocurrió un error",
   "message.error.notFound": "Elemento no encontrado",
-  "message.error.invalidData": "Datos inválidos proporcionados"
+  "message.error.invalidData": "Datos inválidos proporcionados",
+
+  "threading.insights": "Perspectivas",
+  "threading.noInsights": "No hay perspectivas disponibles",
+  "threading.recommendations": "Recomendaciones",
+  "threading.noRecommendations": "No hay recomendaciones disponibles"
 }

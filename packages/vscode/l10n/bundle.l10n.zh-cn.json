@@ -106,5 +106,10 @@
   "message.success.removed": "模板移除成功",
   "message.error.generic": "发生错误",
   "message.error.notFound": "未找到项目",
-  "message.error.invalidData": "提供的数据无效"
+  "message.error.invalidData": "提供的数据无效",
+
+  "threading.insights": "洞察",
+  "threading.noInsights": "无可用洞察",
+  "threading.recommendations": "建议",
+  "threading.noRecommendations": "无可用建议"
 }
