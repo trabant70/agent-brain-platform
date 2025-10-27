@@ -32,7 +32,9 @@ export class MaturityRangeSelector {
   setFootprint(footprint: MaturityFootprint | undefined): void {
     this.currentFootprint = footprint;
     if (this.container) {
-      this.render();
+      this.updateGridVisual();
+      this.updateComplexitySelect();
+      this.updateSelectionInfo();
     }
   }
 
@@ -98,46 +100,51 @@ export class MaturityRangeSelector {
 
   /**
    * Render the 5×5 maturity grid
+   * Layout matches MaturityConfigPanel: Y-axis = Project Phase, X-axis = Operator Experience
+   * Quadrant numbering: Q1-Q5 (bottom row), Q6-Q10, ..., Q21-Q25 (top row)
    */
   private renderGrid(): string {
     const operatorLevels = [
-      { level: 5, label: t('maturity.operator.expert', 'Expert') },
-      { level: 4, label: t('maturity.operator.advanced', 'Advanced') },
-      { level: 3, label: t('maturity.operator.competent', 'Competent') },
-      { level: 2, label: t('maturity.operator.beginner', 'Beginner') },
-      { level: 1, label: t('maturity.operator.novice', 'Novice') }
+      { level: 1, label: t('maturity.operator.novice', 'Novice') },
+      { level: 2, label: t('maturity.operator.junior', 'Junior') },
+      { level: 3, label: t('maturity.operator.mid', 'Mid') },
+      { level: 4, label: t('maturity.operator.senior', 'Senior') },
+      { level: 5, label: t('maturity.operator.expert', 'Expert') }
     ];
 
     const projectLevels = [
-      { level: 1, label: t('maturity.project.planning', 'Planning') },
-      { level: 2, label: t('maturity.project.development', 'Dev') },
-      { level: 3, label: t('maturity.project.testing', 'Testing') },
-      { level: 4, label: t('maturity.project.production', 'Prod') },
-      { level: 5, label: t('maturity.project.mature', 'Mature') }
+      { level: 5, label: t('maturity.project.mature', 'Mature') },
+      { level: 4, label: t('maturity.project.established', 'Established') },
+      { level: 3, label: t('maturity.project.development', 'Dev') },
+      { level: 2, label: t('maturity.project.inception', 'Inception') },
+      { level: 1, label: t('maturity.project.planning', 'Planning') }
     ];
 
     let html = '<table class="maturity-grid" style="border-collapse: collapse; user-select: none;">';
 
-    // Header row (Project maturity)
-    html += '<tr><th></th>';
-    projectLevels.forEach(p => {
-      html += `<th style="text-align: center; font-size: 11px; padding: 4px;">${p.label}</th>`;
+    // Header row (Operator maturity - X-axis)
+    html += '<tr><th style="width: 80px;"></th>';
+    operatorLevels.forEach(op => {
+      html += `<th style="text-align: center; font-size: 11px; padding: 4px; width: 60px;">${op.label}</th>`;
     });
     html += '</tr>';
 
-    // Grid rows (Operator maturity)
-    operatorLevels.forEach(op => {
+    // Grid rows (Project maturity - Y-axis, top to bottom: Mature to Planning)
+    projectLevels.forEach(proj => {
       html += '<tr>';
-      html += `<th style="text-align: right; font-size: 11px; padding: 4px 8px;">${op.label}</th>`;
+      html += `<th style="text-align: right; font-size: 11px; padding: 4px 8px;">${proj.label}</th>`;
 
-      projectLevels.forEach(proj => {
+      operatorLevels.forEach(op => {
+        const quadrant = (proj.level - 1) * 5 + op.level; // Q1-Q25
         const isSelected = this.isCellSelected(op.level, proj.level);
         const cellClass = isSelected ? 'maturity-cell selected' : 'maturity-cell';
         html += `
           <td class="${cellClass}"
               data-operator="${op.level}"
               data-project="${proj.level}"
-              style="width: 40px; height: 40px; text-align: center; border: 1px solid var(--vscode-panel-border); cursor: pointer; background: ${isSelected ? 'var(--vscode-button-background)' : 'transparent'};">
+              data-quadrant="${quadrant}"
+              style="width: 60px; height: 60px; text-align: center; border: 1px solid var(--vscode-panel-border); cursor: pointer; background: ${isSelected ? 'var(--vscode-button-background)' : 'transparent'}; position: relative;">
+            <span style="font-size: 10px; color: var(--vscode-descriptionForeground);">Q${quadrant}</span>
           </td>
         `;
       });
@@ -290,7 +297,30 @@ export class MaturityRangeSelector {
     };
 
     this.callbacks.onRangeChanged(this.currentFootprint);
-    this.render();
+    this.updateGridVisual();
+    this.updateSelectionInfo();
+  }
+
+  /**
+   * Update grid visual without full re-render (for smooth drag selection)
+   */
+  private updateGridVisual(): void {
+    if (!this.container) return;
+
+    const cells = this.container.querySelectorAll('.maturity-cell');
+    cells.forEach(cell => {
+      const operator = parseInt((cell as HTMLElement).dataset.operator || '0');
+      const project = parseInt((cell as HTMLElement).dataset.project || '0');
+      const isSelected = this.isCellSelected(operator, project);
+
+      if (isSelected) {
+        cell.classList.add('selected');
+        (cell as HTMLElement).style.background = 'var(--vscode-button-background)';
+      } else {
+        cell.classList.remove('selected');
+        (cell as HTMLElement).style.background = 'transparent';
+      }
+    });
   }
 
   /**
@@ -328,7 +358,9 @@ export class MaturityRangeSelector {
   private clearSelection(): void {
     this.currentFootprint = undefined;
     this.callbacks.onRangeChanged(undefined);
-    this.render();
+    this.updateGridVisual();
+    this.updateComplexitySelect();
+    this.updateSelectionInfo();
   }
 
   /**
@@ -341,7 +373,9 @@ export class MaturityRangeSelector {
       complexity: { min: 1, max: 3 }
     };
     this.callbacks.onRangeChanged(this.currentFootprint);
-    this.render();
+    this.updateGridVisual();
+    this.updateComplexitySelect();
+    this.updateSelectionInfo();
   }
 
   /**
