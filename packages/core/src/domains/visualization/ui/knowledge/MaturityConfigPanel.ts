@@ -278,7 +278,8 @@ export class MaturityConfigPanel {
     const modal = new ModalDialog();
 
     try {
-      await modal.show({
+      // Start showing the modal (don't await yet)
+      const modalPromise = modal.show({
         title: t('maturity.contextConfiguration'),
         content: this.renderConfigPanel(),
         buttons: [
@@ -310,10 +311,13 @@ export class MaturityConfigPanel {
         width: '750px'
       });
 
-      // Attach event listeners to modal content
+      // Attach event listeners to modal content after DOM is ready
       setTimeout(() => {
         this.attachModalEventListeners();
       }, 0);
+
+      // Now wait for modal to close
+      await modalPromise;
     } catch (error) {
       console.error('[MaturityConfigPanel] Modal error:', error);
     }
