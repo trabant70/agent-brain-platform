@@ -1818,6 +1818,7 @@
   border-bottom: 1px solid transparent;
   cursor: pointer;
   transition: background 0.2s;
+  pointer-events: auto;
 }
 
 .group-section-header:hover {
@@ -1865,6 +1866,16 @@
   padding: 2px 8px;
   border-radius: 3px;
   font-weight: 500;
+  cursor: help;
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
+  transition: all 0.2s ease;
+}
+
+.status-badge:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
 }
 
 .status-badge.not-injected {
@@ -1875,6 +1886,12 @@
 .status-badge.injected {
   background: rgba(0, 255, 136, 0.15);
   color: var(--knowledge-secondary);
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.status-badge.injected:hover {
+  background: rgba(0, 255, 136, 0.25);
+  border-color: var(--knowledge-secondary);
 }
 
 .status-badge.partial {
