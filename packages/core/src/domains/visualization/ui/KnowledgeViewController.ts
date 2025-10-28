@@ -168,7 +168,7 @@ export class KnowledgeViewController {
         onAddItemToTemplate: (templateId) => this.v1TemplateFormController.showAddItemToTemplateModal(templateId),
         onViewTemplateAuditLog: (templateId) => this.handleViewAuditLog(templateId),
         // Get selected file for injection
-        getSelectedFile: () => this.accordionController.getSelectedFile()
+        getSelectedFile: () => this.accordionController.getSelectedFile() ?? undefined
       }
     );
 
@@ -1112,7 +1112,7 @@ export class KnowledgeViewController {
   /**
    * Count how many items from a template are injected in a specific file
    */
-  private countItemsInjectedInFile(template: V1Template, filePath: string | undefined): number {
+  private countItemsInjectedInFile(template: MarketplaceTemplate, filePath: string | undefined): number {
     if (!filePath || !template.items) {
       return 0;
     }
@@ -1121,7 +1121,7 @@ export class KnowledgeViewController {
     for (const item of template.items) {
       if (item.injectedTo && item.injectedTo.length > 0) {
         // Check if this item is injected in the specified file
-        const isInFile = item.injectedTo.some(record => {
+        const isInFile = item.injectedTo.some((record: any) => {
           // Handle both absolute and relative paths
           return record.filePath === filePath ||
                  record.filePath.endsWith(filePath.replace(/\\/g, '/')) ||
