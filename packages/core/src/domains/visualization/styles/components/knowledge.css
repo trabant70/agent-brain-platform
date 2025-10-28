@@ -1947,7 +1947,7 @@
 
 .group-item-row {
   display: grid;
-  grid-template-columns: 40px 1fr 80px 180px 140px;
+  grid-template-columns: 40px 1fr 80px 120px 140px 160px;
   gap: 12px;
   align-items: center;
   padding: 8px 12px;
@@ -1977,6 +1977,63 @@
   font-size: 12px;
   color: var(--vscode-descriptionForeground);
   text-align: center;
+}
+
+/* Template column - hidden in template view mode */
+.item-template {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hide-in-template-view {
+  display: none;
+}
+
+/* Maturity indicators */
+.item-maturity {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.maturity-none {
+  font-size: 12px;
+  color: var(--vscode-disabledForeground);
+}
+
+.maturity-indicators {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
+.maturity-badge {
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 2px;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  white-space: nowrap;
+  font-family: var(--vscode-font-family);
+  font-weight: 500;
+}
+
+.maturity-badge.complexity {
+  background: var(--vscode-charts-blue);
+  color: white;
+}
+
+.maturity-badge.operator {
+  background: var(--vscode-charts-green);
+  color: white;
+}
+
+.maturity-badge.project {
+  background: var(--vscode-charts-purple);
+  color: white;
 }
 
 .item-tags {
@@ -2334,16 +2391,21 @@
 /* Responsive adjustments */
 @media (max-width: 1200px) {
   .group-item-row {
-    grid-template-columns: 40px 1fr 80px 150px 60px;
+    grid-template-columns: 40px 1fr 80px 120px 140px;
+  }
+
+  .item-actions {
+    display: none;
   }
 }
 
 @media (max-width: 900px) {
   .group-item-row {
-    grid-template-columns: 40px 1fr 60px;
+    grid-template-columns: 40px 1fr 140px;
   }
 
   .item-scope,
+  .item-template,
   .item-tags {
     display: none;
   }

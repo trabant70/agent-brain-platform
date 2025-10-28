@@ -575,8 +575,11 @@ export class UnifiedKnowledgeTableController {
       <div class="item-type">${this.getTypeIcon(item.type)}</div>
       <div class="item-title">${this.escapeHtml(item.title)}</div>
       <div class="item-scope">${this.escapeHtml(item.scope)}</div>
-      <div class="item-tags">
-        ${item.tags?.map(t => `<span class="tag">${this.escapeHtml(t)}</span>`).join(' ') || '-'}
+      <div class="item-template ${isTemplateView ? 'hide-in-template-view' : ''}">
+        ${item.templateName ? this.escapeHtml(item.templateName) : '-'}
+      </div>
+      <div class="item-maturity">
+        ${this.renderMaturityIndicators(item)}
       </div>
       <div class="item-actions hover-actions">
         ${this.renderItemActions(item, isTemplateView)}
@@ -587,6 +590,35 @@ export class UnifiedKnowledgeTableController {
     this.wireUpItemActions(row, item);
 
     return row;
+  }
+
+  /**
+   * Render maturity indicators for an item
+   */
+  private renderMaturityIndicators(item: KnowledgeItem): string {
+    if (!item.maturity) {
+      return '<span class="maturity-none">-</span>';
+    }
+
+    const complexity = item.maturity.complexity
+      ? `C:${item.maturity.complexity.min}${item.maturity.complexity.max !== item.maturity.complexity.min ? `-${item.maturity.complexity.max}` : ''}`
+      : '-';
+
+    const operator = item.maturity.operator
+      ? `O:${item.maturity.operator.min}${item.maturity.operator.max !== item.maturity.operator.min ? `-${item.maturity.operator.max}` : ''}`
+      : '-';
+
+    const project = item.maturity.project
+      ? `P:${item.maturity.project.min}${item.maturity.project.max !== item.maturity.project.min ? `-${item.maturity.project.max}` : ''}`
+      : '-';
+
+    return `
+      <div class="maturity-indicators">
+        <span class="maturity-badge complexity" title="Complexity: ${complexity}">${complexity}</span>
+        <span class="maturity-badge operator" title="Operator Maturity: ${operator}">${operator}</span>
+        <span class="maturity-badge project" title="Project Maturity: ${project}">${project}</span>
+      </div>
+    `;
   }
 
   /**
