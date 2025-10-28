@@ -9,27 +9,32 @@
 
 .control-panel {
   position: fixed;
-  top: 0;
+  top: 10px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -100%);
   width: 90%;
   max-width: 1200px;
-  max-height: 0;
+  max-height: 80vh;
   background: var(--vscode-sideBar-background);
   border: 2px solid var(--accent-commit);
   border-top: none;
   border-radius: 0 0 8px 8px;
   overflow: hidden;
-  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0.3s ease;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s ease,
+              opacity 0.3s ease;
   z-index: 1000;
   box-shadow: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .control-panel.open {
-  max-height: 80vh;
+  transform: translate(-50%, 0);
   overflow-y: auto;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* Control Panel Content Container */
