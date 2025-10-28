@@ -2051,12 +2051,14 @@
 /* Progressive Disclosure - Hover Actions */
 .hover-actions {
   opacity: 0;
+  pointer-events: none;
   transition: opacity 0.2s ease-in-out;
 }
 
 .group-section-header:hover .hover-actions,
 .group-item-row:hover .hover-actions {
   opacity: 1;
+  pointer-events: auto;
 }
 
 /* Item Preview Modal (Centered) */
