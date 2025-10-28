@@ -217,52 +217,58 @@ export class UnifiedKnowledgeTableController {
   }
 
   /**
-   * Initialize custom tooltips for status badges
+   * Get or create the shared tooltip element
    */
-  private initializeTooltips(): void {
-    console.log('[TOOLTIP] initializeTooltips() called');
+  private getTooltipElement(): HTMLElement {
+    let tooltip = document.querySelector('.custom-tooltip') as HTMLElement;
 
-    // Remove any existing tooltip
-    const existingTooltip = document.querySelector('.custom-tooltip');
-    if (existingTooltip) {
-      console.log('[TOOLTIP] Removing existing tooltip');
-      existingTooltip.remove();
+    if (!tooltip) {
+      tooltip = document.createElement('div');
+      tooltip.className = 'custom-tooltip';
+      tooltip.style.cssText = `
+        position: fixed;
+        background: var(--vscode-editorHoverWidget-background);
+        color: var(--vscode-editorHoverWidget-foreground);
+        border: 1px solid var(--vscode-editorHoverWidget-border);
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        line-height: 1.5;
+        white-space: pre-line;
+        z-index: 10000;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        max-width: 300px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      `;
+      document.body.appendChild(tooltip);
+      console.log('[TOOLTIP] Created new tooltip element');
     }
 
-    // Create tooltip element
-    const tooltip = document.createElement('div');
-    tooltip.className = 'custom-tooltip';
-    tooltip.style.cssText = `
-      position: fixed;
-      background: var(--vscode-editorHoverWidget-background);
-      color: var(--vscode-editorHoverWidget-foreground);
-      border: 1px solid var(--vscode-editorHoverWidget-border);
-      padding: 8px 12px;
-      border-radius: 4px;
-      font-size: 12px;
-      line-height: 1.5;
-      white-space: pre-line;
-      z-index: 10000;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-      max-width: 300px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    `;
-    document.body.appendChild(tooltip);
-    console.log('[TOOLTIP] Tooltip element created and appended to body');
+    return tooltip;
+  }
 
-    // Find all status badges
-    const badges = document.querySelectorAll('.status-badge[data-tooltip]');
-    console.log(`[TOOLTIP] Found ${badges.length} badges with data-tooltip`);
+  /**
+   * Initialize tooltips for badges within a specific element
+   */
+  private initializeTooltipsForElement(element: HTMLElement): void {
+    const tooltip = this.getTooltipElement();
+    const badges = element.querySelectorAll('.status-badge[data-tooltip]');
+
+    console.log(`[TOOLTIP] Initializing ${badges.length} badges in element`);
 
     badges.forEach((badge, index) => {
       const tooltipText = badge.getAttribute('data-tooltip');
-      console.log(`[TOOLTIP] Badge ${index}: tooltip="${tooltipText}"`);
+      console.log(`[TOOLTIP] Badge ${index}: tooltip="${tooltipText?.substring(0, 50)}..."`);
       if (!tooltipText) return;
 
+      // Remove existing listeners (if any) to avoid duplicates
+      const newBadge = badge.cloneNode(true) as HTMLElement;
+      badge.parentNode?.replaceChild(newBadge, badge);
+
       // Show tooltip on mouse enter
-      badge.addEventListener('mouseenter', (e: Event) => {
+      newBadge.addEventListener('mouseenter', (e: Event) => {
         console.log('[TOOLTIP] mouseenter event fired');
         const rect = (e.target as HTMLElement).getBoundingClientRect();
         tooltip.textContent = tooltipText;
@@ -273,20 +279,29 @@ export class UnifiedKnowledgeTableController {
       });
 
       // Hide tooltip on mouse leave
-      badge.addEventListener('mouseleave', () => {
+      newBadge.addEventListener('mouseleave', () => {
         console.log('[TOOLTIP] mouseleave event fired');
         tooltip.style.opacity = '0';
       });
 
       // Update tooltip position on mouse move
-      badge.addEventListener('mousemove', (e: Event) => {
+      newBadge.addEventListener('mousemove', (e: Event) => {
         const mouseEvent = e as MouseEvent;
         tooltip.style.left = `${mouseEvent.clientX - tooltip.offsetWidth / 2}px`;
         tooltip.style.top = `${mouseEvent.clientY + 20}px`;
       });
     });
+  }
 
-    console.log('[TOOLTIP] Event listeners attached to all badges');
+  /**
+   * Initialize custom tooltips for all status badges (legacy method, calls new one)
+   */
+  private initializeTooltips(): void {
+    console.log('[TOOLTIP] initializeTooltips() called for entire container');
+    const container = document.getElementById(this.containerId);
+    if (container) {
+      this.initializeTooltipsForElement(container);
+    }
   }
 
   /**
@@ -385,6 +400,9 @@ export class UnifiedKnowledgeTableController {
 
     // Wire up action buttons
     this.wireUpActionButtons(header, group, strategy);
+
+    // Initialize tooltips for the status badge in this header
+    this.initializeTooltipsForElement(header);
 
     return header;
   }
