@@ -986,13 +986,18 @@ export class KnowledgeViewController {
    * Update injection status for all templates based on claude.md files
    */
   private updateInjectionStatus(files: ClaudeMdFile[]): void {
-    // Extract all injected template IDs from claude.md files
-    const injectedTemplateIds = new Set<string>();
+    // Extract all injected template IDs and track which files they're in
+    const injectedTemplateFiles = new Map<string, string[]>();
+
     for (const file of files) {
       // Check V1 template markers (AGENT-BRAIN:template-xxx:START)
       if (file.templates && file.templates.length > 0) {
         for (const templateSection of file.templates) {
-          injectedTemplateIds.add(templateSection.templateId);
+          const templateId = templateSection.templateId;
+          if (!injectedTemplateFiles.has(templateId)) {
+            injectedTemplateFiles.set(templateId, []);
+          }
+          injectedTemplateFiles.get(templateId)!.push(file.relativePath);
         }
       }
 
@@ -1000,19 +1005,33 @@ export class KnowledgeViewController {
       if (file.scanResult && file.scanResult.groups && file.scanResult.groups.length > 0) {
         for (const group of file.scanResult.groups) {
           if (group.type === 'TEMPLATE' && group.id) {
-            injectedTemplateIds.add(group.id);
+            if (!injectedTemplateFiles.has(group.id)) {
+              injectedTemplateFiles.set(group.id, []);
+            }
+            // Avoid duplicates if both V1 and V2 markers exist
+            const files = injectedTemplateFiles.get(group.id)!;
+            if (!files.includes(file.relativePath)) {
+              files.push(file.relativePath);
+            }
           }
         }
       }
     }
 
     // Build injection status map for all templates
-    const statusMap = new Map<string, InjectionStatus>();
+    const statusMap = new Map<string, { status: InjectionStatus; files: string[] }>();
     for (const template of this.state.templates) {
-      if (injectedTemplateIds.has(template.id)) {
-        statusMap.set(template.id, InjectionStatus.INJECTED);
+      const files = injectedTemplateFiles.get(template.id) || [];
+      if (files.length > 0) {
+        statusMap.set(template.id, {
+          status: InjectionStatus.INJECTED,
+          files: files
+        });
       } else {
-        statusMap.set(template.id, InjectionStatus.NOT_INJECTED);
+        statusMap.set(template.id, {
+          status: InjectionStatus.NOT_INJECTED,
+          files: []
+        });
       }
     }
 
@@ -1028,8 +1047,8 @@ export class KnowledgeViewController {
       'KnowledgeViewController.updateInjectionStatus',
       {
         totalTemplates: this.state.templates.length,
-        injectedCount: injectedTemplateIds.size,
-        notInjectedCount: this.state.templates.length - injectedTemplateIds.size
+        injectedCount: injectedTemplateFiles.size,
+        notInjectedCount: this.state.templates.length - injectedTemplateFiles.size
       },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );

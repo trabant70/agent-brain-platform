@@ -47,7 +47,7 @@ export class UnifiedKnowledgeTableController {
   private templates: MarketplaceTemplate[] = [];
   private maturityContext: MaturityContext | null = null;
   private expandedGroups: Set<string> = new Set();
-  private groupInjectionStatus: Map<string, InjectionStatus> = new Map();
+  private groupInjectionStatus: Map<string, { status: InjectionStatus; files: string[] }> = new Map();
 
   constructor(
     containerId: string,
@@ -121,7 +121,7 @@ export class UnifiedKnowledgeTableController {
   /**
    * Set injection status for groups
    */
-  setInjectionStatus(statusMap: Map<string, InjectionStatus>): void {
+  setInjectionStatus(statusMap: Map<string, { status: InjectionStatus; files: string[] }>): void {
     this.groupInjectionStatus = statusMap;
     this.render();
   }
@@ -256,10 +256,10 @@ export class UnifiedKnowledgeTableController {
     section.dataset.groupId = group.id;
 
     const isExpanded = this.expandedGroups.has(group.id);
-    const injectionStatus = this.groupInjectionStatus.get(group.id) || InjectionStatus.NOT_INJECTED;
+    const injectionInfo = this.groupInjectionStatus.get(group.id) || { status: InjectionStatus.NOT_INJECTED, files: [] };
 
     // Header
-    const header = this.renderGroupHeader(group, isExpanded, injectionStatus, strategy);
+    const header = this.renderGroupHeader(group, isExpanded, injectionInfo, strategy);
     section.appendChild(header);
 
     // Items (only if expanded)
@@ -277,14 +277,14 @@ export class UnifiedKnowledgeTableController {
   private renderGroupHeader(
     group: GroupSection,
     isExpanded: boolean,
-    status: InjectionStatus,
+    injectionInfo: { status: InjectionStatus; files: string[] },
     strategy: GroupingStrategy
   ): HTMLElement {
     const header = document.createElement('div');
     header.className = 'group-section-header';
 
     const expandIcon = isExpanded ? '▼' : '▶';
-    const statusBadge = this.getStatusBadge(status);
+    const statusBadge = this.getStatusBadge(injectionInfo.status, injectionInfo.files);
 
     header.innerHTML = `
       <div class="group-header-left">
@@ -296,7 +296,7 @@ export class UnifiedKnowledgeTableController {
         ${statusBadge}
       </div>
       <div class="group-header-right hover-actions">
-        ${this.renderGroupActions(group, status, strategy)}
+        ${this.renderGroupActions(group, injectionInfo.status, strategy)}
       </div>
     `;
 
@@ -643,15 +643,25 @@ export class UnifiedKnowledgeTableController {
   }
 
   /**
-   * Get status badge HTML
+   * Get status badge HTML with tooltip showing injection locations
    */
-  private getStatusBadge(status: InjectionStatus): string {
+  private getStatusBadge(status: InjectionStatus, files: string[]): string {
+    // Build tooltip text
+    let tooltip = '';
+    if (status === InjectionStatus.INJECTED && files.length > 0) {
+      tooltip = `Injected in:\n${files.join('\n')}`;
+    } else if (status === InjectionStatus.NOT_INJECTED) {
+      tooltip = 'Not injected in any CLAUDE.md file';
+    } else {
+      tooltip = status;
+    }
+
     const badges = {
-      [InjectionStatus.NOT_INJECTED]: '<span class="status-badge not-injected">⚪ Not Injected</span>',
-      [InjectionStatus.INJECTED]: '<span class="status-badge injected">✅ Injected</span>',
-      [InjectionStatus.PARTIAL]: '<span class="status-badge partial">🔵 Partial</span>',
-      [InjectionStatus.PENDING]: '<span class="status-badge pending">🔄 Pending</span>',
-      [InjectionStatus.ERROR]: '<span class="status-badge error">❌ Error</span>'
+      [InjectionStatus.NOT_INJECTED]: `<span class="status-badge not-injected" title="${this.escapeHtml(tooltip)}">⚪ Not Injected</span>`,
+      [InjectionStatus.INJECTED]: `<span class="status-badge injected" title="${this.escapeHtml(tooltip)}">✅ Injected</span>`,
+      [InjectionStatus.PARTIAL]: `<span class="status-badge partial" title="${this.escapeHtml(tooltip)}">🔵 Partial</span>`,
+      [InjectionStatus.PENDING]: `<span class="status-badge pending" title="${this.escapeHtml(tooltip)}">🔄 Pending</span>`,
+      [InjectionStatus.ERROR]: `<span class="status-badge error" title="${this.escapeHtml(tooltip)}">❌ Error</span>`
     };
     return badges[status] || '';
   }

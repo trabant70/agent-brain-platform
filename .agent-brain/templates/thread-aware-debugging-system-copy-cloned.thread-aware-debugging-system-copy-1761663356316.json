@@ -1,8 +1,10 @@
 {
-  "id": "threading-system-v2",
-  "name": "Thread-Aware Debugging System",
-  "version": "2.0.0",
+  "id": "cloned.thread-aware-debugging-system-copy-1761663356316",
+  "name": "Thread-Aware Debugging System (Copy)",
   "description": "Decorator-based threading system for collaborative debugging between human operators and AI agents in VSCode extensions",
+  "version": "2.0.0",
+  "createdAt": "2025-10-28T14:55:56.316Z",
+  "updatedAt": "2025-10-28T14:55:56.316Z",
   "category": "development",
   "tags": [
     "debugging",
@@ -17,12 +19,10 @@
     "email": "support@agentbrain.dev"
   },
   "license": "MIT",
-  "source": "bundled",
-  "scope": "project",
-  "userEditable": true,
+  "source": "cloned",
   "items": [
     {
-      "id": "550e8400-e29b-41d4-a716-446655440001",
+      "id": "item-1761663356316-1ppsbclhg",
       "type": "guideline",
       "scope": "project",
       "title": "Threading System Architecture",
@@ -35,15 +35,29 @@
       "relativePath": "threading/architecture.md",
       "valid": true,
       "metadata": {
-        "createdAt": "2025-01-26T10:00:00.000Z",
-        "updatedAt": "2025-01-26T10:00:00.000Z"
+        "createdAt": "2025-10-28T14:55:56.316Z",
+        "updatedAt": "2025-10-28T14:55:56.316Z"
       },
       "injectedTo": [],
-      "templateId": "threading-system-v2",
-      "templateName": "Thread-Aware Debugging System"
+      "templateId": "cloned.thread-aware-debugging-system-copy-1761663356316",
+      "templateName": "Thread-Aware Debugging System (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440002",
+      "id": "item-1761663356316-p3w1t62f0",
       "type": "configuration",
       "scope": "project",
       "title": "Threading Configuration Schema",
@@ -56,15 +70,29 @@
       "relativePath": "threading/config.md",
       "valid": true,
       "metadata": {
-        "createdAt": "2025-01-26T10:00:00.000Z",
-        "updatedAt": "2025-01-26T10:00:00.000Z"
+        "createdAt": "2025-10-28T14:55:56.316Z",
+        "updatedAt": "2025-10-28T14:55:56.316Z"
       },
       "injectedTo": [],
-      "templateId": "threading-system-v2",
-      "templateName": "Thread-Aware Debugging System"
+      "templateId": "cloned.thread-aware-debugging-system-copy-1761663356316",
+      "templateName": "Thread-Aware Debugging System (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440003",
+      "id": "item-1761663356316-dlfbs47u4",
       "type": "snippet",
       "scope": "project",
       "title": "ThreadSpec Decorator Implementation",
@@ -77,15 +105,29 @@
       "relativePath": "threading/decorators/threadspec.ts",
       "valid": true,
       "metadata": {
-        "createdAt": "2025-01-26T10:00:00.000Z",
-        "updatedAt": "2025-01-26T10:00:00.000Z"
+        "createdAt": "2025-10-28T14:55:56.316Z",
+        "updatedAt": "2025-10-28T14:55:56.316Z"
       },
       "injectedTo": [],
-      "templateId": "threading-system-v2",
-      "templateName": "Thread-Aware Debugging System"
+      "templateId": "cloned.thread-aware-debugging-system-copy-1761663356316",
+      "templateName": "Thread-Aware Debugging System (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440004",
+      "id": "item-1761663356316-r33wyilzo",
       "type": "snippet",
       "scope": "project",
       "title": "ThreadLog Decorator with Delta Detection",
@@ -99,15 +141,29 @@
       "relativePath": "threading/decorators/threadlog.ts",
       "valid": true,
       "metadata": {
-        "createdAt": "2025-01-26T10:00:00.000Z",
-        "updatedAt": "2025-01-26T10:00:00.000Z"
+        "createdAt": "2025-10-28T14:55:56.316Z",
+        "updatedAt": "2025-10-28T14:55:56.316Z"
       },
       "injectedTo": [],
-      "templateId": "threading-system-v2",
-      "templateName": "Thread-Aware Debugging System"
+      "templateId": "cloned.thread-aware-debugging-system-copy-1761663356316",
+      "templateName": "Thread-Aware Debugging System (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440005",
+      "id": "item-1761663356316-qjgoumdrn",
       "type": "api-reference",
       "scope": "project",
       "title": "Thread Control Center API",
@@ -120,15 +176,29 @@
       "relativePath": "threading/control-center.md",
       "valid": true,
       "metadata": {
-        "createdAt": "2025-01-26T10:00:00.000Z",
-        "updatedAt": "2025-01-26T10:00:00.000Z"
+        "createdAt": "2025-10-28T14:55:56.316Z",
+        "updatedAt": "2025-10-28T14:55:56.316Z"
       },
       "injectedTo": [],
-      "templateId": "threading-system-v2",
-      "templateName": "Thread-Aware Debugging System"
+      "templateId": "cloned.thread-aware-debugging-system-copy-1761663356316",
+      "templateName": "Thread-Aware Debugging System (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440006",
+      "id": "item-1761663356316-kbcfeuv38",
       "type": "workflow",
       "scope": "project",
       "title": "Debugging Workflow with Threading",
@@ -141,15 +211,29 @@
       "relativePath": "threading/workflows/debugging.md",
       "valid": true,
       "metadata": {
-        "createdAt": "2025-01-26T10:00:00.000Z",
-        "updatedAt": "2025-01-26T10:00:00.000Z"
+        "createdAt": "2025-10-28T14:55:56.316Z",
+        "updatedAt": "2025-10-28T14:55:56.316Z"
       },
       "injectedTo": [],
-      "templateId": "threading-system-v2",
-      "templateName": "Thread-Aware Debugging System"
+      "templateId": "cloned.thread-aware-debugging-system-copy-1761663356316",
+      "templateName": "Thread-Aware Debugging System (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440007",
+      "id": "item-1761663356316-ukdj8qh4x",
       "type": "guideline",
       "scope": "project",
       "title": "ThreadAnalyzer - Async Pattern Detection",
@@ -163,15 +247,29 @@
       "relativePath": "threading/analyzer.md",
       "valid": true,
       "metadata": {
-        "createdAt": "2025-01-26T10:00:00.000Z",
-        "updatedAt": "2025-01-26T10:00:00.000Z"
+        "createdAt": "2025-10-28T14:55:56.316Z",
+        "updatedAt": "2025-10-28T14:55:56.316Z"
       },
       "injectedTo": [],
-      "templateId": "threading-system-v2",
-      "templateName": "Thread-Aware Debugging System"
+      "templateId": "cloned.thread-aware-debugging-system-copy-1761663356316",
+      "templateName": "Thread-Aware Debugging System (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440008",
+      "id": "item-1761663356316-juctjq4fp",
       "type": "best-practice",
       "scope": "project",
       "title": "Best Practices for Threading System",
@@ -184,15 +282,29 @@
       "relativePath": "threading/best-practices.md",
       "valid": true,
       "metadata": {
-        "createdAt": "2025-01-26T10:00:00.000Z",
-        "updatedAt": "2025-01-26T10:00:00.000Z"
+        "createdAt": "2025-10-28T14:55:56.316Z",
+        "updatedAt": "2025-10-28T14:55:56.316Z"
       },
       "injectedTo": [],
-      "templateId": "threading-system-v2",
-      "templateName": "Thread-Aware Debugging System"
+      "templateId": "cloned.thread-aware-debugging-system-copy-1761663356316",
+      "templateName": "Thread-Aware Debugging System (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440009",
+      "id": "item-1761663356316-3wp5iwysd",
       "type": "command",
       "scope": "project",
       "title": "Threading CLI Commands",
@@ -205,15 +317,29 @@
       "relativePath": "threading/cli.md",
       "valid": true,
       "metadata": {
-        "createdAt": "2025-01-26T10:00:00.000Z",
-        "updatedAt": "2025-01-26T10:00:00.000Z"
+        "createdAt": "2025-10-28T14:55:56.316Z",
+        "updatedAt": "2025-10-28T14:55:56.316Z"
       },
       "injectedTo": [],
-      "templateId": "threading-system-v2",
-      "templateName": "Thread-Aware Debugging System"
+      "templateId": "cloned.thread-aware-debugging-system-copy-1761663356316",
+      "templateName": "Thread-Aware Debugging System (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
     },
     {
-      "id": "550e8400-e29b-41d4-a716-446655440010",
+      "id": "item-1761663356316-4cpbrilnb",
       "type": "troubleshooting",
       "scope": "project",
       "title": "Threading System Troubleshooting",
@@ -226,16 +352,43 @@
       "relativePath": "threading/troubleshooting.md",
       "valid": true,
       "metadata": {
-        "createdAt": "2025-01-26T10:00:00.000Z",
-        "updatedAt": "2025-01-26T10:00:00.000Z"
+        "createdAt": "2025-10-28T14:55:56.316Z",
+        "updatedAt": "2025-10-28T14:55:56.316Z"
       },
       "injectedTo": [],
-      "templateId": "threading-system-v2",
-      "templateName": "Thread-Aware Debugging System"
+      "templateId": "cloned.thread-aware-debugging-system-copy-1761663356316",
+      "templateName": "Thread-Aware Debugging System (Copy)",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 5
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 3
+        }
+      }
     }
   ],
-  "createdAt": "2025-01-26T10:00:00.000Z",
-  "updatedAt": "2025-01-26T10:00:00.000Z",
-  "auditLog": [],
-  "versionHistory": []
+  "itemCount": 10,
+  "scope": "project",
+  "versionHistory": [],
+  "auditLog": [
+    {
+      "id": "audit-1761663356316-11pa41gpt",
+      "timestamp": "2025-10-28T14:55:56.316Z",
+      "operation": "template.cloned",
+      "actor": "user",
+      "details": {
+        "sourceTemplateId": "threading-system-v2",
+        "sourceTemplateName": "Thread-Aware Debugging System",
+        "context": "Cloned from \"Thread-Aware Debugging System\" with 10 items"
+      }
+    }
+  ],
+  "sourceTemplateId": "threading-system-v2"
 }
