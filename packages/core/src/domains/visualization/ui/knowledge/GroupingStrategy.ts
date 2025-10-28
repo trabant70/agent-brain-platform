@@ -105,4 +105,21 @@ export abstract class BaseGroupingStrategy implements GroupingStrategy {
       isExpanded: false
     };
   }
+
+  /**
+   * Create "Unclassified" group for items without maturity metadata
+   */
+  protected createUnclassifiedGroup(ungroupedIds: string[]): GroupSection | null {
+    if (ungroupedIds.length === 0) {
+      return null;
+    }
+
+    return this.createGroupSection(
+      'unclassified',
+      '❓ Unclassified',
+      ungroupedIds,
+      { isUnclassified: true },
+      'Items without maturity metadata'
+    );
+  }
 }

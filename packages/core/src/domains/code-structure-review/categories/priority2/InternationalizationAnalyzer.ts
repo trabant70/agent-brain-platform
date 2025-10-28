@@ -84,8 +84,7 @@ export class InternationalizationAnalyzer extends AnalysisCategory {
 
     if (frontendFiles.length === 0) {
       return this.createAnalysisResult([], {
-        totalFiles: 0,
-        note: 'No frontend files found for i18n analysis'
+        totalFiles: 0
       });
     }
 

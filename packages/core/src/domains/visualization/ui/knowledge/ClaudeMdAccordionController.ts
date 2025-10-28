@@ -21,6 +21,7 @@ export interface AccordionControllerCallbacks {
   onRemoveInjection: (type: 'group' | 'item', groupType: string | null, groupId: string | null, itemId: string | null, filePath: string) => void;
   onScanFiles: () => void;
   onShowNotification: (message: string, type: 'info' | 'success' | 'warning' | 'error', duration?: number) => void;
+  onFileSelected?: (filePath: string) => void;
 }
 
 export class ClaudeMdAccordionController {
@@ -122,6 +123,8 @@ export class ClaudeMdAccordionController {
     // Auto-select first file if none selected
     if (!this.selectedClaudeFile && this.state.claudeMdFiles.length > 0) {
       this.selectedClaudeFile = this.state.claudeMdFiles[0].path;
+      // Notify parent controller to update injection indicators for auto-selected file
+      this.callbacks.onFileSelected?.(this.selectedClaudeFile);
     }
 
     for (const file of this.state.claudeMdFiles) {
@@ -219,6 +222,9 @@ export class ClaudeMdAccordionController {
             { selectedFile: file.path },
             LogPathway.KNOWLEDGE_MANAGEMENT
           );
+
+          // Notify parent controller to update injection indicators
+          this.callbacks.onFileSelected?.(file.path);
 
           this.callbacks.onShowNotification(
             tf('template.selectedFileNotification', { path: file.relativePath }),

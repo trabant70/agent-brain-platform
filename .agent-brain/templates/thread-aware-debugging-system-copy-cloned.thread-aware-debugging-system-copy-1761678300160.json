@@ -4,7 +4,7 @@
   "description": "Decorator-based threading system for collaborative debugging between human operators and AI agents in VSCode extensions",
   "version": "2.0.0",
   "createdAt": "2025-10-28T19:05:00.160Z",
-  "updatedAt": "2025-10-28T19:05:00.160Z",
+  "updatedAt": "2025-10-28T20:39:06.437Z",
   "category": "development",
   "tags": [
     "debugging",
@@ -38,7 +38,16 @@
         "createdAt": "2025-10-28T19:05:00.160Z",
         "updatedAt": "2025-10-28T19:05:00.160Z"
       },
-      "injectedTo": [],
+      "injectedTo": [
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+          "injectedAt": "2025-10-28T20:39:06.437Z",
+          "injectedBy": "user",
+          "injectionType": "item",
+          "parentTemplateId": "cloned.thread-aware-debugging-system-copy-1761678300160",
+          "parentTemplateName": "Thread-Aware Debugging System (Copy)"
+        }
+      ],
       "templateId": "cloned.thread-aware-debugging-system-copy-1761678300160",
       "templateName": "Thread-Aware Debugging System (Copy)",
       "maturity": {
@@ -387,6 +396,17 @@
         "sourceTemplateId": "threading-system-v2",
         "sourceTemplateName": "Thread-Aware Debugging System",
         "context": "Cloned from \"Thread-Aware Debugging System\" with 10 items"
+      }
+    },
+    {
+      "id": "audit-1761683946437-yk0bhxln6",
+      "timestamp": "2025-10-28T20:39:06.437Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "item-1761678300160-u5e7ui145",
+        "itemTitle": "Threading System Architecture",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
       }
     }
   ],

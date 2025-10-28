@@ -456,8 +456,9 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
 
   /**
    * Send claude.md files to webview (delegates to knowledge handler)
+   * Public method to allow external callers (e.g., FocusValidationService) to trigger refresh
    */
-  private sendClaudeMdFiles(): void {
+  public sendClaudeMdFiles(): void {
     if (this.knowledgeHandler) {
       this.knowledgeHandler.sendClaudeMdFiles();
     }

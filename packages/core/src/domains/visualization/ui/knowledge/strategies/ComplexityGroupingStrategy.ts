@@ -43,7 +43,7 @@ export class ComplexityGroupingStrategy extends BaseGroupingStrategy {
     const groups: GroupSection[] = [];
 
     // Filter items that have complexity maturity
-    const { validItems } = this.filterItemsWithMaturity(
+    const { validItems, ungroupedIds } = this.filterItemsWithMaturity(
       items,
       (item) => !!(item.maturity?.complexity)
     );
@@ -70,6 +70,12 @@ export class ComplexityGroupingStrategy extends BaseGroupingStrategy {
         );
       }
     });
+
+    // Add unclassified group at the end
+    const unclassifiedGroup = this.createUnclassifiedGroup(ungroupedIds);
+    if (unclassifiedGroup) {
+      groups.push(unclassifiedGroup);
+    }
 
     return groups;
   }

@@ -38,7 +38,16 @@
         "createdAt": "2025-01-26T10:00:00.000Z",
         "updatedAt": "2025-01-26T10:00:00.000Z"
       },
-      "injectedTo": [],
+      "injectedTo": [
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+          "injectedAt": "2025-10-28T20:48:47.020Z",
+          "injectedBy": "user",
+          "injectionType": "template",
+          "parentTemplateId": "threading-system-v2",
+          "parentTemplateName": "Thread-Aware Debugging System"
+        }
+      ],
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
       "maturity": {
@@ -375,7 +384,19 @@
     }
   ],
   "createdAt": "2025-01-26T10:00:00.000Z",
-  "updatedAt": "2025-10-28T18:36:44.176Z",
-  "auditLog": [],
+  "updatedAt": "2025-10-28T20:48:47.020Z",
+  "auditLog": [
+    {
+      "id": "audit-1761684527020-nzf4s7p84",
+      "timestamp": "2025-10-28T20:48:47.020Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "550e8400-e29b-41d4-a716-446655440001",
+        "itemTitle": "Threading System Architecture",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    }
+  ],
   "versionHistory": []
 }

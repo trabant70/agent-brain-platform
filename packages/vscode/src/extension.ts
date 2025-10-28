@@ -234,6 +234,16 @@ export async function activate(context: vscode.ExtensionContext) {
         log.info(LogCategory.EXTENSION, 'Timeline provider initialized successfully');
         outputChannel.appendLine('✅ Timeline provider initialized');
 
+        // Wire up focus validation callback to refresh claude.md files in webview
+        if (focusValidationService && timelineProvider) {
+            focusValidationService.setClaudeMdFocusCallback(() => {
+                log.debug(LogCategory.EXTENSION, 'CLAUDE.md file focused, refreshing injected indicators');
+                timelineProvider.sendClaudeMdFiles();
+            });
+            log.debug(LogCategory.EXTENSION, 'Focus validation callback configured');
+            outputChannel.appendLine('✅ CLAUDE.md focus callback configured');
+        }
+
         // Set up workspace change listeners
         log.debug(LogCategory.EXTENSION, 'Setting up workspace change listeners', 'watchers');
         outputChannel.appendLine('👁️ Setting up workspace change listeners...');

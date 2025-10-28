@@ -51,7 +51,9 @@
       "Bash(tail:*)",
       "Bash(node:*)",
       "Bash(npx @vscode/vsce:*)",
-      "Bash(xargs:*)"
+      "Bash(xargs:*)",
+      "Bash(O:min-max)",
+      "Bash(P:min-max\"\n- Consistent with table row display formatting\n- Only shown when item has maturity metadata\n\nTechnical changes:\n- UnifiedKnowledgeTableController: Added getMaturityDisplayForPopup() helper method\n- showItemPreviewTooltip: Added maturity display to preview-meta section\n- Version bumped to 0.4.117\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

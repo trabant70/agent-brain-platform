@@ -7,12 +7,15 @@ import type {
   CategoryAnalysis,
   AnalysisContext,
   Issue,
-  Recommendation
+  Recommendation,
+  SourceFile
 } from '../../types';
 import {
   type ICategoryAnalyzer,
+  type CategoryMetadata,
   DEFAULT_THRESHOLDS,
-  SEVERITY_WEIGHTS
+  SEVERITY_WEIGHTS,
+  CATEGORY_METADATA
 } from './CategoryTypes';
 
 /**
@@ -184,7 +187,7 @@ export abstract class AnalysisCategory implements ICategoryAnalyzer {
    * Filter files based on category-specific criteria
    * Override this method to implement custom file filtering
    */
-  protected filterRelevantFiles(context: AnalysisContext): typeof context.files {
+  protected filterRelevantFiles(context: AnalysisContext): SourceFile[] {
     // Default: return all files
     // Subclasses can override to filter by language, path patterns, etc.
     return context.files;
@@ -200,13 +203,21 @@ export abstract class AnalysisCategory implements ICategoryAnalyzer {
   /**
    * Get category metadata for UI display
    */
-  getMetadata() {
+  getMetadata(): CategoryMetadata {
+    // Use predefined metadata if available, otherwise create default
+    const predefined = CATEGORY_METADATA[this.id];
+    if (predefined) {
+      return predefined;
+    }
+
     return {
       id: this.id,
       name: this.name,
       icon: this.config.icon,
       description: this.config.description,
-      priority: this.config.priority
+      priority: this.config.priority,
+      color: '#666666', // Default color
+      keywords: [] // Default empty keywords
     };
   }
 }

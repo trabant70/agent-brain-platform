@@ -4,6 +4,9 @@
 
 import type { MaturityContext } from '../knowledge/types';
 
+// Re-export MaturityContext for use in this domain
+export type { MaturityContext };
+
 // ============================================================================
 // Analysis Results
 // ============================================================================

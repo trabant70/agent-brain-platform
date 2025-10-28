@@ -102,9 +102,9 @@ export class GroupOperationsService {
 
       // Fetch and inject actual item content from the template store
       for (const itemId of safeOptions.itemIds) {
-        const item = this.templateStore.getItem(itemId);
-        if (item && item.body) {
-          groupContent += `${item.body}\n\n`;
+        const result = this.templateStore.getItem(itemId);
+        if (result && result.item.body) {
+          groupContent += `${result.item.body}\n\n`;
         } else {
           logger.warn(
             LogCategory.DATA,

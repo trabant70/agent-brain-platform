@@ -230,16 +230,16 @@ export class TemplateInjectionService {
       throw new Error(`Failed to read file ${targetFilePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
-    // Wrap item in a temporary template marker (reuses existing template logic)
-    // Format: template-item-<itemId> to distinguish from real templates
-    const tempTemplateMarker = `template-item-${itemId}`;
-    let itemContent = `\n<!-- AGENT-BRAIN:${tempTemplateMarker}:START -->\n`;
-    itemContent += `<!-- Template: ${item.title} (1 item) -->\n\n`;
+    // Use item marker (not template wrapper)
+    // Individual items are tracked separately by ClaudeMdScanner
+    const itemMarker = `item-${itemId}`;
+    let itemContent = `\n<!-- AGENT-BRAIN:${itemMarker}:START -->\n`;
+    itemContent += `<!-- Item: ${item.title} -->\n`;
     itemContent += `${item.body}\n`;
-    itemContent += `<!-- AGENT-BRAIN:${tempTemplateMarker}:END -->\n`;
+    itemContent += `<!-- AGENT-BRAIN:${itemMarker}:END -->\n`;
 
     // Check if item is already injected
-    if (currentContent.includes(`<!-- AGENT-BRAIN:${tempTemplateMarker}:START -->`)) {
+    if (currentContent.includes(`<!-- AGENT-BRAIN:${itemMarker}:START -->`)) {
       throw new Error(`Item "${item.title}" is already injected in ${targetFilePath}`);
     }
 
@@ -257,8 +257,7 @@ export class TemplateInjectionService {
     }
 
     // Record injection in template store (audit log)
-    // Use 'template' type since we're wrapping the item in a template marker
-    this.templateStore.recordItemInjection(itemId, targetFilePath, 'template', templateId, 'user');
+    this.templateStore.recordItemInjection(itemId, targetFilePath, 'item', templateId, 'user');
 
     // Record timeline event
     await this.eventStorage.recordEvent({

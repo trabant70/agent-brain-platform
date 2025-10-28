@@ -90,8 +90,7 @@ export class UIUXQualityAnalyzer extends AnalysisCategory {
     if (frontendFiles.length === 0) {
       // No frontend files to analyze
       return this.createAnalysisResult([], {
-        totalComponents: 0,
-        note: 'No frontend components found'
+        totalComponents: 0
       });
     }
 

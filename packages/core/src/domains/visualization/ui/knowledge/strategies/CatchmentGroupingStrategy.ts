@@ -52,7 +52,7 @@ export class CatchmentGroupingStrategy extends BaseGroupingStrategy {
     const groups: GroupSection[] = [];
 
     // Filter items that have maturity metadata
-    const { validItems } = this.filterItemsWithMaturity(
+    const { validItems, ungroupedIds } = this.filterItemsWithMaturity(
       items,
       (item) => !!(item.maturity)
     );
@@ -113,6 +113,12 @@ export class CatchmentGroupingStrategy extends BaseGroupingStrategy {
           'Items outside your current context'
         )
       );
+    }
+
+    // Add unclassified group at the end
+    const unclassifiedGroup = this.createUnclassifiedGroup(ungroupedIds);
+    if (unclassifiedGroup) {
+      groups.push(unclassifiedGroup);
     }
 
     return groups;

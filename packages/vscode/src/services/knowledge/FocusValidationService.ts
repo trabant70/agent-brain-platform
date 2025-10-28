@@ -23,6 +23,7 @@ export class FocusValidationService {
   private focusHandler: FocusUpdateHandler;
   private disposables: vscode.Disposable[] = [];
   private lastValidationTime: Map<string, Date> = new Map();
+  private onClaudeMdFocus?: () => void;
 
   constructor(
     scanner: ClaudeMdScanner,
@@ -58,6 +59,11 @@ export class FocusValidationService {
     this.disposables.push(
       vscode.window.onDidChangeActiveTextEditor((editor) => {
         if (editor && this.isClaudeMdFile(editor.document)) {
+          // Trigger refresh callback to update injected indicators in webview
+          if (this.onClaudeMdFocus) {
+            this.onClaudeMdFocus();
+          }
+
           // Only validate if file has changed and enough time has passed
           const filePath = editor.document.uri.fsPath;
           if (this.focusHandler.hasPendingChanges(filePath)) {
@@ -284,6 +290,14 @@ export class FocusValidationService {
    */
   clearPendingChanges(filePath: string): void {
     this.focusHandler.clearPendingChanges(filePath);
+  }
+
+  /**
+   * Set callback to be called when a CLAUDE.md file receives focus
+   * Used to trigger refresh of injected indicators in the webview
+   */
+  setClaudeMdFocusCallback(callback: () => void): void {
+    this.onClaudeMdFocus = callback;
   }
 
   /**

@@ -47,7 +47,7 @@ export class OperatorGroupingStrategy extends BaseGroupingStrategy {
     const groups: GroupSection[] = [];
 
     // Filter items that have operator maturity
-    const { validItems } = this.filterItemsWithMaturity(
+    const { validItems, ungroupedIds } = this.filterItemsWithMaturity(
       items,
       (item) => !!(item.maturity?.operator)
     );
@@ -74,6 +74,12 @@ export class OperatorGroupingStrategy extends BaseGroupingStrategy {
         );
       }
     });
+
+    // Add unclassified group at the end
+    const unclassifiedGroup = this.createUnclassifiedGroup(ungroupedIds);
+    if (unclassifiedGroup) {
+      groups.push(unclassifiedGroup);
+    }
 
     return groups;
   }

@@ -49,6 +49,11 @@ export interface ICategoryAnalyzer {
    * Determine status based on score
    */
   determineStatus(score: number): 'excellent' | 'good' | 'warning' | 'critical';
+
+  /**
+   * Get category metadata for UI display
+   */
+  getMetadata(): CategoryMetadata;
 }
 
 /**

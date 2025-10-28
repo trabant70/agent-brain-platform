@@ -15,7 +15,8 @@ import type {
   CategoryConfig,
   FeatureCompletenessResult,
   EndpointInfo,
-  ComponentInfo
+  ComponentInfo,
+  SourceFile
 } from '../../types';
 import { AnalysisCategory } from '../base/AnalysisCategory';
 import { CATEGORY_IDS, CATEGORY_METADATA, CategoryPriority } from '../base/CategoryTypes';
@@ -273,7 +274,7 @@ export class FeatureCompletenessAnalyzer extends AnalysisCategory {
   /**
    * Filter backend files
    */
-  private filterBackendFiles(files: typeof this.filterRelevantFiles) {
+  private filterBackendFiles(files: SourceFile[]) {
     return files.filter(
       file =>
         file.path.includes('/server/') ||
@@ -287,7 +288,7 @@ export class FeatureCompletenessAnalyzer extends AnalysisCategory {
   /**
    * Filter frontend files
    */
-  private filterFrontendFiles(files: typeof this.filterRelevantFiles) {
+  private filterFrontendFiles(files: SourceFile[]) {
     return files.filter(
       file =>
         file.path.includes('/components/') ||
