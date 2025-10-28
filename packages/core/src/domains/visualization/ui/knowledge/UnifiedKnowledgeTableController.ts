@@ -211,6 +211,71 @@ export class UnifiedKnowledgeTableController {
       const groupElement = this.renderGroup(group, strategy);
       container.appendChild(groupElement);
     });
+
+    // Initialize tooltips after rendering
+    this.initializeTooltips();
+  }
+
+  /**
+   * Initialize custom tooltips for status badges
+   */
+  private initializeTooltips(): void {
+    // Remove any existing tooltip
+    const existingTooltip = document.querySelector('.custom-tooltip');
+    if (existingTooltip) {
+      existingTooltip.remove();
+    }
+
+    // Create tooltip element
+    const tooltip = document.createElement('div');
+    tooltip.className = 'custom-tooltip';
+    tooltip.style.cssText = `
+      position: fixed;
+      background: var(--vscode-editorHoverWidget-background);
+      color: var(--vscode-editorHoverWidget-foreground);
+      border: 1px solid var(--vscode-editorHoverWidget-border);
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre-line;
+      z-index: 10000;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      max-width: 300px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    `;
+    document.body.appendChild(tooltip);
+
+    // Find all status badges
+    const badges = document.querySelectorAll('.status-badge[data-tooltip]');
+
+    badges.forEach(badge => {
+      const tooltipText = badge.getAttribute('data-tooltip');
+      if (!tooltipText) return;
+
+      // Show tooltip on mouse enter
+      badge.addEventListener('mouseenter', (e: Event) => {
+        const rect = (e.target as HTMLElement).getBoundingClientRect();
+        tooltip.textContent = tooltipText;
+        tooltip.style.opacity = '1';
+        tooltip.style.left = `${rect.left}px`;
+        tooltip.style.top = `${rect.bottom + 8}px`;
+      });
+
+      // Hide tooltip on mouse leave
+      badge.addEventListener('mouseleave', () => {
+        tooltip.style.opacity = '0';
+      });
+
+      // Update tooltip position on mouse move
+      badge.addEventListener('mousemove', (e: Event) => {
+        const mouseEvent = e as MouseEvent;
+        tooltip.style.left = `${mouseEvent.clientX - tooltip.offsetWidth / 2}px`;
+        tooltip.style.top = `${mouseEvent.clientY + 20}px`;
+      });
+    });
   }
 
   /**
@@ -643,7 +708,7 @@ export class UnifiedKnowledgeTableController {
   }
 
   /**
-   * Get status badge HTML with tooltip showing injection locations
+   * Get status badge HTML with custom tooltip showing injection locations
    */
   private getStatusBadge(status: InjectionStatus, files: string[]): string {
     // Build tooltip text
@@ -656,12 +721,13 @@ export class UnifiedKnowledgeTableController {
       tooltip = status;
     }
 
+    // Use data-tooltip for custom tooltip implementation
     const badges = {
-      [InjectionStatus.NOT_INJECTED]: `<span class="status-badge not-injected" title="${this.escapeHtml(tooltip)}">⚪ Not Injected</span>`,
-      [InjectionStatus.INJECTED]: `<span class="status-badge injected" title="${this.escapeHtml(tooltip)}">✅ Injected</span>`,
-      [InjectionStatus.PARTIAL]: `<span class="status-badge partial" title="${this.escapeHtml(tooltip)}">🔵 Partial</span>`,
-      [InjectionStatus.PENDING]: `<span class="status-badge pending" title="${this.escapeHtml(tooltip)}">🔄 Pending</span>`,
-      [InjectionStatus.ERROR]: `<span class="status-badge error" title="${this.escapeHtml(tooltip)}">❌ Error</span>`
+      [InjectionStatus.NOT_INJECTED]: `<span class="status-badge not-injected" data-tooltip="${this.escapeHtml(tooltip)}">⚪ Not Injected</span>`,
+      [InjectionStatus.INJECTED]: `<span class="status-badge injected" data-tooltip="${this.escapeHtml(tooltip)}">✅ Injected</span>`,
+      [InjectionStatus.PARTIAL]: `<span class="status-badge partial" data-tooltip="${this.escapeHtml(tooltip)}">🔵 Partial</span>`,
+      [InjectionStatus.PENDING]: `<span class="status-badge pending" data-tooltip="${this.escapeHtml(tooltip)}">🔄 Pending</span>`,
+      [InjectionStatus.ERROR]: `<span class="status-badge error" data-tooltip="${this.escapeHtml(tooltip)}">❌ Error</span>`
     };
     return badges[status] || '';
   }
