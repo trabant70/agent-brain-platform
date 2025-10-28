@@ -671,14 +671,14 @@ export class UnifiedKnowledgeTableController {
    * Wire up item action buttons
    */
   private wireUpItemActions(row: HTMLElement, item: KnowledgeItem): void {
-    // Preview button - now on hover instead of click
+    // Preview button - supports both hover (quick look) and click (lock in place)
     const previewBtn = row.querySelector('[data-action="preview"]');
     let tooltipTimer: number | null = null;
 
     previewBtn?.addEventListener('mouseenter', (e) => {
-      // Show tooltip after short delay
+      // Show tooltip after short delay (only if not already locked)
       tooltipTimer = window.setTimeout(() => {
-        this.showItemPreviewTooltip(item, e.target as HTMLElement);
+        this.showItemPreviewTooltip(item, e.target as HTMLElement, false);
       }, 300);
     });
 
@@ -688,8 +688,19 @@ export class UnifiedKnowledgeTableController {
         clearTimeout(tooltipTimer);
         tooltipTimer = null;
       }
-      // Hide tooltip
-      this.hideItemPreviewTooltip();
+      // Hide tooltip only if not locked
+      this.hideItemPreviewTooltip(false);
+    });
+
+    previewBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // Cancel hover timer if pending
+      if (tooltipTimer) {
+        clearTimeout(tooltipTimer);
+        tooltipTimer = null;
+      }
+      // Show locked tooltip with close button
+      this.showItemPreviewTooltip(item, e.target as HTMLElement, true);
     });
 
     // Inject individual item button
@@ -971,18 +982,27 @@ export class UnifiedKnowledgeTableController {
 
   /**
    * Show item preview as hover tooltip
+   * @param item The knowledge item to preview
+   * @param anchor The anchor element to position near
+   * @param locked If true, tooltip stays open with close button until explicitly closed
    */
-  private showItemPreviewTooltip(item: KnowledgeItem, anchor: HTMLElement): void {
-    // Remove any existing tooltip
-    this.hideItemPreviewTooltip();
+  private showItemPreviewTooltip(item: KnowledgeItem, anchor: HTMLElement, locked: boolean = false): void {
+    // Remove any existing non-locked tooltip
+    this.hideItemPreviewTooltip(locked);
+
+    // Don't show hover tooltip if a locked one exists
+    if (!locked && document.querySelector('.item-preview-tooltip.locked')) {
+      return;
+    }
 
     // Create tooltip
     const tooltip = document.createElement('div');
-    tooltip.className = 'item-preview-tooltip';
+    tooltip.className = locked ? 'item-preview-tooltip locked' : 'item-preview-tooltip';
     tooltip.dataset.tooltipFor = item.id;
 
-    // Build content
+    // Build content with optional close button
     tooltip.innerHTML = `
+      ${locked ? '<button class="tooltip-close-btn" title="Close">✕</button>' : ''}
       <div class="preview-header">
         <div class="preview-title-row">
           <span class="preview-icon">${this.getTypeIcon(item.type)}</span>
@@ -1032,21 +1052,52 @@ export class UnifiedKnowledgeTableController {
     tooltip.style.left = `${left}px`;
     tooltip.style.top = `${top}px`;
 
-    // Add hover listener to tooltip itself to keep it open when mouse moves to it
-    tooltip.addEventListener('mouseenter', () => {
-      // Keep tooltip open
-    });
+    if (locked) {
+      // Wire up close button
+      const closeBtn = tooltip.querySelector('.tooltip-close-btn');
+      closeBtn?.addEventListener('click', () => {
+        this.hideItemPreviewTooltip(true);
+      });
 
-    tooltip.addEventListener('mouseleave', () => {
-      this.hideItemPreviewTooltip();
-    });
+      // ESC key handler for locked tooltip
+      const escHandler = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          this.hideItemPreviewTooltip(true);
+          document.removeEventListener('keydown', escHandler);
+        }
+      };
+      document.addEventListener('keydown', escHandler);
+
+      // Store handler for cleanup
+      (tooltip as any)._escHandler = escHandler;
+    } else {
+      // Add hover listener to tooltip itself to keep it open when mouse moves to it
+      tooltip.addEventListener('mouseenter', () => {
+        // Keep tooltip open
+      });
+
+      tooltip.addEventListener('mouseleave', () => {
+        this.hideItemPreviewTooltip(false);
+      });
+    }
   }
 
   /**
    * Hide item preview tooltip
+   * @param force If true, removes even locked tooltips; if false, only removes unlocked
    */
-  private hideItemPreviewTooltip(): void {
-    document.querySelectorAll('.item-preview-tooltip').forEach(el => el.remove());
+  private hideItemPreviewTooltip(force: boolean = false): void {
+    document.querySelectorAll('.item-preview-tooltip').forEach(el => {
+      const isLocked = el.classList.contains('locked');
+      if (force || !isLocked) {
+        // Clean up ESC handler if present
+        const escHandler = (el as any)._escHandler;
+        if (escHandler) {
+          document.removeEventListener('keydown', escHandler);
+        }
+        el.remove();
+      }
+    });
   }
 
   /**

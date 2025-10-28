@@ -2105,6 +2105,44 @@
   animation: fadeIn 0.15s ease-in;
 }
 
+/* Locked tooltip (click-to-open) has pointer events and scrolling */
+.item-preview-tooltip.locked {
+  pointer-events: auto;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* Close button for locked tooltips */
+.tooltip-close-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  z-index: 1;
+}
+
+.tooltip-close-btn:hover {
+  background: var(--vscode-button-hoverBackground);
+  transform: scale(1.1);
+}
+
+.tooltip-close-btn:active {
+  transform: scale(0.95);
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
