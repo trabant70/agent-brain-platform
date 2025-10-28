@@ -779,31 +779,10 @@ export class KnowledgeMessageHandler {
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
 
-      // Get target file path (use focused file if not provided)
+      // Get target file path (should be provided from UI)
       let targetFilePath = payload.filePath;
       if (!targetFilePath) {
-        const activeEditor = vscode.window.activeTextEditor;
-        if (!activeEditor) {
-          // Show file picker if no active editor
-          const fileUri = await vscode.window.showOpenDialog({
-            canSelectFiles: true,
-            canSelectFolders: false,
-            canSelectMany: false,
-            filters: {
-              'Markdown files': ['md'],
-              'All files': ['*']
-            },
-            title: 'Select file to inject template into'
-          });
-
-          if (!fileUri || fileUri.length === 0) {
-            throw new Error('No file selected');
-          }
-
-          targetFilePath = fileUri[0].fsPath;
-        } else {
-          targetFilePath = activeEditor.document.uri.fsPath;
-        }
+        throw new Error('No file path provided. Please select a claude.md file in the UI.');
       }
 
       await this.context.knowledgeManager.injectV1Template(payload.templateId, targetFilePath);
@@ -859,32 +838,8 @@ export class KnowledgeMessageHandler {
       console.log('[KnowledgeMessageHandler] Initial targetFilePath:', targetFilePath);
 
       if (!targetFilePath) {
-        console.log('[KnowledgeMessageHandler] No filePath in payload, checking active editor');
-        const activeEditor = vscode.window.activeTextEditor;
-        if (!activeEditor) {
-          console.error('[KnowledgeMessageHandler] No active editor found, showing file picker');
-          // Show file picker if no active editor
-          const fileUri = await vscode.window.showOpenDialog({
-            canSelectFiles: true,
-            canSelectFolders: false,
-            canSelectMany: false,
-            filters: {
-              'Markdown files': ['md'],
-              'All files': ['*']
-            },
-            title: 'Select file for maturity-based injection preview'
-          });
-
-          if (!fileUri || fileUri.length === 0) {
-            throw new Error('No file selected');
-          }
-
-          targetFilePath = fileUri[0].fsPath;
-          console.log('[KnowledgeMessageHandler] Got targetFilePath from file picker:', targetFilePath);
-        } else {
-          targetFilePath = activeEditor.document.uri.fsPath;
-          console.log('[KnowledgeMessageHandler] Got targetFilePath from active editor:', targetFilePath);
-        }
+        console.log('[KnowledgeMessageHandler] No filePath in payload');
+        throw new Error('No file path provided. Please select a claude.md file in the UI.');
       }
 
       // Generate preview using maturity context
@@ -1045,31 +1000,10 @@ export class KnowledgeMessageHandler {
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
 
-      // Get target file path (use focused file if not provided)
+      // Get target file path (should be provided from UI)
       let targetFilePath = payload.filePath;
       if (!targetFilePath) {
-        const activeEditor = vscode.window.activeTextEditor;
-        if (!activeEditor) {
-          // Show file picker if no active editor
-          const fileUri = await vscode.window.showOpenDialog({
-            canSelectFiles: true,
-            canSelectFolders: false,
-            canSelectMany: false,
-            filters: {
-              'Markdown files': ['md'],
-              'All files': ['*']
-            },
-            title: 'Select file to inject knowledge item into'
-          });
-
-          if (!fileUri || fileUri.length === 0) {
-            throw new Error('No file selected');
-          }
-
-          targetFilePath = fileUri[0].fsPath;
-        } else {
-          targetFilePath = activeEditor.document.uri.fsPath;
-        }
+        throw new Error('No file path provided. Please select a claude.md file in the UI.');
       }
 
       await this.context.knowledgeManager.injectV1Item(payload.templateId, payload.itemId, targetFilePath);

@@ -40,6 +40,8 @@ export interface UnifiedKnowledgeTableCallbacks {
   onDeleteTemplate?: (templateId: string) => void;
   onAddItemToTemplate?: (templateId: string) => void;
   onViewTemplateAuditLog?: (templateId: string) => void;
+  // Get selected file for injection
+  getSelectedFile?: () => string | undefined;
 }
 
 /**
@@ -453,14 +455,14 @@ export class UnifiedKnowledgeTableController {
         <button class="action-btn edit-btn" data-action="edit-template" data-template-id="${group.id}" title="${t('tooltip.editTemplate')}">
           ✏️
         </button>
+        <button class="action-btn add-btn" data-action="add-item" data-template-id="${group.id}" title="${t('tooltip.addItemToTemplate')}">
+          ➕
+        </button>
         <button class="action-btn clone-btn" data-action="clone" data-template-id="${group.id}" title="${t('button.clone')}">
           📋
         </button>
         <button class="action-btn delete-btn" data-action="delete-template" data-template-id="${group.id}" title="${t('tooltip.deleteTemplate')}">
           🗑️
-        </button>
-        <button class="action-btn add-btn" data-action="add-item" data-template-id="${group.id}" title="${t('tooltip.addItemToTemplate')}">
-          ➕
         </button>
       `;
     }
@@ -571,9 +573,15 @@ export class UnifiedKnowledgeTableController {
 
     const isTemplateView = this.currentMode === ViewMode.BY_TEMPLATE;
 
+    // Get injection status for this item
+    const itemStatus = this.getItemInjectionStatus(item);
+
     row.innerHTML = `
       <div class="item-type">${this.getTypeIcon(item.type)}</div>
-      <div class="item-title">${this.escapeHtml(item.title)}</div>
+      <div class="item-title">
+        ${this.escapeHtml(item.title)}
+        ${itemStatus.badge}
+      </div>
       <div class="item-scope">${this.escapeHtml(item.scope)}</div>
       <div class="item-template ${isTemplateView ? 'hide-in-template-view' : ''}">
         ${item.templateName ? this.escapeHtml(item.templateName) : '-'}
@@ -589,7 +597,31 @@ export class UnifiedKnowledgeTableController {
     // Wire up item action buttons
     this.wireUpItemActions(row, item);
 
+    // Initialize tooltips for injection status badge
+    this.initializeTooltipsForElement(row);
+
     return row;
+  }
+
+  /**
+   * Get injection status for an individual item
+   */
+  private getItemInjectionStatus(item: KnowledgeItem): { status: InjectionStatus; badge: string } {
+    if (!item.injectedTo || item.injectedTo.length === 0) {
+      return {
+        status: InjectionStatus.NOT_INJECTED,
+        badge: ''  // Don't show badge for not injected items to reduce clutter
+      };
+    }
+
+    const files = item.injectedTo.map(rec => rec.filePath);
+    const tooltip = `Injected in:\n${files.join('\n')}`;
+    const badge = `<span class="status-badge injected item-injected" data-tooltip="${this.escapeHtml(tooltip)}">✅</span>`;
+
+    return {
+      status: InjectionStatus.INJECTED,
+      badge
+    };
   }
 
   /**
@@ -1104,13 +1136,24 @@ export class UnifiedKnowledgeTableController {
    * Inject individual item to file
    */
   private injectIndividualItem(item: KnowledgeItem): void {
+    // Get selected file from callback
+    const selectedFile = this.callbacks.getSelectedFile?.();
+    if (!selectedFile) {
+      this.callbacks.onShowNotification?.('Please select a claude.md file first', 'warning', 3000);
+      return;
+    }
+
     const template = this.templates.find(t => t.items?.some(i => i.id === item.id));
     if (template) {
-      // Send message to backend
+      // Send message to backend with filePath
       if (window.vscode) {
         window.vscode.postMessage({
           type: 'v1:inject-item',
-          payload: { templateId: template.id, itemId: item.id }
+          payload: {
+            templateId: template.id,
+            itemId: item.id,
+            filePath: selectedFile
+          }
         });
       }
       this.callbacks.onShowNotification?.(`Injecting item: ${item.title}`, 'info', 2000);

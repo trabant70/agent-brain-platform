@@ -166,7 +166,9 @@ export class KnowledgeViewController {
         onEditTemplate: (templateId) => this.handleEditTemplate(templateId),
         onDeleteTemplate: (templateId) => this.handleDeleteTemplate(templateId),
         onAddItemToTemplate: (templateId) => this.v1TemplateFormController.showAddItemToTemplateModal(templateId),
-        onViewTemplateAuditLog: (templateId) => this.handleViewAuditLog(templateId)
+        onViewTemplateAuditLog: (templateId) => this.handleViewAuditLog(templateId),
+        // Get selected file for injection
+        getSelectedFile: () => this.accordionController.getSelectedFile()
       }
     );
 

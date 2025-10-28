@@ -1904,6 +1904,14 @@
   color: #ff4444;
 }
 
+/* Item injection status badge (smaller, inline) */
+.status-badge.item-injected {
+  font-size: 10px;
+  padding: 1px 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
 /* Group Header Actions */
 .group-header-right {
   display: flex;
