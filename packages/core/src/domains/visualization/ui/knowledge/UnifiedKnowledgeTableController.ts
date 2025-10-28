@@ -980,7 +980,7 @@ export class UnifiedKnowledgeTableController {
   /**
    * Delete template
    */
-  private deleteTemplate(templateId: string): void {
+  private async deleteTemplate(templateId: string): Promise<void> {
     webviewLogger.info(
       LogCategory.UI,
       `Delete template requested: ${templateId}`,
@@ -1011,37 +1011,51 @@ export class UnifiedKnowledgeTableController {
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
 
-    const userConfirmed = confirm(confirmMessage);
+    // Use custom modal instead of browser confirm() which doesn't work in sandboxed webviews
+    const { ModalDialog } = require('../ModalDialog');
+    const modal = new ModalDialog();
 
-    if (userConfirmed) {
-      webviewLogger.info(
-        LogCategory.UI,
-        'User confirmed template deletion, sending message to backend',
-        'UnifiedKnowledgeTableController.deleteTemplate',
-        { templateId },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-      );
+    try {
+      const userConfirmed = await modal.confirm(confirmMessage, t('template.deleteTemplate'));
 
-      if (window.vscode) {
-        window.vscode.postMessage({
-          type: 'v1:delete-template',
-          payload: { templateId }
-        });
-      } else {
-        webviewLogger.error(
+      if (userConfirmed) {
+        webviewLogger.info(
           LogCategory.UI,
-          'window.vscode not available',
+          'User confirmed template deletion, sending message to backend',
           'UnifiedKnowledgeTableController.deleteTemplate',
-          undefined,
+          { templateId },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
+        if (window.vscode) {
+          window.vscode.postMessage({
+            type: 'v1:delete-template',
+            payload: { templateId }
+          });
+        } else {
+          webviewLogger.error(
+            LogCategory.UI,
+            'window.vscode not available',
+            'UnifiedKnowledgeTableController.deleteTemplate',
+            undefined,
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+        }
+      } else {
+        webviewLogger.info(
+          LogCategory.UI,
+          'User cancelled template deletion',
+          'UnifiedKnowledgeTableController.deleteTemplate',
+          { templateId },
           LogPathway.KNOWLEDGE_MANAGEMENT
         );
       }
-    } else {
-      webviewLogger.info(
+    } catch (error) {
+      webviewLogger.error(
         LogCategory.UI,
-        'User cancelled template deletion',
+        'Error showing delete confirmation modal',
         'UnifiedKnowledgeTableController.deleteTemplate',
-        { templateId },
+        { error },
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
     }
