@@ -658,6 +658,34 @@ export class UnifiedKnowledgeTableController {
   }
 
   /**
+   * Get maturity display text for popup view
+   */
+  private getMaturityDisplayForPopup(item: KnowledgeItem): string {
+    if (!item.maturity) {
+      return '';
+    }
+
+    const parts: string[] = [];
+
+    if (item.maturity.complexity) {
+      const c = item.maturity.complexity;
+      parts.push(`C:${c.min}${c.max !== c.min ? `-${c.max}` : ''}`);
+    }
+
+    if (item.maturity.operator) {
+      const o = item.maturity.operator;
+      parts.push(`O:${o.min}${o.max !== o.min ? `-${o.max}` : ''}`);
+    }
+
+    if (item.maturity.project) {
+      const p = item.maturity.project;
+      parts.push(`P:${p.min}${p.max !== p.min ? `-${p.max}` : ''}`);
+    }
+
+    return parts.length > 0 ? parts.join(' | ') : '';
+  }
+
+  /**
    * Render item action buttons
    */
   private renderItemActions(item: KnowledgeItem, isTemplateView: boolean): string {
@@ -1049,6 +1077,9 @@ export class UnifiedKnowledgeTableController {
     tooltip.className = locked ? 'item-preview-tooltip locked' : 'item-preview-tooltip';
     tooltip.dataset.tooltipFor = item.id;
 
+    // Build maturity display
+    const maturityDisplay = this.getMaturityDisplayForPopup(item);
+
     // Build content with optional close button
     tooltip.innerHTML = `
       ${locked ? '<button class="tooltip-close-btn" title="Close">✕</button>' : ''}
@@ -1063,6 +1094,9 @@ export class UnifiedKnowledgeTableController {
         <span><strong>Scope:</strong> ${this.escapeHtml(item.scope)}</span>
         ${item.tags && item.tags.length > 0 ? `
           <span><strong>Tags:</strong> ${item.tags.map(t => this.escapeHtml(t)).join(', ')}</span>
+        ` : ''}
+        ${maturityDisplay ? `
+          <span><strong>Maturity:</strong> ${maturityDisplay}</span>
         ` : ''}
       </div>
       <div class="preview-divider"></div>
