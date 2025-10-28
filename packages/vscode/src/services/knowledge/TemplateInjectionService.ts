@@ -21,6 +21,7 @@ import {
   GroupInjectionOptions,
   InjectionPreview
 } from '@agent-brain/core/domains/knowledge';
+import { KnowledgeEventStorage } from '@agent-brain/core/domains/events';
 import { logger, LogCategory, LogPathway } from '@agent-brain/core/infrastructure/logging/Logger';
 
 /**
@@ -38,7 +39,8 @@ export class TemplateInjectionService {
 
   constructor(
     private templateStore: TemplateStore,
-    private templateEngine: TemplateEngine
+    private templateEngine: TemplateEngine,
+    private eventStorage: KnowledgeEventStorage
   ) {
     this.maturityFilterEngine = new MaturityFilterEngine();
   }
@@ -158,18 +160,31 @@ export class TemplateInjectionService {
       throw new Error(`Failed to write to file ${targetFilePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
-    // Record injection for all items
+    // Record injection for all items in template store (audit log)
     this.templateStore.recordTemplateInjection(templateId, targetFilePath, 'user');
+
+    // Record timeline events for each injected item
+    for (const item of matchingItems) {
+      await this.eventStorage.recordEvent({
+        type: 'apply',
+        knowledgeItemId: item.id,
+        knowledgeItemTitle: item.title,
+        knowledgeItemType: item.type,
+        targetFile: targetFilePath,
+        actor: 'user'
+      });
+    }
 
     logger.info(
       LogCategory.EXTENSION,
-      'Injected template',
+      'Injected template and recorded timeline events',
       'TemplateInjectionService.injectTemplate',
       {
         templateId,
         targetFilePath,
         totalItems: template.items.length,
-        injectedItems: matchingItems.length
+        injectedItems: matchingItems.length,
+        eventsRecorded: matchingItems.length
       },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
@@ -240,12 +255,22 @@ export class TemplateInjectionService {
       throw new Error(`Failed to write to file ${targetFilePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
-    // Record injection
+    // Record injection in template store (audit log)
     this.templateStore.recordItemInjection(itemId, targetFilePath, 'item', templateId, 'user');
+
+    // Record timeline event
+    await this.eventStorage.recordEvent({
+      type: 'apply',
+      knowledgeItemId: item.id,
+      knowledgeItemTitle: item.title,
+      knowledgeItemType: item.type,
+      targetFile: targetFilePath,
+      actor: 'user'
+    });
 
     logger.info(
       LogCategory.EXTENSION,
-      'Injected item',
+      'Injected item and recorded timeline event',
       'TemplateInjectionService.injectItem',
       { templateId, itemId, targetFilePath, itemTitle: item.title },
       LogPathway.KNOWLEDGE_MANAGEMENT
@@ -263,6 +288,12 @@ export class TemplateInjectionService {
       { templateId, targetFilePath },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
+
+    // Get template to record events for all items
+    const template = this.templateStore.getTemplate(templateId);
+    if (!template) {
+      throw new Error(`Template ${templateId} not found`);
+    }
 
     // Read current file content
     const fileUri = vscode.Uri.file(targetFilePath);
@@ -292,11 +323,26 @@ export class TemplateInjectionService {
       throw new Error(`Failed to write to file ${targetFilePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
+    // Record removal in template store (audit log)
+    this.templateStore.recordTemplateRemoval(templateId, targetFilePath, 'user');
+
+    // Record timeline events for each removed item
+    for (const item of template.items) {
+      await this.eventStorage.recordEvent({
+        type: 'remove',
+        knowledgeItemId: item.id,
+        knowledgeItemTitle: item.title,
+        knowledgeItemType: item.type,
+        targetFile: targetFilePath,
+        actor: 'user'
+      });
+    }
+
     logger.info(
       LogCategory.EXTENSION,
-      'Removed template',
+      'Removed template and recorded timeline events',
       'TemplateInjectionService.removeTemplate',
-      { templateId, targetFilePath },
+      { templateId, targetFilePath, itemsRemoved: template.items.length },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
   }
@@ -348,7 +394,15 @@ export class TemplateInjectionService {
 
     if (effectiveContext) {
       // Filter items using MaturityFilterEngine
-      const coreContext = this.toCoreContext(effectiveContext);
+      // Check if context is already in core format or needs conversion
+      let coreContext: CoreMaturityContext;
+      if ('complexity' in effectiveContext && 'quadrant' in effectiveContext) {
+        // Already in core format
+        coreContext = effectiveContext as CoreMaturityContext;
+      } else {
+        // Convert from local format
+        coreContext = this.toCoreContext(effectiveContext);
+      }
       const filterResult = this.maturityFilterEngine.filterItems(
         template.items,
         coreContext
@@ -472,7 +526,15 @@ export class TemplateInjectionService {
         items = template.items;
       } else {
         // Filter items based on maturity context
-        const coreContext = this.toCoreContext(maturityContext);
+        // Check if maturityContext is already in core format or needs conversion
+        let coreContext: CoreMaturityContext;
+        if ('complexity' in maturityContext && 'quadrant' in maturityContext) {
+          // Already in core format
+          coreContext = maturityContext as CoreMaturityContext;
+        } else {
+          // Convert from local format
+          coreContext = this.toCoreContext(maturityContext);
+        }
         const { matched } = this.maturityFilterEngine.filterItems(template.items, coreContext);
         items = template.items.filter(item => matched.some(m => m.itemId === item.id));
       }
@@ -514,6 +576,18 @@ export class TemplateInjectionService {
       throw new Error(`Failed to write to file ${targetFilePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
+    // Record timeline events for each injected item
+    for (const item of items) {
+      await this.eventStorage.recordEvent({
+        type: 'apply',
+        knowledgeItemId: item.id,
+        knowledgeItemTitle: item.title,
+        knowledgeItemType: item.type,
+        targetFile: targetFilePath,
+        actor: 'user'
+      });
+    }
+
     logger.info(
       LogCategory.EXTENSION,
       'Injected maturity group',
@@ -543,7 +617,15 @@ export class TemplateInjectionService {
       throw new Error('No maturity context available for catchment injection');
     }
 
-    const coreContext = this.toCoreContext(effectiveContext);
+    // Check if context is already in core format or needs conversion
+    let coreContext: CoreMaturityContext;
+    if ('complexity' in effectiveContext && 'quadrant' in effectiveContext) {
+      // Already in core format
+      coreContext = effectiveContext as CoreMaturityContext;
+    } else {
+      // Convert from local format
+      coreContext = this.toCoreContext(effectiveContext);
+    }
 
     // Filter items using MaturityFilterEngine
     const { matched } = this.maturityFilterEngine.filterItems(

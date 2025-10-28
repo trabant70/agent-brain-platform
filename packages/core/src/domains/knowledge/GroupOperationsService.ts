@@ -37,30 +37,38 @@ export class GroupOperationsService {
     options: GroupInjectionOptions
   ): GroupInjectionResult {
     try {
+      // Add defensive checks with defaults
+      const safeOptions = {
+        ...options,
+        itemIds: options.itemIds || [],
+        replaceExisting: options.replaceExisting ?? false,
+        metadata: options.metadata || {}
+      };
+
       logger.info(
         LogCategory.DATA,
         'Injecting group',
         'GroupOperationsService.injectGroup',
-        { groupType: options.groupType, groupId: options.groupId, itemCount: options.itemIds.length },
+        { groupType: safeOptions.groupType, groupId: safeOptions.groupId, itemCount: safeOptions.itemIds.length },
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
 
       // Check if group already exists
       const existingGroups = this.scanner.scanFile(content);
-      const groupExists = existingGroups.groups.some(g => g.id === options.groupId);
+      const groupExists = existingGroups.groups.some(g => g.id === safeOptions.groupId);
 
       if (groupExists) {
-        if (!options.replaceExisting) {
+        if (!safeOptions.replaceExisting) {
           return {
             success: false,
-            error: `Group ${options.groupId} already exists`
+            error: `Group ${safeOptions.groupId} already exists`
           };
         }
 
         // Remove existing group first
         const removeResult = this.removeGroup(content, {
-          groupType: options.groupType,
-          groupId: options.groupId
+          groupType: safeOptions.groupType,
+          groupId: safeOptions.groupId
         });
 
         if (!removeResult.success) {
@@ -75,14 +83,14 @@ export class GroupOperationsService {
 
       // Generate group markers
       const metadata = {
-        ...options.metadata,
+        ...safeOptions.metadata,
         injectedAt: new Date().toISOString(),
-        itemCount: options.itemIds.length
+        itemCount: safeOptions.itemIds.length
       };
 
       const markers = this.templateEngine.generateGroupMarkers(
-        options.groupType,
-        options.groupId,
+        safeOptions.groupType,
+        safeOptions.groupId,
         metadata
       );
 
@@ -90,9 +98,9 @@ export class GroupOperationsService {
       // Note: In a real implementation, you'd fetch the actual item content
       // For now, we'll just list the item IDs as placeholders
       let groupContent = `\n${markers.start}\n`;
-      groupContent += `<!-- Group: ${options.groupType} (${options.itemIds.length} items) -->\n\n`;
+      groupContent += `<!-- Group: ${safeOptions.groupType} (${safeOptions.itemIds.length} items) -->\n\n`;
 
-      for (const itemId of options.itemIds) {
+      for (const itemId of safeOptions.itemIds) {
         groupContent += `<!-- Item: ${itemId} -->\n`;
         groupContent += `[Content for ${itemId} would be here]\n\n`;
       }
@@ -106,15 +114,15 @@ export class GroupOperationsService {
         LogCategory.DATA,
         'Group injected successfully',
         'GroupOperationsService.injectGroup',
-        { groupType: options.groupType, groupId: options.groupId, itemsInjected: options.itemIds.length },
+        { groupType: safeOptions.groupType, groupId: safeOptions.groupId, itemsInjected: safeOptions.itemIds.length },
         LogPathway.KNOWLEDGE_MANAGEMENT
       );
 
       return {
         success: true,
-        groupType: options.groupType,
-        groupId: options.groupId,
-        itemsInjected: options.itemIds.length,
+        groupType: safeOptions.groupType,
+        groupId: safeOptions.groupId,
+        itemsInjected: safeOptions.itemIds.length,
         itemsExcluded: 0,
         content: updatedContent
       };

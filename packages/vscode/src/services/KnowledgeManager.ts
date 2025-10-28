@@ -34,10 +34,12 @@ import {
   TemplateInstaller,
   MaturityContext,
   MaturityConfigManager,
-  GroupType
+  GroupType,
+  ClaudeMdScanner,
+  GroupOperationsService
 } from '@agent-brain/core/domains/knowledge';
 
-import type { InjectionPreview } from '@agent-brain/core/domains/knowledge/GroupTypes';
+import type { InjectionPreview, GroupRemovalOptions } from '@agent-brain/core/domains/knowledge/GroupTypes';
 
 import { KnowledgeEventStorage } from '@agent-brain/core/domains/events';
 import { logger, LogCategory, LogPathway } from '@agent-brain/core/infrastructure/logging/Logger';
@@ -56,6 +58,8 @@ export class KnowledgeManager {
   private fileSystem: KnowledgeFileSystem;
   private templateEngine: TemplateEngine;
   private eventStorage: KnowledgeEventStorage;
+  private scanner: ClaudeMdScanner;
+  private groupOperationsService: GroupOperationsService;
 
   // Template management (V1)
   private templateStore: TemplateStore;
@@ -85,6 +89,8 @@ export class KnowledgeManager {
     this.fileSystem = new KnowledgeFileSystem(workspaceRoot);
     this.templateEngine = new TemplateEngine(this.store);
     this.eventStorage = new KnowledgeEventStorage(workspaceRoot);
+    this.scanner = new ClaudeMdScanner(this.templateEngine);
+    this.groupOperationsService = new GroupOperationsService(this.templateEngine, this.scanner);
 
     // Initialize V1 template components
     this.templateStore = new TemplateStore();
@@ -99,6 +105,7 @@ export class KnowledgeManager {
       workspaceRoot,
       this.fileSystem,
       this.templateEngine,
+      this.scanner,
       extensionContext
     );
 
@@ -119,7 +126,8 @@ export class KnowledgeManager {
 
     this.templateInjectionService = new TemplateInjectionService(
       this.templateStore,
-      this.templateEngine
+      this.templateEngine,
+      this.eventStorage
     );
   }
 
@@ -331,6 +339,7 @@ export class KnowledgeManager {
     type?: KnowledgeType;
     scope?: KnowledgeScope;
     tags?: string[];
+    maturity?: import('@agent-brain/core/domains/knowledge/types').MaturityFootprint;
   }): Promise<void> {
     await this.templateOperationsService.updateItem(templateId, itemId, updates);
     await this.templateFileService.saveTemplatesToFiles(this.templateStore);
@@ -404,6 +413,139 @@ export class KnowledgeManager {
 
   async removeV1Template(templateId: string, targetFilePath: string): Promise<void> {
     await this.templateInjectionService.removeTemplate(templateId, targetFilePath);
+  }
+
+  /**
+   * Inject a V2 group to a file
+   */
+  async injectGroup(
+    filePath: string,
+    groupType: string,
+    groupId: string,
+    itemIds: string[],
+    maturityContext?: MaturityContext
+  ): Promise<void> {
+    // Add defensive checks with defaults
+    const safeItemIds = itemIds || [];
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'Injecting V2 group to file',
+      'KnowledgeManager.injectGroup',
+      { filePath, groupType, groupId, itemCount: safeItemIds.length },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    // Read file content
+    const uri = vscode.Uri.file(filePath);
+    const content = await vscode.workspace.fs.readFile(uri);
+    const contentStr = Buffer.from(content).toString('utf8');
+
+    // Inject the group (pass itemIds, not items)
+    const result = this.groupOperationsService.injectGroup(contentStr, {
+      groupType: groupType as GroupType,
+      groupId,
+      itemIds: safeItemIds,
+      maturityContext
+    });
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to inject group');
+    }
+
+    // Write updated content back to file
+    const updatedContent = Buffer.from(result.content!, 'utf8');
+    await vscode.workspace.fs.writeFile(uri, updatedContent);
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'V2 group injected successfully',
+      'KnowledgeManager.injectGroup',
+      { filePath, groupType, groupId, itemsInjected: safeItemIds.length },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+  }
+
+  /**
+   * Remove a V2 group injection from a file
+   */
+  async removeGroup(filePath: string, groupType: string, groupId: string): Promise<void> {
+    logger.info(
+      LogCategory.EXTENSION,
+      'Removing V2 group from file',
+      'KnowledgeManager.removeGroup',
+      { filePath, groupType, groupId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    // Read file content
+    const uri = vscode.Uri.file(filePath);
+    const content = await vscode.workspace.fs.readFile(uri);
+    const contentStr = Buffer.from(content).toString('utf8');
+
+    // Remove the group
+    const result = this.groupOperationsService.removeGroup(contentStr, {
+      groupType: groupType as GroupType,
+      groupId,
+      removeOrphaned: false
+    });
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to remove group');
+    }
+
+    // Write updated content back to file
+    const updatedContent = Buffer.from(result.content!, 'utf8');
+    await vscode.workspace.fs.writeFile(uri, updatedContent);
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'V2 group removed successfully',
+      'KnowledgeManager.removeGroup',
+      { filePath, groupType, groupId, itemsRemoved: result.itemsRemoved },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+  }
+
+  /**
+   * Remove a V2 individual item injection from a file
+   */
+  async removeIndividualItem(filePath: string, itemId: string): Promise<void> {
+    logger.info(
+      LogCategory.EXTENSION,
+      'Removing V2 individual item from file',
+      'KnowledgeManager.removeIndividualItem',
+      { filePath, itemId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    // Read file content
+    const uri = vscode.Uri.file(filePath);
+    const content = await vscode.workspace.fs.readFile(uri);
+    const contentStr = Buffer.from(content).toString('utf8');
+
+    // Remove the item by treating it as a group (individual items are essentially single-item groups)
+    const result = this.groupOperationsService.removeGroup(contentStr, {
+      groupType: GroupType.TEMPLATE,  // Type doesn't matter for individual items
+      groupId: itemId,
+      removeOrphaned: false
+    });
+
+    if (!result.success) {
+      throw new Error(result.error || 'Failed to remove individual item');
+    }
+
+    // Write updated content back to file
+    const updatedContent = Buffer.from(result.content!, 'utf8');
+    await vscode.workspace.fs.writeFile(uri, updatedContent);
+
+    logger.info(
+      LogCategory.EXTENSION,
+      'V2 individual item removed successfully',
+      'KnowledgeManager.removeIndividualItem',
+      { filePath, itemId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
   }
 
   /**

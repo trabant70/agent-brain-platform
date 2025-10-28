@@ -83,8 +83,15 @@ export class I18nService {
   loadTranslations(bundleFile: string): Record<string, string> | null {
     try {
       const bundlePath = vscode.Uri.joinPath(this.extensionUri, 'l10n', bundleFile);
+      console.log('[I18nService] Attempting to load translations from:', bundlePath.fsPath);
+      console.log('[I18nService] Extension URI:', this.extensionUri.fsPath);
+      console.log('[I18nService] Bundle file:', bundleFile);
+
       const bundleContent = fs.readFileSync(bundlePath.fsPath, 'utf8');
+      console.log('[I18nService] Bundle content loaded, length:', bundleContent.length);
+
       const translations = JSON.parse(bundleContent);
+      console.log('[I18nService] Translations parsed, keys:', Object.keys(translations).length);
 
       logger.info(
         LogCategory.EXTENSION,
@@ -94,6 +101,12 @@ export class I18nService {
 
       return translations;
     } catch (error) {
+      console.error('[I18nService] ERROR loading bundle:', error);
+      console.error('[I18nService] Error details:', {
+        name: error instanceof Error ? error.name : 'Unknown',
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       logger.error(
         LogCategory.EXTENSION,
         `Failed to load i18n bundle: ${bundleFile}`,
@@ -110,8 +123,13 @@ export class I18nService {
   private handleFallback(webview: vscode.Webview): void {
     try {
       const fallbackPath = vscode.Uri.joinPath(this.extensionUri, 'l10n', 'bundle.l10n.json');
+      console.log('[I18nService] handleFallback() - trying to load from:', fallbackPath.fsPath);
+
       const fallbackContent = fs.readFileSync(fallbackPath.fsPath, 'utf8');
+      console.log('[I18nService] handleFallback() - loaded content, length:', fallbackContent.length);
+
       const fallbackTranslations = JSON.parse(fallbackContent);
+      console.log('[I18nService] handleFallback() - parsed translations, keys:', Object.keys(fallbackTranslations).length);
 
       this.sendTranslationsToWebview(webview, 'en', fallbackTranslations);
 
@@ -121,12 +139,17 @@ export class I18nService {
         'I18nService.handleFallback'
       );
     } catch (fallbackError) {
+      console.error('[I18nService] handleFallback() - FAILED:', fallbackError);
       logger.error(
         LogCategory.EXTENSION,
         'Failed to load fallback English bundle',
         'I18nService.handleFallback',
         fallbackError
       );
+
+      // Send empty translations so webview can at least initialize
+      console.log('[I18nService] Sending empty translations to allow webview to initialize');
+      this.sendTranslationsToWebview(webview, 'en', {});
     }
   }
 
