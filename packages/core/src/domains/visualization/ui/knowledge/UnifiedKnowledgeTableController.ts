@@ -220,9 +220,12 @@ export class UnifiedKnowledgeTableController {
    * Initialize custom tooltips for status badges
    */
   private initializeTooltips(): void {
+    console.log('[TOOLTIP] initializeTooltips() called');
+
     // Remove any existing tooltip
     const existingTooltip = document.querySelector('.custom-tooltip');
     if (existingTooltip) {
+      console.log('[TOOLTIP] Removing existing tooltip');
       existingTooltip.remove();
     }
 
@@ -247,25 +250,31 @@ export class UnifiedKnowledgeTableController {
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     `;
     document.body.appendChild(tooltip);
+    console.log('[TOOLTIP] Tooltip element created and appended to body');
 
     // Find all status badges
     const badges = document.querySelectorAll('.status-badge[data-tooltip]');
+    console.log(`[TOOLTIP] Found ${badges.length} badges with data-tooltip`);
 
-    badges.forEach(badge => {
+    badges.forEach((badge, index) => {
       const tooltipText = badge.getAttribute('data-tooltip');
+      console.log(`[TOOLTIP] Badge ${index}: tooltip="${tooltipText}"`);
       if (!tooltipText) return;
 
       // Show tooltip on mouse enter
       badge.addEventListener('mouseenter', (e: Event) => {
+        console.log('[TOOLTIP] mouseenter event fired');
         const rect = (e.target as HTMLElement).getBoundingClientRect();
         tooltip.textContent = tooltipText;
         tooltip.style.opacity = '1';
         tooltip.style.left = `${rect.left}px`;
         tooltip.style.top = `${rect.bottom + 8}px`;
+        console.log(`[TOOLTIP] Showing tooltip at (${rect.left}, ${rect.bottom + 8})`);
       });
 
       // Hide tooltip on mouse leave
       badge.addEventListener('mouseleave', () => {
+        console.log('[TOOLTIP] mouseleave event fired');
         tooltip.style.opacity = '0';
       });
 
@@ -276,6 +285,8 @@ export class UnifiedKnowledgeTableController {
         tooltip.style.top = `${mouseEvent.clientY + 20}px`;
       });
     });
+
+    console.log('[TOOLTIP] Event listeners attached to all badges');
   }
 
   /**
@@ -386,6 +397,8 @@ export class UnifiedKnowledgeTableController {
     const canRemove = status === InjectionStatus.INJECTED;
     const isTemplateView = strategy.getMode() === ViewMode.BY_TEMPLATE;
 
+    console.log(`[ACTIONS] renderGroupActions for group ${group.id}, mode=${strategy.getMode()}, isTemplateView=${isTemplateView}`);
+
     let actions = '';
 
     // Inject/Remove (all views)
@@ -407,6 +420,7 @@ export class UnifiedKnowledgeTableController {
 
     // Template-specific actions (only in template view)
     if (isTemplateView) {
+      console.log(`[ACTIONS] Adding template-specific actions for ${group.id}`);
       actions += `
         <button class="action-btn audit-btn" data-action="audit" data-template-id="${group.id}" title="${t('tooltip.viewAuditLog')}">
           📊
@@ -426,6 +440,7 @@ export class UnifiedKnowledgeTableController {
       `;
     }
 
+    console.log(`[ACTIONS] Rendered actions HTML length: ${actions.length}`);
     return actions;
   }
 
@@ -433,53 +448,71 @@ export class UnifiedKnowledgeTableController {
    * Wire up action button event handlers
    */
   private wireUpActionButtons(header: HTMLElement, group: GroupSection, strategy: GroupingStrategy): void {
+    console.log(`[WIRE] wireUpActionButtons for group ${group.id}, mode=${strategy.getMode()}`);
+
     // Inject button
     const injectBtn = header.querySelector('.inject-btn');
+    console.log(`[WIRE] inject button found: ${!!injectBtn}`);
     injectBtn?.addEventListener('click', (e) => {
+      console.log('[WIRE] inject button clicked');
       e.stopPropagation();
       this.callbacks.onInjectGroup(strategy.getGroupType(), group.id, group.itemIds);
     });
 
     // Remove button
     const removeBtn = header.querySelector('.remove-btn');
+    console.log(`[WIRE] remove button found: ${!!removeBtn}`);
     removeBtn?.addEventListener('click', (e) => {
+      console.log('[WIRE] remove button clicked');
       e.stopPropagation();
       this.callbacks.onRemoveGroup(strategy.getGroupType(), group.id);
     });
 
     // Template-specific actions
     if (strategy.getMode() === ViewMode.BY_TEMPLATE) {
+      console.log('[WIRE] In template view mode, wiring template-specific actions');
+
       // Audit log button
       const auditBtn = header.querySelector('[data-action="audit"]');
+      console.log(`[WIRE] audit button found: ${!!auditBtn}`);
       auditBtn?.addEventListener('click', (e) => {
+        console.log('[WIRE] audit button clicked');
         e.stopPropagation();
         this.showTemplateAuditLog(group.id);
       });
 
       // Edit template button
       const editBtn = header.querySelector('[data-action="edit-template"]');
+      console.log(`[WIRE] edit-template button found: ${!!editBtn}`);
       editBtn?.addEventListener('click', (e) => {
+        console.log('[WIRE] edit-template button clicked');
         e.stopPropagation();
         this.editTemplate(group.id);
       });
 
       // Clone template button
       const cloneBtn = header.querySelector('[data-action="clone"]');
+      console.log(`[WIRE] clone button found: ${!!cloneBtn}`);
       cloneBtn?.addEventListener('click', (e) => {
+        console.log('[WIRE] clone button clicked');
         e.stopPropagation();
         this.cloneTemplate(group.id);
       });
 
       // Delete template button
       const deleteBtn = header.querySelector('[data-action="delete-template"]');
+      console.log(`[WIRE] delete-template button found: ${!!deleteBtn}`, deleteBtn);
       deleteBtn?.addEventListener('click', (e) => {
+        console.log('[WIRE] DELETE BUTTON CLICKED!');
         e.stopPropagation();
         this.deleteTemplate(group.id);
       });
 
       // Add item button
       const addBtn = header.querySelector('[data-action="add-item"]');
+      console.log(`[WIRE] add-item button found: ${!!addBtn}`);
       addBtn?.addEventListener('click', (e) => {
+        console.log('[WIRE] add-item button clicked');
         e.stopPropagation();
         this.addItemToTemplate(group.id);
       });
