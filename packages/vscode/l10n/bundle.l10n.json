@@ -410,10 +410,6 @@
   "threading.mode.disabled": "Disabled",
   "threading.mode.development": "Development",
   "threading.mode.debugging": "Debugging",
-  "threading.mode.learning": "Learning"
-  "threading.mode.disabled": "Disabled",
-  "threading.mode.development": "Development",
-  "threading.mode.debugging": "Debugging",
   "threading.mode.learning": "Learning",
 
   "grouping.label": "Group by:",
@@ -454,7 +450,7 @@
   "grouping.empty.catchment": "Set a maturity context to see relevant items",
   
   "grouping.action.inject": "Inject",
-  "grouping.action.remove": "Remove",
+  "grouping.action.remove": "Remove injection from file",
   "grouping.status.notInjected": "Not Injected",
   "grouping.status.injected": "Injected",
   "grouping.status.partial": "Partial",

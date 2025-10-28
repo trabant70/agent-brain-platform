@@ -4,7 +4,7 @@
   "description": "10 game-changing CLAUDE.md entries from Reza Rezvani that transform AI coding sessions into a superpower.",
   "version": "1.0.0",
   "createdAt": "2025-10-23T00:00:00.000Z",
-  "updatedAt": "2025-10-26T09:10:34.179Z",
+  "updatedAt": "2025-10-28T18:36:44.170Z",
   "category": "best-practices",
   "tags": [
     "claude-md",
@@ -60,7 +60,21 @@
         }
       ],
       "templateId": "bundled.reza-rezvani-essentials",
-      "templateName": "Reza Rezvani's CLAUDE.md Essentials"
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials",
+      "maturity": {
+        "operator": {
+          "min": 2,
+          "max": 4
+        },
+        "project": {
+          "min": 2,
+          "max": 4
+        },
+        "complexity": {
+          "min": 2,
+          "max": 3
+        }
+      }
     },
     {
       "id": "guideline-command-center",
@@ -102,7 +116,21 @@
         }
       ],
       "templateId": "bundled.reza-rezvani-essentials",
-      "templateName": "Reza Rezvani's CLAUDE.md Essentials"
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials",
+      "maturity": {
+        "operator": {
+          "min": 2,
+          "max": 4
+        },
+        "project": {
+          "min": 2,
+          "max": 4
+        },
+        "complexity": {
+          "min": 2,
+          "max": 3
+        }
+      }
     },
     {
       "id": "standard-style-guide-sheriff",
@@ -144,7 +172,21 @@
         }
       ],
       "templateId": "bundled.reza-rezvani-essentials",
-      "templateName": "Reza Rezvani's CLAUDE.md Essentials"
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials",
+      "maturity": {
+        "operator": {
+          "min": 2,
+          "max": 4
+        },
+        "project": {
+          "min": 2,
+          "max": 4
+        },
+        "complexity": {
+          "min": 2,
+          "max": 3
+        }
+      }
     },
     {
       "id": "best-practice-test-bench-coach",
@@ -186,7 +228,21 @@
         }
       ],
       "templateId": "bundled.reza-rezvani-essentials",
-      "templateName": "Reza Rezvani's CLAUDE.md Essentials"
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials",
+      "maturity": {
+        "operator": {
+          "min": 2,
+          "max": 4
+        },
+        "project": {
+          "min": 2,
+          "max": 4
+        },
+        "complexity": {
+          "min": 2,
+          "max": 3
+        }
+      }
     },
     {
       "id": "best-practice-error-handling-mantra",
@@ -228,7 +284,21 @@
         }
       ],
       "templateId": "bundled.reza-rezvani-essentials",
-      "templateName": "Reza Rezvani's CLAUDE.md Essentials"
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials",
+      "maturity": {
+        "operator": {
+          "min": 2,
+          "max": 4
+        },
+        "project": {
+          "min": 2,
+          "max": 4
+        },
+        "complexity": {
+          "min": 2,
+          "max": 3
+        }
+      }
     },
     {
       "id": "standard-clean-code-commandments",
@@ -270,7 +340,21 @@
         }
       ],
       "templateId": "bundled.reza-rezvani-essentials",
-      "templateName": "Reza Rezvani's CLAUDE.md Essentials"
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials",
+      "maturity": {
+        "operator": {
+          "min": 2,
+          "max": 4
+        },
+        "project": {
+          "min": 2,
+          "max": 4
+        },
+        "complexity": {
+          "min": 2,
+          "max": 3
+        }
+      }
     },
     {
       "id": "guideline-security-sentry",
@@ -313,7 +397,21 @@
         }
       ],
       "templateId": "bundled.reza-rezvani-essentials",
-      "templateName": "Reza Rezvani's CLAUDE.md Essentials"
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials",
+      "maturity": {
+        "operator": {
+          "min": 2,
+          "max": 4
+        },
+        "project": {
+          "min": 2,
+          "max": 4
+        },
+        "complexity": {
+          "min": 2,
+          "max": 3
+        }
+      }
     },
     {
       "id": "convention-teamwork-protocol",
@@ -356,7 +454,21 @@
         }
       ],
       "templateId": "bundled.reza-rezvani-essentials",
-      "templateName": "Reza Rezvani's CLAUDE.md Essentials"
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials",
+      "maturity": {
+        "operator": {
+          "min": 2,
+          "max": 4
+        },
+        "project": {
+          "min": 2,
+          "max": 4
+        },
+        "complexity": {
+          "min": 2,
+          "max": 3
+        }
+      }
     },
     {
       "id": "best-practice-edge-case-oracle",
@@ -398,7 +510,21 @@
         }
       ],
       "templateId": "bundled.reza-rezvani-essentials",
-      "templateName": "Reza Rezvani's CLAUDE.md Essentials"
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials",
+      "maturity": {
+        "operator": {
+          "min": 2,
+          "max": 4
+        },
+        "project": {
+          "min": 2,
+          "max": 4
+        },
+        "complexity": {
+          "min": 2,
+          "max": 3
+        }
+      }
     },
     {
       "id": "golden-path-agentic-workflow",
@@ -441,7 +567,21 @@
         }
       ],
       "templateId": "bundled.reza-rezvani-essentials",
-      "templateName": "Reza Rezvani's CLAUDE.md Essentials"
+      "templateName": "Reza Rezvani's CLAUDE.md Essentials",
+      "maturity": {
+        "operator": {
+          "min": 2,
+          "max": 4
+        },
+        "project": {
+          "min": 2,
+          "max": 4
+        },
+        "complexity": {
+          "min": 2,
+          "max": 3
+        }
+      }
     }
   ],
   "itemCount": 10,

@@ -175,25 +175,31 @@ export class AccordionTemplates {
       file.scanResult.groups.forEach((group, idx) => {
         sectionsHTML += `
         <div class="injection-item">
-          <div class="injection-header">
-            <div class="injection-info">
-              <div class="injection-type-label">Type:</div>
-              <div class="injection-type-value">${MarkdownRenderer.escapeHtml(group.type)}</div>
+          <div class="injection-content">
+            <div class="injection-details">
+              <div class="injection-info-row">
+                <span class="injection-label">Type:</span>
+                <span class="injection-value">${MarkdownRenderer.escapeHtml(group.type)}</span>
+              </div>
+              <div class="injection-info-row">
+                <span class="injection-label">ID:</span>
+                <span class="injection-value">${MarkdownRenderer.escapeHtml(group.id.substring(0, 35))}${group.id.length > 35 ? '...' : ''}</span>
+              </div>
+              <div class="injection-info-row">
+                <span class="injection-label">Lines:</span>
+                <span class="injection-value">${group.lineStart}-${group.lineEnd}</span>
+                ${group.items && group.items.length > 0 ? `<span class="injection-badge">${group.items.length} item(s)</span>` : ''}
+              </div>
             </div>
-            <button class="remove-injection-btn"
-                    data-group-type="${group.type}"
-                    data-group-id="${group.id}"
-                    data-file-path="${file.path}"
-                    data-injection-type="group"
-                    title="Remove this group">
-              Remove
-            </button>
           </div>
-          <div class="injection-meta">
-            <span class="injection-id" title="Group ID">ID: ${MarkdownRenderer.escapeHtml(group.id.substring(0, 30))}${group.id.length > 30 ? '...' : ''}</span>
-            ${group.items && group.items.length > 0 ? `<span class="injection-items">${group.items.length} item(s)</span>` : ''}
-            <span class="injection-lines">Lines ${group.lineStart}-${group.lineEnd}</span>
-          </div>
+          <button class="remove-injection-btn ab-btn-danger-small"
+                  data-group-type="${group.type}"
+                  data-group-id="${group.id}"
+                  data-file-path="${file.path}"
+                  data-injection-type="group"
+                  title="Remove this group">
+            ✖ Remove
+          </button>
         </div>
       `;
       });
@@ -210,22 +216,25 @@ export class AccordionTemplates {
       file.scanResult.individualItems.forEach((item, idx) => {
         sectionsHTML += `
         <div class="injection-item">
-          <div class="injection-header">
-            <div class="injection-info">
-              <div class="injection-id-label">Item:</div>
-              <div class="injection-id-value">${MarkdownRenderer.escapeHtml(item.id)}</div>
+          <div class="injection-content">
+            <div class="injection-details">
+              <div class="injection-info-row">
+                <span class="injection-label">Item:</span>
+                <span class="injection-value">${MarkdownRenderer.escapeHtml(item.id)}</span>
+              </div>
+              <div class="injection-info-row">
+                <span class="injection-label">Line:</span>
+                <span class="injection-value">${item.line}</span>
+              </div>
             </div>
-            <button class="remove-injection-btn"
-                    data-item-id="${item.id}"
-                    data-file-path="${file.path}"
-                    data-injection-type="item"
-                    title="Remove this item">
-              Remove
-            </button>
           </div>
-          <div class="injection-meta">
-            <span class="injection-lines">Line ${item.line}</span>
-          </div>
+          <button class="remove-injection-btn ab-btn-danger-small"
+                  data-item-id="${item.id}"
+                  data-file-path="${file.path}"
+                  data-injection-type="item"
+                  title="Remove this item">
+            ✖ Remove
+          </button>
         </div>
       `;
       });

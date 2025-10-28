@@ -23,6 +23,7 @@ import { ComplexityGroupingStrategy } from './strategies/ComplexityGroupingStrat
 import { CatchmentGroupingStrategy } from './strategies/CatchmentGroupingStrategy';
 import { t } from '../../webview/i18n';
 import { webviewLogger, LogCategory, LogPathway } from '../../webview/WebviewLogger';
+import { ModalDialog } from '../ModalDialog';
 
 /**
  * Callbacks from table controller to parent
@@ -33,6 +34,12 @@ export interface UnifiedKnowledgeTableCallbacks {
   onEditItem: (templateId: string, itemId: string) => void;
   onDeleteItem: (templateId: string, itemId: string) => void;
   onShowNotification: (message: string, type: 'info' | 'warning' | 'error', duration: number) => void;
+  // Template-specific actions
+  onCloneTemplate?: (templateId: string) => void;
+  onEditTemplate?: (templateId: string) => void;
+  onDeleteTemplate?: (templateId: string) => void;
+  onAddItemToTemplate?: (templateId: string) => void;
+  onViewTemplateAuditLog?: (templateId: string) => void;
 }
 
 /**
@@ -431,7 +438,7 @@ export class UnifiedKnowledgeTableController {
     if (canRemove) {
       actions += `
         <button class="action-btn remove-btn" data-action="remove" data-group-id="${group.id}" title="${t('grouping.action.remove')}">
-          🗑️
+          ⏏️
         </button>
       `;
     }
@@ -441,7 +448,7 @@ export class UnifiedKnowledgeTableController {
       console.log(`[ACTIONS] Adding template-specific actions for ${group.id}`);
       actions += `
         <button class="action-btn audit-btn" data-action="audit" data-template-id="${group.id}" title="${t('tooltip.viewAuditLog')}">
-          📊
+          📜
         </button>
         <button class="action-btn edit-btn" data-action="edit-template" data-template-id="${group.id}" title="${t('tooltip.editTemplate')}">
           ✏️
@@ -632,11 +639,25 @@ export class UnifiedKnowledgeTableController {
    * Wire up item action buttons
    */
   private wireUpItemActions(row: HTMLElement, item: KnowledgeItem): void {
-    // Preview button
+    // Preview button - now on hover instead of click
     const previewBtn = row.querySelector('[data-action="preview"]');
-    previewBtn?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.showItemPreview(item, e.target as HTMLElement);
+    let tooltipTimer: number | null = null;
+
+    previewBtn?.addEventListener('mouseenter', (e) => {
+      // Show tooltip after short delay
+      tooltipTimer = window.setTimeout(() => {
+        this.showItemPreviewTooltip(item, e.target as HTMLElement);
+      }, 300);
+    });
+
+    previewBtn?.addEventListener('mouseleave', () => {
+      // Cancel tooltip if still pending
+      if (tooltipTimer) {
+        clearTimeout(tooltipTimer);
+        tooltipTimer = null;
+      }
+      // Hide tooltip
+      this.hideItemPreviewTooltip();
     });
 
     // Inject individual item button
@@ -917,6 +938,86 @@ export class UnifiedKnowledgeTableController {
   }
 
   /**
+   * Show item preview as hover tooltip
+   */
+  private showItemPreviewTooltip(item: KnowledgeItem, anchor: HTMLElement): void {
+    // Remove any existing tooltip
+    this.hideItemPreviewTooltip();
+
+    // Create tooltip
+    const tooltip = document.createElement('div');
+    tooltip.className = 'item-preview-tooltip';
+    tooltip.dataset.tooltipFor = item.id;
+
+    // Build content
+    tooltip.innerHTML = `
+      <div class="preview-header">
+        <div class="preview-title-row">
+          <span class="preview-icon">${this.getTypeIcon(item.type)}</span>
+          <span class="preview-title">${this.escapeHtml(item.title)}</span>
+        </div>
+        <span class="preview-type-badge">${item.type}</span>
+      </div>
+      <div class="preview-meta">
+        <span><strong>Scope:</strong> ${this.escapeHtml(item.scope)}</span>
+        ${item.tags && item.tags.length > 0 ? `
+          <span><strong>Tags:</strong> ${item.tags.map(t => this.escapeHtml(t)).join(', ')}</span>
+        ` : ''}
+      </div>
+      <div class="preview-divider"></div>
+      <div class="preview-body">
+        <h4>Content</h4>
+        <div class="preview-body-text">${this.escapeHtml(item.body || 'No content')}</div>
+      </div>
+    `;
+
+    // Add to document
+    document.body.appendChild(tooltip);
+
+    // Position near the anchor button
+    const rect = anchor.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+
+    // Default position: right of button
+    let left = rect.right + 10;
+    let top = rect.top;
+
+    // If tooltip would go off right edge, show on left instead
+    if (left + tooltipRect.width > window.innerWidth - 10) {
+      left = rect.left - tooltipRect.width - 10;
+    }
+
+    // If tooltip would go off bottom edge, adjust up
+    if (top + tooltipRect.height > window.innerHeight - 10) {
+      top = window.innerHeight - tooltipRect.height - 10;
+    }
+
+    // If tooltip would go off top edge, adjust down
+    if (top < 10) {
+      top = 10;
+    }
+
+    tooltip.style.left = `${left}px`;
+    tooltip.style.top = `${top}px`;
+
+    // Add hover listener to tooltip itself to keep it open when mouse moves to it
+    tooltip.addEventListener('mouseenter', () => {
+      // Keep tooltip open
+    });
+
+    tooltip.addEventListener('mouseleave', () => {
+      this.hideItemPreviewTooltip();
+    });
+  }
+
+  /**
+   * Hide item preview tooltip
+   */
+  private hideItemPreviewTooltip(): void {
+    document.querySelectorAll('.item-preview-tooltip').forEach(el => el.remove());
+  }
+
+  /**
    * Inject individual item to file
    */
   private injectIndividualItem(item: KnowledgeItem): void {
@@ -961,13 +1062,8 @@ export class UnifiedKnowledgeTableController {
    * Show template audit log
    */
   private showTemplateAuditLog(templateId: string): void {
-    this.callbacks.onShowNotification?.('Loading template audit log...', 'info', 1000);
-
-    if (window.vscode) {
-      window.vscode.postMessage({
-        type: 'v1:show-audit-log',
-        payload: { templateId }
-      });
+    if (this.callbacks.onViewTemplateAuditLog) {
+      this.callbacks.onViewTemplateAuditLog(templateId);
     }
   }
 
@@ -975,11 +1071,13 @@ export class UnifiedKnowledgeTableController {
    * Edit template
    */
   private editTemplate(templateId: string): void {
-    if (window.vscode) {
-      window.vscode.postMessage({
-        type: 'v1:edit-template',
-        payload: { templateId }
-      });
+    console.log(`[UnifiedKnowledgeTableController] editTemplate called with templateId: ${templateId}`);
+    console.log(`[UnifiedKnowledgeTableController] onEditTemplate callback exists: ${!!this.callbacks.onEditTemplate}`);
+    if (this.callbacks.onEditTemplate) {
+      console.log(`[UnifiedKnowledgeTableController] Calling onEditTemplate callback`);
+      this.callbacks.onEditTemplate(templateId);
+    } else {
+      console.log(`[UnifiedKnowledgeTableController] No onEditTemplate callback configured`);
     }
   }
 
@@ -987,11 +1085,8 @@ export class UnifiedKnowledgeTableController {
    * Clone template
    */
   private cloneTemplate(templateId: string): void {
-    if (window.vscode) {
-      window.vscode.postMessage({
-        type: 'v1:clone-template',
-        payload: { templateId }
-      });
+    if (this.callbacks.onCloneTemplate) {
+      this.callbacks.onCloneTemplate(templateId);
     }
   }
 
@@ -999,83 +1094,8 @@ export class UnifiedKnowledgeTableController {
    * Delete template
    */
   private async deleteTemplate(templateId: string): Promise<void> {
-    webviewLogger.info(
-      LogCategory.UI,
-      `Delete template requested: ${templateId}`,
-      'UnifiedKnowledgeTableController.deleteTemplate',
-      { templateId },
-      LogPathway.KNOWLEDGE_MANAGEMENT
-    );
-
-    const template = this.templates.find(t => t.id === templateId);
-    if (!template) {
-      webviewLogger.warn(
-        LogCategory.UI,
-        'Template not found for deletion',
-        'UnifiedKnowledgeTableController.deleteTemplate',
-        { templateId },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-      );
-      this.callbacks.onShowNotification?.('Template not found', 'error', 3000);
-      return;
-    }
-
-    const confirmMessage = t('confirm.deleteTemplate');
-    webviewLogger.debug(
-      LogCategory.UI,
-      `Showing confirmation dialog: "${confirmMessage}"`,
-      'UnifiedKnowledgeTableController.deleteTemplate',
-      { templateId, templateName: template.name },
-      LogPathway.KNOWLEDGE_MANAGEMENT
-    );
-
-    // Use custom modal instead of browser confirm() which doesn't work in sandboxed webviews
-    const { ModalDialog } = require('../ModalDialog');
-    const modal = new ModalDialog();
-
-    try {
-      const userConfirmed = await modal.confirm(confirmMessage, t('template.deleteTemplate'));
-
-      if (userConfirmed) {
-        webviewLogger.info(
-          LogCategory.UI,
-          'User confirmed template deletion, sending message to backend',
-          'UnifiedKnowledgeTableController.deleteTemplate',
-          { templateId },
-          LogPathway.KNOWLEDGE_MANAGEMENT
-        );
-
-        if (window.vscode) {
-          window.vscode.postMessage({
-            type: 'v1:delete-template',
-            payload: { templateId }
-          });
-        } else {
-          webviewLogger.error(
-            LogCategory.UI,
-            'window.vscode not available',
-            'UnifiedKnowledgeTableController.deleteTemplate',
-            undefined,
-            LogPathway.KNOWLEDGE_MANAGEMENT
-          );
-        }
-      } else {
-        webviewLogger.info(
-          LogCategory.UI,
-          'User cancelled template deletion',
-          'UnifiedKnowledgeTableController.deleteTemplate',
-          { templateId },
-          LogPathway.KNOWLEDGE_MANAGEMENT
-        );
-      }
-    } catch (error) {
-      webviewLogger.error(
-        LogCategory.UI,
-        'Error showing delete confirmation modal',
-        'UnifiedKnowledgeTableController.deleteTemplate',
-        { error },
-        LogPathway.KNOWLEDGE_MANAGEMENT
-      );
+    if (this.callbacks.onDeleteTemplate) {
+      this.callbacks.onDeleteTemplate(templateId);
     }
   }
 
@@ -1083,11 +1103,8 @@ export class UnifiedKnowledgeTableController {
    * Add item to template
    */
   private addItemToTemplate(templateId: string): void {
-    if (window.vscode) {
-      window.vscode.postMessage({
-        type: 'v1:add-item',
-        payload: { templateId }
-      });
+    if (this.callbacks.onAddItemToTemplate) {
+      this.callbacks.onAddItemToTemplate(templateId);
     }
   }
 

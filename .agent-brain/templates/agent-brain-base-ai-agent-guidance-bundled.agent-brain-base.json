@@ -4,7 +4,7 @@
   "description": "Essential guidance for AI coding agents to maintain consistency, honesty, and effective knowledge capture across sessions.",
   "version": "1.0.0",
   "createdAt": "2025-10-23T00:00:00.000Z",
-  "updatedAt": "2025-10-27T08:36:16.282Z",
+  "updatedAt": "2025-10-28T18:36:44.156Z",
   "category": "onboarding",
   "tags": [
     "ai-agent",
@@ -107,7 +107,21 @@
         }
       ],
       "templateId": "bundled.agent-brain-base",
-      "templateName": "Agent Brain Base - AI Agent Guidance"
+      "templateName": "Agent Brain Base - AI Agent Guidance",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 3
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 2
+        }
+      }
     },
     {
       "id": "golden-path-learning-capture",
@@ -196,7 +210,21 @@
         }
       ],
       "templateId": "bundled.agent-brain-base",
-      "templateName": "Agent Brain Base - AI Agent Guidance"
+      "templateName": "Agent Brain Base - AI Agent Guidance",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 3
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 2
+        }
+      }
     },
     {
       "id": "golden-path-context-survival",
@@ -285,7 +313,21 @@
         }
       ],
       "templateId": "bundled.agent-brain-base",
-      "templateName": "Agent Brain Base - AI Agent Guidance"
+      "templateName": "Agent Brain Base - AI Agent Guidance",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 3
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 2
+        }
+      }
     },
     {
       "id": "best-practice-full-honesty",
@@ -375,7 +417,21 @@
         }
       ],
       "templateId": "bundled.agent-brain-base",
-      "templateName": "Agent Brain Base - AI Agent Guidance"
+      "templateName": "Agent Brain Base - AI Agent Guidance",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 3
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 2
+        }
+      }
     },
     {
       "id": "best-practice-todo-hygiene",
@@ -465,7 +521,21 @@
         }
       ],
       "templateId": "bundled.agent-brain-base",
-      "templateName": "Agent Brain Base - AI Agent Guidance"
+      "templateName": "Agent Brain Base - AI Agent Guidance",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 3
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 2
+        }
+      }
     },
     {
       "id": "best-practice-coming-back",
@@ -555,7 +625,21 @@
         }
       ],
       "templateId": "bundled.agent-brain-base",
-      "templateName": "Agent Brain Base - AI Agent Guidance"
+      "templateName": "Agent Brain Base - AI Agent Guidance",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 3
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 2
+        }
+      }
     },
     {
       "id": "guideline-knowledge-item-creation",
@@ -644,7 +728,21 @@
         }
       ],
       "templateId": "bundled.agent-brain-base",
-      "templateName": "Agent Brain Base - AI Agent Guidance"
+      "templateName": "Agent Brain Base - AI Agent Guidance",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 3
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 2
+        }
+      }
     },
     {
       "id": "gotcha-ai-agent-pitfalls",
@@ -734,7 +832,21 @@
         }
       ],
       "templateId": "bundled.agent-brain-base",
-      "templateName": "Agent Brain Base - AI Agent Guidance"
+      "templateName": "Agent Brain Base - AI Agent Guidance",
+      "maturity": {
+        "operator": {
+          "min": 1,
+          "max": 3
+        },
+        "project": {
+          "min": 1,
+          "max": 5
+        },
+        "complexity": {
+          "min": 1,
+          "max": 2
+        }
+      }
     }
   ],
   "itemCount": 8,

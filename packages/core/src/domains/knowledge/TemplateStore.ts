@@ -307,8 +307,8 @@ export class TemplateStore {
       return null;
     }
 
-    // Cannot modify bundled templates
-    if (template.source === TemplateSource.BUNDLED) {
+    // Cannot modify bundled templates unless they are marked as user-editable
+    if (template.source === TemplateSource.BUNDLED && !template.userEditable) {
       return null;
     }
 
@@ -370,8 +370,8 @@ export class TemplateStore {
       return false;
     }
 
-    // Cannot modify bundled templates
-    if (template.source === TemplateSource.BUNDLED) {
+    // Cannot modify bundled templates unless they are marked as user-editable
+    if (template.source === TemplateSource.BUNDLED && !template.userEditable) {
       return false;
     }
 
@@ -415,8 +415,8 @@ export class TemplateStore {
       return false;
     }
 
-    // Cannot modify bundled templates
-    if (template.source === TemplateSource.BUNDLED) {
+    // Cannot modify bundled templates unless they are marked as user-editable
+    if (template.source === TemplateSource.BUNDLED && !template.userEditable) {
       return false;
     }
 
@@ -714,8 +714,8 @@ export class TemplateStore {
       return false;
     }
 
-    // Cannot modify bundled templates
-    if (template.source === TemplateSource.BUNDLED) {
+    // Cannot modify bundled templates unless they are marked as user-editable
+    if (template.source === TemplateSource.BUNDLED && !template.userEditable) {
       return false;
     }
 

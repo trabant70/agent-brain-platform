@@ -1502,6 +1502,442 @@
       "knowledgeItemType": "golden-path",
       "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
       "actor": "user"
+    },
+    {
+      "id": "ke-1761676819120",
+      "timestamp": "2025-10-28T18:40:19.120Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761676819122",
+      "timestamp": "2025-10-28T18:40:19.122Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761676819124",
+      "timestamp": "2025-10-28T18:40:19.124Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761676819126",
+      "timestamp": "2025-10-28T18:40:19.126Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761676819128",
+      "timestamp": "2025-10-28T18:40:19.128Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761676819129",
+      "timestamp": "2025-10-28T18:40:19.129Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761676819130",
+      "timestamp": "2025-10-28T18:40:19.130Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761676819131",
+      "timestamp": "2025-10-28T18:40:19.131Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678751239",
+      "timestamp": "2025-10-28T19:12:31.239Z",
+      "type": "remove",
+      "knowledgeItemId": "guideline-architecture-blueprint",
+      "knowledgeItemTitle": "Architecture Blueprint - The 10,000-Foot View",
+      "knowledgeItemType": "guideline",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678751241",
+      "timestamp": "2025-10-28T19:12:31.241Z",
+      "type": "remove",
+      "knowledgeItemId": "guideline-command-center",
+      "knowledgeItemTitle": "Command Center - Never Forget How to Build",
+      "knowledgeItemType": "guideline",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678751242",
+      "timestamp": "2025-10-28T19:12:31.242Z",
+      "type": "remove",
+      "knowledgeItemId": "standard-style-guide-sheriff",
+      "knowledgeItemTitle": "Style Guide Sheriff - Enforce Consistency",
+      "knowledgeItemType": "standard",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678751243",
+      "timestamp": "2025-10-28T19:12:31.243Z",
+      "type": "remove",
+      "knowledgeItemId": "best-practice-test-bench-coach",
+      "knowledgeItemTitle": "Test Bench Coach - Make Testing First-Class",
+      "knowledgeItemType": "best-practice",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678751244",
+      "timestamp": "2025-10-28T19:12:31.244Z",
+      "type": "remove",
+      "knowledgeItemId": "best-practice-error-handling-mantra",
+      "knowledgeItemTitle": "Error Handling Mantra - Debug Like a Pro",
+      "knowledgeItemType": "best-practice",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678751245",
+      "timestamp": "2025-10-28T19:12:31.245Z",
+      "type": "remove",
+      "knowledgeItemId": "standard-clean-code-commandments",
+      "knowledgeItemTitle": "Clean Code Commandments - Write Maintainable Code",
+      "knowledgeItemType": "standard",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678751246",
+      "timestamp": "2025-10-28T19:12:31.246Z",
+      "type": "remove",
+      "knowledgeItemId": "guideline-security-sentry",
+      "knowledgeItemTitle": "Security Sentry - Code with Security in Mind",
+      "knowledgeItemType": "guideline",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678751247",
+      "timestamp": "2025-10-28T19:12:31.247Z",
+      "type": "remove",
+      "knowledgeItemId": "convention-teamwork-protocol",
+      "knowledgeItemTitle": "Teamwork Protocol - Collaborate Effectively",
+      "knowledgeItemType": "convention",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678751248",
+      "timestamp": "2025-10-28T19:12:31.248Z",
+      "type": "remove",
+      "knowledgeItemId": "best-practice-edge-case-oracle",
+      "knowledgeItemTitle": "Edge-Case Oracle - Think Beyond the Happy Path",
+      "knowledgeItemType": "best-practice",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678751249",
+      "timestamp": "2025-10-28T19:12:31.249Z",
+      "type": "remove",
+      "knowledgeItemId": "golden-path-agentic-workflow",
+      "knowledgeItemTitle": "Agentic Workflow Guardrails - Plan, Execute, Verify",
+      "knowledgeItemType": "golden-path",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678833888",
+      "timestamp": "2025-10-28T19:13:53.888Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678833890",
+      "timestamp": "2025-10-28T19:13:53.890Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678833891",
+      "timestamp": "2025-10-28T19:13:53.891Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678833892",
+      "timestamp": "2025-10-28T19:13:53.892Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678833893",
+      "timestamp": "2025-10-28T19:13:53.893Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678833894",
+      "timestamp": "2025-10-28T19:13:53.894Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678833895",
+      "timestamp": "2025-10-28T19:13:53.895Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678833896",
+      "timestamp": "2025-10-28T19:13:53.896Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678833897",
+      "timestamp": "2025-10-28T19:13:53.897Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761678833898",
+      "timestamp": "2025-10-28T19:13:53.898Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277721",
+      "timestamp": "2025-10-28T19:21:17.721Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277722",
+      "timestamp": "2025-10-28T19:21:17.722Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277723",
+      "timestamp": "2025-10-28T19:21:17.723Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277724",
+      "timestamp": "2025-10-28T19:21:17.724Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277725",
+      "timestamp": "2025-10-28T19:21:17.725Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277726",
+      "timestamp": "2025-10-28T19:21:17.726Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277727",
+      "timestamp": "2025-10-28T19:21:17.727Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277728",
+      "timestamp": "2025-10-28T19:21:17.728Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277729",
+      "timestamp": "2025-10-28T19:21:17.729Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277730",
+      "timestamp": "2025-10-28T19:21:17.730Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277731",
+      "timestamp": "2025-10-28T19:21:17.731Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277732",
+      "timestamp": "2025-10-28T19:21:17.732Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277733",
+      "timestamp": "2025-10-28T19:21:17.733Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277734",
+      "timestamp": "2025-10-28T19:21:17.734Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277735",
+      "timestamp": "2025-10-28T19:21:17.735Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277735",
+      "timestamp": "2025-10-28T19:21:17.735Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277736",
+      "timestamp": "2025-10-28T19:21:17.736Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277737",
+      "timestamp": "2025-10-28T19:21:17.737Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277738",
+      "timestamp": "2025-10-28T19:21:17.738Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277740",
+      "timestamp": "2025-10-28T19:21:17.740Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277741",
+      "timestamp": "2025-10-28T19:21:17.741Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277742",
+      "timestamp": "2025-10-28T19:21:17.742Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277743",
+      "timestamp": "2025-10-28T19:21:17.743Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277745",
+      "timestamp": "2025-10-28T19:21:17.745Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277746",
+      "timestamp": "2025-10-28T19:21:17.746Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277747",
+      "timestamp": "2025-10-28T19:21:17.747Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277748",
+      "timestamp": "2025-10-28T19:21:17.748Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277749",
+      "timestamp": "2025-10-28T19:21:17.749Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277750",
+      "timestamp": "2025-10-28T19:21:17.750Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
+    },
+    {
+      "id": "ke-1761679277751",
+      "timestamp": "2025-10-28T19:21:17.751Z",
+      "type": "apply",
+      "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+      "actor": "user"
     }
   ]
 }

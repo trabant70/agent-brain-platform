@@ -1790,11 +1790,6 @@
   outline-offset: -1px;
 }
 
-.knowledge-toolbar #toggle-all-sections {
-  padding: 5px 8px;
-  min-width: unset;
-}
-
 /* Group Sections */
 .group-section {
   margin-bottom: 12px;
@@ -1952,7 +1947,7 @@
 
 .group-item-row {
   display: grid;
-  grid-template-columns: 40px 1fr 100px 200px 80px;
+  grid-template-columns: 40px 1fr 80px 180px 140px;
   gap: 12px;
   align-items: center;
   padding: 8px 12px;
@@ -2007,25 +2002,128 @@
 }
 
 .item-action-btn {
-  background: none;
-  border: none;
+  background: transparent;
+  border: 1px solid var(--vscode-panel-border);
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 3px;
   transition: all 0.2s;
   font-size: 14px;
+  opacity: 0.7;
 }
 
 .item-action-btn:hover {
-  background: var(--vscode-button-secondaryHoverBackground);
+  background: var(--vscode-toolbar-hoverBackground);
+  border-color: var(--vscode-focusBorder);
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+.item-action-btn:active {
+  transform: scale(0.95);
 }
 
 .item-action-btn.edit-btn:hover {
   background: rgba(0, 212, 255, 0.15);
+  border-color: rgba(0, 212, 255, 0.4);
 }
 
 .item-action-btn.delete-btn:hover {
   background: rgba(255, 68, 68, 0.15);
+  border-color: rgba(255, 68, 68, 0.4);
+}
+
+/* Item Preview Hover Tooltip */
+.item-preview-tooltip {
+  position: fixed;
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-editorWidget-border);
+  border-radius: 6px;
+  padding: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  z-index: 10000;
+  max-width: 500px;
+  min-width: 350px;
+  pointer-events: none;
+  animation: fadeIn 0.15s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.item-preview-tooltip .preview-header {
+  margin-bottom: 12px;
+}
+
+.item-preview-tooltip .preview-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.item-preview-tooltip .preview-icon {
+  font-size: 20px;
+}
+
+.item-preview-tooltip .preview-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.item-preview-tooltip .preview-type-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.item-preview-tooltip .preview-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.item-preview-tooltip .preview-divider {
+  height: 1px;
+  background: var(--vscode-panel-border);
+  margin: 12px 0;
+}
+
+.item-preview-tooltip .preview-body h4 {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.item-preview-tooltip .preview-body-text {
+  padding: 10px;
+  background: var(--vscode-textBlockQuote-background);
+  border-left: 3px solid var(--vscode-textLink-activeForeground);
+  border-radius: 3px;
+  font-size: 12px;
+  line-height: 1.5;
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 /* Empty State */
@@ -2248,5 +2346,138 @@
   .item-scope,
   .item-tags {
     display: none;
+  }
+}
+
+/* ============================================
+   CLAUDE.MD INJECTIONS SECTION
+   ============================================ */
+
+/* Injections container */
+.injections-section {
+  margin: 12px 0;
+  padding: 0;
+}
+
+/* Section header */
+.injections-header {
+  padding: 10px 12px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--vscode-foreground);
+  background: var(--vscode-editor-background);
+  border-bottom: 1px solid var(--vscode-panel-border);
+  margin-bottom: 8px;
+}
+
+/* Individual injection item */
+.injection-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.injection-item:hover {
+  background: var(--vscode-list-hoverBackground);
+  border-color: var(--vscode-focusBorder);
+}
+
+/* Content container (left side) */
+.injection-content {
+  flex: 1;
+  min-width: 0; /* Allow text truncation */
+}
+
+/* Details section */
+.injection-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Info row (each line of information) */
+.injection-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+/* Label styling */
+.injection-label {
+  color: var(--vscode-descriptionForeground);
+  font-weight: 500;
+  min-width: 45px;
+  flex-shrink: 0;
+}
+
+/* Value styling */
+.injection-value {
+  color: var(--vscode-foreground);
+  font-family: var(--vscode-editor-font-family);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Badge for item counts */
+.injection-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  margin-left: 8px;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Remove button styling */
+.remove-injection-btn {
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+/* Small danger button variant */
+.ab-btn-danger-small {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--vscode-errorForeground);
+  background: transparent;
+  border: 1px solid var(--vscode-errorForeground);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.ab-btn-danger-small:hover {
+  background: var(--vscode-errorForeground);
+  color: var(--vscode-errorLens-errorBackground);
+  border-color: var(--vscode-errorForeground);
+}
+
+.ab-btn-danger-small:active {
+  transform: scale(0.95);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .injection-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .remove-injection-btn {
+    margin-left: 0;
+    align-self: flex-end;
   }
 }

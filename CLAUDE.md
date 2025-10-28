@@ -216,37 +216,763 @@ agent-brain-platform/
 
 <!-- AGENT-BRAIN-GROUP-END: TYPE=TEMPLATE ID=bundled.agent-brain-base -->
 
-<!-- AGENT-BRAIN-GROUP-START: TYPE=TEMPLATE ID=bundled.reza-rezvani-essentials INJECTED_AT=2025-10-28T14:09:33.802Z ITEM_COUNT=10 -->
+<!-- AGENT-BRAIN-GROUP-START: TYPE=TEMPLATE ID=bundled.reza-rezvani-essentials INJECTED_AT=2025-10-28T19:13:53.856Z ITEM_COUNT=10 -->
 <!-- Group: TEMPLATE (10 items) -->
 
-<!-- Item: guideline-architecture-blueprint -->
-[Content for guideline-architecture-blueprint would be here]
+# Architecture Blueprint - The 10,000-Foot View
 
-<!-- Item: guideline-command-center -->
-[Content for guideline-command-center would be here]
+**Original concept by Reza Rezvani**
 
-<!-- Item: standard-style-guide-sheriff -->
-[Content for standard-style-guide-sheriff would be here]
+## Purpose
+Provide the high-level system architecture upfront so AI agents always code with the grand plan in mind.
 
-<!-- Item: best-practice-test-bench-coach -->
-[Content for best-practice-test-bench-coach would be here]
+## What to Include
 
-<!-- Item: best-practice-error-handling-mantra -->
-[Content for best-practice-error-handling-mantra would be here]
+**Tech Stack:**
+- Frontend framework (React, Vue, etc.)
+- Backend framework (Express, Django, etc.)
+- Database (PostgreSQL, MongoDB, SQLite, etc.)
+- Key libraries and their purposes
 
-<!-- Item: standard-clean-code-commandments -->
-[Content for standard-clean-code-commandments would be here]
+**System Layers:**
+- How components communicate
+- API endpoints and protocols
+- Authentication/authorization flow
+- Data flow from UI to database
 
-<!-- Item: guideline-security-sentry -->
-[Content for guideline-security-sentry would be here]
+**Design Patterns:**
+- MVC, MVVM, or other architectural pattern
+- Module organization
+- Separation of concerns
 
-<!-- Item: convention-teamwork-protocol -->
-[Content for convention-teamwork-protocol would be here]
+## Example
+```markdown
+## Architecture
 
-<!-- Item: best-practice-edge-case-oracle -->
-[Content for best-practice-edge-case-oracle would be here]
+Full-stack app with React frontend and Express backend:
+- **Frontend**: React 19 SPA (Vite), component-based UI
+- **Backend**: Express.js REST API, MVC pattern
+- **Database**: PostgreSQL with tables for users, posts, comments
+- **Communication**: Frontend calls backend at http://localhost:3001/api/
+- **Auth**: JWT tokens stored in httpOnly cookies
+```
 
-<!-- Item: golden-path-agentic-workflow -->
-[Content for golden-path-agentic-workflow would be here]
+## Benefits
+- Prevents mixing patterns or misplacing files
+- Ensures code fits the system design
+- AI sees the forest, not just trees
+- Reduces architectural drift
+
+## Keep Updated
+Whenever you complete a major refactor, update this section. Tell the AI: "Update the Architecture Blueprint in CLAUDE.md to reflect our new structure."
+
+# Command Center - Never Forget How to Build
+
+**Original concept by Reza Rezvani**
+
+## Purpose
+Document all common commands so AI agents never ask "How do I run this?" and can execute the right commands automatically.
+
+## What to Include
+
+**Development:**
+- Start dev server
+- Build for production
+- Run in watch mode
+
+**Testing:**
+- Run all tests
+- Run specific test suites
+- Generate coverage reports
+
+**Quality:**
+- Lint code
+- Format code
+- Type checking
+
+**Deployment:**
+- Build artifacts
+- Deploy commands
+- Environment setup
+
+## Example Template
+```markdown
+## Commands
+
+**Development:**
+- `npm run dev` - Start development server (auto-reload)
+- `npm run build` - Build for production (outputs to dist/)
+
+**Testing:**
+- `npm run test` - Run test suite (Jest with coverage)
+- `npm run test:watch` - Run tests in watch mode
+
+**Quality:**
+- `npm run lint` - Lint with ESLint
+- `npm run format` - Format with Prettier
+
+**Environment:**
+- Node 18+ required
+- Copy .env.example to .env before first run
+```
+
+## Pro Tips
+- Include tool versions if setup is finicky
+- Note any environment prerequisites
+- Document safe commands that don't need permission
+- Add deployment steps if applicable
+
+## Result
+AI will use correct commands automatically, no more guessing or "it works on my machine" issues.
+
+# Style Guide Sheriff - Enforce Consistency
+
+**Original concept by Reza Rezvani**
+
+## Purpose
+Keep code style consistent across all contributions, whether human or AI-generated.
+
+## Core Style Elements
+
+**Syntax:**
+- Module system (ES6 import/export vs CommonJS)
+- Modern features (ES6+ preferred)
+- Language-specific conventions
+
+**Formatting:**
+- Indentation (2 spaces, 4 spaces, tabs)
+- Quote style (single, double)
+- Semicolons (use or omit)
+- Line length limits
+
+**Naming Conventions:**
+- Variables: camelCase
+- Functions: camelCase
+- Classes/Components: PascalCase
+- Constants: UPPER_SNAKE_CASE
+- Files: kebab-case or PascalCase
+
+**Patterns:**
+- Prefer functional over class components (React)
+- Async/await over promises.then()
+- Avoid deprecated APIs
+
+## Example
+```markdown
+## Code Style
+
+- **Syntax**: ES6+ modules, arrow functions
+- **Format**: 2-space indent, single quotes, no semicolons
+- **Naming**: camelCase for vars/functions, PascalCase for components
+- **Patterns**: Functional components with hooks (React)
+- **Linting**: Must pass ESLint with zero warnings
+```
+
+## Extended Guidelines
+
+**Comments & Documentation:**
+- JSDoc format for public APIs
+- Explain "why" not "what" in comments
+- Remove commented-out code before commit
+
+**Commit Messages:**
+- Conventional commits (feat:, fix:, docs:)
+- Include ticket IDs if applicable
+- One-line summary, details after blank line
+
+## Result
+AI outputs will conform to style automatically, pass linters, and look uniform with human-written code.
+
+# Test Bench Coach - Make Testing First-Class
+
+**Original concept by Reza Rezvani**
+
+## Philosophy
+For every feature or bugfix, write or update tests as part of the workflow. Testing is not optional.
+
+## Testing Mindset
+
+**Test-Driven Development:**
+- Consider writing tests first (or immediately after)
+- Red-Green-Refactor cycle
+- Tests as specification
+
+**Coverage Goals:**
+- High coverage on core logic (services, reducers, utilities)
+- Include edge cases and error states
+- Focus on behavior, not implementation
+
+**Test Types:**
+- Unit tests for pure functions
+- Integration tests for API endpoints
+- Component tests for UI (React Testing Library)
+- E2E tests for critical user flows
+
+## Framework Specifics
+```markdown
+## Testing Instructions
+
+**Framework**: Jest for unit tests, React Testing Library for components
+
+**Approach**:
+- Always include tests for new features
+- Fix bugs by first writing a failing test
+- Run `npm run test` before considering task done
+
+**Test Structure**:
+- Use `describe` blocks for modules
+- Use `it('should...')` for behaviors
+- Keep tests focused and readable
+
+**Edge Cases**:
+- Test invalid inputs
+- Test empty/null states
+- Test error conditions
+- Test boundary values
+```
+
+## Pro Tips
+- Ask AI to generate additional edge case tests
+- Leverage AI's tireless nature for exhaustive testing
+- Include property-based tests for critical logic
+- AI can think of tests you might forget at 2 AM
+
+## Result
+AI will auto-suggest test files after implementing features, write comprehensive test suites, and catch edge cases proactively.
+
+# Error Handling Mantra - Debug Like a Pro
+
+**Original concept by Reza Rezvani**
+
+## Core Principles
+
+### 1. Diagnose, Don't Guess
+- Analyze root cause step-by-step
+- Check assumptions and inputs
+- Review relevant code paths
+- Use systematic approach, not random fixes
+
+### 2. Graceful Handling
+- Use try/catch around async operations
+- Return user-friendly error messages
+- Provide fallback values when appropriate
+- Fail fast on bad input
+
+### 3. Helpful Logging
+- Include context in error logs
+- Log at appropriate levels (error, warn, info)
+- Avoid log spam in production
+- Make errors traceable
+
+### 4. No Silent Failures
+- Never swallow exceptions silently
+- Either throw, log, or handle explicitly
+- Make failures visible
+- Surface errors to monitoring systems
+
+## Implementation Guide
+```markdown
+## Error Handling
+
+**When Error Occurs**:
+1. Explain possible causes step-by-step
+2. Check assumptions and data flow
+3. Propose fix with reasoning
+4. Add safeguards to prevent recurrence
+
+**Code Patterns**:
+- Wrap risky operations in try/catch
+- Validate inputs before processing
+- Use Error Boundaries (React)
+- Return meaningful error codes/messages
+
+**Debugging Strategy**:
+- Add targeted console.debug statements
+- Consider binary search through git history
+- Isolate the issue before fixing
+- Test the fix against multiple scenarios
+```
+
+## Pro Tips
+- Add React Error Boundaries around API-calling components
+- Include error handling in test cases
+- Document known edge cases that cause errors
+- Stop after 3 failed attempts and reassess approach
+
+## Result
+AI will catch its own mistakes more often, add proper error handling proactively, and debug systematically rather than guessing.
+
+# Clean Code Commandments - Write Maintainable Code
+
+**Original concept by Reza Rezvani**
+
+## The Commandments
+
+### 1. Function Size Limits
+- Aim for functions ≤ 50 lines
+- Break large functions into smaller helpers
+- Each function should fit on one screen
+
+### 2. Single Responsibility
+- Each function/module has one clear purpose
+- Don't lump unrelated logic together
+- If function does two things, split it
+
+### 3. Descriptive Naming
+- Use clear, specific names
+- Avoid generic names: `tmp`, `data`, `handleStuff`
+- Prefer: `calculateInvoiceTotal` over `doCalc`
+- Names should reveal intent
+
+### 4. DRY Principle (Don't Repeat Yourself)
+- No duplicate code
+- Refactor similar logic into shared functions
+- If copying code, consider abstraction
+
+### 5. Meaningful Comments
+- Explain non-obvious logic
+- Don't comment self-explanatory code
+- Remove commented-out code
+- Update comments when code changes
+
+### 6. Code Organization
+- Group related functions
+- Logical file structure
+- Separate concerns (UI, logic, data)
+- Consistent module patterns
+
+## Example Guidelines
+```markdown
+## Clean Code
+
+**Function Rules**:
+- Max 50 lines per function
+- Single responsibility only
+- Descriptive names (calculateTotal not doStuff)
+
+**Code Quality**:
+- DRY - no duplication
+- Comments explain "why" not "what"
+- Remove debug code and commented lines
+
+**Organization**:
+- Group related functions
+- Consistent import order
+- Logical file structure
+```
+
+## Anti-Patterns to Avoid
+- Functions over 100 lines
+- Generic variable names
+- Nested ternaries (> 2 levels)
+- Deep nesting (> 3 levels)
+- Magic numbers (use constants)
+- God objects/classes
+
+## Result
+AI will self-correct during coding, refactor large functions automatically, spot code duplication, and produce clean, maintainable code by default.
+
+# Security Sentry - Code with Security in Mind
+
+**Original concept by Reza Rezvani**
+
+## Critical Security Practices
+
+### Input Validation
+- Validate ALL inputs (users, APIs, files)
+- Never trust user input
+- Check format, length, type
+- Whitelist valid inputs
+
+### Authentication & Authorization
+- Hash passwords with bcrypt (never plain text)
+- Use salt with hashing
+- Implement rate limiting on login
+- Account lockout after failed attempts
+- Validate JWT signatures
+- Check permissions before actions
+
+### Database Safety
+- Use parameterized queries or ORM
+- NEVER concatenate user input in SQL
+- Prevent SQL injection
+- Use least privilege for DB users
+
+### XSS & CSRF Protection
+- Sanitize HTML content (use DOMPurify)
+- Escape user-generated content
+- Use CSRF tokens for state-changing forms
+- Set secure HTTP headers
+- Avoid dangerouslySetInnerHTML unless sanitized
+
+### Dependencies & Code Execution
+- Avoid eval() and Function()
+- Don't execute dynamic code from users
+- Keep dependencies updated
+- Check for known vulnerabilities
+- Prefer built-in solutions over risky packages
+
+## Example Security Guide
+```markdown
+## Security Guidelines
+
+**Input Handling**:
+- Validate all user inputs (email format, length, type)
+- Sanitize HTML with DOMPurify before rendering
+- Never trust external data
+
+**Authentication**:
+- Hash passwords with bcrypt (12 rounds minimum)
+- No plain text passwords EVER
+- Rate limit login attempts (5 per 15 min)
+- Use httpOnly cookies for tokens
+
+**Database**:
+- Parameterized queries only
+- No string concatenation in SQL
+- Use ORM for complex queries
+
+**API Security**:
+- HTTPS only in production
+- Validate JWT signatures
+- Check authorization for every endpoint
+- Return generic error messages (don't leak info)
+```
+
+## Common Vulnerabilities to Prevent
+- SQL Injection
+- XSS (Cross-Site Scripting)
+- CSRF (Cross-Site Request Forgery)
+- Authentication bypass
+- Path traversal
+- Insecure direct object references
+- Mass assignment
+- Sensitive data exposure
+
+## Result
+AI will catch security issues proactively, refuse insecure implementations, suggest security improvements, and act as a security reviewer for every line of code.
+
+# Teamwork Protocol - Collaborate Effectively
+
+**Original concept by Reza Rezvani**
+
+## Purpose
+Align AI coding with team collaboration conventions - from Git etiquette to documentation standards.
+
+## Git Workflow
+
+**Branching Strategy**:
+- Feature branches off `dev` or `main`
+- Branch naming: `feature/login-form`, `fix/api-timeout`
+- Never commit directly to protected branches
+- Delete branches after merge
+
+**Commit Messages**:
+- Use conventional commits: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`
+- Include ticket IDs: `feat(auth): add OAuth support (TICKET-123)`
+- One-line summary (50 chars), details after blank line
+- Imperative mood: "Add feature" not "Added feature"
+
+**Pull Requests**:
+- Create PR when feature complete
+- Write clear description of changes
+- Tag relevant reviewers
+- Link to tickets/issues
+- Ensure CI/CD passes before requesting review
+
+## Documentation Standards
+
+**Code Documentation**:
+- Document public APIs and functions
+- Update README when behavior changes
+- Keep CHANGELOG.md current
+- Document new endpoints in API docs
+
+**Comments**:
+- Explain complex logic
+- Document workarounds with context
+- Add TODOs with ticket references
+- Keep comments up-to-date
+
+## Example Protocol
+```markdown
+## Collaboration Workflow
+
+**Git Flow**:
+- Branch from `dev` for features
+- Naming: `feature/name` or `fix/name`
+- Commit format: `type(scope): message (TICKET-ID)`
+- PR required for merging to `dev` or `main`
+
+**Documentation**:
+- Update API docs for new endpoints
+- Add CHANGELOG entry for notable changes
+- Document breaking changes prominently
+- Keep README examples current
+
+**Code Review**:
+- All PRs need 1 approval minimum
+- Address review comments before merge
+- Run linter and tests before requesting review
+- Keep PRs focused and reasonably sized
+```
+
+## Communication Standards
+
+**Commit Messages**:
+- Clear and descriptive
+- Follow team conventions
+- Include context for future maintainers
+
+**PR Descriptions**:
+- What changed and why
+- Testing performed
+- Screenshots for UI changes
+- Migration steps if needed
+
+**Documentation Updates**:
+- Same PR as code changes
+- Cover user-facing changes
+- Update examples and tutorials
+
+## Result
+AI will format commits correctly, update documentation automatically, create proper PRs, and follow team workflows seamlessly.
+
+# Edge-Case Oracle - Think Beyond the Happy Path
+
+**Original concept by Reza Rezvani**
+
+## Philosophy
+For any non-trivial feature, systematically consider edge cases and handle them explicitly.
+
+## Categories of Edge Cases
+
+### Empty or Null Inputs
+- Empty arrays/lists
+- Null/undefined values
+- Empty strings
+- Missing required fields
+- Zero values
+
+### Boundary Conditions
+- Maximum values (overflow)
+- Minimum values (underflow)
+- Very large numbers
+- Very long strings/arrays
+- Negative numbers where unexpected
+
+### Invalid States
+- End date before start date
+- Negative quantities
+- Division by zero
+- Invalid enum values
+- Malformed data
+
+### Concurrency Issues
+- Two users editing same data
+- Race conditions
+- Lock contention
+- Stale data reads
+
+### External Dependencies
+- API timeouts
+- Network failures
+- Third-party service downtime
+- Rate limiting
+- Invalid responses
+
+## Edge Case Protocol
+```markdown
+## Edge Case Considerations
+
+**Always Consider**:
+- Empty/null inputs (empty array, missing fields, zero)
+- Boundary values (max/min, overflow, very long text)
+- Invalid states (dates out of order, negative values)
+- Concurrent access (multiple users, race conditions)
+- External failures (API down, network timeout)
+
+**How to Handle**:
+1. Identify edge case during design
+2. Decide: handle gracefully or fail fast
+3. Implement check or validation
+4. Add test case for the edge condition
+5. Document if behavior is non-obvious
+
+**Fail Fast vs Graceful**:
+- Fail fast: Throw error on bad input (development)
+- Graceful: Return safe default, log warning (production)
+```
+
+## Example Edge Cases
+
+**Date Range Picker**:
+- End date before start date → Swap them
+- Same start and end date → Valid (single day)
+- Dates in far future/past → Validate reasonable range
+
+**Financial Calculations**:
+- Empty transaction array → Return 0
+- Negative amounts → Throw error or handle as refund
+- Floating point precision → Use decimal library
+
+**User Input**:
+- Extra whitespace → Trim
+- Special characters → Sanitize
+- Too long → Truncate or reject
+- Empty required field → Show validation error
+
+## Implementation Strategy
+
+**During Planning**:
+1. List potential edge cases
+2. Decide handling strategy for each
+3. Add test cases to verify
+
+**During Coding**:
+- Add input validation
+- Implement error handling
+- Document assumptions
+- Use defensive programming
+
+**During Testing**:
+- Test each edge case explicitly
+- Verify error messages are helpful
+- Check logging is appropriate
+
+## Result
+AI will proactively identify edge cases ("What if the array is empty?"), implement checks without being asked, and suggest additional test cases for robustness.
+
+# Agentic Workflow Guardrails - Plan, Execute, Verify
+
+**Original concept by Reza Rezvani**
+
+## Philosophy
+For complex, multi-step tasks, break them down systematically and verify each step rather than jumping in headfirst.
+
+## The 3-Phase Approach
+
+### Phase 1: Analysis
+- Understand the requirements fully
+- Identify constraints and dependencies
+- Research relevant patterns or solutions
+- Ask clarifying questions if anything is unclear
+
+### Phase 2: Planning
+- Create structured plan or outline
+- Break into logical steps/modules
+- Identify risks and edge cases
+- Get user approval before coding
+
+### Phase 3: Implementation
+- Execute plan incrementally
+- Verify each chunk before moving on
+- Run tests after each logical unit
+- Adjust plan if something doesn't work
+
+## Workflow Guidelines
+```markdown
+## Complex Task Workflow
+
+**Step 1: Analysis & Planning**
+- For multi-step tasks, output a clear plan first
+- List steps, modules, or phases
+- Identify dependencies and order
+- Use extended reasoning for complex decisions
+
+**Step 2: Get Approval**
+- Present plan for review
+- Wait for user confirmation
+- Incorporate feedback
+- Only proceed after approval
+
+**Step 3: Incremental Implementation**
+- Implement in logical chunks
+- After each chunk: verify alignment with plan
+- Run relevant tests
+- Commit working code before next chunk
+
+**Step 4: Error Recovery**
+- If solution isn't working, backtrack and rethink
+- Don't stubbornly persist with failing approach
+- Consider alternative approaches
+- Ask for guidance if stuck after 2-3 attempts
+
+**Step 5: Review & Polish**
+- Ensure all plan items completed
+- Run full test suite
+- Check documentation is updated
+- Review for clean code principles
+```
+
+## When to Use This Workflow
+
+**Always Plan For**:
+- Features with 3+ significant components
+- Architectural changes
+- Database migrations
+- Refactoring large modules
+- New integrations (OAuth, payment APIs, etc.)
+- Security-critical features
+
+**Quick Implementation OK For**:
+- Small bug fixes
+- Style/formatting changes
+- Adding simple tests
+- Documentation updates
+
+## Extended Reasoning
+
+**Use "Think Harder" When**:
+- Designing complex algorithms
+- Making architectural decisions
+- Debugging mysterious issues
+- Optimizing performance
+- Resolving conflicting requirements
+
+Better to spend more tokens on solid approach than rush into flawed code.
+
+## Example Workflow
+
+**Task**: Add OAuth2 login flow
+
+**Phase 1 - Plan** (AI outputs):
+```markdown
+1. Set up OAuth provider (Google)
+2. Create callback endpoint /auth/google/callback
+3. Handle token exchange and validation
+4. Store user session
+5. Add refresh token logic
+6. Update frontend with "Sign in with Google" button
+7. Add tests for auth flow
+```
+
+**Phase 2 - User approves plan** (adds refresh token requirement)
+
+**Phase 3 - Implement incrementally**:
+- Step 1: OAuth config ✓ (test: config loads)
+- Step 2: Callback endpoint ✓ (test: route responds)
+- Step 3: Token exchange ✓ (test: validates token)
+- etc.
+
+## Pro Tips
+
+**Document Plans**:
+- Save plan to PLAN.md file
+- Reference later with @filename
+- Keeps context size manageable
+
+**Custom Trigger Words**:
+- "Let's brainstorm" → Enter planning mode
+- "Think harder" → Use extended reasoning
+- "Ship it" → Final review and merge
+
+**Sub-Agent Strategies**:
+- Spin up specialized agents for testing, review, etc.
+- Coordinate multiple agents for parallel work
+- Use appropriate agent for task type
+
+## Result
+AI will propose structured plans, get your approval before major work, implement incrementally with verification, and recover intelligently from failures. Code quality and success rate dramatically improve.
 
 <!-- AGENT-BRAIN-GROUP-END: TYPE=TEMPLATE ID=bundled.reza-rezvani-essentials -->

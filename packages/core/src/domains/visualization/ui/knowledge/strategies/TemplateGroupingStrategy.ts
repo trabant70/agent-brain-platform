@@ -52,24 +52,24 @@ export class TemplateGroupingStrategy extends BaseGroupingStrategy {
     // So we can directly convert templates to groups
 
     this.templates.forEach(template => {
-      if (template.items && template.items.length > 0) {
-        groups.push(
-          this.createGroupSection(
-            template.id,
-            `📦 ${template.name}`,
-            template.items.map(item => item.id),
-            {
-              templateId: template.id,
-              category: template.category,
-              tags: template.tags,
-              scope: template.scope,
-              version: template.version,
-              itemCount: template.itemCount
-            },
-            template.description
-          )
-        );
-      }
+      // Show all templates, even empty ones (itemCount === 0)
+      const templateItems = template.items || [];
+      groups.push(
+        this.createGroupSection(
+          template.id,
+          `📦 ${template.name}`,
+          templateItems.map(item => item.id),
+          {
+            templateId: template.id,
+            category: template.category,
+            tags: template.tags,
+            scope: template.scope,
+            version: template.version,
+            itemCount: template.itemCount
+          },
+          template.description
+        )
+      );
     });
 
     return groups;

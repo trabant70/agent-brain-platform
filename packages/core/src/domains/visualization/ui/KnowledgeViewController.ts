@@ -127,7 +127,8 @@ export class KnowledgeViewController {
         }
       },
       onScanFiles: () => this.scanClaudeMdFiles(),
-      onShowNotification: (message, type, duration) => this.notifications.show({ type, message, duration })
+      onShowNotification: (message, type, duration) => this.notifications.show({ type, message, duration }),
+      onFileSelected: (filePath) => this.handleFileSelected(filePath)
     });
 
     this.v1TemplatesTableController = new V1TemplatesTableController({
@@ -159,7 +160,13 @@ export class KnowledgeViewController {
         onRemoveGroup: (groupType, groupId) => this.handleRemoveGroup(groupType, groupId),
         onEditItem: (templateId, itemId) => this.handleEditItem(templateId, itemId),
         onDeleteItem: (templateId, itemId) => this.handleDeleteItem(templateId, itemId),
-        onShowNotification: (message, type, duration) => this.notifications.show({ type, message, duration })
+        onShowNotification: (message, type, duration) => this.notifications.show({ type, message, duration }),
+        // Template-specific actions
+        onCloneTemplate: (templateId) => this.handleCloneTemplate(templateId),
+        onEditTemplate: (templateId) => this.handleEditTemplate(templateId),
+        onDeleteTemplate: (templateId) => this.handleDeleteTemplate(templateId),
+        onAddItemToTemplate: (templateId) => this.v1TemplateFormController.showAddItemToTemplateModal(templateId),
+        onViewTemplateAuditLog: (templateId) => this.handleViewAuditLog(templateId)
       }
     );
 
@@ -494,8 +501,12 @@ export class KnowledgeViewController {
    * Handle edit template action
    */
   private handleEditTemplate(templateId: string): void {
+    console.log(`[KnowledgeViewController] handleEditTemplate called with templateId: ${templateId}`);
+    console.log(`[KnowledgeViewController] Available templates count: ${this.state.templates.length}`);
     const template = this.state.templates.find(t => t.id === templateId);
+    console.log(`[KnowledgeViewController] Template found: ${!!template}`, template?.name);
     if (!template) {
+      console.log(`[KnowledgeViewController] Template not found, showing error notification`);
       this.notifications.show({
         type: 'error',
         message: 'Template not found',
@@ -504,6 +515,7 @@ export class KnowledgeViewController {
       return;
     }
 
+    console.log(`[KnowledgeViewController] Calling showEditTemplateModal`);
     this.v1TemplateFormController.showEditTemplateModal(template);
   }
 
@@ -984,8 +996,10 @@ export class KnowledgeViewController {
 
   /**
    * Update injection status for all templates based on claude.md files
+   * @param files All claude.md files
+   * @param selectedFilePath Optional: If provided, show injection status only for this specific file
    */
-  private updateInjectionStatus(files: ClaudeMdFile[]): void {
+  private updateInjectionStatus(files: ClaudeMdFile[], selectedFilePath?: string): void {
     // Extract all injected template IDs and track which files they're in
     const injectedTemplateFiles = new Map<string, string[]>();
 
@@ -1022,16 +1036,38 @@ export class KnowledgeViewController {
     const statusMap = new Map<string, { status: InjectionStatus; files: string[] }>();
     for (const template of this.state.templates) {
       const files = injectedTemplateFiles.get(template.id) || [];
-      if (files.length > 0) {
-        statusMap.set(template.id, {
-          status: InjectionStatus.INJECTED,
-          files: files
-        });
+
+      // If a specific file is selected, only show INJECTED if template is in THAT file
+      if (selectedFilePath) {
+        // Convert absolute path to relative if needed
+        const isInjectedInSelectedFile = files.some(filePath =>
+          filePath === selectedFilePath || filePath.endsWith(selectedFilePath.replace(/\\/g, '/'))
+        );
+
+        if (isInjectedInSelectedFile) {
+          statusMap.set(template.id, {
+            status: InjectionStatus.INJECTED,
+            files: [selectedFilePath] // Only show the selected file
+          });
+        } else {
+          statusMap.set(template.id, {
+            status: InjectionStatus.NOT_INJECTED,
+            files: []
+          });
+        }
       } else {
-        statusMap.set(template.id, {
-          status: InjectionStatus.NOT_INJECTED,
-          files: []
-        });
+        // No specific file selected - show global status
+        if (files.length > 0) {
+          statusMap.set(template.id, {
+            status: InjectionStatus.INJECTED,
+            files: files
+          });
+        } else {
+          statusMap.set(template.id, {
+            status: InjectionStatus.NOT_INJECTED,
+            files: []
+          });
+        }
       }
     }
 
@@ -1048,10 +1084,27 @@ export class KnowledgeViewController {
       {
         totalTemplates: this.state.templates.length,
         injectedCount: injectedTemplateFiles.size,
-        notInjectedCount: this.state.templates.length - injectedTemplateFiles.size
+        notInjectedCount: this.state.templates.length - injectedTemplateFiles.size,
+        selectedFile: selectedFilePath || 'all files'
       },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
+  }
+
+  /**
+   * Handle file selection change - update injection indicators for selected file
+   */
+  private handleFileSelected(filePath: string): void {
+    webviewLogger.info(
+      LogCategory.UI,
+      'File selected - updating injection indicators',
+      'KnowledgeViewController.handleFileSelected',
+      { filePath },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    // Update injection status to show only for the selected file
+    this.updateInjectionStatus(this.state.claudeMdFiles, filePath);
   }
 
   /**
@@ -1102,12 +1155,6 @@ export class KnowledgeViewController {
    * Setup event listeners
    */
   private setupEventListeners(): void {
-    // Toggle all sections button - delegate to V1 table controller
-    const toggleAllBtn = document.getElementById('toggle-all-sections');
-    toggleAllBtn?.addEventListener('click', () => {
-      this.v1TemplatesTableController.toggleAllSections();
-    });
-
     // V1 Create Template button
     const createTemplateBtn = document.getElementById('create-v1-template');
     createTemplateBtn?.addEventListener('click', () => this.v1TemplateFormController.showCreateTemplateModal());
