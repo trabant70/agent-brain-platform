@@ -948,19 +948,69 @@ export class UnifiedKnowledgeTableController {
    * Delete template
    */
   private deleteTemplate(templateId: string): void {
+    webviewLogger.info(
+      LogCategory.UI,
+      `Delete template requested: ${templateId}`,
+      'UnifiedKnowledgeTableController.deleteTemplate',
+      { templateId },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
     const template = this.templates.find(t => t.id === templateId);
     if (!template) {
+      webviewLogger.warn(
+        LogCategory.UI,
+        'Template not found for deletion',
+        'UnifiedKnowledgeTableController.deleteTemplate',
+        { templateId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
       this.callbacks.onShowNotification?.('Template not found', 'error', 3000);
       return;
     }
 
-    if (confirm(t('confirm.deleteTemplate'))) {
+    const confirmMessage = t('confirm.deleteTemplate');
+    webviewLogger.debug(
+      LogCategory.UI,
+      `Showing confirmation dialog: "${confirmMessage}"`,
+      'UnifiedKnowledgeTableController.deleteTemplate',
+      { templateId, templateName: template.name },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    const userConfirmed = confirm(confirmMessage);
+
+    if (userConfirmed) {
+      webviewLogger.info(
+        LogCategory.UI,
+        'User confirmed template deletion, sending message to backend',
+        'UnifiedKnowledgeTableController.deleteTemplate',
+        { templateId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
       if (window.vscode) {
         window.vscode.postMessage({
           type: 'v1:delete-template',
           payload: { templateId }
         });
+      } else {
+        webviewLogger.error(
+          LogCategory.UI,
+          'window.vscode not available',
+          'UnifiedKnowledgeTableController.deleteTemplate',
+          undefined,
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
       }
+    } else {
+      webviewLogger.info(
+        LogCategory.UI,
+        'User cancelled template deletion',
+        'UnifiedKnowledgeTableController.deleteTemplate',
+        { templateId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
     }
   }
 
