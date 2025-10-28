@@ -230,15 +230,16 @@ export class TemplateInjectionService {
       throw new Error(`Failed to read file ${targetFilePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
-    // Prepare item content with markers
-    const itemMarker = `item-${itemId}`;
-    let itemContent = `\n<!-- AGENT-BRAIN:${itemMarker}:START -->\n`;
-    itemContent += `<!-- Item: ${item.title} -->\n`;
+    // Wrap item in a temporary template marker (reuses existing template logic)
+    // Format: template-item-<itemId> to distinguish from real templates
+    const tempTemplateMarker = `template-item-${itemId}`;
+    let itemContent = `\n<!-- AGENT-BRAIN:${tempTemplateMarker}:START -->\n`;
+    itemContent += `<!-- Template: ${item.title} (1 item) -->\n\n`;
     itemContent += `${item.body}\n`;
-    itemContent += `<!-- AGENT-BRAIN:${itemMarker}:END -->\n`;
+    itemContent += `<!-- AGENT-BRAIN:${tempTemplateMarker}:END -->\n`;
 
     // Check if item is already injected
-    if (currentContent.includes(`<!-- AGENT-BRAIN:${itemMarker}:START -->`)) {
+    if (currentContent.includes(`<!-- AGENT-BRAIN:${tempTemplateMarker}:START -->`)) {
       throw new Error(`Item "${item.title}" is already injected in ${targetFilePath}`);
     }
 
@@ -256,7 +257,8 @@ export class TemplateInjectionService {
     }
 
     // Record injection in template store (audit log)
-    this.templateStore.recordItemInjection(itemId, targetFilePath, 'item', templateId, 'user');
+    // Use 'template' type since we're wrapping the item in a template marker
+    this.templateStore.recordItemInjection(itemId, targetFilePath, 'template', templateId, 'user');
 
     // Record timeline event
     await this.eventStorage.recordEvent({
