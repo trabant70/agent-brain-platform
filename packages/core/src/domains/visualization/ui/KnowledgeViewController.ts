@@ -343,6 +343,8 @@ export class KnowledgeViewController {
           message: 'Item injected successfully!',
           duration: 3000
         });
+        // Request fresh claude.md files to update injection status
+        this.scanClaudeMdFiles();
         break;
 
       case 'v1:update-item-success':
