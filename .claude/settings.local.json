@@ -49,7 +49,9 @@
       "Bash(for file in packages/vscode/l10n/bundle.l10n*.json)",
       "Bash(for file in /mnt/c/projects/agent-brain-platform/packages/vscode/l10n/bundle.l10n*.json)",
       "Bash(tail:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npx @vscode/vsce:*)",
+      "Bash(xargs:*)"
     ],
     "deny": [],
     "ask": []

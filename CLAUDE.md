@@ -186,3 +186,67 @@ agent-brain-platform/
 - **i18n Required**: All user-facing strings must use t() function
 - **Validation Mandatory**: All templates pass multi-layer validation
 - **Provider Independence**: Each provider works standalone
+
+<!-- AGENT-BRAIN-GROUP-START: TYPE=TEMPLATE ID=bundled.agent-brain-base INJECTED_AT=2025-10-28T14:09:31.072Z ITEM_COUNT=8 -->
+<!-- Group: TEMPLATE (8 items) -->
+
+<!-- Item: golden-path-session-journals -->
+[Content for golden-path-session-journals would be here]
+
+<!-- Item: golden-path-learning-capture -->
+[Content for golden-path-learning-capture would be here]
+
+<!-- Item: golden-path-context-survival -->
+[Content for golden-path-context-survival would be here]
+
+<!-- Item: best-practice-full-honesty -->
+[Content for best-practice-full-honesty would be here]
+
+<!-- Item: best-practice-todo-hygiene -->
+[Content for best-practice-todo-hygiene would be here]
+
+<!-- Item: best-practice-coming-back -->
+[Content for best-practice-coming-back would be here]
+
+<!-- Item: guideline-knowledge-item-creation -->
+[Content for guideline-knowledge-item-creation would be here]
+
+<!-- Item: gotcha-ai-agent-pitfalls -->
+[Content for gotcha-ai-agent-pitfalls would be here]
+
+<!-- AGENT-BRAIN-GROUP-END: TYPE=TEMPLATE ID=bundled.agent-brain-base -->
+
+<!-- AGENT-BRAIN-GROUP-START: TYPE=TEMPLATE ID=bundled.reza-rezvani-essentials INJECTED_AT=2025-10-28T14:09:33.802Z ITEM_COUNT=10 -->
+<!-- Group: TEMPLATE (10 items) -->
+
+<!-- Item: guideline-architecture-blueprint -->
+[Content for guideline-architecture-blueprint would be here]
+
+<!-- Item: guideline-command-center -->
+[Content for guideline-command-center would be here]
+
+<!-- Item: standard-style-guide-sheriff -->
+[Content for standard-style-guide-sheriff would be here]
+
+<!-- Item: best-practice-test-bench-coach -->
+[Content for best-practice-test-bench-coach would be here]
+
+<!-- Item: best-practice-error-handling-mantra -->
+[Content for best-practice-error-handling-mantra would be here]
+
+<!-- Item: standard-clean-code-commandments -->
+[Content for standard-clean-code-commandments would be here]
+
+<!-- Item: guideline-security-sentry -->
+[Content for guideline-security-sentry would be here]
+
+<!-- Item: convention-teamwork-protocol -->
+[Content for convention-teamwork-protocol would be here]
+
+<!-- Item: best-practice-edge-case-oracle -->
+[Content for best-practice-edge-case-oracle would be here]
+
+<!-- Item: golden-path-agentic-workflow -->
+[Content for golden-path-agentic-workflow would be here]
+
+<!-- AGENT-BRAIN-GROUP-END: TYPE=TEMPLATE ID=bundled.reza-rezvani-essentials -->

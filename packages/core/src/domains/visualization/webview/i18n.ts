@@ -22,16 +22,22 @@ export function initI18n(locale: string, strings: Record<string, string>): void 
     currentLocale = locale;
     translations = strings;
     i18nInitialized = true;
-    console.log(`[i18n] Initialized with locale: ${locale}, ${Object.keys(strings).length} strings loaded`);
+    console.log(`[i18n] ========== INITIALIZING I18N ==========`);
+    console.log(`[i18n] Locale: ${locale}`);
+    console.log(`[i18n] Strings loaded: ${Object.keys(strings).length}`);
+    console.log(`[i18n] Registered listeners: ${i18nListeners.length}`);
 
     // Notify all listeners that i18n is ready
-    i18nListeners.forEach(listener => {
+    i18nListeners.forEach((listener, index) => {
         try {
+            console.log(`[i18n] Calling listener ${index + 1}/${i18nListeners.length}...`);
             listener();
+            console.log(`[i18n] Listener ${index + 1} completed`);
         } catch (error) {
-            console.error('[i18n] Error in i18n listener:', error);
+            console.error(`[i18n] Error in i18n listener ${index + 1}:`, error);
         }
     });
+    console.log(`[i18n] All ${i18nListeners.length} listeners notified`);
 }
 
 /**
@@ -42,9 +48,11 @@ export function initI18n(locale: string, strings: Record<string, string>): void 
 export function onI18nReady(listener: I18nListener): void {
     if (i18nInitialized) {
         // Already initialized, call immediately
+        console.log('[i18n] onI18nReady called but i18n already initialized, calling listener immediately');
         listener();
     } else {
         // Not yet initialized, add to listeners
+        console.log(`[i18n] Registering listener ${i18nListeners.length + 1}, i18n not yet initialized`);
         i18nListeners.push(listener);
     }
 }

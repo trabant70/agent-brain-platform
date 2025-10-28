@@ -411,4 +411,53 @@
   "threading.mode.development": "Development",
   "threading.mode.debugging": "Debugging",
   "threading.mode.learning": "Learning"
+  "threading.mode.disabled": "Disabled",
+  "threading.mode.development": "Development",
+  "threading.mode.debugging": "Debugging",
+  "threading.mode.learning": "Learning",
+
+  "grouping.label": "Group by:",
+  "grouping.mode.template": "Template",
+  "grouping.mode.operator": "Operator Level",
+  "grouping.mode.project": "Project Phase",
+  "grouping.mode.complexity": "Complexity",
+  "grouping.mode.catchment": "Relevance",
+  
+  "grouping.description.template": "Group by source template (providence)",
+  "grouping.description.operator": "Group by operator experience level (Novice → Expert)",
+  "grouping.description.project": "Group by project maturity phase (Planning → Mature)",
+  "grouping.description.complexity": "Group by domain complexity (Simple → Complex)",
+  "grouping.description.catchment": "Group by relevance to current maturity context",
+  
+  "grouping.operator.novice": "Novice",
+  "grouping.operator.junior": "Junior",
+  "grouping.operator.mid": "Mid-Level",
+  "grouping.operator.senior": "Senior",
+  "grouping.operator.expert": "Expert",
+  
+  "grouping.project.planning": "Planning",
+  "grouping.project.inception": "Inception",
+  "grouping.project.development": "Development",
+  "grouping.project.established": "Established",
+  "grouping.project.mature": "Mature",
+  
+  "grouping.complexity.simple": "Simple",
+  "grouping.complexity.standard": "Standard",
+  "grouping.complexity.complex": "Complex",
+  
+  "grouping.catchment.in": "Fully Relevant",
+  "grouping.catchment.partial": "Partially Relevant",
+  "grouping.catchment.out": "Not Relevant",
+  
+  "grouping.empty.template": "No templates available",
+  "grouping.empty.maturity": "Items need maturity metadata to appear in this view",
+  "grouping.empty.catchment": "Set a maturity context to see relevant items",
+  
+  "grouping.action.inject": "Inject",
+  "grouping.action.remove": "Remove",
+  "grouping.status.notInjected": "Not Injected",
+  "grouping.status.injected": "Injected",
+  "grouping.status.partial": "Partial",
+  "grouping.status.pending": "Pending",
+  "grouping.status.error": "Error"
 }

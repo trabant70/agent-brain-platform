@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${cspSource} 'unsafe-inline'; script-src ${cspSource} 'unsafe-inline';">
+    <title>Code Structure Review</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--vscode-font-family);
+            font-size: var(--vscode-font-size);
+            color: var(--vscode-foreground);
+            background-color: var(--vscode-editor-background);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--vscode-panel-border);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: var(--vscode-button-hoverBackground);
+        }
+
+        button.secondary {
+            background: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+        }
+
+        button.secondary:hover {
+            background: var(--vscode-button-secondaryHoverBackground);
+        }
+
+        /* Maturity Level Selector */
+        .maturity-selector {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .maturity-selector label {
+            font-weight: 600;
+        }
+
+        .maturity-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+        .maturity-button {
+            padding: 6px 14px;
+            font-size: 12px;
+            background: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            border: 1px solid var(--vscode-input-border);
+        }
+
+        .maturity-button.active {
+            background: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            border-color: var(--vscode-button-background);
+        }
+
+        /* Score Dashboard */
+        .score-dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .score-card {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .score-card h3 {
+            font-size: 14px;
+            color: var(--vscode-descriptionForeground);
+            margin-bottom: 10px;
+        }
+
+        .score-value {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .score-value.excellent { color: #4CAF50; }
+        .score-value.good { color: #8BC34A; }
+        .score-value.warning { color: #FFC107; }
+        .score-value.critical { color: #F44336; }
+
+        .score-label {
+            font-size: 12px;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        /* Category Cards */
+        .categories-container {
+            margin-bottom: 30px;
+        }
+
+        .categories-container h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 15px;
+        }
+
+        .category-card {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-radius: 8px;
+            padding: 20px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .category-card:hover {
+            border-color: var(--vscode-focusBorder);
+        }
+
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .category-icon {
+            font-size: 24px;
+        }
+
+        .category-title {
+            flex: 1;
+        }
+
+        .category-title h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .category-title p {
+            font-size: 12px;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        .category-score {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .category-metrics {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .metric {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .metric-value {
+            font-weight: 600;
+        }
+
+        /* Issue List */
+        .issues-container {
+            margin-bottom: 30px;
+        }
+
+        .issues-container h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .issue-item {
+            background: var(--vscode-editor-background);
+            border: 1px solid var(--vscode-panel-border);
+            border-left: 4px solid;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .issue-item:hover {
+            border-left-color: var(--vscode-focusBorder);
+        }
+
+        .issue-item.critical { border-left-color: #F44336; }
+        .issue-item.high { border-left-color: #FF9800; }
+        .issue-item.medium { border-left-color: #FFC107; }
+        .issue-item.low { border-left-color: #8BC34A; }
+
+        .issue-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+
+        .issue-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .issue-severity {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+
+        .issue-severity.critical {
+            background: rgba(244, 67, 54, 0.2);
+            color: #F44336;
+        }
+
+        .issue-severity.high {
+            background: rgba(255, 152, 0, 0.2);
+            color: #FF9800;
+        }
+
+        .issue-severity.medium {
+            background: rgba(255, 193, 7, 0.2);
+            color: #FFC107;
+        }
+
+        .issue-severity.low {
+            background: rgba(139, 195, 74, 0.2);
+            color: #8BC34A;
+        }
+
+        .issue-description {
+            font-size: 13px;
+            color: var(--vscode-descriptionForeground);
+            margin-bottom: 8px;
+        }
+
+        .issue-location {
+            font-size: 12px;
+            font-family: var(--vscode-editor-font-family);
+            color: var(--vscode-textLink-foreground);
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--vscode-panel-border);
+            border-top-color: var(--vscode-button-background);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 15px;
+            color: var(--vscode-descriptionForeground);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .empty-state p {
+            color: var(--vscode-descriptionForeground);
+            margin-bottom: 20px;
+        }
+
+        /* Hidden */
+        .hidden {
+            display: none;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--vscode-panel-border);
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .tab.active {
+            border-bottom-color: var(--vscode-button-background);
+            color: var(--vscode-button-background);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📊 Code Structure Review</h1>
+            <div class="header-actions">
+                <button id="analyze-btn" class="primary">Analyze Code</button>
+                <button id="quick-analyze-btn" class="secondary">Quick Analysis</button>
+                <button id="export-btn" class="secondary">Export Report</button>
+            </div>
+        </div>
+
+        <!-- Maturity Level Selector -->
+        <div class="maturity-selector">
+            <label>Maturity Level:</label>
+            <div class="maturity-buttons">
+                <button class="maturity-button" data-level="novice">Novice</button>
+                <button class="maturity-button active" data-level="intermediate">Intermediate</button>
+                <button class="maturity-button" data-level="advanced">Advanced</button>
+                <button class="maturity-button" data-level="expert">Expert</button>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="loading hidden">
+            <div class="spinner"></div>
+            <div class="loading-text">Analyzing code structure...</div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="empty-state">
+            <h2>No Analysis Data</h2>
+            <p>Click "Analyze Code" to start reviewing your codebase</p>
+            <button id="start-analysis-btn">Start Analysis</button>
+        </div>
+
+        <!-- Results Container -->
+        <div id="results-container" class="hidden">
+            <!-- Score Dashboard -->
+            <div class="score-dashboard">
+                <div class="score-card">
+                    <h3>Overall Score</h3>
+                    <div id="overall-score" class="score-value excellent">95</div>
+                    <div class="score-label">Code Quality</div>
+                </div>
+                <div class="score-card">
+                    <h3>Total Issues</h3>
+                    <div id="total-issues" class="score-value">12</div>
+                    <div class="score-label">Across All Categories</div>
+                </div>
+                <div class="score-card">
+                    <h3>Critical Issues</h3>
+                    <div id="critical-issues" class="score-value critical">2</div>
+                    <div class="score-label">Require Immediate Attention</div>
+                </div>
+                <div class="score-card">
+                    <h3>Files Analyzed</h3>
+                    <div id="files-analyzed" class="score-value">156</div>
+                    <div class="score-label">Code Files</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab active" data-tab="overview">Overview</button>
+                <button class="tab" data-tab="categories">Categories</button>
+                <button class="tab" data-tab="issues">All Issues</button>
+            </div>
+
+            <!-- Overview Tab -->
+            <div id="overview-tab" class="tab-content active">
+                <div class="categories-container">
+                    <h2>Category Scores</h2>
+                    <div id="categories-grid" class="categories-grid">
+                        <!-- Category cards will be inserted here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories Tab -->
+            <div id="categories-tab" class="tab-content">
+                <div id="category-details">
+                    <!-- Detailed category view will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Issues Tab -->
+            <div id="issues-tab" class="tab-content">
+                <div class="issues-container">
+                    <h2>All Issues</h2>
+                    <div id="issues-list">
+                        <!-- Issues will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const vscode = acquireVsCodeApi();
+
+        // State
+        let currentAnalysis = null;
+        let currentMaturityLevel = 'intermediate';
+
+        // Elements
+        const loadingState = document.getElementById('loading-state');
+        const emptyState = document.getElementById('empty-state');
+        const resultsContainer = document.getElementById('results-container');
+
+        // Initialize
+        init();
+
+        function init() {
+            setupEventListeners();
+            requestRefresh();
+        }
+
+        function setupEventListeners() {
+            // Analyze buttons
+            document.getElementById('analyze-btn').addEventListener('click', () => {
+                vscode.postMessage({ type: 'analyze:full' });
+            });
+
+            document.getElementById('quick-analyze-btn').addEventListener('click', () => {
+                vscode.postMessage({ type: 'analyze:quick' });
+            });
+
+            document.getElementById('start-analysis-btn').addEventListener('click', () => {
+                vscode.postMessage({ type: 'analyze:full' });
+            });
+
+            document.getElementById('export-btn').addEventListener('click', () => {
+                vscode.postMessage({ type: 'report:export', payload: { format: 'detailed' } });
+            });
+
+            // Maturity level buttons
+            document.querySelectorAll('.maturity-button').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.maturity-button').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentMaturityLevel = btn.dataset.level;
+                    vscode.postMessage({ type: 'maturity:change', payload: { maturityLevel: currentMaturityLevel } });
+                });
+            });
+
+            // Tab buttons
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.dataset.tab;
+                    switchTab(tabName);
+                });
+            });
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+
+            document.querySelector(\`.tab[data-tab="\${tabName}"]\`).classList.add('active');
+            document.getElementById(\`\${tabName}-tab\`).classList.add('active');
+        }
+
+        function requestRefresh() {
+            vscode.postMessage({ type: 'analyze:refresh' });
+        }
+
+        // Handle messages from extension
+        window.addEventListener('message', event => {
+            const message = event.data;
+
+            switch (message.type) {
+                case 'analysis:start':
+                    showLoading();
+                    break;
+
+                case 'analysis:complete':
+                case 'analysis:data':
+                    hideLoading();
+                    currentAnalysis = message.payload.analysis;
+                    renderAnalysis(currentAnalysis);
+                    break;
+
+                case 'analysis:no-data':
+                    hideLoading();
+                    showEmpty();
+                    break;
+
+                case 'analysis:error':
+                    hideLoading();
+                    alert('Analysis failed: ' + message.payload.message);
+                    break;
+
+                case 'prompt:generated':
+                    console.log('Prompt generated:', message.payload.prompt);
+                    break;
+            }
+        });
+
+        function showLoading() {
+            emptyState.classList.add('hidden');
+            resultsContainer.classList.add('hidden');
+            loadingState.classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            loadingState.classList.add('hidden');
+        }
+
+        function showEmpty() {
+            emptyState.classList.remove('hidden');
+            resultsContainer.classList.add('hidden');
+        }
+
+        function renderAnalysis(analysis) {
+            emptyState.classList.add('hidden');
+            resultsContainer.classList.remove('hidden');
+
+            // Render score dashboard
+            renderScoreDashboard(analysis.summary);
+
+            // Render categories
+            renderCategories(analysis.categories);
+
+            // Render issues
+            renderIssues(analysis.categories);
+        }
+
+        function renderScoreDashboard(summary) {
+            const overallScore = document.getElementById('overall-score');
+            overallScore.textContent = summary.overallScore;
+            overallScore.className = 'score-value ' + getScoreClass(summary.overallScore);
+
+            document.getElementById('total-issues').textContent = summary.totalIssues;
+            document.getElementById('critical-issues').textContent = summary.criticalIssues;
+            document.getElementById('files-analyzed').textContent = summary.analyzedFiles;
+        }
+
+        function renderCategories(categories) {
+            const grid = document.getElementById('categories-grid');
+            grid.innerHTML = '';
+
+            categories.forEach(category => {
+                const card = createCategoryCard(category);
+                grid.appendChild(card);
+            });
+        }
+
+        function createCategoryCard(category) {
+            const card = document.createElement('div');
+            card.className = 'category-card';
+            card.innerHTML = \`
+                <div class="category-header">
+                    <div class="category-icon">\${getCategoryIcon(category.categoryId)}</div>
+                    <div class="category-title">
+                        <h3>\${category.categoryName}</h3>
+                        <p>\${category.issues.length} issue(s)</p>
+                    </div>
+                    <div class="category-score \${getScoreClass(category.score)}">\${category.score}</div>
+                </div>
+                <div class="category-metrics">
+                    <div class="metric">
+                        <span>Status:</span>
+                        <span class="metric-value">\${category.status}</span>
+                    </div>
+                </div>
+            \`;
+
+            card.addEventListener('click', () => {
+                switchTab('categories');
+                renderCategoryDetails(category);
+            });
+
+            return card;
+        }
+
+        function renderCategoryDetails(category) {
+            const details = document.getElementById('category-details');
+            details.innerHTML = \`
+                <h2>\${getCategoryIcon(category.categoryId)} \${category.categoryName}</h2>
+                <p>\${category.issues.length} issue(s) found</p>
+                <div class="issues-list">
+                    \${category.issues.map(issue => createIssueHTML(issue)).join('')}
+                </div>
+            \`;
+        }
+
+        function renderIssues(categories) {
+            const issuesList = document.getElementById('issues-list');
+            const allIssues = categories.flatMap(cat => cat.issues);
+
+            issuesList.innerHTML = allIssues.map(issue => createIssueHTML(issue)).join('');
+        }
+
+        function createIssueHTML(issue) {
+            return \`
+                <div class="issue-item \${issue.severity}" onclick="handleIssueClick('\${issue.id}')">
+                    <div class="issue-header">
+                        <div class="issue-title">\${issue.title}</div>
+                        <div class="issue-severity \${issue.severity}">\${issue.severity}</div>
+                    </div>
+                    <div class="issue-description">\${issue.description}</div>
+                    <div class="issue-location">\${issue.filePath}:\${issue.lineNumber || '?'}</div>
+                </div>
+            \`;
+        }
+
+        function handleIssueClick(issueId) {
+            vscode.postMessage({ type: 'issue:details', payload: { issueId } });
+        }
+
+        function getCategoryIcon(categoryId) {
+            const icons = {
+                'feature-completeness': '🔌',
+                'ui-ux-quality': '✨',
+                'test-coverage': '🧪',
+                'internationalization': '🌍'
+            };
+            return icons[categoryId] || '📋';
+        }
+
+        function getScoreClass(score) {
+            if (score >= 90) return 'excellent';
+            if (score >= 70) return 'good';
+            if (score >= 50) return 'warning';
+            return 'critical';
+        }
+    </script>
+</body>
+</html>

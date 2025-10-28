@@ -52,38 +52,47 @@ export class KnowledgeEventProvider implements IDataProvider {
    */
   async initialize(config: ProviderConfig): Promise<void> {
     try {
-      logger.debug(
+      logger.info(
         LogCategory.DATA,
-        'Initializing KnowledgeEventProvider',
+        '>>> KNOWLEDGE PROVIDER: Initializing <<<',
         'initialize',
         { config },
-        LogPathway.DATA_INGESTION
+        LogPathway.KNOWLEDGE_MANAGEMENT
       );
 
       this.config = config;
-      
+
       // Get workspace root from config settings
       const workspaceRoot = config.settings?.workspaceRoot || config.settings?.storagePath;
       if (!workspaceRoot) {
         throw new Error('KnowledgeEventProvider requires workspaceRoot in config.settings');
       }
 
+      logger.info(
+        LogCategory.DATA,
+        `>>> KNOWLEDGE PROVIDER: Creating storage with workspaceRoot: ${workspaceRoot} <<<`,
+        'initialize',
+        { workspaceRoot },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
       this.storage = new KnowledgeEventStorage(workspaceRoot);
       this.isInitialized = true;
 
-      logger.debug(
+      logger.info(
         LogCategory.DATA,
-        'KnowledgeEventProvider initialized successfully',
+        '>>> KNOWLEDGE PROVIDER: Initialized successfully <<<',
         'initialize',
-        undefined,
-        LogPathway.DATA_INGESTION
+        { enabled: config.enabled },
+        LogPathway.KNOWLEDGE_MANAGEMENT
       );
     } catch (error) {
       logger.error(
         LogCategory.DATA,
-        'Failed to initialize KnowledgeEventProvider',
+        '>>> KNOWLEDGE PROVIDER: INITIALIZATION FAILED <<<',
         'initialize',
-        { error: error instanceof Error ? error.message : String(error) }
+        { error: error instanceof Error ? error.message : String(error) },
+        LogPathway.KNOWLEDGE_MANAGEMENT
       );
       throw error;
     }
@@ -122,42 +131,47 @@ export class KnowledgeEventProvider implements IDataProvider {
     }
 
     try {
-      logger.debug(
+      logger.info(
         LogCategory.DATA,
-        'Fetching knowledge events',
+        '>>> KNOWLEDGE PROVIDER: fetchEvents() CALLED <<<',
         'fetchEvents',
-        undefined,
-        LogPathway.DATA_INGESTION
+        { context },
+        LogPathway.KNOWLEDGE_MANAGEMENT
       );
 
       const records = await this.storage.loadAll();
 
-      logger.debug(
+      logger.info(
         LogCategory.DATA,
-        'Knowledge events loaded from storage',
+        `>>> KNOWLEDGE PROVIDER: Loaded ${records.length} records from storage <<<`,
         'fetchEvents',
         { count: records.length },
-        LogPathway.DATA_INGESTION
+        LogPathway.KNOWLEDGE_MANAGEMENT
       );
 
       // Transform to CanonicalEvents
       const events = records.map(record => this.transformToCanonicalEvent(record));
 
-      logger.debug(
+      logger.info(
         LogCategory.DATA,
-        'Knowledge events transformed to CanonicalEvents',
+        `>>> KNOWLEDGE PROVIDER: Transformed ${events.length} events, returning to timeline <<<`,
         'fetchEvents',
-        { count: events.length },
-        LogPathway.DATA_INGESTION
+        {
+          count: events.length,
+          eventIds: events.slice(0, 5).map(e => e.id),
+          eventTypes: events.slice(0, 5).map(e => e.type)
+        },
+        LogPathway.KNOWLEDGE_MANAGEMENT
       );
 
       return events;
     } catch (error) {
       logger.error(
         LogCategory.DATA,
-        'Failed to fetch knowledge events',
+        '>>> KNOWLEDGE PROVIDER: FETCH FAILED <<<',
         'fetchEvents',
-        { error: error instanceof Error ? error.message : String(error) }
+        { error: error instanceof Error ? error.message : String(error) },
+        LogPathway.KNOWLEDGE_MANAGEMENT
       );
       throw error;
     }
@@ -189,10 +203,10 @@ export class KnowledgeEventProvider implements IDataProvider {
 
     // Create author (user or agent)
     const author: Author = {
-      id: record.actor,
+      id: record.actor || 'unknown',
       name: record.actor === 'user' ? 'User' : 'Agent',
       email: record.actor === 'user' ? 'user@local' : 'agent@local',
-      username: record.actor
+      username: record.actor || 'unknown'
     };
 
     // Build description
@@ -204,6 +218,20 @@ export class KnowledgeEventProvider implements IDataProvider {
       linesAdded: 0,
       linesRemoved: 0
     };
+
+    // Build tags with defensive checks
+    const tags = [
+      'knowledge-event',
+      record.type,
+      record.knowledgeItemType || 'unknown-type',
+      record.actor || 'unknown'
+    ];
+
+    // Build labels with defensive checks
+    const labels = [
+      record.knowledgeItemType || 'unknown-type',
+      record.actor || 'unknown'
+    ];
 
     // Build canonical event
     const event: CanonicalEvent = {
@@ -217,7 +245,7 @@ export class KnowledgeEventProvider implements IDataProvider {
       timestamp: new Date(record.timestamp),
 
       // Content
-      title: record.knowledgeItemTitle,
+      title: record.knowledgeItemTitle || 'Untitled',
       description,
 
       // Attribution
@@ -225,12 +253,7 @@ export class KnowledgeEventProvider implements IDataProvider {
 
       // Context - Git (not applicable for knowledge events)
       branches: [],
-      tags: [
-        'knowledge-event',
-        record.type,
-        record.knowledgeItemType,
-        record.actor
-      ],
+      tags,
 
       // Relationships (for DAG construction)
       parentIds: [], // Knowledge events have no parent relationships
@@ -241,14 +264,14 @@ export class KnowledgeEventProvider implements IDataProvider {
       // Metadata (extensible for provider-specific data)
       metadata: {
         knowledgeEventType: record.type,
-        knowledgeItemId: record.knowledgeItemId,
-        knowledgeItemType: record.knowledgeItemType,
-        targetFile: record.targetFile,
-        actor: record.actor
+        knowledgeItemId: record.knowledgeItemId || 'unknown',
+        knowledgeItemType: record.knowledgeItemType || 'unknown-type',
+        targetFile: record.targetFile || 'unknown',
+        actor: record.actor || 'unknown'
       },
 
       // Labels
-      labels: [record.knowledgeItemType, record.actor]
+      labels
     };
 
     return event;
@@ -275,15 +298,17 @@ export class KnowledgeEventProvider implements IDataProvider {
    */
   private buildDescription(record: KnowledgeEventRecord): string {
     const actorName = record.actor === 'user' ? 'User' : 'Coding agent';
-    const typeLabel = record.knowledgeItemType.replace(/-/g, ' ');
+    const typeLabel = record.knowledgeItemType ? record.knowledgeItemType.replace(/-/g, ' ') : 'knowledge item';
+    const title = record.knowledgeItemTitle || 'untitled';
+    const file = record.targetFile || 'file';
 
     switch (record.type) {
       case 'apply':
-        return `${actorName} applied ${typeLabel} "${record.knowledgeItemTitle}" to ${record.targetFile}`;
+        return `${actorName} applied ${typeLabel} "${title}" to ${file}`;
       case 'remove':
-        return `${actorName} removed ${typeLabel} "${record.knowledgeItemTitle}" from ${record.targetFile}`;
+        return `${actorName} removed ${typeLabel} "${title}" from ${file}`;
       case 'create':
-        return `${actorName} created new ${typeLabel} "${record.knowledgeItemTitle}" at ${record.targetFile}`;
+        return `${actorName} created new ${typeLabel} "${title}" at ${file}`;
     }
   }
 }

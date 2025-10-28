@@ -616,12 +616,14 @@ export class V1TemplateFormController {
       payload: {
         templateId,
         itemId,
-        title: formData['edit-item-title'],
-        body: formData['edit-item-body'],
-        type: formData['edit-item-type'],
-        scope: formData['edit-item-scope'],
-        tags,
-        maturity: this.currentMaturityFootprint
+        updates: {
+          title: formData['edit-item-title'],
+          body: formData['edit-item-body'],
+          type: formData['edit-item-type'],
+          scope: formData['edit-item-scope'],
+          tags,
+          maturity: this.currentMaturityFootprint
+        }
       }
     });
 

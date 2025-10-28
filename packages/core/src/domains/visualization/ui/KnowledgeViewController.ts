@@ -15,12 +15,13 @@ import {
   KnowledgeScope,
   MarketplaceTemplate
 } from '../../knowledge/types';
-import { InjectionStatus } from '../../knowledge/GroupTypes';
+import { InjectionStatus, GroupType } from '../../knowledge/GroupTypes';
 import { NotificationManager } from './NotificationManager';
 import { ModalDialog } from './ModalDialog';
 import { webviewLogger, LogCategory, LogPathway } from '../webview/WebviewLogger';
 import { ClaudeMdAccordionController } from './knowledge/ClaudeMdAccordionController';
 import { V1TemplatesTableController } from './knowledge/V1TemplatesTableController';
+import { UnifiedKnowledgeTableController } from './knowledge/UnifiedKnowledgeTableController';
 import { V1TemplateFormController } from './knowledge/V1TemplateFormController';
 import { AuditLogViewer } from './knowledge/AuditLogViewer';
 import { ValidationResultsModal } from './knowledge/ValidationResultsModal';
@@ -55,6 +56,7 @@ export class KnowledgeViewController {
   // V1 Sub-controllers
   private accordionController: ClaudeMdAccordionController;
   private v1TemplatesTableController: V1TemplatesTableController;
+  private unifiedTableController: UnifiedKnowledgeTableController;
   private v1TemplateFormController: V1TemplateFormController;
   private auditLogViewer: AuditLogViewer;
 
@@ -100,6 +102,30 @@ export class KnowledgeViewController {
           );
         }
       },
+      onRemoveInjection: (type, groupType, groupId, itemId, filePath) => {
+        webviewLogger.debug(
+          LogCategory.UI,
+          'Removing V2 injection from file',
+          'KnowledgeViewController.onRemoveInjection',
+          { type, groupType, groupId, itemId, filePath },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        // Send message to extension to remove the V2 group/item from the file
+        if (window.vscode) {
+          window.vscode.postMessage({
+            type: 'v2:remove-injection',
+            payload: { type, groupType, groupId, itemId, filePath }
+          });
+        } else {
+          webviewLogger.error(
+            LogCategory.UI,
+            'Cannot remove injection - VSCode API not available',
+            'KnowledgeViewController.onRemoveInjection',
+            undefined,
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+        }
+      },
       onScanFiles: () => this.scanClaudeMdFiles(),
       onShowNotification: (message, type, duration) => this.notifications.show({ type, message, duration })
     });
@@ -124,6 +150,19 @@ export class KnowledgeViewController {
       onReorderItem: (templateId, itemId, newIndex) => this.handleReorderItem(templateId, itemId, newIndex)
     });
 
+    // Initialize unified table controller (new grouping system)
+    this.unifiedTableController = new UnifiedKnowledgeTableController(
+      'v1-templates-container',
+      'grouping-mode-selector',
+      {
+        onInjectGroup: (groupType, groupId, itemIds) => this.handleInjectGroup(groupType, groupId, itemIds),
+        onRemoveGroup: (groupType, groupId) => this.handleRemoveGroup(groupType, groupId),
+        onEditItem: (templateId, itemId) => this.handleEditItem(templateId, itemId),
+        onDeleteItem: (templateId, itemId) => this.handleDeleteItem(templateId, itemId),
+        onShowNotification: (message, type, duration) => this.notifications.show({ type, message, duration })
+      }
+    );
+
     this.v1TemplateFormController = new V1TemplateFormController({
       onSendMessage: (message) => this.sendMessage(message),
       onShowNotification: (message, type, duration) => this.notifications.show({ type, message, duration })
@@ -137,6 +176,7 @@ export class KnowledgeViewController {
       onContextChanged: (context) => {
         this.currentMaturityContext = context;
         this.v1TemplatesTableController.setMaturityContext(context);
+        this.unifiedTableController.setMaturityContext(context);
         // Could add live preview here if needed
       }
     });
@@ -184,7 +224,10 @@ export class KnowledgeViewController {
     switch (message.type) {
       case 'v1:templates-data':
         this.state.templates = message.payload.templates || [];
-        this.v1TemplatesTableController.render(this.state.templates);
+        // Render using unified table controller (new grouping system)
+        this.unifiedTableController.setTemplates(this.state.templates);
+        // Old controller - TODO: Remove once unified controller is fully tested
+        // this.v1TemplatesTableController.render(this.state.templates);
         // Update injection status based on current claude.md files
         this.updateInjectionStatus(this.state.claudeMdFiles);
         webviewLogger.info(
@@ -205,7 +248,10 @@ export class KnowledgeViewController {
         } else {
           this.state.templates.push(updatedTemplate);
         }
-        this.v1TemplatesTableController.render(this.state.templates);
+        // Render using unified table controller (new grouping system)
+        this.unifiedTableController.setTemplates(this.state.templates);
+        // Old controller - TODO: Remove once unified controller is fully tested
+        // this.v1TemplatesTableController.render(this.state.templates);
         webviewLogger.debug(
           LogCategory.UI,
           'V1 template updated in state and rendered',
@@ -239,6 +285,18 @@ export class KnowledgeViewController {
           'Audit log data received',
           'KnowledgeViewController.handleMessage',
           { templateId, entriesCount: auditLog?.length || 0 },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        break;
+
+      case 'v1:item-audit-data':
+        // Forward to unified table controller for display
+        this.unifiedTableController.handleMessage(message);
+        webviewLogger.debug(
+          LogCategory.UI,
+          'Item audit log data received',
+          'KnowledgeViewController.handleMessage',
+          { itemId: message.payload.itemId, entriesCount: message.payload.auditLog?.length || 0 },
           LogPathway.KNOWLEDGE_MANAGEMENT
         );
         break;
@@ -350,6 +408,7 @@ export class KnowledgeViewController {
           this.currentMaturityContext = message.payload.context;
           this.maturityConfigPanel.setContext(message.payload.context);
           this.v1TemplatesTableController.setMaturityContext(message.payload.context);
+          this.unifiedTableController.setMaturityContext(message.payload.context);
         }
         webviewLogger.debug(
           LogCategory.UI,
@@ -365,6 +424,7 @@ export class KnowledgeViewController {
           this.currentMaturityContext = message.payload.context;
           this.maturityConfigPanel.setContext(message.payload.context);
           this.v1TemplatesTableController.setMaturityContext(message.payload.context);
+          this.unifiedTableController.setMaturityContext(message.payload.context);
         }
         webviewLogger.info(
           LogCategory.UI,
@@ -560,6 +620,84 @@ export class KnowledgeViewController {
     this.sendMessage({
       type: 'v1:export-template',
       payload: { templateId }
+    });
+  }
+
+  /**
+   * Handle inject group action (new grouping system)
+   */
+  private async handleInjectGroup(groupType: GroupType, groupId: string, itemIds: string[]): Promise<void> {
+    const focusedFile = this.accordionController.getSelectedFile();
+    if (!focusedFile) {
+      this.notifications.show({
+        type: 'warning',
+        message: 'Please select a claude.md file first',
+        duration: 3000
+      });
+      return;
+    }
+
+    webviewLogger.info(
+      LogCategory.UI,
+      'Injecting group to file',
+      'KnowledgeViewController.handleInjectGroup',
+      { groupType, groupId, itemCount: itemIds.length, filePath: focusedFile },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    this.notifications.show({
+      type: 'info',
+      message: 'Injecting group...',
+      duration: 2000
+    });
+
+    this.sendMessage({
+      type: 'group:inject',
+      payload: {
+        groupType,
+        groupId,
+        itemIds,
+        filePath: focusedFile,
+        maturityContext: this.currentMaturityContext
+      }
+    });
+  }
+
+  /**
+   * Handle remove group action (new grouping system)
+   */
+  private async handleRemoveGroup(groupType: GroupType, groupId: string): Promise<void> {
+    const focusedFile = this.accordionController.getSelectedFile();
+    if (!focusedFile) {
+      this.notifications.show({
+        type: 'warning',
+        message: 'Please select a claude.md file first',
+        duration: 3000
+      });
+      return;
+    }
+
+    webviewLogger.info(
+      LogCategory.UI,
+      'Removing group from file',
+      'KnowledgeViewController.handleRemoveGroup',
+      { groupType, groupId, filePath: focusedFile },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    this.notifications.show({
+      type: 'info',
+      message: 'Removing group...',
+      duration: 2000
+    });
+
+    this.sendMessage({
+      type: 'group:remove',
+      payload: {
+        groupType,
+        groupId,
+        filePath: focusedFile
+      }
     });
   }
 
@@ -780,8 +918,13 @@ export class KnowledgeViewController {
     // Render maturity configuration panel
     this.renderMaturityPanel();
 
-    // Render V1 templates using the table controller
-    this.v1TemplatesTableController.render(this.state.templates);
+    // Render templates using the unified table controller (new grouping system)
+    this.unifiedTableController.setTemplates(this.state.templates);
+    this.unifiedTableController.setMaturityContext(this.currentMaturityContext);
+
+    // Keep old controller rendering for backward compatibility during transition
+    // TODO: Remove v1TemplatesTableController once unified controller is fully tested
+    // this.v1TemplatesTableController.render(this.state.templates);
   }
 
   /**
@@ -846,9 +989,19 @@ export class KnowledgeViewController {
     // Extract all injected template IDs from claude.md files
     const injectedTemplateIds = new Set<string>();
     for (const file of files) {
+      // Check V1 template markers (AGENT-BRAIN:template-xxx:START)
       if (file.templates && file.templates.length > 0) {
         for (const templateSection of file.templates) {
           injectedTemplateIds.add(templateSection.templateId);
+        }
+      }
+
+      // Check V2 template groups (AGENT-BRAIN-GROUP-START: TYPE=TEMPLATE ID=xxx)
+      if (file.scanResult && file.scanResult.groups && file.scanResult.groups.length > 0) {
+        for (const group of file.scanResult.groups) {
+          if (group.type === 'TEMPLATE' && group.id) {
+            injectedTemplateIds.add(group.id);
+          }
         }
       }
     }
@@ -863,8 +1016,11 @@ export class KnowledgeViewController {
       }
     }
 
-    // Update the table controller
-    this.v1TemplatesTableController.setInjectionStatus(statusMap);
+    // Update the unified table controller (new grouping system)
+    this.unifiedTableController.setInjectionStatus(statusMap);
+
+    // Old controller - TODO: Remove once unified controller is fully tested
+    // this.v1TemplatesTableController.setInjectionStatus(statusMap);
 
     webviewLogger.debug(
       LogCategory.UI,

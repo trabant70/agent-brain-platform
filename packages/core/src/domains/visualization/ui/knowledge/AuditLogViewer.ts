@@ -63,21 +63,19 @@ export class AuditLogViewer {
     });
 
     return `
-      <div class="audit-log-container" style="padding: 20px;">
-        <table class="audit-log-table" style="width: 100%; border-collapse: collapse; font-size: 13px;">
-          <thead style="position: sticky; top: 0; background: var(--vscode-editor-background); z-index: 1;">
-            <tr style="border-bottom: 2px solid var(--vscode-panel-border);">
-              <th style="text-align: left; padding: 12px 8px; font-weight: 600; color: var(--vscode-descriptionForeground);">${t('column.timestamp')}</th>
-              <th style="text-align: left; padding: 12px 8px; font-weight: 600; color: var(--vscode-descriptionForeground);">${t('column.operation')}</th>
-              <th style="text-align: left; padding: 12px 8px; font-weight: 600; color: var(--vscode-descriptionForeground);">${t('column.actor')}</th>
-              <th style="text-align: left; padding: 12px 8px; font-weight: 600; color: var(--vscode-descriptionForeground);">${t('column.details')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${sortedLog.map(entry => this.renderAuditEntry(entry)).join('')}
-          </tbody>
-        </table>
-      </div>
+      <table class="audit-log-table" style="width: 100%; border-collapse: collapse; font-size: 13px; margin: -20px -20px 0 -20px;">
+        <thead style="position: sticky; top: 0; background: var(--vscode-editor-background); z-index: 10;">
+          <tr style="border-bottom: 2px solid var(--vscode-panel-border);">
+            <th style="text-align: left; padding: 12px 28px 12px 28px; font-weight: 600; color: var(--vscode-descriptionForeground);">${t('column.timestamp')}</th>
+            <th style="text-align: left; padding: 12px 8px; font-weight: 600; color: var(--vscode-descriptionForeground);">${t('column.operation')}</th>
+            <th style="text-align: left; padding: 12px 8px; font-weight: 600; color: var(--vscode-descriptionForeground);">${t('column.actor')}</th>
+            <th style="text-align: left; padding: 12px 28px 12px 8px; font-weight: 600; color: var(--vscode-descriptionForeground);">${t('column.details')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sortedLog.map(entry => this.renderAuditEntry(entry)).join('')}
+        </tbody>
+      </table>
     `;
   }
 
@@ -92,7 +90,7 @@ export class AuditLogViewer {
 
     return `
       <tr style="border-bottom: 1px solid var(--vscode-panel-border);">
-        <td style="padding: 12px 8px; font-size: 12px; color: var(--vscode-descriptionForeground); white-space: nowrap;">
+        <td style="padding: 12px 28px 12px 28px; font-size: 12px; color: var(--vscode-descriptionForeground); white-space: nowrap;">
           ${timestamp}
         </td>
         <td style="padding: 12px 8px;">
@@ -103,7 +101,7 @@ export class AuditLogViewer {
         <td style="padding: 12px 8px; color: var(--vscode-descriptionForeground);">
           ${actor}
         </td>
-        <td style="padding: 12px 8px; font-size: 12px;">
+        <td style="padding: 12px 28px 12px 8px; font-size: 12px;">
           ${details}
         </td>
       </tr>

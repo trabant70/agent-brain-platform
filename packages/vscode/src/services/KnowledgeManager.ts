@@ -90,10 +90,12 @@ export class KnowledgeManager {
     this.templateEngine = new TemplateEngine(this.store);
     this.eventStorage = new KnowledgeEventStorage(workspaceRoot);
     this.scanner = new ClaudeMdScanner(this.templateEngine);
-    this.groupOperationsService = new GroupOperationsService(this.templateEngine, this.scanner);
 
     // Initialize V1 template components
     this.templateStore = new TemplateStore();
+
+    // Initialize group operations service (needs templateStore for content injection)
+    this.groupOperationsService = new GroupOperationsService(this.templateEngine, this.scanner, this.templateStore);
     this.auditLogger = new AuditLogger();
     this.versionManager = new VersionManager();
     this.templateCloner = new TemplateCloner();
@@ -457,6 +459,76 @@ export class KnowledgeManager {
     const updatedContent = Buffer.from(result.content!, 'utf8');
     await vscode.workspace.fs.writeFile(uri, updatedContent);
 
+    // Record timeline events for each injected item
+    logger.info(
+      LogCategory.EXTENSION,
+      'Recording timeline events for injected items',
+      'KnowledgeManager.injectGroup',
+      { itemCount: safeItemIds.length },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    for (const itemId of safeItemIds) {
+      // Look up the item from the template store
+      logger.info(
+        LogCategory.EXTENSION,
+        'Looking up item for event recording',
+        'KnowledgeManager.injectGroup',
+        { itemId, templateStoreItemCount: this.templateStore.getAllItems().length },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      const item = this.templateStore.getItem(itemId);
+      if (item) {
+        logger.info(
+          LogCategory.EXTENSION,
+          'Item found, recording event',
+          'KnowledgeManager.injectGroup',
+          {
+            itemId: item.id,
+            itemTitle: item.title,
+            itemType: item.type,
+            hasBody: !!item.body
+          },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
+        try {
+          await this.eventStorage.recordEvent({
+            type: 'apply',
+            knowledgeItemId: item.id,
+            knowledgeItemTitle: item.title,
+            knowledgeItemType: item.type,
+            targetFile: filePath,
+            actor: 'user'
+          });
+          logger.info(
+            LogCategory.EXTENSION,
+            'Event recorded successfully for injected item',
+            'KnowledgeManager.injectGroup',
+            { itemId: item.id, itemTitle: item.title },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+        } catch (error) {
+          logger.error(
+            LogCategory.EXTENSION,
+            'Failed to record event for injected item',
+            'KnowledgeManager.injectGroup',
+            { itemId: item.id, error: error instanceof Error ? error.message : String(error) },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+        }
+      } else {
+        logger.warn(
+          LogCategory.EXTENSION,
+          'Item not found in store, skipping event recording',
+          'KnowledgeManager.injectGroup',
+          { itemId, availableItemIds: this.templateStore.getAllItems().map(i => i.id).slice(0, 10) },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+      }
+    }
+
     logger.info(
       LogCategory.EXTENSION,
       'V2 group injected successfully',
@@ -483,6 +555,49 @@ export class KnowledgeManager {
     const content = await vscode.workspace.fs.readFile(uri);
     const contentStr = Buffer.from(content).toString('utf8');
 
+    // Get items to remove
+    // For template groups, look up the template to get items (more reliable than scanning)
+    // For other groups, scan the file
+    let itemsToRemove: any[] = [];
+
+    if (groupType === 'TEMPLATE') {
+      const template = this.templateStore.getTemplate(groupId);
+      if (template && template.items) {
+        itemsToRemove = template.items;
+        logger.info(
+          LogCategory.EXTENSION,
+          'Found items from template store for removal',
+          'KnowledgeManager.removeGroup',
+          { groupId, itemCount: itemsToRemove.length },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+      } else {
+        logger.warn(
+          LogCategory.EXTENSION,
+          'Template not found in store, falling back to scanner',
+          'KnowledgeManager.removeGroup',
+          { groupId },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        // Fallback to scanning
+        const scanResult = this.scanner.scanFile(contentStr);
+        const targetGroup = scanResult.groups.find(g => g.id === groupId);
+        itemsToRemove = targetGroup?.items || [];
+      }
+    } else {
+      // For non-template groups, scan the file
+      const scanResult = this.scanner.scanFile(contentStr);
+      const targetGroup = scanResult.groups.find(g => g.id === groupId);
+      itemsToRemove = targetGroup?.items || [];
+      logger.info(
+        LogCategory.EXTENSION,
+        'Found items from scanner for removal',
+        'KnowledgeManager.removeGroup',
+        { groupId, itemCount: itemsToRemove.length },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+    }
+
     // Remove the group
     const result = this.groupOperationsService.removeGroup(contentStr, {
       groupType: groupType as GroupType,
@@ -497,6 +612,83 @@ export class KnowledgeManager {
     // Write updated content back to file
     const updatedContent = Buffer.from(result.content!, 'utf8');
     await vscode.workspace.fs.writeFile(uri, updatedContent);
+
+    // Record timeline events for each removed item
+    logger.info(
+      LogCategory.EXTENSION,
+      'Recording timeline events for removed items',
+      'KnowledgeManager.removeGroup',
+      { itemCount: itemsToRemove.length },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
+    for (const itemToRemove of itemsToRemove) {
+      // Get the item ID (either from scanned item or direct item)
+      const itemId = itemToRemove.id;
+
+      logger.info(
+        LogCategory.EXTENSION,
+        'Looking up item for removal event recording',
+        'KnowledgeManager.removeGroup',
+        { itemId, itemHasTitle: !!itemToRemove.title, itemHasType: !!itemToRemove.type },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      // If the item already has all required fields, use it directly
+      // Otherwise, look it up from the store
+      let item = itemToRemove;
+      if (!item.title || !item.type) {
+        item = this.templateStore.getItem(itemId);
+      }
+
+      if (item && item.id && item.title && item.type) {
+        logger.info(
+          LogCategory.EXTENSION,
+          'Item found, recording removal event',
+          'KnowledgeManager.removeGroup',
+          {
+            itemId: item.id,
+            itemTitle: item.title,
+            itemType: item.type
+          },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+
+        try {
+          await this.eventStorage.recordEvent({
+            type: 'remove',
+            knowledgeItemId: item.id,
+            knowledgeItemTitle: item.title,
+            knowledgeItemType: item.type,
+            targetFile: filePath,
+            actor: 'user'
+          });
+          logger.info(
+            LogCategory.EXTENSION,
+            'Removal event recorded successfully',
+            'KnowledgeManager.removeGroup',
+            { itemId: item.id, itemTitle: item.title },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+        } catch (error) {
+          logger.error(
+            LogCategory.EXTENSION,
+            'Failed to record removal event',
+            'KnowledgeManager.removeGroup',
+            { itemId: item.id, error: error instanceof Error ? error.message : String(error) },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+        }
+      } else {
+        logger.warn(
+          LogCategory.EXTENSION,
+          'Item missing required fields, skipping event recording',
+          'KnowledgeManager.removeGroup',
+          { itemId, hasTitle: !!item?.title, hasType: !!item?.type },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+      }
+    }
 
     logger.info(
       LogCategory.EXTENSION,

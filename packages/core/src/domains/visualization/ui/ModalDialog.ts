@@ -466,14 +466,14 @@ export class ModalDialog {
         const width = options.width || '600px';
         this.modal.style.cssText = `
             background: var(--vscode-editor-background);
-            border: 1px solid var(--vscode-panel-border);
+            border: 2px solid rgba(0, 212, 255, 0.6);
             border-radius: 6px;
             min-width: 400px;
             max-width: ${width};
             width: ${width};
             max-height: 85vh;
             overflow: hidden;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 12px rgba(0, 212, 255, 0.3);
             animation: slideIn 0.2s ease-out;
             display: flex;
             flex-direction: column;
@@ -508,7 +508,7 @@ export class ModalDialog {
         // Build modal structure
         this.modal.innerHTML = `
             ${titleHtml}
-            <div class="modal-custom-content" style="flex: 1; overflow-y: auto; padding: 0;">
+            <div class="modal-custom-content" style="flex: 1; overflow-y: auto; padding: 20px;">
                 ${typeof options.content === 'string' ? options.content : ''}
             </div>
             ${buttonsHtml ? `

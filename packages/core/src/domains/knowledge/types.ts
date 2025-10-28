@@ -5,6 +5,8 @@
  * All knowledge items are stored as markdown files with frontmatter.
  */
 
+import { ScanResult } from './GroupTypes';
+
 /**
  * Knowledge item type taxonomy
  * Categorizes different kinds of development knowledge
@@ -302,6 +304,22 @@ export interface ClaudeMdFile {
 
   /** Conflict descriptions if any */
   conflicts?: string[];
+
+  // V2 Group Injection Scan Results (optional, populated when scanning for V2 groups)
+  /** Number of V2 groups found in file */
+  groups?: number;
+
+  /** Number of individual injected items found */
+  individualItems?: number;
+
+  /** Total number of injections (groups + individual items) */
+  totalInjections?: number;
+
+  /** Warnings from V2 group scanning */
+  scanWarnings?: string[];
+
+  /** Full scan result with detailed group information */
+  scanResult?: ScanResult;
 }
 
 /**

@@ -7,6 +7,7 @@
 
 import { MarkdownRenderer } from '../utils/MarkdownRenderer';
 import { t, tf } from '../../../webview/i18n';
+import { ScanResult } from '../../../../knowledge/GroupTypes';
 
 export interface ClaudeMdFile {
   path: string;
@@ -15,6 +16,12 @@ export interface ClaudeMdFile {
   hasConflicts: boolean;
   conflicts?: string[];
   templates: any[];
+  // V2 Group Injection Scan Results
+  groups?: number;
+  individualItems?: number;
+  totalInjections?: number;
+  scanWarnings?: string[];
+  scanResult?: ScanResult;
 }
 
 export class AccordionTemplates {
@@ -34,16 +41,47 @@ export class AccordionTemplates {
    * Template for accordion header
    */
   static accordionHeader(file: ClaudeMdFile, isSelected: boolean): string {
-    // Build tooltip with list of injected items
-    let tooltip = '';
-    if (file.templates.length > 0) {
-      const itemsList = file.templates.map(tmpl => {
-        // Determine if this is a template or individual item based on ID pattern
-        const isTemplate = tmpl.templateId.startsWith('template-');
-        const prefix = isTemplate ? t('template.typeTemplate') : t('template.typeItem');
-        return `${prefix}: ${MarkdownRenderer.escapeHtml(tmpl.templateName)}`;
-      }).join('&#10;'); // Use &#10; for newlines in HTML title attribute
-      tooltip = `${tf('template.injectedSections', { count: file.templates.length })}&#10;${itemsList}`;
+    // Build V2 injection tooltip with item names
+    let v2Tooltip = '';
+    const totalInjections = (file.totalInjections ?? 0);
+    if (totalInjections > 0 && file.scanResult) {
+      // Build detailed tooltip with group/item names
+      v2Tooltip = `Injections: ${totalInjections}&#10;&#10;`;
+
+      // List groups with their item counts
+      if (file.scanResult.groups.length > 0) {
+        v2Tooltip += `Groups (${file.scanResult.groups.length}):&#10;`;
+        file.scanResult.groups.forEach(group => {
+          const groupLabel = `${group.type}: ${group.id}`;
+          const itemInfo = group.items && group.items.length > 0 ? ` (${group.items.length} items)` : '';
+          v2Tooltip += `  • ${groupLabel}${itemInfo}&#10;`;
+        });
+      }
+
+      // List individual items
+      if (file.scanResult.individualItems.length > 0) {
+        if (file.scanResult.groups.length > 0) {
+          v2Tooltip += `&#10;`;
+        }
+        v2Tooltip += `Individual Items (${file.scanResult.individualItems.length}):&#10;`;
+        file.scanResult.individualItems.forEach(item => {
+          v2Tooltip += `  • ${item.id}&#10;`;
+        });
+      }
+    } else if (totalInjections > 0) {
+      // Fallback if no scan result
+      const groups = file.groups ?? 0;
+      const individualItems = file.individualItems ?? 0;
+      v2Tooltip = `Injections: ${totalInjections}&#10;`;
+      if (groups > 0) {
+        v2Tooltip += `Groups: ${groups}&#10;`;
+      }
+      if (individualItems > 0) {
+        v2Tooltip += `Individual Items: ${individualItems}&#10;`;
+      }
+      if (file.scanWarnings && file.scanWarnings.length > 0) {
+        v2Tooltip += `&#10;Warnings: ${file.scanWarnings.length}`;
+      }
     }
 
     // Build conflict tooltip if there are validation errors
@@ -59,7 +97,8 @@ export class AccordionTemplates {
       <span class="accordion-icon ab-collapsible-icon">▼</span>
       <span class="accordion-title ab-collapsible-title">📄 ${MarkdownRenderer.escapeHtml(file.relativePath)}</span>
       ${file.hasConflicts ? `<span class="conflict-badge ab-badge-error" title="${conflictTooltip}">${t('template.conflictsBadge')}</span>` : ''}
-      ${file.templates.length > 0 ? `<span class="template-count ab-collapsible-badge" title="${tooltip}">${file.templates.length}</span>` : ''}
+      ${totalInjections > 0 ? `<span class="injection-count ab-collapsible-badge" style="background: rgba(0, 200, 100, 0.2); border: 1px solid rgba(0, 200, 100, 0.4);" title="${v2Tooltip}">✅ ${totalInjections}</span>` : ''}
+      ${(file.scanWarnings && file.scanWarnings.length > 0) ? `<span class="warning-badge ab-badge-warning" title="${file.scanWarnings.join('&#10;')}">⚠️</span>` : ''}
     `;
   }
 
@@ -114,5 +153,85 @@ export class AccordionTemplates {
         </div>
       `;
     }
+  }
+
+  /**
+   * Template for V2 groups and items section with removal buttons
+   */
+  static v2GroupsSection(file: ClaudeMdFile): string {
+    if (!file.scanResult || file.scanResult.totalInjectionCount === 0) {
+      return '';
+    }
+
+    let sectionsHTML = '';
+
+    // Add groups section
+    if (file.scanResult.groups.length > 0) {
+      sectionsHTML += `<div class="injections-section">`;
+      sectionsHTML += `<div class="injections-header">
+        📦 Injected Groups (${file.scanResult.groups.length})
+      </div>`;
+
+      file.scanResult.groups.forEach((group, idx) => {
+        sectionsHTML += `
+        <div class="injection-item">
+          <div class="injection-header">
+            <div class="injection-info">
+              <div class="injection-type-label">Type:</div>
+              <div class="injection-type-value">${MarkdownRenderer.escapeHtml(group.type)}</div>
+            </div>
+            <button class="remove-injection-btn"
+                    data-group-type="${group.type}"
+                    data-group-id="${group.id}"
+                    data-file-path="${file.path}"
+                    data-injection-type="group"
+                    title="Remove this group">
+              Remove
+            </button>
+          </div>
+          <div class="injection-meta">
+            <span class="injection-id" title="Group ID">ID: ${MarkdownRenderer.escapeHtml(group.id.substring(0, 30))}${group.id.length > 30 ? '...' : ''}</span>
+            ${group.items && group.items.length > 0 ? `<span class="injection-items">${group.items.length} item(s)</span>` : ''}
+            <span class="injection-lines">Lines ${group.lineStart}-${group.lineEnd}</span>
+          </div>
+        </div>
+      `;
+      });
+      sectionsHTML += `</div>`;
+    }
+
+    // Add individual items section
+    if (file.scanResult.individualItems.length > 0) {
+      sectionsHTML += `<div class="injections-section">`;
+      sectionsHTML += `<div class="injections-header">
+        📄 Individual Items (${file.scanResult.individualItems.length})
+      </div>`;
+
+      file.scanResult.individualItems.forEach((item, idx) => {
+        sectionsHTML += `
+        <div class="injection-item">
+          <div class="injection-header">
+            <div class="injection-info">
+              <div class="injection-id-label">Item:</div>
+              <div class="injection-id-value">${MarkdownRenderer.escapeHtml(item.id)}</div>
+            </div>
+            <button class="remove-injection-btn"
+                    data-item-id="${item.id}"
+                    data-file-path="${file.path}"
+                    data-injection-type="item"
+                    title="Remove this item">
+              Remove
+            </button>
+          </div>
+          <div class="injection-meta">
+            <span class="injection-lines">Line ${item.line}</span>
+          </div>
+        </div>
+      `;
+      });
+      sectionsHTML += `</div>`;
+    }
+
+    return sectionsHTML;
   }
 }

@@ -80,6 +80,7 @@ export interface UpdateItemOptions {
   tags?: string[];
   author?: string;
   source?: string;
+  maturity?: import('./types').MaturityFootprint;
 }
 
 /**
@@ -450,6 +451,11 @@ export class TemplateStore {
     if (updates.tags !== undefined) {
       item.tags = updates.tags;
       changes.tags = { from: before.tags, to: updates.tags };
+    }
+
+    if (updates.maturity !== undefined) {
+      item.maturity = updates.maturity;
+      changes.maturity = { from: before.maturity, to: updates.maturity };
     }
 
     if (updates.author !== undefined && updates.author !== item.metadata.author) {

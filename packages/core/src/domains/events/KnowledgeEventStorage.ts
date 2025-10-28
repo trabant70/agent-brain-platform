@@ -103,21 +103,36 @@ export class KnowledgeEventStorage {
      * @returns The complete event record that was saved
      */
     async recordEvent(params: RecordKnowledgeEventParams): Promise<KnowledgeEventRecord> {
-        logger.debug(
+        logger.info(
             LogCategory.DATA,
-            'Recording knowledge event',
+            '>>> RECORDING KNOWLEDGE EVENT - START <<<',
             'recordEvent',
             {
                 type: params.type,
                 knowledgeItemId: params.knowledgeItemId,
-                actor: params.actor
+                actor: params.actor,
+                filePath: this.filePath
             },
             LogPathway.KNOWLEDGE_MANAGEMENT
         );
 
         try {
             // Load existing events
+            logger.info(
+                LogCategory.DATA,
+                'Loading existing events',
+                'recordEvent',
+                { filePath: this.filePath },
+                LogPathway.KNOWLEDGE_MANAGEMENT
+            );
             const events = await this.loadAll();
+            logger.info(
+                LogCategory.DATA,
+                'Existing events loaded',
+                'recordEvent',
+                { count: events.length },
+                LogPathway.KNOWLEDGE_MANAGEMENT
+            );
 
             // Create new event with auto-generated ID and timestamp
             const newEvent: KnowledgeEventRecord = {
@@ -125,6 +140,14 @@ export class KnowledgeEventStorage {
                 timestamp: new Date().toISOString(),
                 ...params
             };
+
+            logger.info(
+                LogCategory.DATA,
+                'New event created',
+                'recordEvent',
+                { eventId: newEvent.id, timestamp: newEvent.timestamp },
+                LogPathway.KNOWLEDGE_MANAGEMENT
+            );
 
             // Append to events array
             events.push(newEvent);
@@ -135,18 +158,31 @@ export class KnowledgeEventStorage {
                 events
             };
 
+            logger.info(
+                LogCategory.DATA,
+                'About to write file',
+                'recordEvent',
+                {
+                    filePath: this.filePath,
+                    totalEvents: events.length,
+                    dataSize: JSON.stringify(fileData).length
+                },
+                LogPathway.KNOWLEDGE_MANAGEMENT
+            );
+
             await fs.promises.writeFile(
                 this.filePath,
                 JSON.stringify(fileData, null, 2),
                 'utf8'
             );
 
-            logger.debug(
+            logger.info(
                 LogCategory.DATA,
-                'Knowledge event recorded successfully',
+                '>>> FILE WRITE COMPLETED SUCCESSFULLY <<<',
                 'recordEvent',
                 {
-                    id: newEvent.id,
+                    filePath: this.filePath,
+                    eventId: newEvent.id,
                     totalEvents: events.length
                 },
                 LogPathway.KNOWLEDGE_MANAGEMENT
@@ -156,9 +192,13 @@ export class KnowledgeEventStorage {
         } catch (error) {
             logger.error(
                 LogCategory.DATA,
-                'Failed to record knowledge event',
+                '!!! FAILED TO RECORD KNOWLEDGE EVENT !!!',
                 'recordEvent',
-                { error: error instanceof Error ? error.message : String(error) }
+                {
+                    error: error instanceof Error ? error.message : String(error),
+                    stack: error instanceof Error ? error.stack : undefined,
+                    filePath: this.filePath
+                }
             );
 
             throw error;

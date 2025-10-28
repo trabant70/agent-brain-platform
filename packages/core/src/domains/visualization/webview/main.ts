@@ -173,6 +173,7 @@ function setupMessageHandling(): void {
             switch (message.type) {
                 case 'i18n:init':
                     // Initialize internationalization with locale and translations
+                    console.log('[main.ts] ========== i18n:init MESSAGE RECEIVED ==========');
                     console.log('[main.ts] Received i18n:init message:', {
                         locale: message.payload?.locale,
                         translationsCount: message.payload?.translations ? Object.keys(message.payload.translations).length : 0,
@@ -181,7 +182,9 @@ function setupMessageHandling(): void {
                     });
 
                     if (message.payload && message.payload.locale && message.payload.translations) {
+                        console.log('[main.ts] Calling initI18n()...');
                         initI18n(message.payload.locale, message.payload.translations);
+                        console.log('[main.ts] initI18n() completed');
                         webviewLogger.info(
                             LogCategory.WEBVIEW,
                             `i18n initialized with locale: ${message.payload.locale}, ${Object.keys(message.payload.translations).length} keys`,
@@ -277,6 +280,26 @@ function setupMessageHandling(): void {
                             webviewLogger.warn(
                                 LogCategory.WEBVIEW,
                                 `ThreadingViewController not available for threading message: ${message.type}`,
+                                'setupMessageHandling',
+                                { messageType: message.type }
+                            );
+                        }
+                    }
+                    // Route code structure messages to CodeStructureViewController
+                    else if (message.type.startsWith('code-structure:')) {
+                        const codeStructureController = (window as any).codeStructureController;
+                        if (codeStructureController && typeof codeStructureController.handleMessage === 'function') {
+                            codeStructureController.handleMessage(message);
+                            webviewLogger.debug(
+                                LogCategory.WEBVIEW,
+                                `Routed code-structure message to CodeStructureViewController: ${message.type}`,
+                                'setupMessageHandling',
+                                { messageType: message.type }
+                            );
+                        } else {
+                            webviewLogger.warn(
+                                LogCategory.WEBVIEW,
+                                `CodeStructureViewController not available for code-structure message: ${message.type}`,
                                 'setupMessageHandling',
                                 { messageType: message.type }
                             );

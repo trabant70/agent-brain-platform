@@ -260,6 +260,7 @@ export class TemplateOperationsService {
     type?: KnowledgeType;
     scope?: KnowledgeScope;
     tags?: string[];
+    maturity?: import('@agent-brain/core/domains/knowledge/types').MaturityFootprint;
   }): Promise<void> {
     const template = this.templateStore.getTemplate(templateId);
     if (this.isTemplateReadOnly(template)) {

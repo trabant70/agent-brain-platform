@@ -104,6 +104,10 @@ export class KnowledgeMessageHandler {
         await this.handleV1InjectItem(message.payload);
         return true;
 
+      case 'v1:get-item-audit':
+        await this.handleV1GetItemAudit(message.payload);
+        return true;
+
       case 'v1:move-item':
         await this.handleV1MoveItem(message.payload);
         return true;
@@ -126,6 +130,19 @@ export class KnowledgeMessageHandler {
 
       case 'v1:remove-injected-template':
         await this.handleV1RemoveInjectedTemplate(message.payload);
+        return true;
+
+      case 'v2:remove-injection':
+        await this.handleV2RemoveInjection(message.payload);
+        return true;
+
+      // Group operations (new grouping system)
+      case 'group:inject':
+        await this.handleGroupInject(message.payload);
+        return true;
+
+      case 'group:remove':
+        await this.handleGroupRemove(message.payload);
         return true;
 
       // Maturity-based filtering
@@ -478,6 +495,7 @@ export class KnowledgeMessageHandler {
       type?: string;
       scope?: string;
       tags?: string[];
+      maturity?: import('@agent-brain/core/domains/knowledge/types').MaturityFootprint;
     };
   }): Promise<void> {
     try {
@@ -1031,6 +1049,48 @@ export class KnowledgeMessageHandler {
     }
   }
 
+  private async handleV1GetItemAudit(payload: { templateId: string; itemId: string }): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling v1:get-item-audit',
+        'KnowledgeMessageHandler.handleV1GetItemAudit',
+        { templateId: payload.templateId, itemId: payload.itemId },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      // Get audit log for this item
+      const auditLog = await this.context.knowledgeManager.getV1AuditLog(payload.templateId);
+
+      // Filter to events related to this specific item
+      const itemAuditLog = auditLog.filter((entry: any) => {
+        // Check if the entry relates to this item
+        return entry.metadata?.itemId === payload.itemId ||
+               entry.operation.includes(payload.itemId);
+      });
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:item-audit-data',
+        payload: { templateId: payload.templateId, itemId: payload.itemId, auditLog: itemAuditLog }
+      });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to get item audit log',
+        'KnowledgeMessageHandler.handleV1GetItemAudit',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to get item audit log: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v1:error',
+        payload: { message: error.message, operation: 'get-item-audit' }
+      });
+    }
+  }
+
   private async handleV1MoveItem(payload: { itemId: string; fromTemplateId: string; toTemplateId: string }): Promise<void> {
     try {
       logger.debug(
@@ -1276,6 +1336,79 @@ export class KnowledgeMessageHandler {
     }
   }
 
+  /**
+   * Handle V2 injection removal (groups or items)
+   */
+  private async handleV2RemoveInjection(payload: {
+    type: 'group' | 'item';
+    groupType: string | null;
+    groupId: string | null;
+    itemId: string | null;
+    filePath: string;
+  }): Promise<void> {
+    try {
+      logger.debug(
+        LogCategory.EXTENSION,
+        'Handling v2:remove-injection',
+        'KnowledgeMessageHandler.handleV2RemoveInjection',
+        { payload },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      if (payload.type === 'group' && payload.groupType && payload.groupId) {
+        // Remove a group
+        await this.context.knowledgeManager.removeGroup(
+          payload.filePath,
+          payload.groupType,
+          payload.groupId
+        );
+        vscode.window.showInformationMessage(`Group removed from ${payload.filePath}`);
+      } else if (payload.type === 'item' && payload.itemId) {
+        // Remove an individual item
+        await this.context.knowledgeManager.removeIndividualItem(
+          payload.filePath,
+          payload.itemId
+        );
+        vscode.window.showInformationMessage(`Item removed from ${payload.filePath}`);
+      } else {
+        throw new Error('Invalid removal request: missing required parameters');
+      }
+
+      // Refresh claude.md file statistics
+      await this.sendClaudeMdFiles();
+
+      // Refresh timeline to show new knowledge events
+      logger.info(
+        LogCategory.EXTENSION,
+        'Triggering timeline refresh after V2 removal',
+        'KnowledgeMessageHandler.handleV2RemoveInjection',
+        {},
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+      await this.context.onTimelineRefresh();
+
+      this.context.view?.webview.postMessage({
+        type: 'v2:remove-injection-success',
+        payload: { filePath: payload.filePath }
+      });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to remove V2 injection',
+        'KnowledgeMessageHandler.handleV2RemoveInjection',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to remove injection: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'v2:error',
+        payload: { message: error.message, operation: 'remove-injection' }
+      });
+    }
+  }
+
   // ==========================================================================
   // MATURITY-BASED FILTERING HANDLERS
   // ==========================================================================
@@ -1385,6 +1518,132 @@ export class KnowledgeMessageHandler {
       this.context.view?.webview.postMessage({
         type: 'maturity:error',
         payload: { message: error.message, operation: 'update-context' }
+      });
+    }
+  }
+
+  /**
+   * Handle group:inject - Inject a group of items to a file
+   */
+  private async handleGroupInject(payload: {
+    groupType: string;
+    groupId: string;
+    itemIds: string[];
+    filePath: string;
+    maturityContext?: any;
+  }): Promise<void> {
+    try {
+      logger.info(
+        LogCategory.EXTENSION,
+        'Handling group:inject',
+        'KnowledgeMessageHandler.handleGroupInject',
+        { groupType: payload.groupType, groupId: payload.groupId, itemCount: payload.itemIds.length, filePath: payload.filePath },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      // Call KnowledgeManager to inject the group
+      await this.context.knowledgeManager.injectGroup(
+        payload.filePath,
+        payload.groupType,
+        payload.groupId,
+        payload.itemIds,
+        payload.maturityContext
+      );
+
+      vscode.window.showInformationMessage(`Group injected to ${payload.filePath}`);
+
+      // Refresh claude.md files to update injection status
+      await this.sendClaudeMdFiles();
+
+      // Refresh timeline to show new knowledge events
+      logger.info(
+        LogCategory.EXTENSION,
+        'Triggering timeline refresh after group injection',
+        'KnowledgeMessageHandler.handleGroupInject',
+        {},
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+      await this.context.onTimelineRefresh();
+
+      this.context.view?.webview.postMessage({
+        type: 'group:inject-success',
+        payload: { groupType: payload.groupType, groupId: payload.groupId, filePath: payload.filePath }
+      });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to inject group',
+        'KnowledgeMessageHandler.handleGroupInject',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to inject group: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'group:error',
+        payload: { message: error.message, operation: 'inject' }
+      });
+    }
+  }
+
+  /**
+   * Handle group:remove - Remove a group from a file
+   */
+  private async handleGroupRemove(payload: {
+    groupType: string;
+    groupId: string;
+    filePath: string;
+  }): Promise<void> {
+    try {
+      logger.info(
+        LogCategory.EXTENSION,
+        'Handling group:remove',
+        'KnowledgeMessageHandler.handleGroupRemove',
+        { groupType: payload.groupType, groupId: payload.groupId, filePath: payload.filePath },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      // Call KnowledgeManager to remove the group
+      await this.context.knowledgeManager.removeGroup(
+        payload.filePath,
+        payload.groupType,
+        payload.groupId
+      );
+
+      vscode.window.showInformationMessage(`Group removed from ${payload.filePath}`);
+
+      // Refresh claude.md files to update injection status
+      await this.sendClaudeMdFiles();
+
+      // Refresh timeline to show new knowledge events
+      logger.info(
+        LogCategory.EXTENSION,
+        'Triggering timeline refresh after group removal',
+        'KnowledgeMessageHandler.handleGroupRemove',
+        {},
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+      await this.context.onTimelineRefresh();
+
+      this.context.view?.webview.postMessage({
+        type: 'group:remove-success',
+        payload: { groupType: payload.groupType, groupId: payload.groupId, filePath: payload.filePath }
+      });
+    } catch (error: any) {
+      logger.error(
+        LogCategory.EXTENSION,
+        'Failed to remove group',
+        'KnowledgeMessageHandler.handleGroupRemove',
+        error,
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      vscode.window.showErrorMessage(`Failed to remove group: ${error.message}`);
+
+      this.context.view?.webview.postMessage({
+        type: 'group:error',
+        payload: { message: error.message, operation: 'remove' }
       });
     }
   }

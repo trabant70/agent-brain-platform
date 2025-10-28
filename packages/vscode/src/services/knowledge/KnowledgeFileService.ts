@@ -11,7 +11,7 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { ClaudeMdFile, TemplateEngine } from '@agent-brain/core/domains/knowledge';
+import { ClaudeMdFile, TemplateEngine, ClaudeMdScanner } from '@agent-brain/core/domains/knowledge';
 import { KnowledgeFileSystem } from '@agent-brain/core/domains/knowledge';
 import { logger, LogCategory, LogPathway } from '@agent-brain/core/infrastructure/logging/Logger';
 
@@ -20,17 +20,20 @@ export class KnowledgeFileService {
   private knowledgeBaseDir: string;
   private fileSystem: KnowledgeFileSystem;
   private templateEngine: TemplateEngine;
+  private scanner: ClaudeMdScanner;
   private extensionContext: vscode.ExtensionContext;
 
   constructor(
     private workspaceRoot: string,
     fileSystem: KnowledgeFileSystem,
     templateEngine: TemplateEngine,
+    scanner: ClaudeMdScanner,
     extensionContext: vscode.ExtensionContext
   ) {
     this.knowledgeBaseDir = path.join(workspaceRoot, '.agent-brain');
     this.fileSystem = fileSystem;
     this.templateEngine = templateEngine;
+    this.scanner = scanner;
     this.extensionContext = extensionContext;
   }
 
@@ -201,11 +204,14 @@ export class KnowledgeFileService {
           const content = await vscode.workspace.fs.readFile(uri);
           const contentStr = Buffer.from(content).toString('utf8');
 
-          // Parse template sections
+          // Parse V1 template sections
           const templates = this.templateEngine.parseTemplateMarkers(contentStr);
 
-          // Validate markers
+          // Validate V1 markers
           const validation = this.templateEngine.validateTemplateMarkers(contentStr);
+
+          // Scan for V2 groups and injections
+          const scanResult = this.scanner.scanFile(contentStr);
 
           claudeFiles.push({
             path: uri.fsPath,
@@ -213,7 +219,13 @@ export class KnowledgeFileService {
             content: contentStr,
             templates,
             hasConflicts: !validation.valid,
-            conflicts: validation.errors
+            conflicts: validation.errors,
+            // V2 scan results
+            groups: scanResult.groups.length,
+            individualItems: scanResult.individualItems.length,
+            totalInjections: scanResult.totalInjectionCount,
+            scanWarnings: scanResult.warnings,
+            scanResult: scanResult  // Full scan result with group details
           });
 
           logger.debug(
@@ -223,8 +235,12 @@ export class KnowledgeFileService {
             {
               path: uri.fsPath,
               contentLength: contentStr.length,
-              templateCount: templates.length,
-              hasConflicts: !validation.valid
+              v1Templates: templates.length,
+              v2Groups: scanResult.groups.length,
+              v2IndividualItems: scanResult.individualItems.length,
+              v2TotalInjections: scanResult.totalInjectionCount,
+              hasConflicts: !validation.valid,
+              scanWarnings: scanResult.warnings.length
             },
             LogPathway.KNOWLEDGE_MANAGEMENT
           );

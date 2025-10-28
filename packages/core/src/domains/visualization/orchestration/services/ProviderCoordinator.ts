@@ -164,8 +164,10 @@ export class ProviderCoordinator {
   private async registerKnowledgeEventProvider(): Promise<void> {
     logger.info(
       LogCategory.ORCHESTRATION,
-      'Registering Knowledge Event provider',
-      'ProviderCoordinator.registerKnowledgeEventProvider'
+      '>>> PROVIDER COORDINATOR: Registering Knowledge Event provider <<<',
+      'ProviderCoordinator.registerKnowledgeEventProvider',
+      { workspaceRoot: this.workspaceRoot },
+      LogPathway.KNOWLEDGE_MANAGEMENT
     );
 
     try {
@@ -180,15 +182,18 @@ export class ProviderCoordinator {
 
       logger.info(
         LogCategory.ORCHESTRATION,
-        'Knowledge Event provider registered successfully',
+        '>>> PROVIDER COORDINATOR: Knowledge Event provider registered successfully <<<',
         'ProviderCoordinator.registerKnowledgeEventProvider',
-        { workspaceRoot: this.workspaceRoot }
+        { workspaceRoot: this.workspaceRoot },
+        LogPathway.KNOWLEDGE_MANAGEMENT
       );
     } catch (error) {
       logger.error(
         LogCategory.ORCHESTRATION,
-        `Failed to register Knowledge Event provider: ${error}`,
-        'ProviderCoordinator.registerKnowledgeEventProvider'
+        `>>> PROVIDER COORDINATOR: Failed to register Knowledge Event provider: ${error} <<<`,
+        'ProviderCoordinator.registerKnowledgeEventProvider',
+        { error },
+        LogPathway.KNOWLEDGE_MANAGEMENT
       );
       // Continue without knowledge events - not critical
     }
@@ -239,20 +244,20 @@ export class ProviderCoordinator {
 
     logger.info(
       LogCategory.ORCHESTRATION,
-      `Fetching from ${providers.length} providers`,
+      `>>> PROVIDER COORDINATOR: Fetching from ${providers.length} healthy providers <<<`,
       'ProviderCoordinator.fetchFromProviders',
-      undefined,
-      LogPathway.DATA_INGESTION
+      { providerIds: providers.map(p => p.id) },
+      LogPathway.KNOWLEDGE_MANAGEMENT
     );
 
     for (const provider of providers) {
       try {
         logger.info(
           LogCategory.ORCHESTRATION,
-          `Fetching from ${provider.id}`,
+          `>>> PROVIDER COORDINATOR: Calling fetchEvents on ${provider.id} <<<`,
           'ProviderCoordinator.fetchFromProviders',
-          undefined,
-          LogPathway.DATA_INGESTION
+          { providerId: provider.id },
+          LogPathway.KNOWLEDGE_MANAGEMENT
         );
 
         const context: ProviderContext = {
@@ -266,18 +271,18 @@ export class ProviderCoordinator {
 
         logger.info(
           LogCategory.ORCHESTRATION,
-          `Provider ${provider.id} returned ${events.length} events`,
+          `>>> PROVIDER COORDINATOR: Provider ${provider.id} returned ${events.length} events <<<`,
           'ProviderCoordinator.fetchFromProviders',
-          undefined,
-          LogPathway.DATA_INGESTION
+          { providerId: provider.id, eventCount: events.length },
+          LogPathway.KNOWLEDGE_MANAGEMENT
         );
       } catch (error) {
         logger.error(
           LogCategory.ORCHESTRATION,
-          `Provider ${provider.id} failed: ${error}`,
+          `>>> PROVIDER COORDINATOR: Provider ${provider.id} FAILED <<<`,
           'ProviderCoordinator.fetchFromProviders',
-          undefined,
-          LogPathway.DATA_INGESTION
+          { providerId: provider.id, error },
+          LogPathway.KNOWLEDGE_MANAGEMENT
         );
         // Continue with other providers
       }

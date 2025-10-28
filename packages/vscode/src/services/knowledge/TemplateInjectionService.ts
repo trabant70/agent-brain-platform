@@ -577,16 +577,62 @@ export class TemplateInjectionService {
     }
 
     // Record timeline events for each injected item
+    logger.info(
+      LogCategory.EXTENSION,
+      '>>> STARTING EVENT RECORDING LOOP <<<',
+      'TemplateInjectionService.injectMaturityGroup',
+      { itemCount: items.length, targetFilePath },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
+
     for (const item of items) {
-      await this.eventStorage.recordEvent({
-        type: 'apply',
-        knowledgeItemId: item.id,
-        knowledgeItemTitle: item.title,
-        knowledgeItemType: item.type,
-        targetFile: targetFilePath,
-        actor: 'user'
-      });
+      logger.info(
+        LogCategory.EXTENSION,
+        'Recording event for item',
+        'TemplateInjectionService.injectMaturityGroup',
+        { itemId: item.id, itemTitle: item.title },
+        LogPathway.KNOWLEDGE_MANAGEMENT
+      );
+
+      try {
+        await this.eventStorage.recordEvent({
+          type: 'apply',
+          knowledgeItemId: item.id,
+          knowledgeItemTitle: item.title,
+          knowledgeItemType: item.type,
+          targetFile: targetFilePath,
+          actor: 'user'
+        });
+        logger.info(
+          LogCategory.EXTENSION,
+          'Event recorded successfully for item',
+          'TemplateInjectionService.injectMaturityGroup',
+          { itemId: item.id },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+      } catch (error) {
+        logger.error(
+          LogCategory.EXTENSION,
+          'Failed to record event for item',
+          'TemplateInjectionService.injectMaturityGroup',
+          {
+            itemId: item.id,
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined
+          },
+          LogPathway.KNOWLEDGE_MANAGEMENT
+        );
+        // Continue with other items even if one fails
+      }
     }
+
+    logger.info(
+      LogCategory.EXTENSION,
+      '>>> EVENT RECORDING LOOP COMPLETED <<<',
+      'TemplateInjectionService.injectMaturityGroup',
+      { recordedCount: items.length },
+      LogPathway.KNOWLEDGE_MANAGEMENT
+    );
 
     logger.info(
       LogCategory.EXTENSION,

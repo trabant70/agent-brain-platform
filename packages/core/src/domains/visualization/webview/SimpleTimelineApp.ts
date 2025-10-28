@@ -20,6 +20,7 @@ import { TabManager } from '../ui/TabManager';
 import { KnowledgeViewController } from '../ui/KnowledgeViewController';
 import { SessionViewController } from '../ui/SessionViewController';
 import { ThreadingViewController } from '../ui/threading/ThreadingViewController';
+import { CodeStructureViewController } from '../ui/code-structure/CodeStructureViewController';
 import { webviewLogger, LogCategory, LogPathway } from './WebviewLogger';
 
 // Specialized services (NEW - Facade Pattern)
@@ -57,6 +58,7 @@ export class SimpleTimelineApp {
     private knowledgeController: KnowledgeViewController;
     private sessionController: SessionViewController;
     private threadingController: ThreadingViewController;
+    private codeStructureController: CodeStructureViewController;
     private currentEvents: CanonicalEvent[] = [];
     private currentFilterOptions: FilterOptions | null = null;
     private currentAppliedFilters: any = null;  // Current filter state for branch visibility
@@ -209,6 +211,30 @@ export class SimpleTimelineApp {
                 window.vscode.postMessage({ type: 'threading:get-state' });
             }
         }
+
+        // Initialize code structure controller
+        webviewLogger.info(LogCategory.UI, 'Creating CodeStructureViewController...', 'constructor');
+        this.codeStructureController = new CodeStructureViewController();
+        webviewLogger.info(LogCategory.UI, 'CodeStructureViewController created', 'constructor', { hasController: !!this.codeStructureController });
+
+        // Make code structure controller globally accessible BEFORE initialize
+        (window as any).codeStructureController = this.codeStructureController;
+        webviewLogger.info(LogCategory.UI, 'Code structure controller assigned to window', 'constructor', {
+            onWindow: !!(window as any).codeStructureController,
+            onThis: !!this.codeStructureController
+        });
+
+        this.codeStructureController.initialize((message) => {
+            // Forward code structure messages to extension
+            if (window.vscode) {
+                window.vscode.postMessage(message);
+            }
+        });
+
+        webviewLogger.info(LogCategory.UI, 'Code structure controller initialized', 'constructor', {
+            onWindow: !!(window as any).codeStructureController,
+            onThis: !!this.codeStructureController
+        });
 
         // Setup brush callback for range selector
         this.setupRendererCallbacks();

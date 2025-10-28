@@ -2,7 +2,7 @@
   "name": "agent-brain-platform",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.4.86",
+  "version": "0.4.101",
   "publisher": "agent-brain-local",
   "icon": "images/timeline_large.png",
   "repository": {
@@ -122,14 +122,6 @@
             ]
           },
           "default": [
-            "GUID_INIT",
-            "VALID",
-            "PLAN",
-            "MINI",
-            "DIAG",
-            "GOLD",
-            "PROMPT",
-            "EVT_FWD",
             "KNOWLEDGE"
           ],
           "description": "%config.logging.enabledPathways.description%"

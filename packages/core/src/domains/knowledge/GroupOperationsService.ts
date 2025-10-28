@@ -20,12 +20,14 @@ import {
 } from './GroupTypes';
 import { TemplateEngine } from './TemplateEngine';
 import { ClaudeMdScanner } from './ClaudeMdScanner';
+import { TemplateStore } from './TemplateStore';
 import { logger, LogCategory, LogPathway } from '../../infrastructure/logging/Logger';
 
 export class GroupOperationsService {
   constructor(
     private templateEngine: TemplateEngine,
-    private scanner: ClaudeMdScanner
+    private scanner: ClaudeMdScanner,
+    private templateStore: TemplateStore
   ) {}
 
   /**
@@ -94,15 +96,24 @@ export class GroupOperationsService {
         metadata
       );
 
-      // Build group content
-      // Note: In a real implementation, you'd fetch the actual item content
-      // For now, we'll just list the item IDs as placeholders
+      // Build group content with actual item bodies
       let groupContent = `\n${markers.start}\n`;
       groupContent += `<!-- Group: ${safeOptions.groupType} (${safeOptions.itemIds.length} items) -->\n\n`;
 
+      // Fetch and inject actual item content from the template store
       for (const itemId of safeOptions.itemIds) {
-        groupContent += `<!-- Item: ${itemId} -->\n`;
-        groupContent += `[Content for ${itemId} would be here]\n\n`;
+        const item = this.templateStore.getItem(itemId);
+        if (item && item.body) {
+          groupContent += `${item.body}\n\n`;
+        } else {
+          logger.warn(
+            LogCategory.DATA,
+            'Item not found or has no body, skipping',
+            'GroupOperationsService.injectGroup',
+            { itemId },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+        }
       }
 
       groupContent += `${markers.end}\n`;

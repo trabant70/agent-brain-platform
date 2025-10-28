@@ -186,7 +186,7 @@ export class V1TemplatesTableController {
         ${template.source === 'bundled' ? '' : '<button class="action-btn" data-action="audit-log" data-template-id="' + template.id + '" title="' + t('tooltip.viewAuditLog') + '">📊</button>'}
         <button class="action-btn" data-action="export" data-template-id="${template.id}" title="${t('tooltip.exportTemplateToJSON')}">📤</button>
         ${template.source === 'bundled' ? '' : '<button class="action-btn" data-action="edit" data-template-id="' + template.id + '" title="' + t('tooltip.editTemplate') + '">✏️</button>'}
-        ${template.source === 'bundled' ? '' : '<button class="action-btn danger" data-template-id="' + template.id + '" title="' + t('tooltip.deleteTemplate') + '">🗑️</button>'}
+        ${template.source === 'bundled' ? '' : '<button class="action-btn danger" data-action="delete" data-template-id="' + template.id + '" title="' + t('tooltip.deleteTemplate') + '">🗑️</button>'}
       </td>
     `;
 
@@ -279,7 +279,7 @@ export class V1TemplatesTableController {
       <td class="col-maturity" style="position: relative;">
         ${this.renderMaturityIndicators(item.maturity)}
         <button class="info-btn" style="margin-left: 4px; padding: 0 4px; font-size: 10px; cursor: pointer; border: 1px solid var(--vscode-button-border); background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); border-radius: 2px;" title="${t('tooltip.showDetails')}">ⓘ</button>
-        ${template ? this.renderInfoPopup(item, template) : ''}
+        ${template ? this.renderInfoPopup(item, template!) : ''}
       </td>
       <td class="col-actions">
         ${isBundledNotEditable ? '' : '<button class="action-btn" data-action="edit-inline" data-template-id="' + templateId + '" data-item-id="' + item.id + '" title="' + t('tooltip.editItemInline') + '">📝</button>'}

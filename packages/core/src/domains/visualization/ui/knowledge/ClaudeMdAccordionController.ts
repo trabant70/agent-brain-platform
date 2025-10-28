@@ -18,6 +18,7 @@ export interface AccordionState {
 export interface AccordionControllerCallbacks {
   onSaveContent: (filePath: string, content: string) => void;
   onRemoveTemplate: (templateId: string, filePath: string) => void;
+  onRemoveInjection: (type: 'group' | 'item', groupType: string | null, groupId: string | null, itemId: string | null, filePath: string) => void;
   onScanFiles: () => void;
   onShowNotification: (message: string, type: 'info' | 'success' | 'warning' | 'error', duration?: number) => void;
 }
@@ -147,7 +148,10 @@ export class ClaudeMdAccordionController {
         : null;
       contentHTML += AccordionTemplates.claudeMdContent(file, renderedMarkdown);
 
-      // Show templates section if any
+      // Add V2 groups/items section with removal buttons
+      contentHTML += AccordionTemplates.v2GroupsSection(file);
+
+      // Show templates section if any (V1 legacy support - can be removed if not needed)
       if (file.templates.length > 0) {
         // Check for duplicate template IDs
         const templateIds = file.templates.map(t => t.templateId);
@@ -270,6 +274,32 @@ export class ClaudeMdAccordionController {
               LogPathway.KNOWLEDGE_MANAGEMENT
             );
             this.callbacks.onRemoveTemplate(templateId, filePath);
+          }
+        });
+      });
+
+      // Add event listeners to all remove injection buttons (V2 groups/items)
+      const removeInjectionButtons = content.querySelectorAll('.remove-injection-btn');
+      removeInjectionButtons.forEach((btn) => {
+        const button = btn as HTMLButtonElement;
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const injectionType = button.getAttribute('data-injection-type') as 'group' | 'item';
+          const groupType = button.getAttribute('data-group-type');
+          const groupId = button.getAttribute('data-group-id');
+          const itemId = button.getAttribute('data-item-id');
+          const filePath = button.getAttribute('data-file-path');
+
+          if (filePath) {
+            webviewLogger.debug(
+              LogCategory.UI,
+              'Remove injection button clicked',
+              'ClaudeMdAccordionController.renderClaudeMdAccordion',
+              { injectionType, groupType, groupId, itemId, filePath },
+              LogPathway.KNOWLEDGE_MANAGEMENT
+            );
+            this.callbacks.onRemoveInjection(injectionType, groupType, groupId, itemId, filePath);
           }
         });
       });

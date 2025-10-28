@@ -15,11 +15,13 @@ import * as vscode from 'vscode';
 import { DataOrchestrator } from '@agent-brain/core/domains/visualization/orchestration/DataOrchestrator';
 import { CanonicalEvent } from '@agent-brain/core/domains/events';
 import { logger, LogCategory, LogPathway } from '@agent-brain/core/infrastructure/logging/Logger';
+import { CodeStructureReviewProvider } from './CodeStructureReviewProvider';
 
 // Message handlers
 import { TimelineMessageHandler } from './handlers/TimelineMessageHandler';
 import { KnowledgeMessageHandler } from './handlers/KnowledgeMessageHandler';
 import { SessionMessageHandler } from './handlers/SessionMessageHandler';
+import { CodeStructureMessageHandler } from './handlers/CodeStructureMessageHandler';
 
 // Specialized services (NEW - Facade Pattern)
 import {
@@ -37,6 +39,7 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
   private extensionUri: vscode.Uri;
   private knowledgeManager: any = null;
   private threadControlCenter: any = null;
+  private codeStructureProvider?: CodeStructureReviewProvider;
 
   // Shared state object used by handlers and provider
   private providerState = {
@@ -57,6 +60,7 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
   private timelineHandler!: TimelineMessageHandler;
   private knowledgeHandler!: KnowledgeMessageHandler;
   private sessionHandler!: SessionMessageHandler;
+  private codeStructureHandler!: CodeStructureMessageHandler;
 
   // Specialized services (NEW)
   private webviewContentService: WebviewContentService;
@@ -157,6 +161,7 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
     this.messageRouter.registerHandler(this.timelineHandler);
     this.messageRouter.registerHandler(this.knowledgeHandler);
     this.messageRouter.registerHandler(this.sessionHandler);
+    this.messageRouter.registerHandler(this.codeStructureHandler);
 
     // Setup message listener
     this.setupMessageListener(webviewView);
@@ -204,6 +209,13 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
     this.sessionHandler = new SessionMessageHandler({
       view: webviewView
     });
+
+    // Initialize code structure review
+    this.codeStructureProvider = new CodeStructureReviewProvider();
+    this.codeStructureHandler = new CodeStructureMessageHandler(
+      this.codeStructureProvider,
+      (message) => webviewView.webview.postMessage(message)
+    );
   }
 
   /**
@@ -292,6 +304,20 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
           );
           return;
         }
+      }
+
+      // Handle code-structure messages
+      if (message.type && message.type.startsWith('code-structure:')) {
+        // Code structure messages are handled by CodeStructureReviewProvider
+        // For now, we don't have a direct handler in the extension, so messages
+        // will be handled by the webview controller directly
+        logger.debug(
+          LogCategory.WEBVIEW,
+          'Code structure message received - handled by webview controller',
+          'routeMessage',
+          { type: message.type }
+        );
+        // Allow the message to fall through to messageRouter for potential future backend handlers
       }
 
       const handled = await this.messageRouter.routeMessage(message);
