@@ -56,7 +56,7 @@ export class UnifiedKnowledgeTableController {
   private templates: MarketplaceTemplate[] = [];
   private maturityContext: MaturityContext | null = null;
   private expandedGroups: Set<string> = new Set();
-  private groupInjectionStatus: Map<string, { status: InjectionStatus; files: string[] }> = new Map();
+  private groupInjectionStatus: Map<string, { status: InjectionStatus; files: string[]; itemsInjected?: number; totalItems?: number }> = new Map();
 
   constructor(
     containerId: string,
@@ -130,7 +130,7 @@ export class UnifiedKnowledgeTableController {
   /**
    * Set injection status for groups
    */
-  setInjectionStatus(statusMap: Map<string, { status: InjectionStatus; files: string[] }>): void {
+  setInjectionStatus(statusMap: Map<string, { status: InjectionStatus; files: string[]; itemsInjected?: number; totalItems?: number }>): void {
     this.groupInjectionStatus = statusMap;
     this.render();
   }
@@ -377,14 +377,19 @@ export class UnifiedKnowledgeTableController {
   private renderGroupHeader(
     group: GroupSection,
     isExpanded: boolean,
-    injectionInfo: { status: InjectionStatus; files: string[] },
+    injectionInfo: { status: InjectionStatus; files: string[]; itemsInjected?: number; totalItems?: number },
     strategy: GroupingStrategy
   ): HTMLElement {
     const header = document.createElement('div');
     header.className = 'group-section-header';
 
     const expandIcon = isExpanded ? '▼' : '▶';
-    const statusBadge = this.getStatusBadge(injectionInfo.status, injectionInfo.files);
+    const statusBadge = this.getStatusBadge(
+      injectionInfo.status,
+      injectionInfo.files,
+      injectionInfo.itemsInjected,
+      injectionInfo.totalItems
+    );
 
     header.innerHTML = `
       <div class="group-header-left">
@@ -568,10 +573,9 @@ export class UnifiedKnowledgeTableController {
    */
   private renderItemRow(item: KnowledgeItem): HTMLElement {
     const row = document.createElement('div');
-    row.className = 'group-item-row';
-    row.dataset.itemId = item.id;
-
     const isTemplateView = this.currentMode === ViewMode.BY_TEMPLATE;
+    row.className = isTemplateView ? 'group-item-row template-view' : 'group-item-row';
+    row.dataset.itemId = item.id;
 
     // Get injection status for this item
     const itemStatus = this.getItemInjectionStatus(item);
@@ -857,11 +861,24 @@ export class UnifiedKnowledgeTableController {
   /**
    * Get status badge HTML with custom tooltip showing injection locations
    */
-  private getStatusBadge(status: InjectionStatus, files: string[]): string {
+  private getStatusBadge(
+    status: InjectionStatus,
+    files: string[],
+    itemsInjected?: number,
+    totalItems?: number
+  ): string {
     // Build tooltip text
     let tooltip = '';
     if (status === InjectionStatus.INJECTED && files.length > 0) {
       tooltip = `Injected in:\n${files.join('\n')}`;
+    } else if (status === InjectionStatus.PARTIAL && files.length > 0) {
+      // Show partial injection details
+      const fileName = files[0].split('/').pop() || files[0];
+      if (itemsInjected !== undefined && totalItems !== undefined) {
+        tooltip = `Partial: ${itemsInjected} of ${totalItems} items injected in ${fileName}`;
+      } else {
+        tooltip = `Partially injected in ${fileName}`;
+      }
     } else if (status === InjectionStatus.NOT_INJECTED) {
       tooltip = 'Not injected in any CLAUDE.md file';
     } else {

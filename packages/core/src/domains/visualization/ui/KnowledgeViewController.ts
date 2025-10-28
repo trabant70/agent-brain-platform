@@ -1035,7 +1035,7 @@ export class KnowledgeViewController {
     }
 
     // Build injection status map for all templates
-    const statusMap = new Map<string, { status: InjectionStatus; files: string[] }>();
+    const statusMap = new Map<string, { status: InjectionStatus; files: string[]; itemsInjected?: number; totalItems?: number }>();
     for (const template of this.state.templates) {
       const files = injectedTemplateFiles.get(template.id) || [];
 
@@ -1046,17 +1046,31 @@ export class KnowledgeViewController {
           filePath === selectedFilePath || filePath.endsWith(selectedFilePath.replace(/\\/g, '/'))
         );
 
+        // Check item-level injection for partial status
+        const itemsInjectedCount = this.countItemsInjectedInFile(template, selectedFilePath);
+        const totalItems = template.items?.length || 0;
+
+        let status: InjectionStatus;
         if (isInjectedInSelectedFile) {
-          statusMap.set(template.id, {
-            status: InjectionStatus.INJECTED,
-            files: [selectedFilePath] // Only show the selected file
-          });
+          // Template marker is present in the file
+          status = InjectionStatus.INJECTED;
+        } else if (itemsInjectedCount > 0) {
+          // Template not injected, but individual items are
+          if (itemsInjectedCount === totalItems && totalItems > 0) {
+            status = InjectionStatus.INJECTED; // All items present
+          } else {
+            status = InjectionStatus.PARTIAL; // Some items present
+          }
         } else {
-          statusMap.set(template.id, {
-            status: InjectionStatus.NOT_INJECTED,
-            files: []
-          });
+          status = InjectionStatus.NOT_INJECTED;
         }
+
+        statusMap.set(template.id, {
+          status,
+          files: status !== InjectionStatus.NOT_INJECTED ? [selectedFilePath] : [],
+          itemsInjected: itemsInjectedCount,
+          totalItems
+        });
       } else {
         // No specific file selected - show global status
         if (files.length > 0) {
@@ -1091,6 +1105,33 @@ export class KnowledgeViewController {
       },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
+  }
+
+  /**
+   * Count how many items from a template are injected in a specific file
+   */
+  private countItemsInjectedInFile(template: V1Template, filePath: string | undefined): number {
+    if (!filePath || !template.items) {
+      return 0;
+    }
+
+    let count = 0;
+    for (const item of template.items) {
+      if (item.injectedTo && item.injectedTo.length > 0) {
+        // Check if this item is injected in the specified file
+        const isInFile = item.injectedTo.some(record => {
+          // Handle both absolute and relative paths
+          return record.filePath === filePath ||
+                 record.filePath.endsWith(filePath.replace(/\\/g, '/')) ||
+                 filePath.endsWith(record.filePath.replace(/\\/g, '/'));
+        });
+        if (isInFile) {
+          count++;
+        }
+      }
+    }
+
+    return count;
   }
 
   /**

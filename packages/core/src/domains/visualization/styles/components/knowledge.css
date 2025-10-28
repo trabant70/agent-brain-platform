@@ -1963,6 +1963,11 @@
   transition: background 0.2s;
 }
 
+/* Template view: hide template column and adjust grid */
+.group-item-row.template-view {
+  grid-template-columns: 40px 1fr 80px 140px 160px;
+}
+
 .group-item-row:hover {
   background: var(--vscode-list-hoverBackground);
 }
