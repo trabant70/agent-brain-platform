@@ -101,9 +101,9 @@ class Logger {
         // Check VS Code configuration
         try {
             const vscode = require('vscode');
-            const config = vscode.workspace.getConfiguration('repoTimeline');
+            const config = vscode.workspace.getConfiguration('agentBrain');
 
-            const configLevel = config.get('logging.level', 'info') as string;
+            const configLevel = config.get('logging.logLevel', 'INFO') as string;
             this.currentLogLevel = this.parseLogLevel(configLevel);
 
             const enabledCategories = config.get('logging.categories', []) as string[];
@@ -115,7 +115,7 @@ class Logger {
             const pathwayMode = config.get('logging.pathwayMode', 'disabled') as 'disabled' | 'filter' | 'exclusive';
             this.pathwayMode = pathwayMode;
 
-            const enabledPathways = config.get('logging.pathways', []) as string[];
+            const enabledPathways = config.get('logging.enabledPathways', []) as string[];
             if (enabledPathways.length > 0) {
                 this.enabledPathways = new Set(enabledPathways as LogPathway[]);
                 // Always include NONE pathway to allow non-pathway logs

@@ -225,7 +225,7 @@ export class AnalysisDataMapper {
     const cached = this.getCached(cacheKey, analysis);
     if (cached) return cached;
 
-    const files = analysis.files || [];
+    const files = Array.isArray(analysis.files) ? analysis.files : [];
     const root = this.buildFileHierarchy(files);
 
     this.setCached(cacheKey, root, analysis);
@@ -240,31 +240,49 @@ export class AnalysisDataMapper {
     const cached = this.getCached(cacheKey, analysis);
     if (cached) return cached;
 
-    const files = analysis.files || [];
     const categories = analysis.categories || [];
+    const targetCategory = categoryId
+      ? categories.find(c => c.categoryId === categoryId)
+      : null;
 
-    const data: HeatmapData = files.map(file => {
-      const fileCategories = categoryId
-        ? categories.filter(c => c.categoryId === categoryId)
-        : categories;
+    // Get issues from target category or all categories
+    const issues = targetCategory
+      ? (targetCategory.issues || [])
+      : categories.flatMap(c => c.issues || []);
 
-      return fileCategories.map(cat => {
-        const issues = cat.issues?.filter(i => i.file === file.path) || [];
-        const severity = this.calculateMaxSeverity(issues);
+    // Group issues by file
+    const fileIssueMap = new Map<string, { critical: number; high: number; medium: number; low: number; total: number }>();
 
-        return {
-          row: file.path,
-          column: cat.categoryName,
-          value: issues.length,
-          severity,
-          metadata: {
-            file: file.path,
-            category: cat.categoryId,
-            issues
-          }
-        };
-      });
-    }).flat();
+    issues.forEach(issue => {
+      const filePath = issue.file || 'unknown';
+      if (!fileIssueMap.has(filePath)) {
+        fileIssueMap.set(filePath, { critical: 0, high: 0, medium: 0, low: 0, total: 0 });
+      }
+      const counts = fileIssueMap.get(filePath)!;
+      counts.total++;
+      if (issue.severity === 'critical') counts.critical++;
+      else if (issue.severity === 'high') counts.high++;
+      else if (issue.severity === 'medium') counts.medium++;
+      else if (issue.severity === 'low') counts.low++;
+    });
+
+    // Convert to HeatmapCell array
+    const data: HeatmapData = Array.from(fileIssueMap.entries()).map(([filePath, counts]) => {
+      const fileName = filePath.split('/').pop() || filePath;
+      const maxSeverity: 'critical' | 'high' | 'medium' | 'low' =
+        counts.critical > 0 ? 'critical' :
+        counts.high > 0 ? 'high' :
+        counts.medium > 0 ? 'medium' : 'low';
+
+      return {
+        file: fileName,
+        fullPath: filePath,
+        count: counts.total,
+        critical: counts.critical,
+        high: counts.high,
+        severity: maxSeverity
+      };
+    });
 
     this.setCached(cacheKey, data, analysis);
     return data;
@@ -351,29 +369,25 @@ export class AnalysisDataMapper {
     const cached = this.getCached(cacheKey, analysis);
     if (cached) return cached;
 
-    const timelineData = analysis.timeline || [];
+    // Since streaming analysis doesn't include historical timeline data,
+    // create a single-point timeline from current analysis
+    const categories = analysis.categories || [];
+    const categoryNames = categories.map(c => c.categoryName);
+    const currentTime = new Date();
+
+    const categoryScores: Record<string, number> = {};
+    categories.forEach(cat => {
+      categoryScores[cat.categoryName] = cat.score || 0;
+    });
 
     const data: TimelineData = {
-      series: [
+      categories: categoryNames,
+      points: [
         {
-          key: 'score',
-          label: categoryId ? 'Category Score' : 'Overall Score',
-          data: timelineData.map(point => ({
-            timestamp: point.timestamp,
-            score: point.score || 0,
-            commit: point.commit
-          })),
-          color: '#3b82f6'
-        },
-        {
-          key: 'issues',
-          label: 'Issue Count',
-          data: timelineData.map(point => ({
-            timestamp: point.timestamp,
-            score: point.issues || 0,
-            commit: point.commit
-          })),
-          color: '#dc2626'
+          timestamp: currentTime,
+          commit: 'current',
+          overallScore: analysis.summary?.overallScore || 0,
+          categoryScores
         }
       ]
     };
@@ -458,7 +472,7 @@ export class AnalysisDataMapper {
     const cached = this.getCached(cacheKey, analysis);
     if (cached) return cached;
 
-    const files = analysis.files || [];
+    const files = Array.isArray(analysis.files) ? analysis.files : [];
 
     const data: ParallelCoordinatesData = {
       dimensions: [
@@ -579,19 +593,50 @@ export class AnalysisDataMapper {
     const cached = this.getCached(cacheKey, analysis);
     if (cached) return cached;
 
-    const files = analysis.files || [];
-    const severities = ['critical', 'high', 'medium', 'low'];
+    const categories = analysis.categories || [];
+    const targetCategory = categoryId
+      ? categories.find(c => c.categoryId === categoryId)
+      : null;
+
+    // Get issues from target category or all categories
+    const issues = targetCategory
+      ? (targetCategory.issues || [])
+      : categories.flatMap(c => c.issues || []);
+
+    // Group issues by file
+    const fileIssueMap = new Map<string, { critical: number; high: number; medium: number; low: number; total: number }>();
+
+    issues.forEach(issue => {
+      const filePath = issue.file || 'unknown';
+      if (!fileIssueMap.has(filePath)) {
+        fileIssueMap.set(filePath, { critical: 0, high: 0, medium: 0, low: 0, total: 0 });
+      }
+      const counts = fileIssueMap.get(filePath)!;
+      counts.total++;
+      if (issue.severity === 'critical') counts.critical++;
+      else if (issue.severity === 'high') counts.high++;
+      else if (issue.severity === 'medium') counts.medium++;
+      else if (issue.severity === 'low') counts.low++;
+    });
+
+    // Convert to FileIssueBreakdown array
+    const files = Array.from(fileIssueMap.entries()).map(([filePath, counts]) => ({
+      filePath,
+      fileName: this.getFileName(filePath),
+      critical: counts.critical,
+      high: counts.high,
+      medium: counts.medium,
+      low: counts.low,
+      total: counts.total
+    }));
+
+    // Take top 20 files by total issues
+    const sortedFiles = files.sort((a, b) => b.total - a.total).slice(0, 20);
+    const maxCount = sortedFiles.length > 0 ? sortedFiles[0].total : 0;
 
     const data: StackedBarData = {
-      categories: files.map(file => this.getFileName(file.path)),
-      series: severities.map(severity => ({
-        name: severity.toUpperCase(),
-        data: files.map(file => {
-          const issues = file.issues || [];
-          return issues.filter(i => i.severity === severity).length;
-        }),
-        color: this.getSeverityColor(severity)
-      }))
+      files: sortedFiles,
+      maxCount
     };
 
     this.setCached(cacheKey, data, analysis);
@@ -606,7 +651,7 @@ export class AnalysisDataMapper {
     const cached = this.getCached(cacheKey, analysis);
     if (cached) return cached;
 
-    const files = analysis.files || [];
+    const files = Array.isArray(analysis.files) ? analysis.files : [];
     const data = this.buildFileHierarchy(files);
 
     this.setCached(cacheKey, data, analysis);
@@ -621,7 +666,7 @@ export class AnalysisDataMapper {
     const cached = this.getCached(cacheKey, analysis);
     if (cached) return cached;
 
-    const files = analysis.files || [];
+    const files = Array.isArray(analysis.files) ? analysis.files : [];
     const root = this.buildFlameGraphHierarchy(files);
 
     this.setCached(cacheKey, root, analysis);
@@ -764,7 +809,7 @@ export class AnalysisDataMapper {
 
     // Filter files
     const filteredFiles = this.filterFiles(
-      analysis.files || [],
+      Array.isArray(analysis.files) ? analysis.files : [],
       criteria
     );
     filtered.files = filteredFiles;

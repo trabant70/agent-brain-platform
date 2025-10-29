@@ -3,6 +3,10 @@
  * Provides common functionality for rendering, resizing, and updating
  */
 
+import { Logger, LogCategory, LogPathway } from '../../../../infrastructure/logging/Logger';
+
+const logger = Logger.getInstance();
+
 export interface VisualizationConfig {
   width?: number;
   height?: number;
@@ -43,6 +47,14 @@ export abstract class BaseVisualization {
    * Initialize the visualization
    */
   async initialize(): Promise<void> {
+    console.log(`[BaseViz] Initialize starting for ${this.container.id}`);
+    console.log(`[BaseViz] Container dimensions:`, {
+      clientWidth: this.container.clientWidth,
+      clientHeight: this.container.clientHeight,
+      offsetWidth: this.container.offsetWidth,
+      offsetHeight: this.container.offsetHeight
+    });
+
     this.container.innerHTML = '';
 
     // Setup resize observer for responsive behavior
@@ -51,6 +63,7 @@ export abstract class BaseVisualization {
     }
 
     await this.createSVG();
+    console.log(`[BaseViz] Initialize completed, svg created: ${!!this.svg}`);
   }
 
   /**
@@ -58,9 +71,18 @@ export abstract class BaseVisualization {
    */
   protected createSVG(): void {
     const d3 = (window as any).d3;
+    console.log(`[BaseViz] D3 available: ${!!d3}`);
+
     if (!d3) {
+      console.error('[BaseViz] D3 is not loaded!');
       throw new Error('D3 is not loaded');
     }
+
+    console.log(`[BaseViz] Creating SVG with config:`, {
+      width: this.config.width,
+      height: this.config.height,
+      margin: this.config.margin
+    });
 
     this.svg = d3.select(this.container)
       .append('svg')
@@ -68,11 +90,14 @@ export abstract class BaseVisualization {
       .attr('height', this.config.height)
       .attr('class', 'visualization-svg');
 
+    console.log(`[BaseViz] SVG created: ${!!this.svg}, node: ${!!this.svg?.node()}`);
+
     // Add a main group for content (respecting margins)
     if (this.svg) {
-      this.svg.append('g')
+      const contentGroup = this.svg.append('g')
         .attr('class', 'visualization-content')
         .attr('transform', `translate(${this.config.margin.left},${this.config.margin.top})`);
+      console.log(`[BaseViz] Content group created: ${!!contentGroup}`);
     }
   }
 
@@ -80,19 +105,25 @@ export abstract class BaseVisualization {
    * Render the visualization with data
    */
   async render(data: any): Promise<void> {
+    console.log(`[BaseViz] Render starting for ${this.container.id}, has data: ${!!data}`);
     this.data = data;
 
     if (!this.svg) {
+      console.log('[BaseViz] No SVG, initializing...');
       await this.initialize();
     }
 
     // Clear previous content
     if (this.svg) {
-      this.svg.select('.visualization-content').selectAll('*').remove();
+      const contentGroup = this.svg.select('.visualization-content');
+      console.log(`[BaseViz] Content group found: ${!!contentGroup.node()}`);
+      contentGroup.selectAll('*').remove();
     }
 
     // Render the specific visualization
+    console.log('[BaseViz] Calling renderContent()...');
     await this.renderContent();
+    console.log('[BaseViz] renderContent() completed');
 
     // Add interactions if enabled
     if (this.config.interactive) {

@@ -124,6 +124,20 @@ export class OverviewPanel {
       </div>
     `;
 
+    // Make visualization containers visible by adding 'active' class
+    const vizContainers = [
+      'viz-overview-bubble',
+      'viz-overview-gauge',
+      'viz-overview-radar',
+      'viz-overview-sunburst'
+    ];
+    vizContainers.forEach(containerId => {
+      const container = document.getElementById(containerId);
+      if (container) {
+        container.classList.add('active');
+      }
+    });
+
     // Render search filter
     this.renderSearchFilter(analysisData);
 
@@ -201,20 +215,19 @@ export class OverviewPanel {
 
   /**
    * Render all overview visualizations
+   * Note: Calls renderVisualizations directly to avoid navigation event loop
    */
   private async renderVisualizations(analysisData: AnalysisData): Promise<void> {
-    const vizManager = this.coordinator.getContext().state === 'overview'
-      ? this.coordinator
-      : null;
-
-    if (!vizManager) {
-      console.warn('Coordinator not in overview state');
-      return;
+    // Ensure coordinator is in overview state
+    if (this.coordinator.getContext().state !== 'overview') {
+      console.warn('Coordinator not in overview state, navigating...');
+      await this.coordinator.navigateToOverview();
+      return; // Navigation will trigger re-render through IntegrationController
     }
 
     try {
-      // Navigate to overview to trigger visualization rendering
-      await this.coordinator.navigateToOverview();
+      // Render visualizations directly without triggering navigation
+      await this.coordinator.renderCurrentState();
     } catch (error) {
       console.error('Error rendering overview visualizations:', error);
       this.showError('Failed to render visualizations');

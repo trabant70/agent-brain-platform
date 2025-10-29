@@ -3,7 +3,16 @@
  */
 
 import type { AIPromptTemplate, MaturityLevel } from '../types';
-import { CATEGORY_IDS } from '../categories/base/CategoryTypes';
+
+/**
+ * Category IDs used in analysis
+ */
+const CATEGORY_IDS = {
+  FEATURE_COMPLETENESS: 'feature-completeness',
+  UI_UX_QUALITY: 'uiux-quality',
+  TEST_COVERAGE: 'test-coverage',
+  INTERNATIONALIZATION: 'internationalization'
+} as const;
 
 /**
  * Prompt templates organized by category and maturity level

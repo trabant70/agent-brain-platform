@@ -38,6 +38,13 @@ export class StackedBarChart extends BaseVisualization {
     if (!this.svg) return;
 
     const data: StackedBarData = this.data;
+
+    // Validate data
+    if (!data || !data.files || data.files.length === 0) {
+      this.renderEmpty();
+      return;
+    }
+
     const width = this.getContentWidth();
     const height = this.getContentHeight();
 
@@ -118,7 +125,13 @@ export class StackedBarChart extends BaseVisualization {
       .attr('fill', (d: any) => colorScale(d.key));
 
     groups.selectAll('rect')
-      .data((d: any) => d)
+      .data((d: any) => {
+        // Add severity key to each segment for tooltip access
+        return d.map((segment: any) => {
+          segment.severity = d.key;
+          return segment;
+        });
+      })
       .join('rect')
       .attr('x', (d: any) => xScale(d[0]))
       .attr('y', (d: any) => yScale(d.data.fileName) || 0)
@@ -172,7 +185,7 @@ export class StackedBarChart extends BaseVisualization {
   private showSegmentTooltip(event: MouseEvent, segment: any): void {
     const tooltip = this.getOrCreateTooltip();
 
-    const severity = segment[2]; // Stack key (severity level)
+    const severity = segment.severity || 'unknown'; // Severity key added during data binding
     const count = segment[1] - segment[0];
     const file = segment.data;
 
@@ -339,6 +352,19 @@ export class StackedBarChart extends BaseVisualization {
         this.renderContent();
       });
     });
+  }
+
+  /**
+   * Render empty state
+   */
+  private renderEmpty(): void {
+    this.container.innerHTML = `
+      <div class="visualization-empty" style="padding: 40px; text-align: center; color: var(--vscode-descriptionForeground);">
+        <div style="font-size: 32px; margin-bottom: 8px;">📊</div>
+        <div>No file data available</div>
+        <div style="font-size: 11px; margin-top: 8px;">Run an analysis to see file-level issue breakdown</div>
+      </div>
+    `;
   }
 
   /**

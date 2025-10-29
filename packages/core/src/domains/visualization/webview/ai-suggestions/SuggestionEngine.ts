@@ -198,7 +198,8 @@ export class SuggestionEngine {
     });
 
     // Rule 5: High complexity files
-    const complexFiles = (analysis.files || []).filter(
+    const filesArray = Array.isArray(analysis.files) ? analysis.files : [];
+    const complexFiles = filesArray.filter(
       file => (file.complexity || 0) > 20
     );
     complexFiles.slice(0, 3).forEach(file => {
@@ -386,9 +387,10 @@ export class SuggestionEngine {
 
     // Find files with 5+ issues
     const hotspots: any[] = [];
+    const filesArray = Array.isArray(analysis.files) ? analysis.files : [];
     fileIssueMap.forEach((count, path) => {
       if (count >= 5) {
-        const file = (analysis.files || []).find(f => f.path === path);
+        const file = filesArray.find(f => f.path === path);
         hotspots.push({
           path,
           issueCount: count,

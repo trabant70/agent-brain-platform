@@ -188,13 +188,18 @@ export class GaugeChart extends BaseVisualization {
       .attr('stroke', 'var(--vscode-foreground)')
       .attr('stroke-width', 2);
 
-    // Tick labels
-    ticks.append('text')
+    // Tick labels - position them outside the arc without parent rotation
+    g.append('g')
+      .attr('class', 'tick-labels')
+      .selectAll('text')
+      .data(tickValues)
+      .join('text')
       .attr('transform', (d: number) => {
         const angle = angleScale(d);
-        const x = Math.cos(angle) * (radius * 0.75 - 20);
-        const y = Math.sin(angle) * (radius * 0.75 - 20);
-        return `translate(${x},${y}) rotate(${-(angle * 180 / Math.PI)})`;
+        const labelRadius = radius * 0.75 - 20;
+        const x = Math.cos(angle) * labelRadius;
+        const y = Math.sin(angle) * labelRadius;
+        return `translate(${x},${y})`;
       })
       .attr('text-anchor', 'middle')
       .attr('dy', '0.35em')

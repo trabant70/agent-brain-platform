@@ -288,8 +288,11 @@ export class VisualizationManager {
       }
 
       // Initialize and render
+      console.log(`[VisualizationManager] Initializing ${type} visualization in ${containerId}...`);
       await visualization.initialize();
+      console.log(`[VisualizationManager] Rendering ${type} visualization...`);
       await visualization.render(data);
+      console.log(`[VisualizationManager] ${type} visualization complete`);
 
       // Store reference
       this.visualizations.set(containerId, visualization);

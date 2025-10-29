@@ -45,6 +45,13 @@ export class TimelineVisualization extends BaseVisualization {
     if (!this.svg) return;
 
     const data: TimelineData = this.data;
+
+    // Validate data
+    if (!data || !data.categories || !data.points || data.points.length === 0) {
+      this.renderEmpty();
+      return;
+    }
+
     const width = this.getContentWidth();
     const height = this.getContentHeight();
 
@@ -116,40 +123,44 @@ export class TimelineVisualization extends BaseVisualization {
       .y((d: any) => this.yScale(d.score))
       .curve(d3.curveMonotoneX);
 
-    // Render lines for each category
-    data.categories.forEach(category => {
-      if (!this.selectedCategories.has(category)) return;
+    // Render lines for each category (only if more than one point)
+    if (data.points.length > 1) {
+      data.categories.forEach(category => {
+        if (!this.selectedCategories.has(category)) return;
 
-      const categoryData = data.points.map(p => ({
+        const categoryData = data.points.map(p => ({
+          timestamp: p.timestamp,
+          score: p.categoryScores[category] || 0,
+          point: p
+        }));
+
+        g.append('path')
+          .datum(categoryData)
+          .attr('class', `line line-${this.sanitizeCategoryName(category)}`)
+          .attr('fill', 'none')
+          .attr('stroke', colorScale(category))
+          .attr('stroke-width', 2)
+          .attr('d', line);
+      });
+    }
+
+    // Render overall score line (thicker, dashed) - only if more than one point
+    if (data.points.length > 1) {
+      const overallData = data.points.map(p => ({
         timestamp: p.timestamp,
-        score: p.categoryScores[category] || 0,
+        score: p.overallScore,
         point: p
       }));
 
       g.append('path')
-        .datum(categoryData)
-        .attr('class', `line line-${this.sanitizeCategoryName(category)}`)
+        .datum(overallData)
+        .attr('class', 'line line-overall')
         .attr('fill', 'none')
-        .attr('stroke', colorScale(category))
-        .attr('stroke-width', 2)
+        .attr('stroke', 'var(--vscode-foreground)')
+        .attr('stroke-width', 3)
+        .attr('stroke-dasharray', '5,5')
         .attr('d', line);
-    });
-
-    // Render overall score line (thicker, dashed)
-    const overallData = data.points.map(p => ({
-      timestamp: p.timestamp,
-      score: p.overallScore,
-      point: p
-    }));
-
-    g.append('path')
-      .datum(overallData)
-      .attr('class', 'line line-overall')
-      .attr('fill', 'none')
-      .attr('stroke', 'var(--vscode-foreground)')
-      .attr('stroke-width', 3)
-      .attr('stroke-dasharray', '5,5')
-      .attr('d', line);
+    }
 
     // Add interactive dots on commits
     this.renderCommitDots(g, data.points, colorScale);
@@ -384,6 +395,19 @@ export class TimelineVisualization extends BaseVisualization {
       this.svg.select('.visualization-content').selectAll('*').remove();
     }
     this.renderContent();
+  }
+
+  /**
+   * Render empty state
+   */
+  private renderEmpty(): void {
+    this.container.innerHTML = `
+      <div class="visualization-empty" style="padding: 40px; text-align: center; color: var(--vscode-descriptionForeground);">
+        <div style="font-size: 32px; margin-bottom: 8px;">📈</div>
+        <div>Timeline data not available</div>
+        <div style="font-size: 11px; margin-top: 8px;">Historical data will appear here after multiple analyses</div>
+      </div>
+    `;
   }
 
   /**

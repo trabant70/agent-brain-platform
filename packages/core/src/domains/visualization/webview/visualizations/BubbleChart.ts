@@ -5,6 +5,9 @@
  */
 
 import { BaseVisualization, VisualizationConfig } from './BaseVisualization';
+import { Logger, LogCategory, LogPathway } from '../../../../infrastructure/logging/Logger';
+
+const logger = Logger.getInstance();
 
 export interface BubbleData {
   id: string;
@@ -30,25 +33,36 @@ export class BubbleChart extends BaseVisualization {
   }
 
   protected async renderContent(): Promise<void> {
+    logger.debug(LogCategory.VISUALIZATION, 'BubbleChart renderContent starting', 'BubbleChart', undefined, LogPathway.RENDER_PIPELINE);
     const d3 = (window as any).d3;
     if (!d3) {
-      console.error('D3 is not available');
+      logger.error(LogCategory.VISUALIZATION, 'D3 is not available', 'BubbleChart', undefined, LogPathway.RENDER_PIPELINE);
       return;
     }
 
     const data = this.data as BubbleChartData;
+    logger.debug(LogCategory.VISUALIZATION, 'BubbleChart data check', 'BubbleChart', {
+      hasData: !!data,
+      hasChildren: !!data?.children,
+      childCount: data?.children?.length || 0
+    }, LogPathway.RENDER_PIPELINE);
+
     if (!data || !data.children || data.children.length === 0) {
+      logger.debug(LogCategory.VISUALIZATION, 'No data, rendering empty state', 'BubbleChart', undefined, LogPathway.RENDER_PIPELINE);
       this.renderEmpty();
       return;
     }
 
     const width = this.getContentWidth();
     const height = this.getContentHeight();
+    logger.debug(LogCategory.VISUALIZATION, 'Content dimensions', 'BubbleChart', { width, height }, LogPathway.RENDER_PIPELINE);
 
     // Create hierarchical data for pack layout
     const root = d3.hierarchy({ children: data.children })
       .sum((d: any) => d.value || 0)
       .sort((a: any, b: any) => (b.value || 0) - (a.value || 0));
+
+    logger.debug(LogCategory.VISUALIZATION, `Hierarchy created, root value: ${root.value}`, 'BubbleChart', undefined, LogPathway.RENDER_PIPELINE);
 
     // Create pack layout
     const pack = d3.pack()
@@ -56,8 +70,10 @@ export class BubbleChart extends BaseVisualization {
       .padding(3);
 
     const nodes = pack(root).leaves();
+    logger.debug(LogCategory.VISUALIZATION, `Pack layout computed, nodes: ${nodes.length}`, 'BubbleChart', undefined, LogPathway.RENDER_PIPELINE);
 
     const g = this.svg!.select('.visualization-content');
+    logger.debug(LogCategory.VISUALIZATION, `Content group selected: ${!!g.node()}`, 'BubbleChart', undefined, LogPathway.RENDER_PIPELINE);
 
     // Create bubble groups
     const bubbles = g.selectAll('.bubble')
@@ -65,6 +81,8 @@ export class BubbleChart extends BaseVisualization {
       .join('g')
       .attr('class', 'bubble')
       .attr('transform', (d: any) => `translate(${d.x},${d.y})`);
+
+    logger.debug(LogCategory.VISUALIZATION, `Bubble groups created: ${bubbles.size()}`, 'BubbleChart', undefined, LogPathway.RENDER_PIPELINE);
 
     // Draw circles
     bubbles.append('circle')
@@ -135,6 +153,8 @@ export class BubbleChart extends BaseVisualization {
 
     // Add legend
     this.renderLegend(g, width, height);
+
+    logger.debug(LogCategory.VISUALIZATION, 'BubbleChart renderContent completed successfully', 'BubbleChart', undefined, LogPathway.RENDER_PIPELINE);
   }
 
   /**

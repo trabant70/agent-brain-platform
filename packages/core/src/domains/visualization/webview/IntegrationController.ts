@@ -74,10 +74,11 @@ export class IntegrationController {
     };
 
     // Initialize components
+    // Note: useCoordinator is false because IntegrationController manages its own coordinator
     this.visualizationManager = new VisualizationManager({
       enableInteractions: true,
       showLabels: true,
-      useCoordinator: this.config.enableCoordinator
+      useCoordinator: false
     });
 
     this.dataMapper = new AnalysisDataMapper();

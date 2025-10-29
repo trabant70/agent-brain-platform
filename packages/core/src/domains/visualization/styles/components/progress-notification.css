@@ -1,0 +1,280 @@
+/**
+ * Progress Notification UI Styles
+ *
+ * Styles for the real-time progress notification component
+ * used during streaming code analysis.
+ */
+
+/* ==================== Progress Notification Container ==================== */
+
+.progress-notification {
+  position: relative;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.3s ease-out;
+}
+
+.progress-notification.active {
+  border-color: var(--vscode-progressBar-background);
+}
+
+.progress-notification.complete {
+  border-color: var(--vscode-testing-iconPassed);
+}
+
+.progress-notification.error {
+  border-color: var(--vscode-errorForeground);
+  background: var(--vscode-inputValidation-errorBackground);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== Header ==================== */
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.progress-phase {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.phase-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.phase-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+}
+
+.cancel-btn {
+  padding: 4px 8px;
+  background: transparent;
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  transition: all 0.2s;
+}
+
+.cancel-btn:hover {
+  background: var(--vscode-list-hoverBackground);
+  border-color: var(--vscode-errorForeground);
+  color: var(--vscode-errorForeground);
+}
+
+/* ==================== Progress Body ==================== */
+
+.progress-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ==================== Progress Bar ==================== */
+
+.progress-bar-container {
+  position: relative;
+  width: 100%;
+  height: 24px;
+  background: var(--vscode-progressBar-background);
+  opacity: 0.2;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--vscode-progressBar-background);
+  border-radius: 4px;
+  transition: width 0.3s ease-out;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+}
+
+.progress-bar.indeterminate {
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--vscode-progressBar-background) 50%,
+    transparent 100%
+  );
+  animation: indeterminate 1.5s infinite;
+}
+
+@keyframes indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.progress-percentage {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--vscode-editor-background);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* ==================== Progress Message ==================== */
+
+.progress-message {
+  font-size: 13px;
+  color: var(--vscode-descriptionForeground);
+  line-height: 1.4;
+}
+
+/* ==================== Progress Stats ==================== */
+
+.progress-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  padding-top: 4px;
+}
+
+.progress-count {
+  font-family: var(--vscode-editor-font-family);
+  font-weight: 500;
+}
+
+.progress-time {
+  font-style: italic;
+  opacity: 0.8;
+}
+
+/* ==================== Progress Details ==================== */
+
+.progress-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  margin-top: 8px;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.detail-label {
+  color: var(--vscode-descriptionForeground);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.detail-value {
+  color: var(--vscode-foreground);
+  font-family: var(--vscode-editor-font-family);
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+/* ==================== Error State ==================== */
+
+.error-message {
+  font-size: 13px;
+  color: var(--vscode-errorForeground);
+  line-height: 1.4;
+  padding: 8px 12px;
+  background: var(--vscode-editor-background);
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+/* ==================== Responsive Design ==================== */
+
+@media (max-width: 600px) {
+  .progress-notification {
+    padding: 12px;
+  }
+
+  .progress-details {
+    padding: 8px;
+  }
+
+  .detail-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .detail-value {
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .progress-stats {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+/* ==================== Dark Theme Adjustments ==================== */
+
+.vscode-dark .progress-notification {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.vscode-dark .progress-bar-container {
+  opacity: 0.3;
+}
+
+/* ==================== High Contrast Theme ==================== */
+
+.vscode-high-contrast .progress-notification {
+  border-width: 2px;
+}
+
+.vscode-high-contrast .progress-bar-container {
+  opacity: 0.5;
+  border: 1px solid var(--vscode-contrastBorder);
+}
+
+.vscode-high-contrast .cancel-btn {
+  border-width: 2px;
+}

@@ -1,60 +1,70 @@
 /**
  * Code Structure Review Domain - Public API
  *
- * This module provides comprehensive code structure analysis capabilities
- * for detecting issues in feature completeness, UI/UX quality, i18n, test coverage, and more.
+ * Streaming architecture for memory-efficient code structure analysis.
+ * Supports analysis of 10,000+ files without memory issues or UI freezing.
  */
 
 // Export all types
 export * from './types';
 
-// Export category system
-export { AnalysisCategory } from './categories/base/AnalysisCategory';
-export { CategoryRegistry, getCategoryRegistry } from './categories/base/CategoryRegistry';
-export * from './categories/base/CategoryTypes';
-
-// Export analysis engine
-export { CategoryOrchestrator, type AnalysisEventListener } from './analysis/CategoryOrchestrator';
-export { SourceFileParser, ASTTraversal } from './analysis/SourceFileParser';
-export { ResultAggregator } from './analysis/ResultAggregator';
+// Export streaming orchestration
 export {
-  createAnalysisContext,
-  filterFiles,
-  getFilesByLanguage,
-  getFilesByPattern,
-  AnalysisContextUtils
-} from './analysis/AnalysisContext';
+  StreamingOrchestrator,
+  type StreamingAnalysisOptions,
+  type StreamingAnalysisResult
+} from './orchestration';
 
-// Export priority 1 categories
-export { FeatureCompletenessAnalyzer } from './categories/priority1/FeatureCompletenessAnalyzer';
-export { UIUXQualityAnalyzer } from './categories/priority1/UIUXQualityAnalyzer';
-export { TestCoverageAnalyzer } from './categories/priority1/TestCoverageAnalyzer';
+// Export streaming infrastructure
+export {
+  StreamingFileProcessor,
+  type StreamingOptions,
+  ProgressEventEmitter,
+  ProgressEventLogger,
+  formatProgressEvent,
+  type ProgressEvent,
+  type ProgressPhase,
+  UnifiedMetadataExtractor
+} from './streaming';
 
-// Export priority 2 categories
-export { InternationalizationAnalyzer } from './categories/priority2/InternationalizationAnalyzer';
+// Export registries
+export {
+  FeatureCompletenessRegistry,
+  type EndpointMetadata,
+  type APICallMetadata,
+  type ComponentMetadata,
+  type MockDataMetadata,
+  UIUXQualityRegistry,
+  type AsyncOperationMetadata,
+  type FormMetadata,
+  type ListRenderingMetadata,
+  type UserActionMetadata,
+  type AccessibilityMetadata,
+  TestCoverageRegistry,
+  type FileMetadata,
+  InternationalizationRegistry,
+  type StringLiteralMetadata,
+  type DateTimeOperationMetadata,
+  type NumberFormatMetadata,
+  type RTLIssueMetadata,
+  UnifiedMetadataRegistry
+} from './registries';
 
-// Export detectors
+// Export streaming analyzers
 export {
-  EndpointDetector,
-  APICallDetector,
-  MockDetector,
-  ComponentDetector
-} from './detectors/FeatureDetectors';
-export {
-  LoadingStateDetector,
-  ErrorHandlingDetector,
-  EmptyStateDetector,
-  FormValidationDetector,
-  UserFeedbackDetector,
-  AccessibilityDetector
-} from './detectors/UIUXDetectors';
-export {
-  HardcodedStringDetector,
-  TranslationCoverageDetector,
-  DateTimeFormatDetector,
-  NumberFormatDetector,
-  RTLSupportDetector
-} from './detectors/I18nDetectors';
+  FeatureCompletenessAnalyzerStreaming,
+  type FeatureCompletenessAnalysis,
+  type FeatureCompletenessIssue,
+  UIUXQualityAnalyzerStreaming,
+  type UIUXQualityAnalysis,
+  type UIUXQualityIssue,
+  TestCoverageAnalyzerStreaming,
+  type TestCoverageAnalysis,
+  type TestCoverageIssue,
+  InternationalizationAnalyzerStreaming,
+  type I18nAnalysis,
+  type I18nIssue
+} from './analyzers';
 
 // Export AI integration
 export { PromptGenerator } from './ai/PromptGenerator';
@@ -71,3 +81,6 @@ export {
 export { ReportGenerator } from './reporting/ReportGenerator';
 export { VisualizationDataBuilder } from './reporting/VisualizationDataBuilder';
 export { KnowledgeItemGenerator } from './reporting/KnowledgeItemGenerator';
+
+// Export data builders
+export * from './data-builders';

@@ -98,10 +98,11 @@ export class VisualizationCoordinator {
 
   /**
    * Initialize with analysis data
+   * Note: Does not automatically render - IntegrationController controls render timing
    */
   async initialize(analysisData: AnalysisData): Promise<void> {
     this.analysisData = analysisData;
-    await this.renderCurrentState();
+    // Rendering removed - IntegrationController will call renderCurrentState when panels are ready
   }
 
   /**
@@ -244,8 +245,9 @@ export class VisualizationCoordinator {
 
   /**
    * Render current state visualizations
+   * Public so panels can trigger visualization rendering without navigation
    */
-  private async renderCurrentState(): Promise<void> {
+  async renderCurrentState(): Promise<void> {
     if (!this.analysisData) {
       console.warn('No analysis data available');
       return;
@@ -256,11 +258,8 @@ export class VisualizationCoordinator {
 
     const config = this.stateConfigs[this.context.state];
 
-    // Validate containers exist before rendering
-    if (!this.validateContainersExist(this.context.state)) {
-      console.error(`Required containers not found for state: ${this.context.state}`);
-      return;
-    }
+    // Note: Container validation removed - panels create their own containers during render
+    // Validating before render causes a catch-22 where containers are never created
 
     switch (this.context.state) {
       case 'overview':
@@ -273,22 +272,40 @@ export class VisualizationCoordinator {
         await this.renderFileDetail(config);
         break;
     }
+
+    // Validate containers exist AFTER rendering (for debugging)
+    if (!this.validateContainersExist(this.context.state)) {
+      console.warn(`Some visualization containers may not have been created for state: ${this.context.state}`);
+    }
   }
 
   /**
    * Render overview state
    */
   private async renderOverview(config: StateVisualizationConfig): Promise<void> {
-    if (!this.analysisData) return;
+    if (!this.analysisData) {
+      console.warn('[VisualizationCoordinator] No analysis data for renderOverview');
+      return;
+    }
+
+    console.log('[VisualizationCoordinator] renderOverview starting', {
+      hasData: !!this.analysisData,
+      categoryCount: this.analysisData.categories?.length || 0
+    });
 
     // Primary: Bubble chart
     const bubbleData = this.dataMapper.toBubbleChart(this.analysisData);
-    await this.visualizationManager.createVisualization(
+    console.log('[VisualizationCoordinator] Bubble data prepared:', {
+      childCount: bubbleData.children?.length || 0
+    });
+
+    const bubbleViz = await this.visualizationManager.createVisualization(
       'viz-overview-bubble',
       'bubble',
       bubbleData,
       'Category Overview'
     );
+    console.log('[VisualizationCoordinator] Bubble visualization created:', !!bubbleViz);
 
     // Secondary visualizations
     if (config.secondary && config.secondary.length > 0) {

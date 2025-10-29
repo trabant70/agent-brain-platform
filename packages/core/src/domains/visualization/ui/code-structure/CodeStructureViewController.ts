@@ -9,6 +9,8 @@ import { NotificationManager } from '../NotificationManager';
 import { webviewLogger, LogCategory, LogPathway } from '../../webview/WebviewLogger';
 import { createIntegrationController, type IntegrationController, type AnalysisData } from '../../webview/IntegrationController';
 import { MaturityLevelAdapter, EducationalTooltips, type MaturityLevel } from '../../webview/progressive-disclosure';
+import { createProgressNotification, type ProgressNotificationUI } from './ProgressNotificationUI';
+import type { ProgressEvent } from '../../../code-structure-review/streaming/ProgressEventEmitter';
 
 export interface CodeStructureViewState {
   currentAnalysis: any | null;
@@ -23,6 +25,7 @@ export class CodeStructureViewController {
   private maturityAdapter: MaturityLevelAdapter;
   private tooltips: EducationalTooltips;
   private integrationController: IntegrationController | null = null;
+  private progressNotification: ProgressNotificationUI | null = null;
 
   constructor() {
     console.log('[CodeStructureViewController] Constructor called');
@@ -74,8 +77,12 @@ export class CodeStructureViewController {
     switch (message.type) {
       case 'code-structure:analysis-start':
         this.state.isAnalyzing = true;
-        this.renderLoadingState();
+        this.renderLoadingStateWithProgress();
         webviewLogger.info(LogCategory.UI, 'Analysis started', 'handleMessage');
+        break;
+
+      case 'code-structure:progress':
+        this.handleProgressEvent(message.payload as ProgressEvent);
         break;
 
       case 'code-structure:analysis-complete':
@@ -162,11 +169,8 @@ export class CodeStructureViewController {
                 <option value="expert">${t('maturity.expert', 'Expert')}</option>
               </select>
             </div>
-            <button id="run-quick-analysis" class="btn btn-secondary">
-              ${t('codeStructure.quickAnalysis', 'Quick Analysis')}
-            </button>
-            <button id="run-full-analysis" class="btn btn-primary">
-              ${t('codeStructure.fullAnalysis', 'Full Analysis')}
+            <button id="run-analysis" class="btn btn-primary">
+              ${t('codeStructure.runAnalysis', 'Run Analysis')}
             </button>
           </div>
         </div>
@@ -217,6 +221,68 @@ export class CodeStructureViewController {
   }
 
   /**
+   * Render loading state with progress notification
+   */
+  private renderLoadingStateWithProgress(): void {
+    const mainContainer = document.getElementById('code-structure-main');
+    if (!mainContainer) return;
+
+    // Create container for progress notification
+    mainContainer.innerHTML = `
+      <div class="loading-state-with-progress">
+        <div id="progress-notification-container"></div>
+      </div>
+    `;
+
+    // Initialize progress notification
+    const container = document.getElementById('progress-notification-container');
+    if (container) {
+      this.progressNotification = createProgressNotification({
+        container,
+        showDetails: true,
+        showTimeEstimate: true,
+        onCancel: () => {
+          this.sendMessage({
+            type: 'code-structure:cancel-analysis',
+            payload: {}
+          });
+        }
+      });
+      this.progressNotification.show();
+    }
+  }
+
+  /**
+   * Handle progress event from backend
+   */
+  private handleProgressEvent(event: ProgressEvent): void {
+    if (this.progressNotification) {
+      this.progressNotification.update(event);
+
+      // If complete, hide progress after a delay
+      if (event.phase === 'complete') {
+        setTimeout(() => {
+          if (this.progressNotification) {
+            this.progressNotification.dispose();
+            this.progressNotification = null;
+          }
+        }, 2000);
+      }
+
+      // If error, keep showing until user dismisses
+      if (event.phase === 'error') {
+        this.state.isAnalyzing = false;
+      }
+    }
+
+    webviewLogger.debug(LogCategory.UI, 'Progress event received', 'handleProgressEvent', {
+      phase: event.phase,
+      percentage: event.percentage,
+      message: event.message
+    });
+  }
+
+  /**
    * Render error state
    */
   private renderError(errorMessage: string): void {
@@ -236,7 +302,7 @@ export class CodeStructureViewController {
 
     // Add retry handler
     document.getElementById('retry-analysis')?.addEventListener('click', () => {
-      this.runFullAnalysis();
+      this.runAnalysis();
     });
   }
 
@@ -457,14 +523,9 @@ export class CodeStructureViewController {
    * Setup event listeners
    */
   private setupEventListeners(): void {
-    // Quick analysis button
-    document.getElementById('run-quick-analysis')?.addEventListener('click', () => {
-      this.runQuickAnalysis();
-    });
-
-    // Full analysis button
-    document.getElementById('run-full-analysis')?.addEventListener('click', () => {
-      this.runFullAnalysis();
+    // Run analysis button
+    document.getElementById('run-analysis')?.addEventListener('click', () => {
+      this.runAnalysis();
     });
 
     // Maturity level selector
@@ -551,25 +612,14 @@ export class CodeStructureViewController {
   }
 
   /**
-   * Run quick analysis
+   * Run analysis
    */
-  private runQuickAnalysis(): void {
+  private runAnalysis(): void {
     this.sendMessage({
-      type: 'code-structure:run-quick-analysis',
+      type: 'code-structure-review:run-analysis',
       payload: {}
     });
-    webviewLogger.info(LogCategory.UI, 'Quick analysis requested', 'runQuickAnalysis');
-  }
-
-  /**
-   * Run full analysis
-   */
-  private runFullAnalysis(): void {
-    this.sendMessage({
-      type: 'code-structure:run-full-analysis',
-      payload: {}
-    });
-    webviewLogger.info(LogCategory.UI, 'Full analysis requested', 'runFullAnalysis');
+    webviewLogger.info(LogCategory.UI, 'Analysis requested', 'runAnalysis');
   }
 
   /**

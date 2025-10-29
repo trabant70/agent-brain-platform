@@ -157,9 +157,6 @@ export class CategoryDetailPanel {
     // Render AI suggestions (category-specific)
     this.renderSuggestions(analysisData, categoryId);
 
-    // Render visualizations
-    await this.renderVisualizations(analysisData);
-
     // Populate issue list
     this.populateIssueList(category.issues || []);
 
@@ -167,6 +164,11 @@ export class CategoryDetailPanel {
     this.setupEventListeners();
 
     this.isRendered = true;
+
+    // Render visualizations after DOM is ready
+    // Use requestAnimationFrame to ensure the DOM has been painted
+    await new Promise(resolve => requestAnimationFrame(() => resolve(undefined)));
+    await this.renderVisualizations(analysisData);
   }
 
   /**
@@ -232,13 +234,21 @@ export class CategoryDetailPanel {
 
   /**
    * Render category visualizations
+   * Note: Calls renderCurrentState directly to avoid navigation event loop
    */
   private async renderVisualizations(analysisData: AnalysisData): Promise<void> {
     if (!this.categoryId || !this.categoryName) return;
 
-    try {
-      // Navigate to category detail to trigger visualization rendering
+    // Ensure coordinator is in category-detail state
+    if (this.coordinator.getContext().state !== 'category-detail') {
+      console.warn('Coordinator not in category-detail state, navigating...');
       await this.coordinator.navigateToCategoryDetail(this.categoryId, this.categoryName);
+      return; // Navigation will trigger re-render through IntegrationController
+    }
+
+    try {
+      // Render visualizations directly without triggering navigation
+      await this.coordinator.renderCurrentState();
     } catch (error) {
       console.error('Error rendering category visualizations:', error);
       this.showError('Failed to render visualizations');

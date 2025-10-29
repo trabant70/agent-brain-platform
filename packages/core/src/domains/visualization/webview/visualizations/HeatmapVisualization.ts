@@ -147,7 +147,7 @@ export class HeatmapVisualization extends BaseVisualization {
         .attr('x', cellSize / 2)
         .attr('y', cellSize + 12)
         .attr('text-anchor', 'middle')
-        .text((d: HeatmapCell) => this.truncateFileName(d.file, cellSize))
+        .text((d: HeatmapCell) => this.truncateFileName(d.file || 'unknown', cellSize))
         .style('font-size', '10px')
         .style('fill', 'var(--vscode-foreground, #333)')
         .style('pointer-events', 'none');
@@ -163,7 +163,8 @@ export class HeatmapVisualization extends BaseVisualization {
   /**
    * Truncate file name to fit cell width
    */
-  private truncateFileName(fileName: string, cellSize: number): string {
+  private truncateFileName(fileName: string | undefined, cellSize: number): string {
+    if (!fileName) return 'unknown';
     const maxChars = Math.floor(cellSize / 6);
     if (fileName.length <= maxChars) return fileName;
     return fileName.substring(0, maxChars - 3) + '...';

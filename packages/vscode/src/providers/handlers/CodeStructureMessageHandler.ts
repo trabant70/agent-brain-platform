@@ -148,7 +148,8 @@ export class CodeStructureMessageHandler {
     this.sendMessage({ type: 'code-structure:analysis-start' });
 
     try {
-      const analysis = await this.provider.quickAnalyze();
+      // Quick analysis now uses the same streaming analysis as full analysis
+      const analysis = await this.provider.analyzeWorkspace();
       const visualizationData = this.provider.getVisualizationData();
 
       // Send legacy format

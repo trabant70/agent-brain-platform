@@ -1,234 +1,264 @@
 /**
  * Code Structure Review Provider
- * VSCode-specific implementation for code structure analysis
+ *
+ * VSCode-specific implementation using streaming architecture.
+ * Memory-efficient: only one file's AST in memory at a time.
+ * Supports analysis of 10,000+ files without memory issues.
  */
 
 import * as vscode from 'vscode';
-import * as path from 'path';
 import * as fs from 'fs/promises';
 import {
-  CategoryOrchestrator,
-  SourceFileParser,
-  createAnalysisContext,
-  CategoryRegistry,
-  FeatureCompletenessAnalyzer,
-  UIUXQualityAnalyzer,
-  TestCoverageAnalyzer,
-  InternationalizationAnalyzer,
-  PromptGenerator,
-  ReportGenerator,
-  VisualizationDataBuilder,
-  KnowledgeItemGenerator,
-  type CodeStructureAnalysis,
-  type AnalysisConfig,
-  type MaturityLevel
-} from '@agent-brain/core/domains/code-structure-review';
+  StreamingOrchestrator,
+  type StreamingAnalysisOptions,
+  type StreamingAnalysisResult,
+  type ProgressEvent
+} from '@agent-brain/core/domains/code-structure-review/orchestration';
+
+export interface AnalysisProgressCallback {
+  (event: ProgressEvent): void;
+}
+
+export interface ProviderOptions {
+  /**
+   * Callback for progress events (for webview updates)
+   */
+  onProgress?: AnalysisProgressCallback;
+
+  /**
+   * Workspace folder to analyze
+   */
+  workspaceFolder?: vscode.WorkspaceFolder;
+
+  /**
+   * File patterns to include (default: TypeScript/JavaScript/TSX/JSX)
+   */
+  includePatterns?: string[];
+
+  /**
+   * File patterns to exclude (default: node_modules, dist, build, etc.)
+   */
+  excludePatterns?: string[];
+
+  /**
+   * Which analyzers to run (default: all)
+   */
+  enabledAnalyzers?: Array<'feature-completeness' | 'ui-ux-quality' | 'test-coverage' | 'i18n'>;
+
+  /**
+   * Maturity context for filtering
+   */
+  maturityContext?: any;
+}
 
 /**
- * Provides code structure review functionality for VSCode
+ * Code Structure Review Provider for VSCode
  */
 export class CodeStructureReviewProvider {
-  private orchestrator: CategoryOrchestrator;
-  private parser: SourceFileParser;
-  private promptGenerator: PromptGenerator;
-  private reportGenerator: ReportGenerator;
-  private vizBuilder: VisualizationDataBuilder;
-  private knowledgeGenerator: KnowledgeItemGenerator;
-  private registry: CategoryRegistry;
-  private currentAnalysis?: CodeStructureAnalysis;
+  private orchestrator: StreamingOrchestrator;
+  private currentAnalysis?: StreamingAnalysisResult;
   private statusBarItem?: vscode.StatusBarItem;
+  private cancellationTokenSource?: vscode.CancellationTokenSource;
 
   constructor() {
-    this.registry = CategoryRegistry.getInstance();
-    this.initializeAnalyzers();
-
-    this.orchestrator = new CategoryOrchestrator(this.registry);
-    this.parser = new SourceFileParser();
-    this.promptGenerator = new PromptGenerator();
-    this.reportGenerator = new ReportGenerator();
-    this.vizBuilder = new VisualizationDataBuilder();
-    this.knowledgeGenerator = new KnowledgeItemGenerator();
-
-    this.setupEventListeners();
+    this.orchestrator = new StreamingOrchestrator();
+    this.setupProgressForwarding();
   }
 
   /**
-   * Initialize and register analyzers
+   * Forward orchestrator progress events
    */
-  private initializeAnalyzers(): void {
-    this.registry.clear();
-    this.registry.register(new FeatureCompletenessAnalyzer());
-    this.registry.register(new UIUXQualityAnalyzer());
-    this.registry.register(new TestCoverageAnalyzer());
-    this.registry.register(new InternationalizationAnalyzer());
+  private setupProgressForwarding(): void {
+    // Progress forwarding is set up per-analysis via options.onProgress
   }
 
   /**
-   * Set up event listeners for analysis progress
-   */
-  private setupEventListeners(): void {
-    this.orchestrator.addEventListener((event) => {
-      switch (event.type) {
-        case 'analysis-start':
-          console.log('[CodeStructureReview] Analysis started');
-          break;
-        case 'category-complete':
-          console.log(
-            `[CodeStructureReview] Category ${event.categoryId} completed in ${event.duration}ms`
-          );
-          break;
-        case 'analysis-complete':
-          console.log(
-            `[CodeStructureReview] Analysis complete in ${event.duration}ms`
-          );
-          break;
-        case 'analysis-error':
-          console.error(
-            `[CodeStructureReview] Analysis error in ${event.categoryId}:`,
-            event.error
-          );
-          break;
-      }
-    });
-  }
-
-  /**
-   * Run full analysis on workspace
+   * Run full streaming analysis on workspace
    */
   async analyzeWorkspace(
-    workspaceFolder?: vscode.WorkspaceFolder,
-    options?: Partial<AnalysisConfig>
-  ): Promise<CodeStructureAnalysis> {
-    const folder =
-      workspaceFolder || vscode.workspace.workspaceFolders?.[0];
+    options: ProviderOptions = {}
+  ): Promise<StreamingAnalysisResult> {
+    const folder = options.workspaceFolder || vscode.workspace.workspaceFolders?.[0];
 
     if (!folder) {
       throw new Error('No workspace folder open');
     }
 
-    // Show progress
-    return vscode.window.withProgress(
-      {
-        location: vscode.ProgressLocation.Notification,
-        title: 'Analyzing Code Structure',
-        cancellable: false
-      },
-      async (progress) => {
-        try {
+    console.log(`[CodeStructureReview] Starting analysis for: ${folder.uri.fsPath}`);
+
+    // Create cancellation token
+    this.cancellationTokenSource = new vscode.CancellationTokenSource();
+
+    try {
+      // Show progress notification
+      return await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: 'Analyzing Code Structure',
+          cancellable: true
+        },
+        async (progress, token) => {
+          // Handle cancellation
+          token.onCancellationRequested(() => {
+            console.log('[CodeStructureReview] Cancellation requested');
+            this.cancellationTokenSource?.cancel();
+          });
+
           // Step 1: Scan files
-          progress.report({ message: 'Scanning files...', increment: 10 });
-          const files = await this.scanWorkspaceFiles(folder.uri.fsPath);
+          progress.report({ message: 'Scanning workspace files...', increment: 5 });
+          const filePaths = await this.scanWorkspaceFiles(
+            folder.uri.fsPath,
+            options.includePatterns,
+            options.excludePatterns
+          );
 
-          // Step 2: Parse files
-          progress.report({ message: 'Parsing files...', increment: 20 });
-          const sourceFiles = await this.parseFiles(files);
+          console.log(`[CodeStructureReview] Found ${filePaths.length} files`);
 
-          // Step 3: Create context
-          const config = this.getAnalysisConfig(options);
-          const context = createAnalysisContext(sourceFiles, config);
+          if (token.isCancellationRequested) {
+            throw new Error('Analysis cancelled by user');
+          }
 
-          // Step 4: Run analysis
-          progress.report({ message: 'Analyzing code...', increment: 30 });
-          const analysis = await this.orchestrator.analyze(context);
+          // Step 2: Load file contents
+          progress.report({ message: 'Loading file contents...', increment: 10 });
+          const files = await this.loadFileContents(filePaths);
 
-          // Update workspace path
-          analysis.workspace = folder.uri.fsPath;
+          console.log(`[CodeStructureReview] Loaded ${files.length} files`);
 
-          // Step 5: Cache results
-          progress.report({ message: 'Finalizing...', increment: 40 });
+          if (token.isCancellationRequested) {
+            throw new Error('Analysis cancelled by user');
+          }
+
+          // Step 3: Run streaming analysis
+          progress.report({ message: 'Processing files (streaming)...', increment: 10 });
+
+          const analysis = await this.orchestrator.analyze({
+            files,
+            enabledAnalyzers: options.enabledAnalyzers,
+            maturityContext: options.maturityContext,
+            onProgress: (event) => {
+              // Forward to webview callback
+              if (options.onProgress) {
+                options.onProgress(event);
+              }
+
+              // Update VSCode progress notification
+              const phaseLabels = {
+                scanning: 'Scanning files',
+                extracting: 'Extracting metadata',
+                analyzing: 'Running analyzers',
+                aggregating: 'Aggregating results',
+                complete: 'Complete',
+                error: 'Error'
+              };
+
+              progress.report({
+                message: `${phaseLabels[event.phase]} (${event.percentage}%)`,
+                increment: 0 // Don't increment, use percentage from event
+              });
+
+              // Check cancellation during processing
+              if (token.isCancellationRequested) {
+                throw new Error('Analysis cancelled by user');
+              }
+            }
+          });
+
+          // Step 4: Cache result
           this.currentAnalysis = analysis;
 
-          // Update status bar
+          // Step 5: Update status bar
           this.updateStatusBar(analysis);
 
+          progress.report({ message: 'Done!', increment: 100 });
+
+          console.log(`[CodeStructureReview] ✓ Analysis complete: ${analysis.summary.totalIssues} issues, score: ${analysis.summary.overallScore}/100`);
+
           return analysis;
-        } catch (error) {
-          vscode.window.showErrorMessage(
-            `Code structure analysis failed: ${error.message}`
-          );
-          throw error;
         }
-      }
-    );
-  }
+      );
+    } catch (error) {
+      console.error('[CodeStructureReview] Analysis failed:', error);
 
-  /**
-   * Run quick analysis (Priority 1 categories only)
-   */
-  async quickAnalyze(
-    workspaceFolder?: vscode.WorkspaceFolder
-  ): Promise<CodeStructureAnalysis> {
-    const folder =
-      workspaceFolder || vscode.workspace.workspaceFolders?.[0];
+      vscode.window.showErrorMessage(
+        `Code structure analysis failed: ${(error as Error).message}`
+      );
 
-    if (!folder) {
-      throw new Error('No workspace folder open');
+      throw error;
+    } finally {
+      this.cancellationTokenSource?.dispose();
+      this.cancellationTokenSource = undefined;
     }
-
-    return vscode.window.withProgress(
-      {
-        location: vscode.ProgressLocation.Notification,
-        title: 'Quick Code Analysis',
-        cancellable: false
-      },
-      async (progress) => {
-        progress.report({ message: 'Scanning...', increment: 20 });
-        const files = await this.scanWorkspaceFiles(folder.uri.fsPath);
-
-        progress.report({ message: 'Analyzing...', increment: 40 });
-        const sourceFiles = await this.parseFiles(files);
-        const context = createAnalysisContext(sourceFiles);
-
-        const analysis = await this.orchestrator.quickAnalyze(context);
-        analysis.workspace = folder.uri.fsPath;
-
-        this.currentAnalysis = analysis;
-        this.updateStatusBar(analysis);
-
-        return analysis;
-      }
-    );
   }
 
   /**
-   * Scan workspace for code files
+   * Scan workspace for files to analyze
    */
   private async scanWorkspaceFiles(
-    workspacePath: string
-  ): Promise<Array<{ path: string; content: string }>> {
-    const config = vscode.workspace.getConfiguration('agentBrain.codeStructureReview');
-    const includePatterns = config.get<string[]>('includePatterns', [
+    workspacePath: string,
+    includePatterns?: string[],
+    excludePatterns?: string[]
+  ): Promise<string[]> {
+    // Default patterns
+    const defaultInclude = [
       '**/*.ts',
       '**/*.tsx',
       '**/*.js',
       '**/*.jsx'
-    ]);
+    ];
 
-    const excludePatterns = config.get<string[]>('excludePatterns', [
+    const defaultExclude = [
       '**/node_modules/**',
       '**/dist/**',
       '**/build/**',
+      '**/.next/**',
+      '**/out/**',
+      '**/coverage/**',
       '**/*.test.ts',
-      '**/*.spec.ts'
-    ]);
+      '**/*.test.tsx',
+      '**/*.test.js',
+      '**/*.test.jsx',
+      '**/*.spec.ts',
+      '**/*.spec.tsx',
+      '**/*.spec.js',
+      '**/*.spec.jsx',
+      '**/*.d.ts'
+    ];
 
+    const include = includePatterns || defaultInclude;
+    const exclude = excludePatterns || defaultExclude;
+
+    console.log(`[CodeStructureReview] Scanning with patterns:`, { include, exclude });
+
+    const filePaths: string[] = [];
+
+    for (const pattern of include) {
+      const uris = await vscode.workspace.findFiles(pattern, `{${exclude.join(',')}}`);
+      filePaths.push(...uris.map(uri => uri.fsPath));
+    }
+
+    // Remove duplicates
+    const uniquePaths = [...new Set(filePaths)];
+
+    console.log(`[CodeStructureReview] Found ${uniquePaths.length} unique files`);
+
+    return uniquePaths;
+  }
+
+  /**
+   * Load file contents
+   */
+  private async loadFileContents(
+    filePaths: string[]
+  ): Promise<Array<{ path: string; content: string }>> {
     const files: Array<{ path: string; content: string }> = [];
 
-    // Use VSCode's file search
-    for (const pattern of includePatterns) {
-      const uris = await vscode.workspace.findFiles(
-        pattern,
-        `{${excludePatterns.join(',')}}`
-      );
-
-      for (const uri of uris) {
-        try {
-          const content = await fs.readFile(uri.fsPath, 'utf-8');
-          const relativePath = path.relative(workspacePath, uri.fsPath);
-          files.push({ path: relativePath, content });
-        } catch (error) {
-          console.warn(`Failed to read file ${uri.fsPath}:`, error);
-        }
+    for (const filePath of filePaths) {
+      try {
+        const content = await fs.readFile(filePath, 'utf-8');
+        files.push({ path: filePath, content });
+      } catch (error) {
+        console.warn(`[CodeStructureReview] Failed to read file: ${filePath}`, error);
+        // Skip files that can't be read
       }
     }
 
@@ -236,200 +266,239 @@ export class CodeStructureReviewProvider {
   }
 
   /**
-   * Parse files to SourceFile format
-   */
-  private async parseFiles(
-    files: Array<{ path: string; content: string }>
-  ): Promise<ReturnType<SourceFileParser['parseMultiple']>> {
-    return this.parser.parseMultiple(files);
-  }
-
-  /**
-   * Get analysis configuration from VSCode settings
-   */
-  private getAnalysisConfig(
-    overrides?: Partial<AnalysisConfig>
-  ): AnalysisConfig {
-    const config = vscode.workspace.getConfiguration('agentBrain.codeStructureReview');
-
-    return {
-      enabledCategories: config.get<string[]>('enabledCategories', []),
-      excludePatterns: config.get<string[]>('excludePatterns', [
-        '**/node_modules/**',
-        '**/dist/**',
-        '**/build/**',
-        '**/*.test.ts',
-        '**/*.spec.ts'
-      ]),
-      includePatterns: config.get<string[]>('includePatterns', [
-        '**/*.ts',
-        '**/*.tsx',
-        '**/*.js',
-        '**/*.jsx'
-      ]),
-      ...overrides
-    };
-  }
-
-  /**
    * Update status bar with analysis results
    */
-  private updateStatusBar(analysis: CodeStructureAnalysis): void {
+  private updateStatusBar(analysis: StreamingAnalysisResult): void {
     if (!this.statusBarItem) {
       this.statusBarItem = vscode.window.createStatusBarItem(
         vscode.StatusBarAlignment.Right,
         100
       );
+      this.statusBarItem.command = 'agent-brain.showCodeStructureReview';
     }
 
     const score = analysis.summary.overallScore;
-    const icon = this.getStatusIcon(score);
+    const icon = this.getStatusBarIcon(score);
 
     this.statusBarItem.text = `${icon} Code: ${score}/100`;
-    this.statusBarItem.tooltip = `Code Structure Score: ${score}/100\nIssues: ${analysis.summary.totalIssues}\nClick for details`;
-    this.statusBarItem.command = 'agentBrain.showCodeStructureReview';
+    this.statusBarItem.tooltip = `Code Structure Score: ${score}/100\n${analysis.summary.totalIssues} issues found`;
     this.statusBarItem.show();
   }
 
   /**
-   * Get status icon based on score
+   * Get icon based on score
    */
-  private getStatusIcon(score: number): string {
-    if (score >= 90) return '✅';
-    if (score >= 70) return '👍';
-    if (score >= 50) return '⚠️';
-    return '❌';
+  private getStatusBarIcon(score: number): string {
+    if (score >= 90) return '$(check)';
+    if (score >= 70) return '$(info)';
+    if (score >= 50) return '$(warning)';
+    return '$(error)';
   }
 
   /**
-   * Generate AI prompt for current analysis
+   * Get current analysis result
    */
-  async generatePrompt(
-    categoryId?: string,
-    maturityLevel?: MaturityLevel
-  ): Promise<string> {
-    if (!this.currentAnalysis) {
-      throw new Error('No analysis available. Run analysis first.');
-    }
-
-    const level =
-      maturityLevel ||
-      vscode.workspace
-        .getConfiguration('agentBrain.codeStructureReview')
-        .get<MaturityLevel>('defaultMaturityLevel', 'intermediate');
-
-    if (categoryId) {
-      const category = this.currentAnalysis.categories.find(
-        (c) => c.categoryId === categoryId
-      );
-      if (!category) {
-        throw new Error(`Category ${categoryId} not found`);
-      }
-
-      const prompt = this.promptGenerator.generatePrompt(category, level);
-      return prompt?.prompt || 'No prompt generated';
-    } else {
-      const prompt = this.promptGenerator.generateTopPriorityPrompt(
-        this.currentAnalysis,
-        level
-      );
-      return prompt?.prompt || 'No issues found';
-    }
-  }
-
-  /**
-   * Generate report
-   */
-  async generateReport(format: 'summary' | 'detailed' | 'json' | 'csv' = 'summary'): Promise<string> {
-    if (!this.currentAnalysis) {
-      throw new Error('No analysis available. Run analysis first.');
-    }
-
-    switch (format) {
-      case 'summary':
-        return this.reportGenerator.generateExecutiveSummary(this.currentAnalysis);
-      case 'detailed':
-        return this.reportGenerator.generateDetailedReport(this.currentAnalysis);
-      case 'json':
-        return this.reportGenerator.generateJSONReport(this.currentAnalysis);
-      case 'csv':
-        return this.reportGenerator.generateCSVReport(this.currentAnalysis);
-      default:
-        return this.reportGenerator.generateExecutiveSummary(this.currentAnalysis);
-    }
-  }
-
-  /**
-   * Export report to file
-   */
-  async exportReport(format: 'summary' | 'detailed' | 'json' | 'csv'): Promise<void> {
-    const report = await this.generateReport(format);
-
-    const extension = format === 'json' ? 'json' : format === 'csv' ? 'csv' : 'md';
-    const defaultUri = vscode.Uri.file(
-      path.join(
-        vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '',
-        `code-structure-review.${extension}`
-      )
-    );
-
-    const uri = await vscode.window.showSaveDialog({
-      defaultUri,
-      filters: {
-        'Report': [extension]
-      }
-    });
-
-    if (uri) {
-      await fs.writeFile(uri.fsPath, report, 'utf-8');
-      vscode.window.showInformationMessage(`Report exported to ${uri.fsPath}`);
-    }
-  }
-
-  /**
-   * Get current analysis
-   */
-  getCurrentAnalysis(): CodeStructureAnalysis | undefined {
+  getCurrentAnalysis(): StreamingAnalysisResult | undefined {
     return this.currentAnalysis;
   }
 
   /**
-   * Get visualization data
+   * Clear cached analysis
    */
-  getVisualizationData() {
-    if (!this.currentAnalysis) {
-      throw new Error('No analysis available. Run analysis first.');
-    }
-
-    return this.vizBuilder.buildAllVisualizations(this.currentAnalysis);
+  clearAnalysis(): void {
+    this.currentAnalysis = undefined;
+    this.orchestrator.clear();
   }
 
   /**
-   * Generate knowledge items from analysis
+   * Get orchestrator statistics
    */
-  generateKnowledgeItems(maxPerCategory: number = 3): Array<any> {
+  getStatistics() {
+    return this.orchestrator.getStatistics();
+  }
+
+  /**
+   * Get registry for inspection (advanced usage)
+   */
+  getRegistry() {
+    return this.orchestrator.getRegistry();
+  }
+
+  /**
+   * Get visualization data for webview
+   * Returns structured data for UI rendering
+   */
+  getVisualizationData(): any {
+    if (!this.currentAnalysis) {
+      return undefined;
+    }
+
+    // Transform analysis results into visualization format
+    const registry = this.orchestrator.getRegistry();
+
+    return {
+      files: registry.testCoverage.getAllFiles().map(f => ({
+        path: f.path,
+        category: f.category,
+        importance: f.importance,
+        hasTest: f.hasCorrespondingTest
+      })),
+      dependencies: [], // Not yet implemented in streaming
+      timeline: [], // Not yet implemented in streaming
+      testCoverage: {
+        percentage: this.currentAnalysis.categories.find(c => c.categoryId === 'test-coverage')?.score || 0,
+        testedFiles: registry.testCoverage.getCounts().total - registry.testCoverage.getCounts().untested,
+        totalFiles: registry.testCoverage.getCounts().total
+      },
+      i18n: {
+        translationCoverage: registry.i18n.getStats().stringLiterals.translationCoverage,
+        untranslated: registry.i18n.getCounts().untranslated
+      }
+    };
+  }
+
+  /**
+   * Generate AI prompt for issues
+   */
+  async generatePrompt(categoryId?: string, maturityLevel?: any): Promise<string> {
     if (!this.currentAnalysis) {
       throw new Error('No analysis available. Run analysis first.');
     }
 
-    const items: any[] = [];
+    const category = categoryId
+      ? this.currentAnalysis.categories.find(c => c.categoryId === categoryId)
+      : this.currentAnalysis.categories[0];
 
-    this.currentAnalysis.categories.forEach((category) => {
-      const categoryItems = this.knowledgeGenerator.generateFromCategory(
-        category,
-        maxPerCategory
-      );
-      items.push(...categoryItems);
+    if (!category) {
+      throw new Error('Category not found');
+    }
+
+    // Generate a simple prompt based on the analysis
+    let prompt = `# Code Structure Review - ${category.categoryName}\n\n`;
+    prompt += `**Score**: ${category.score}/100 (${category.status})\n`;
+    prompt += `**Priority**: ${category.priority}\n\n`;
+    prompt += `## Issues Found (${category.issues.length})\n\n`;
+
+    category.issues.slice(0, 10).forEach((issue, i) => {
+      prompt += `### ${i + 1}. ${issue.title}\n`;
+      prompt += `**Severity**: ${issue.severity}\n`;
+      prompt += `**File**: ${issue.filePath}${issue.lineNumber ? `:${issue.lineNumber}` : ''}\n`;
+      prompt += `**Description**: ${issue.description}\n`;
+      prompt += `**Recommendation**: ${issue.recommendation}\n\n`;
     });
 
-    return items;
+    if (category.issues.length > 10) {
+      prompt += `\n... and ${category.issues.length - 10} more issues.\n`;
+    }
+
+    return prompt;
   }
 
   /**
-   * Dispose provider
+   * Export analysis report
+   */
+  async exportReport(format: 'summary' | 'detailed' | 'json' | 'csv'): Promise<void> {
+    if (!this.currentAnalysis) {
+      throw new Error('No analysis available. Run analysis first.');
+    }
+
+    const workspace = vscode.workspace.workspaceFolders?.[0];
+    if (!workspace) {
+      throw new Error('No workspace folder found');
+    }
+
+    let content: string;
+    let extension: string;
+
+    switch (format) {
+      case 'json':
+        content = JSON.stringify(this.currentAnalysis, null, 2);
+        extension = 'json';
+        break;
+
+      case 'csv':
+        // Simple CSV export of issues
+        content = 'Category,Severity,Title,File,Line,Description\n';
+        this.currentAnalysis.categories.forEach(cat => {
+          cat.issues.forEach(issue => {
+            const row = [
+              cat.categoryName,
+              issue.severity,
+              `"${issue.title.replace(/"/g, '""')}"`,
+              issue.filePath,
+              issue.lineNumber || '',
+              `"${issue.description.replace(/"/g, '""')}"`
+            ].join(',');
+            content += row + '\n';
+          });
+        });
+        extension = 'csv';
+        break;
+
+      case 'summary':
+      case 'detailed':
+      default:
+        content = this.generateMarkdownReport(format === 'detailed');
+        extension = 'md';
+        break;
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const fileName = `code-structure-review-${format}-${timestamp}.${extension}`;
+    const filePath = vscode.Uri.joinPath(workspace.uri, fileName);
+
+    await vscode.workspace.fs.writeFile(filePath, Buffer.from(content, 'utf-8'));
+
+    const doc = await vscode.workspace.openTextDocument(filePath);
+    await vscode.window.showTextDocument(doc);
+
+    vscode.window.showInformationMessage(`Report exported to ${fileName}`);
+  }
+
+  /**
+   * Generate markdown report
+   */
+  private generateMarkdownReport(detailed: boolean): string {
+    if (!this.currentAnalysis) {
+      return '# No analysis available\n';
+    }
+
+    let md = '# Code Structure Review Report\n\n';
+    md += `**Generated**: ${new Date().toLocaleString()}\n`;
+    md += `**Overall Score**: ${this.currentAnalysis.summary.overallScore}/100\n`;
+    md += `**Total Issues**: ${this.currentAnalysis.summary.totalIssues}\n\n`;
+
+    md += '## Summary by Category\n\n';
+    this.currentAnalysis.categories.forEach(cat => {
+      md += `### ${cat.categoryName}\n`;
+      md += `- **Score**: ${cat.score}/100 (${cat.status})\n`;
+      md += `- **Priority**: ${cat.priority}\n`;
+      md += `- **Issues**: ${cat.issues.length}\n`;
+      md += `- **Summary**: ${cat.summary}\n\n`;
+    });
+
+    if (detailed) {
+      md += '## Detailed Issues\n\n';
+      this.currentAnalysis.categories.forEach(cat => {
+        md += `### ${cat.categoryName}\n\n`;
+        cat.issues.forEach((issue, i) => {
+          md += `#### ${i + 1}. ${issue.title}\n`;
+          md += `- **Severity**: ${issue.severity}\n`;
+          md += `- **File**: \`${issue.filePath}\`${issue.lineNumber ? ` (line ${issue.lineNumber})` : ''}\n`;
+          md += `- **Description**: ${issue.description}\n`;
+          md += `- **Recommendation**: ${issue.recommendation}\n\n`;
+        });
+      });
+    }
+
+    return md;
+  }
+
+  /**
+   * Dispose resources
    */
   dispose(): void {
     this.statusBarItem?.dispose();
-    this.parser.clearCache();
+    this.cancellationTokenSource?.dispose();
   }
 }

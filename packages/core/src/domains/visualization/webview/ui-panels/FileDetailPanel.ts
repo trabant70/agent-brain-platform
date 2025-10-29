@@ -149,13 +149,21 @@ export class FileDetailPanel {
 
   /**
    * Render file visualizations
+   * Note: Calls renderCurrentState directly to avoid navigation event loop
    */
   private async renderVisualizations(analysisData: AnalysisData): Promise<void> {
     if (!this.filePath) return;
 
-    try {
-      // Navigate to file detail to trigger visualization rendering
+    // Ensure coordinator is in file-detail state
+    if (this.coordinator.getContext().state !== 'file-detail') {
+      console.warn('Coordinator not in file-detail state, navigating...');
       await this.coordinator.navigateToFileDetail(this.filePath, this.categoryId || undefined);
+      return; // Navigation will trigger re-render through IntegrationController
+    }
+
+    try {
+      // Render visualizations directly without triggering navigation
+      await this.coordinator.renderCurrentState();
     } catch (error) {
       console.error('Error rendering file visualizations:', error);
       this.showError('Failed to render visualizations');
