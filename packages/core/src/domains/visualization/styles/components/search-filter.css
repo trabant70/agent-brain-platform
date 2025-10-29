@@ -1,0 +1,397 @@
+/**
+ * Search and Filter Component Styles
+ * Styles for search input and collapsible filter panel
+ */
+
+/* Search Filter Container */
+.search-filter {
+  padding: 12px 20px;
+  background: var(--vscode-sideBar-background);
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+/* Filter Section */
+.filter-section {
+  margin-bottom: 12px;
+}
+
+.filter-section:last-child {
+  margin-bottom: 0;
+}
+
+/* Search Input */
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 4px;
+  transition: border-color 0.2s;
+}
+
+.search-input-wrapper:focus-within {
+  border-color: var(--vscode-focusBorder);
+}
+
+.search-icon {
+  position: absolute;
+  left: 10px;
+  font-size: 14px;
+  color: var(--vscode-descriptionForeground);
+  pointer-events: none;
+}
+
+.search-input {
+  flex: 1;
+  padding: 8px 36px 8px 36px;
+  background: transparent;
+  border: none;
+  color: var(--vscode-input-foreground);
+  font-size: 13px;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+.search-clear {
+  position: absolute;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  border-radius: 3px;
+  font-size: 18px;
+  line-height: 1;
+  transition: all 0.2s;
+}
+
+.search-clear:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+  color: var(--vscode-foreground);
+}
+
+/* Filter Toggle Button */
+.filter-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.filter-toggle:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.filter-toggle.expanded {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border-color: var(--vscode-button-background);
+}
+
+.filter-icon {
+  font-size: 14px;
+}
+
+.filter-label {
+  flex: 1;
+  text-align: left;
+  font-weight: 500;
+}
+
+.filter-count {
+  display: none;
+  padding: 2px 8px;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.toggle-arrow {
+  font-size: 10px;
+  transition: transform 0.2s;
+}
+
+.filter-toggle.expanded .toggle-arrow {
+  transform: rotate(180deg);
+}
+
+/* Filter Panel */
+.filter-panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+}
+
+.filter-panel.expanded {
+  max-height: 600px;
+  margin-top: -1px;
+  overflow-y: auto;
+}
+
+/* Filter Group */
+.filter-group {
+  padding: 16px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.filter-group:last-of-type {
+  border-bottom: none;
+}
+
+.filter-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.filter-group-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vscode-editor-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-group-clear {
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  color: var(--vscode-textLink-foreground);
+  cursor: pointer;
+  font-size: 11px;
+  border-radius: 3px;
+  transition: background-color 0.2s;
+}
+
+.filter-group-clear:hover {
+  background: var(--vscode-toolbar-hoverBackground);
+}
+
+/* Filter Options */
+.filter-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.filter-option:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.filter-checkbox {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.filter-option-label {
+  flex: 1;
+  font-size: 13px;
+  color: var(--vscode-editor-foreground);
+  user-select: none;
+}
+
+.filter-option-count {
+  padding: 2px 6px;
+  background: var(--vscode-badge-background);
+  color: var(--vscode-badge-foreground);
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* Severity Labels */
+.severity-critical {
+  color: #dc2626 !important;
+  font-weight: 600;
+}
+
+.severity-high {
+  color: #f59e0b !important;
+  font-weight: 600;
+}
+
+.severity-medium {
+  color: #3b82f6 !important;
+  font-weight: 600;
+}
+
+.severity-low {
+  color: #10b981 !important;
+  font-weight: 600;
+}
+
+/* Filter Range */
+.filter-range {
+  padding: 8px 0;
+}
+
+.range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.range-input {
+  flex: 1;
+  padding: 6px 10px;
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 4px;
+  color: var(--vscode-input-foreground);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.range-input:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.range-input::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+.range-separator {
+  color: var(--vscode-descriptionForeground);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Filter Text Input */
+.filter-text-input {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--vscode-input-background);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 4px;
+  color: var(--vscode-input-foreground);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.filter-text-input:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.filter-text-input::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+/* Filter Actions */
+.filter-actions {
+  display: flex;
+  gap: 8px;
+  padding: 16px;
+  border-top: 1px solid var(--vscode-panel-border);
+  background: var(--vscode-sideBar-background);
+}
+
+.btn-filter-apply,
+.btn-filter-reset {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-filter-apply {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.btn-filter-apply:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.btn-filter-reset {
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: 1px solid var(--vscode-panel-border);
+}
+
+.btn-filter-reset:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .search-filter {
+    padding: 12px 16px;
+  }
+
+  .filter-group {
+    padding: 12px;
+  }
+
+  .filter-actions {
+    padding: 12px;
+  }
+
+  .range-inputs {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .range-separator {
+    text-align: center;
+  }
+}
+
+/* Scrollbar Styling (for filter panel) */
+.filter-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+.filter-panel::-webkit-scrollbar-track {
+  background: var(--vscode-scrollbarSlider-background);
+}
+
+.filter-panel::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-activeBackground);
+  border-radius: 4px;
+}
+
+.filter-panel::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-hoverBackground);
+}

@@ -40,72 +40,6 @@
         "author": "Agent Brain Team",
         "version": 1
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-24T21:26:34.135Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:39:59.791Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:45:36.538Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:49:23.860Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T22:00:22.528Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T22:07:18.883Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-26T09:10:31.573Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-27T08:36:16.282Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        }
-      ],
       "templateId": "bundled.agent-brain-base",
       "templateName": "Agent Brain Base - AI Agent Guidance",
       "maturity": {
@@ -121,7 +55,8 @@
           "min": 1,
           "max": 2
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "golden-path-learning-capture",
@@ -143,72 +78,6 @@
         "author": "Agent Brain Team",
         "version": 1
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-24T21:26:34.135Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:39:59.791Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:45:36.538Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:49:23.860Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T22:00:22.528Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T22:07:18.883Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-26T09:10:31.573Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-27T08:36:16.282Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        }
-      ],
       "templateId": "bundled.agent-brain-base",
       "templateName": "Agent Brain Base - AI Agent Guidance",
       "maturity": {
@@ -224,7 +93,8 @@
           "min": 1,
           "max": 2
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "golden-path-context-survival",
@@ -246,72 +116,6 @@
         "author": "Agent Brain Team",
         "version": 1
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-24T21:26:34.135Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:39:59.791Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:45:36.538Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:49:23.860Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T22:00:22.528Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T22:07:18.883Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-26T09:10:31.574Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-27T08:36:16.282Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        }
-      ],
       "templateId": "bundled.agent-brain-base",
       "templateName": "Agent Brain Base - AI Agent Guidance",
       "maturity": {
@@ -327,7 +131,8 @@
           "min": 1,
           "max": 2
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "best-practice-full-honesty",
@@ -350,72 +155,6 @@
         "author": "Agent Brain Team",
         "version": 1
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-24T21:26:34.135Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:39:59.791Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:45:36.538Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:49:23.860Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T22:00:22.528Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T22:07:18.883Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-26T09:10:31.574Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-27T08:36:16.282Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        }
-      ],
       "templateId": "bundled.agent-brain-base",
       "templateName": "Agent Brain Base - AI Agent Guidance",
       "maturity": {
@@ -431,7 +170,8 @@
           "min": 1,
           "max": 2
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "best-practice-todo-hygiene",
@@ -454,72 +194,6 @@
         "author": "Agent Brain Team",
         "version": 1
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-24T21:26:34.135Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:39:59.791Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:45:36.538Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:49:23.860Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T22:00:22.528Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T22:07:18.883Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-26T09:10:31.574Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-27T08:36:16.282Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        }
-      ],
       "templateId": "bundled.agent-brain-base",
       "templateName": "Agent Brain Base - AI Agent Guidance",
       "maturity": {
@@ -535,7 +209,8 @@
           "min": 1,
           "max": 2
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "best-practice-coming-back",
@@ -558,72 +233,6 @@
         "author": "Agent Brain Team",
         "version": 1
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-24T21:26:34.135Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:39:59.791Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:45:36.538Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:49:23.860Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T22:00:22.528Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T22:07:18.883Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-26T09:10:31.574Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-27T08:36:16.282Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        }
-      ],
       "templateId": "bundled.agent-brain-base",
       "templateName": "Agent Brain Base - AI Agent Guidance",
       "maturity": {
@@ -639,7 +248,8 @@
           "min": 1,
           "max": 2
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "guideline-knowledge-item-creation",
@@ -661,72 +271,6 @@
         "author": "Agent Brain Team",
         "version": 1
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-24T21:26:34.135Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:39:59.791Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:45:36.538Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:49:23.860Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T22:00:22.528Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T22:07:18.883Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-26T09:10:31.574Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-27T08:36:16.282Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        }
-      ],
       "templateId": "bundled.agent-brain-base",
       "templateName": "Agent Brain Base - AI Agent Guidance",
       "maturity": {
@@ -742,7 +286,8 @@
           "min": 1,
           "max": 2
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "gotcha-ai-agent-pitfalls",
@@ -765,72 +310,6 @@
         "author": "Agent Brain Team",
         "version": 1
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-24T21:26:34.135Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:39:59.791Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:45:36.538Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T21:49:23.860Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T22:00:22.528Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-24T22:07:18.883Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-26T09:10:31.574Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-27T08:36:16.282Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.agent-brain-base",
-          "parentTemplateName": "Agent Brain Base - AI Agent Guidance"
-        }
-      ],
       "templateId": "bundled.agent-brain-base",
       "templateName": "Agent Brain Base - AI Agent Guidance",
       "maturity": {
@@ -846,7 +325,8 @@
           "min": 1,
           "max": 2
         }
-      }
+      },
+      "injectedTo": []
     }
   ],
   "itemCount": 8,

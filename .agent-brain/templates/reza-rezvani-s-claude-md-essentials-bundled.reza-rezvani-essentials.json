@@ -41,24 +41,6 @@
         "author": "Reza Rezvani",
         "version": 1
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-24T22:05:21.969Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-26T09:10:34.179Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        }
-      ],
       "templateId": "bundled.reza-rezvani-essentials",
       "templateName": "Reza Rezvani's CLAUDE.md Essentials",
       "maturity": {
@@ -74,7 +56,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "guideline-command-center",
@@ -97,24 +80,6 @@
         "author": "Reza Rezvani",
         "version": 1
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-24T22:05:21.969Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-26T09:10:34.179Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        }
-      ],
       "templateId": "bundled.reza-rezvani-essentials",
       "templateName": "Reza Rezvani's CLAUDE.md Essentials",
       "maturity": {
@@ -130,7 +95,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "standard-style-guide-sheriff",
@@ -153,24 +119,6 @@
         "author": "Reza Rezvani",
         "version": 1
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-24T22:05:21.970Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-26T09:10:34.179Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        }
-      ],
       "templateId": "bundled.reza-rezvani-essentials",
       "templateName": "Reza Rezvani's CLAUDE.md Essentials",
       "maturity": {
@@ -186,7 +134,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "best-practice-test-bench-coach",
@@ -209,24 +158,6 @@
         "author": "Reza Rezvani",
         "version": 1
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-24T22:05:21.970Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-26T09:10:34.179Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        }
-      ],
       "templateId": "bundled.reza-rezvani-essentials",
       "templateName": "Reza Rezvani's CLAUDE.md Essentials",
       "maturity": {
@@ -242,7 +173,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "best-practice-error-handling-mantra",
@@ -265,24 +197,6 @@
         "author": "Reza Rezvani",
         "version": 1
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-24T22:05:21.970Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-26T09:10:34.179Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        }
-      ],
       "templateId": "bundled.reza-rezvani-essentials",
       "templateName": "Reza Rezvani's CLAUDE.md Essentials",
       "maturity": {
@@ -298,7 +212,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "standard-clean-code-commandments",
@@ -321,24 +236,6 @@
         "author": "Reza Rezvani",
         "version": 1
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-24T22:05:21.970Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-26T09:10:34.179Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        }
-      ],
       "templateId": "bundled.reza-rezvani-essentials",
       "templateName": "Reza Rezvani's CLAUDE.md Essentials",
       "maturity": {
@@ -354,7 +251,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "guideline-security-sentry",
@@ -378,24 +276,6 @@
         "author": "Reza Rezvani",
         "version": 1
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-24T22:05:21.970Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-26T09:10:34.179Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        }
-      ],
       "templateId": "bundled.reza-rezvani-essentials",
       "templateName": "Reza Rezvani's CLAUDE.md Essentials",
       "maturity": {
@@ -411,7 +291,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "convention-teamwork-protocol",
@@ -435,24 +316,6 @@
         "author": "Reza Rezvani",
         "version": 1
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-24T22:05:21.970Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-26T09:10:34.179Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        }
-      ],
       "templateId": "bundled.reza-rezvani-essentials",
       "templateName": "Reza Rezvani's CLAUDE.md Essentials",
       "maturity": {
@@ -468,7 +331,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "best-practice-edge-case-oracle",
@@ -491,24 +355,6 @@
         "author": "Reza Rezvani",
         "version": 1
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-24T22:05:21.970Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-26T09:10:34.179Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        }
-      ],
       "templateId": "bundled.reza-rezvani-essentials",
       "templateName": "Reza Rezvani's CLAUDE.md Essentials",
       "maturity": {
@@ -524,7 +370,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "golden-path-agentic-workflow",
@@ -548,24 +395,6 @@
         "author": "Reza Rezvani",
         "version": 1
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-24T22:05:21.970Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        },
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\CLAUDE.md",
-          "injectedAt": "2025-10-26T09:10:34.179Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "bundled.reza-rezvani-essentials",
-          "parentTemplateName": "Reza Rezvani's CLAUDE.md Essentials"
-        }
-      ],
       "templateId": "bundled.reza-rezvani-essentials",
       "templateName": "Reza Rezvani's CLAUDE.md Essentials",
       "maturity": {
@@ -581,7 +410,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     }
   ],
   "itemCount": 10,

@@ -389,12 +389,13 @@ export class KnowledgeFileSystem {
   /**
    * Save a template to a JSON file
    * Handles serialization with pretty printing for human readability
+   * IMPORTANT: Strips runtime-only fields like injectedTo which should not be persisted
    */
   toTemplateJson(template: MarketplaceTemplate, options?: { pretty?: boolean }): string {
     const pretty = options?.pretty !== false; // Default to true
 
-    // Create a clean copy without undefined values
-    const cleanTemplate = this.cleanUndefinedValues(template);
+    // Create a clean copy without runtime-only fields
+    const cleanTemplate = this.removeRuntimeFields(template);
 
     // Serialize with pretty printing (2 space indentation)
     return JSON.stringify(cleanTemplate, null, pretty ? 2 : 0);
@@ -585,6 +586,26 @@ export class KnowledgeFileSystem {
       return new Date(value);
     }
     return new Date(); // Fallback
+  }
+
+  /**
+   * Remove runtime-only fields from template before serialization
+   * These fields are computed fresh from scanner on load and should not be persisted
+   */
+  private removeRuntimeFields(template: MarketplaceTemplate): MarketplaceTemplate {
+    // Deep clone the template to avoid modifying the original
+    const cleaned = JSON.parse(JSON.stringify(template));
+
+    // Strip injectedTo arrays from all items
+    if (cleaned.items && Array.isArray(cleaned.items)) {
+      cleaned.items = cleaned.items.map((item: any) => {
+        const { injectedTo, ...itemWithoutInjection } = item;
+        return itemWithoutInjection;
+      });
+    }
+
+    // Clean undefined values
+    return this.cleanUndefinedValues(cleaned);
   }
 
   /**

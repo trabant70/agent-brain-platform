@@ -1,0 +1,691 @@
+/**
+ * Panel Styles
+ * Styles for Overview and Category Detail panels
+ */
+
+/* Base Panel Styles */
+.overview-panel,
+.category-detail-panel,
+.file-detail-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+}
+
+/* Panel Header */
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  background: var(--vscode-sideBar-background);
+}
+
+.panel-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--vscode-editor-foreground);
+}
+
+.panel-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-refresh,
+.btn-back {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background-color 0.2s;
+}
+
+.btn-refresh:hover,
+.btn-back:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.btn-refresh .icon,
+.btn-back .icon {
+  font-size: 16px;
+}
+
+/* Category Badges */
+.category-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.category-badge-excellent {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.category-badge-good {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+.category-badge-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.category-badge-critical {
+  background: rgba(220, 38, 38, 0.15);
+  color: #dc2626;
+}
+
+/* Panel Stats */
+.panel-stats {
+  display: flex;
+  gap: 20px;
+  padding: 12px 20px;
+  background: var(--vscode-editorWidget-background);
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--vscode-editor-foreground);
+}
+
+.stat-critical {
+  color: #dc2626;
+}
+
+.stat-high {
+  color: #f59e0b;
+}
+
+.stat-score {
+  font-size: 18px;
+}
+
+.score-excellent {
+  color: #10b981;
+}
+
+.score-good {
+  color: #3b82f6;
+}
+
+.score-warning {
+  color: #f59e0b;
+}
+
+.score-critical {
+  color: #dc2626;
+}
+
+/* Panel Content */
+.panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+/* Visualization Sections */
+.viz-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 8px;
+}
+
+.viz-primary {
+  min-height: 400px;
+}
+
+.viz-secondary {
+  min-height: 300px;
+}
+
+.viz-header {
+  margin-bottom: 16px;
+}
+
+.viz-title {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vscode-editor-foreground);
+}
+
+.viz-subtitle {
+  margin: 0;
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.viz-container {
+  min-height: 300px;
+  display: none;
+}
+
+.viz-container.active {
+  display: block;
+}
+
+/* Visualization Grid (for secondary visualizations) */
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+/* Visualization Tabs */
+.viz-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.viz-tab {
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--vscode-descriptionForeground);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.viz-tab:hover {
+  color: var(--vscode-editor-foreground);
+  background: var(--vscode-list-hoverBackground);
+}
+
+.viz-tab.active {
+  color: var(--vscode-textLink-foreground);
+  border-bottom-color: var(--vscode-textLink-foreground);
+}
+
+.viz-tab-content {
+  position: relative;
+}
+
+/* Panel Footer */
+.panel-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--vscode-panel-border);
+  background: var(--vscode-sideBar-background);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 16px;
+}
+
+/* Issue Details */
+.issue-details {
+  margin: 0;
+}
+
+.issue-details summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+}
+
+.issue-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.summary-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vscode-editor-foreground);
+}
+
+.summary-icon {
+  font-size: 12px;
+  color: var(--vscode-descriptionForeground);
+  transition: transform 0.2s;
+}
+
+.issue-details[open] .summary-icon {
+  transform: rotate(180deg);
+}
+
+.issue-list {
+  max-height: 400px;
+  overflow-y: auto;
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+}
+
+.no-issues {
+  text-align: center;
+  padding: 20px;
+  color: var(--vscode-descriptionForeground);
+  font-size: 13px;
+}
+
+.file-group {
+  margin-bottom: 16px;
+}
+
+.file-group:last-child {
+  margin-bottom: 0;
+}
+
+.file-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--vscode-editorGroupHeader-tabsBackground);
+  border-radius: 4px 4px 0 0;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.file-name {
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--vscode-editor-font-family);
+  color: var(--vscode-editor-foreground);
+}
+
+.file-count {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.file-issues {
+  padding: 8px;
+}
+
+.issue-item {
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  background: var(--vscode-editorWidget-background);
+  border-left: 3px solid var(--vscode-panel-border);
+  border-radius: 4px;
+}
+
+.issue-item:last-child {
+  margin-bottom: 0;
+}
+
+.issue-item.severity-critical {
+  border-left-color: #dc2626;
+}
+
+.issue-item.severity-high {
+  border-left-color: #f59e0b;
+}
+
+.issue-item.severity-medium {
+  border-left-color: #3b82f6;
+}
+
+.issue-item.severity-low {
+  border-left-color: #10b981;
+}
+
+.issue-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.issue-severity {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.severity-critical .issue-severity {
+  background: rgba(220, 38, 38, 0.15);
+  color: #dc2626;
+}
+
+.severity-high .issue-severity {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.severity-medium .issue-severity {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+.severity-low .issue-severity {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.issue-line {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  font-family: var(--vscode-editor-font-family);
+}
+
+.issue-message {
+  font-size: 12px;
+  color: var(--vscode-editor-foreground);
+  line-height: 1.5;
+}
+
+/* Panel Error */
+.panel-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.error-message {
+  font-size: 14px;
+  color: var(--vscode-errorForeground);
+}
+
+/* Breadcrumb Navigation */
+.breadcrumb-nav {
+  display: flex;
+  align-items: center;
+  padding: 12px 20px;
+  background: var(--vscode-sideBar-background);
+  border-bottom: 1px solid var(--vscode-panel-border);
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.breadcrumb-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  color: var(--vscode-textLink-foreground);
+  cursor: pointer;
+  font-size: 13px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.breadcrumb-link:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.breadcrumb-current {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  color: var(--vscode-editor-foreground);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.breadcrumb-icon {
+  font-size: 14px;
+}
+
+.breadcrumb-separator {
+  color: var(--vscode-descriptionForeground);
+  font-size: 16px;
+  user-select: none;
+}
+
+/* Visualization Selector */
+.visualization-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  background: var(--vscode-editorWidget-background);
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.selector-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vscode-descriptionForeground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.viz-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.viz-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.viz-option:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.viz-option.active {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border-color: var(--vscode-button-background);
+}
+
+.viz-icon {
+  font-size: 14px;
+}
+
+.viz-label {
+  font-weight: 500;
+}
+
+/* File Detail Panel Specific Styles */
+.file-path {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  font-family: var(--vscode-editor-font-family);
+  margin-top: 4px;
+}
+
+.coverage-good {
+  color: #10b981;
+}
+
+.coverage-medium {
+  color: #f59e0b;
+}
+
+.coverage-low {
+  color: #dc2626;
+}
+
+.complexity-low {
+  color: #10b981;
+}
+
+.complexity-medium {
+  color: #f59e0b;
+}
+
+.complexity-high {
+  color: #dc2626;
+}
+
+.score-good {
+  color: #10b981;
+}
+
+.score-medium {
+  color: #f59e0b;
+}
+
+.score-low {
+  color: #dc2626;
+}
+
+/* Metrics Grid */
+.metrics-grid {
+  padding: 20px;
+}
+
+.metric-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.metric-card {
+  padding: 20px;
+  background: var(--vscode-editorWidget-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.metric-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.metric-icon {
+  font-size: 24px;
+}
+
+.metric-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vscode-descriptionForeground);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--vscode-editor-foreground);
+  margin-bottom: 4px;
+}
+
+.metric-warning {
+  color: #f59e0b;
+}
+
+.metric-label {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.issue-category {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  margin-left: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .viz-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .panel-stats {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .viz-tabs {
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .metric-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

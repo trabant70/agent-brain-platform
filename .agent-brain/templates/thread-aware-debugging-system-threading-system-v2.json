@@ -38,16 +38,6 @@
         "createdAt": "2025-01-26T10:00:00.000Z",
         "updatedAt": "2025-01-26T10:00:00.000Z"
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-28T20:48:47.020Z",
-          "injectedBy": "user",
-          "injectionType": "template",
-          "parentTemplateId": "threading-system-v2",
-          "parentTemplateName": "Thread-Aware Debugging System"
-        }
-      ],
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
       "maturity": {
@@ -63,7 +53,17 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": [
+        {
+          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
+          "injectedAt": "2025-10-28T21:29:47.747Z",
+          "injectedBy": "user",
+          "injectionType": "item",
+          "parentTemplateId": "threading-system-v2",
+          "parentTemplateName": "Thread-Aware Debugging System"
+        }
+      ]
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440002",
@@ -82,7 +82,6 @@
         "createdAt": "2025-01-26T10:00:00.000Z",
         "updatedAt": "2025-01-26T10:00:00.000Z"
       },
-      "injectedTo": [],
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
       "maturity": {
@@ -98,7 +97,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440003",
@@ -117,7 +117,6 @@
         "createdAt": "2025-01-26T10:00:00.000Z",
         "updatedAt": "2025-01-26T10:00:00.000Z"
       },
-      "injectedTo": [],
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
       "maturity": {
@@ -133,7 +132,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440004",
@@ -153,7 +153,6 @@
         "createdAt": "2025-01-26T10:00:00.000Z",
         "updatedAt": "2025-01-26T10:00:00.000Z"
       },
-      "injectedTo": [],
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
       "maturity": {
@@ -169,7 +168,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440005",
@@ -188,7 +188,6 @@
         "createdAt": "2025-01-26T10:00:00.000Z",
         "updatedAt": "2025-01-26T10:00:00.000Z"
       },
-      "injectedTo": [],
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
       "maturity": {
@@ -204,7 +203,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440006",
@@ -223,7 +223,6 @@
         "createdAt": "2025-01-26T10:00:00.000Z",
         "updatedAt": "2025-01-26T10:00:00.000Z"
       },
-      "injectedTo": [],
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
       "maturity": {
@@ -239,7 +238,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440007",
@@ -259,7 +259,6 @@
         "createdAt": "2025-01-26T10:00:00.000Z",
         "updatedAt": "2025-01-26T10:00:00.000Z"
       },
-      "injectedTo": [],
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
       "maturity": {
@@ -275,7 +274,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440008",
@@ -294,7 +294,6 @@
         "createdAt": "2025-01-26T10:00:00.000Z",
         "updatedAt": "2025-01-26T10:00:00.000Z"
       },
-      "injectedTo": [],
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
       "maturity": {
@@ -310,7 +309,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440009",
@@ -329,7 +329,6 @@
         "createdAt": "2025-01-26T10:00:00.000Z",
         "updatedAt": "2025-01-26T10:00:00.000Z"
       },
-      "injectedTo": [],
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
       "maturity": {
@@ -345,7 +344,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "550e8400-e29b-41d4-a716-446655440010",
@@ -364,7 +364,6 @@
         "createdAt": "2025-01-26T10:00:00.000Z",
         "updatedAt": "2025-01-26T10:00:00.000Z"
       },
-      "injectedTo": [],
       "templateId": "threading-system-v2",
       "templateName": "Thread-Aware Debugging System",
       "maturity": {
@@ -380,15 +379,49 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     }
   ],
   "createdAt": "2025-01-26T10:00:00.000Z",
-  "updatedAt": "2025-10-28T20:48:47.020Z",
+  "updatedAt": "2025-10-28T21:29:47.747Z",
   "auditLog": [
     {
       "id": "audit-1761684527020-nzf4s7p84",
       "timestamp": "2025-10-28T20:48:47.020Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "550e8400-e29b-41d4-a716-446655440001",
+        "itemTitle": "Threading System Architecture",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761685132395-23u3rr1bi",
+      "timestamp": "2025-10-28T20:58:52.395Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "550e8400-e29b-41d4-a716-446655440001",
+        "itemTitle": "Threading System Architecture",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761685687848-8ksjnxgza",
+      "timestamp": "2025-10-28T21:08:07.848Z",
+      "operation": "item.injected",
+      "actor": "user",
+      "details": {
+        "itemId": "550e8400-e29b-41d4-a716-446655440001",
+        "itemTitle": "Threading System Architecture",
+        "targetFile": "c:\\projects\\agent-brain-platform\\docs\\claude.md"
+      }
+    },
+    {
+      "id": "audit-1761686987747-x3udynnv6",
+      "timestamp": "2025-10-28T21:29:47.747Z",
       "operation": "item.injected",
       "actor": "user",
       "details": {

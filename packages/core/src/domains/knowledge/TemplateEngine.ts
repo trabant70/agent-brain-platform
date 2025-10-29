@@ -697,29 +697,18 @@ export class TemplateEngine {
           startLine: currentSection.startLine!,
           endLine: lineNumber
         };
-        // Only add TOP-LEVEL TEMPLATE sections (when stack is now empty)
+        // Only add TOP-LEVEL sections (when stack is now empty)
         // Nested items inside templates are NOT returned as separate sections
-        // Individual items (item-xxx) are NOT returned - they're tracked by ClaudeMdScanner
+        // Both template-xxx and item-xxx markers are returned (needed for removal)
         if (sectionStack.length === 0) {
-          // Only include template markers, not standalone item markers
-          if (section.templateId.startsWith('template-')) {
-            logger.info(
-              LogCategory.DATA,
-              'Adding top-level template section',
-              'TemplateEngine.parseTemplateMarkers',
-              { templateId: section.templateId, templateName: section.templateName, startLine: section.startLine, endLine: section.endLine },
-              LogPathway.KNOWLEDGE_MANAGEMENT
-            );
-            sections.push(section);
-          } else if (section.templateId.startsWith('item-')) {
-            logger.info(
-              LogCategory.DATA,
-              'Skipping top-level item marker (tracked by scanner)',
-              'TemplateEngine.parseTemplateMarkers',
-              { templateId: section.templateId },
-              LogPathway.KNOWLEDGE_MANAGEMENT
-            );
-          }
+          logger.info(
+            LogCategory.DATA,
+            'Adding top-level section',
+            'TemplateEngine.parseTemplateMarkers',
+            { templateId: section.templateId, templateName: section.templateName, startLine: section.startLine, endLine: section.endLine },
+            LogPathway.KNOWLEDGE_MANAGEMENT
+          );
+          sections.push(section);
         } else {
           logger.info(
             LogCategory.DATA,

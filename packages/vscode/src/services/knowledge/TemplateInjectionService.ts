@@ -290,10 +290,16 @@ export class TemplateInjectionService {
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
 
-    // Get template to record events for all items
-    const template = this.templateStore.getTemplate(templateId);
-    if (!template) {
-      throw new Error(`Template ${templateId} not found`);
+    // Check if this is a template or an individual item
+    const isIndividualItem = templateId.startsWith('item-');
+    let template: V1Template | undefined = undefined;
+
+    if (!isIndividualItem) {
+      // Get template to record events for all items
+      template = this.templateStore.getTemplate(templateId);
+      if (!template) {
+        throw new Error(`Template ${templateId} not found`);
+      }
     }
 
     // Read current file content
@@ -306,8 +312,8 @@ export class TemplateInjectionService {
       throw new Error(`Failed to read file ${targetFilePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
-    // Use TemplateEngine to remove the template section
-    // templateId already includes "template-" prefix (e.g., "template-bundled.agent-brain-base")
+    // Use TemplateEngine to remove the template/item section
+    // templateId includes prefix (e.g., "template-xxx" or "item-xxx")
     const result = this.templateEngine.removeTemplate(currentContent, templateId);
 
     if (!result.success) {
@@ -324,16 +330,29 @@ export class TemplateInjectionService {
       throw new Error(`Failed to write to file ${targetFilePath}: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
-    // Record removal in template store (audit log)
-    this.templateStore.recordTemplateRemoval(templateId, targetFilePath, 'user');
+    if (!isIndividualItem && template) {
+      // Record removal in template store (audit log)
+      this.templateStore.recordTemplateRemoval(templateId, targetFilePath, 'user');
 
-    // Record timeline events for each removed item
-    for (const item of template.items) {
+      // Record timeline events for each removed item
+      for (const item of template.items) {
+        await this.eventStorage.recordEvent({
+          type: 'remove',
+          knowledgeItemId: item.id,
+          knowledgeItemTitle: item.title,
+          knowledgeItemType: item.type,
+          targetFile: targetFilePath,
+          actor: 'user'
+        });
+      }
+    } else {
+      // For individual items, record a single removal event
+      // Extract the item ID from the marker (item-xxx format)
       await this.eventStorage.recordEvent({
         type: 'remove',
-        knowledgeItemId: item.id,
-        knowledgeItemTitle: item.title,
-        knowledgeItemType: item.type,
+        knowledgeItemId: templateId,
+        knowledgeItemTitle: 'Individual Item',
+        knowledgeItemType: 'unknown',
         targetFile: targetFilePath,
         actor: 'user'
       });
@@ -341,9 +360,9 @@ export class TemplateInjectionService {
 
     logger.info(
       LogCategory.EXTENSION,
-      'Removed template and recorded timeline events',
+      isIndividualItem ? 'Removed individual item and recorded timeline event' : 'Removed template and recorded timeline events',
       'TemplateInjectionService.removeTemplate',
-      { templateId, targetFilePath, itemsRemoved: template.items.length },
+      { templateId, targetFilePath, itemsRemoved: isIndividualItem ? 1 : (template?.items.length || 0) },
       LogPathway.KNOWLEDGE_MANAGEMENT
     );
   }

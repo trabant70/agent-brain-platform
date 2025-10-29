@@ -47,6 +47,15 @@ export class CodeStructureMessageHandler {
           await this.handleMaturityChange(message.payload);
           return true;
 
+        // New message types for KnowledgeWebviewIntegration
+        case 'code-structure-review:request-data':
+          await this.handleRequestData();
+          return true;
+
+        case 'code-structure-review:run-analysis':
+          await this.handleRunAnalysis(message.payload);
+          return true;
+
         default:
           logger.warn(
             LogCategory.WEBVIEW,
@@ -68,6 +77,12 @@ export class CodeStructureMessageHandler {
           message: error instanceof Error ? error.message : 'Unknown error occurred'
         }
       });
+      this.sendMessage({
+        type: 'code-structure-review:error',
+        payload: {
+          error: error instanceof Error ? error.message : 'Unknown error occurred'
+        }
+      });
       return false;
     }
   }
@@ -80,12 +95,28 @@ export class CodeStructureMessageHandler {
 
     try {
       const analysis = await this.provider.analyzeWorkspace();
+      const visualizationData = this.provider.getVisualizationData();
 
+      // Send legacy format
       this.sendMessage({
         type: 'code-structure:analysis-complete',
         payload: {
           analysis,
-          visualizations: this.provider.getVisualizationData()
+          visualizations: visualizationData
+        }
+      });
+
+      // Send new format for KnowledgeWebviewIntegration
+      this.sendMessage({
+        type: 'code-structure-review:data',
+        data: {
+          summary: analysis.summary,
+          categories: analysis.categories,
+          files: visualizationData?.files || [],
+          dependencies: visualizationData?.dependencies || [],
+          timeline: visualizationData?.timeline || [],
+          testCoverage: visualizationData?.testCoverage || {},
+          i18n: visualizationData?.i18n || {}
         }
       });
 
@@ -103,6 +134,10 @@ export class CodeStructureMessageHandler {
         type: 'code-structure:analysis-error',
         payload: { message: error instanceof Error ? error.message : 'Analysis failed' }
       });
+      this.sendMessage({
+        type: 'code-structure-review:error',
+        error: error instanceof Error ? error.message : 'Analysis failed'
+      });
     }
   }
 
@@ -114,12 +149,28 @@ export class CodeStructureMessageHandler {
 
     try {
       const analysis = await this.provider.quickAnalyze();
+      const visualizationData = this.provider.getVisualizationData();
 
+      // Send legacy format
       this.sendMessage({
         type: 'code-structure:analysis-complete',
         payload: {
           analysis,
-          visualizations: this.provider.getVisualizationData()
+          visualizations: visualizationData
+        }
+      });
+
+      // Send new format for KnowledgeWebviewIntegration
+      this.sendMessage({
+        type: 'code-structure-review:data',
+        data: {
+          summary: analysis.summary,
+          categories: analysis.categories,
+          files: visualizationData?.files || [],
+          dependencies: visualizationData?.dependencies || [],
+          timeline: visualizationData?.timeline || [],
+          testCoverage: visualizationData?.testCoverage || {},
+          i18n: visualizationData?.i18n || {}
         }
       });
 
@@ -136,6 +187,10 @@ export class CodeStructureMessageHandler {
       this.sendMessage({
         type: 'code-structure:analysis-error',
         payload: { message: error instanceof Error ? error.message : 'Analysis failed' }
+      });
+      this.sendMessage({
+        type: 'code-structure-review:error',
+        error: error instanceof Error ? error.message : 'Analysis failed'
       });
     }
   }
@@ -205,5 +260,132 @@ export class CodeStructureMessageHandler {
       `Maturity level changed to ${payload.maturityLevel}`,
       'handleMaturityChange'
     );
+  }
+
+  /**
+   * Handle request for current analysis data
+   * Sends current analysis to webview or empty state if no analysis exists
+   */
+  private async handleRequestData(): Promise<void> {
+    logger.debug(
+      LogCategory.WEBVIEW,
+      'Request for code structure data received',
+      'handleRequestData'
+    );
+
+    try {
+      const currentAnalysis = this.provider.getCurrentAnalysis();
+
+      if (currentAnalysis) {
+        // Send existing analysis data
+        const visualizationData = this.provider.getVisualizationData();
+
+        this.sendMessage({
+          type: 'code-structure-review:data',
+          data: {
+            summary: currentAnalysis.summary,
+            categories: currentAnalysis.categories,
+            files: visualizationData?.files || [],
+            dependencies: visualizationData?.dependencies || [],
+            timeline: visualizationData?.timeline || [],
+            testCoverage: visualizationData?.testCoverage || {},
+            i18n: visualizationData?.i18n || {}
+          }
+        });
+
+        logger.info(
+          LogCategory.WEBVIEW,
+          'Sent existing code structure data to webview',
+          'handleRequestData',
+          { score: currentAnalysis.summary.overallScore, issues: currentAnalysis.summary.totalIssues }
+        );
+      } else {
+        // No analysis available - send empty state
+        this.sendMessage({
+          type: 'code-structure-review:clear'
+        });
+
+        logger.debug(
+          LogCategory.WEBVIEW,
+          'No analysis data available, sent clear message',
+          'handleRequestData'
+        );
+      }
+    } catch (error) {
+      logger.error(
+        LogCategory.WEBVIEW,
+        'Failed to get current analysis data',
+        'handleRequestData',
+        error
+      );
+      this.sendMessage({
+        type: 'code-structure-review:error',
+        error: error instanceof Error ? error.message : 'Failed to retrieve analysis data'
+      });
+    }
+  }
+
+  /**
+   * Handle run analysis request
+   * Triggers a full analysis and sends results to webview
+   */
+  private async handleRunAnalysis(payload: any = {}): Promise<void> {
+    logger.info(
+      LogCategory.WEBVIEW,
+      'Run analysis requested from webview',
+      'handleRunAnalysis',
+      payload
+    );
+
+    try {
+      // Run full analysis
+      const analysis = await this.provider.analyzeWorkspace();
+      const visualizationData = this.provider.getVisualizationData();
+
+      // Send results to webview
+      this.sendMessage({
+        type: 'code-structure-review:data',
+        data: {
+          summary: analysis.summary,
+          categories: analysis.categories,
+          files: visualizationData?.files || [],
+          dependencies: visualizationData?.dependencies || [],
+          timeline: visualizationData?.timeline || [],
+          testCoverage: visualizationData?.testCoverage || {},
+          i18n: visualizationData?.i18n || {}
+        }
+      });
+
+      logger.info(
+        LogCategory.WEBVIEW,
+        'Analysis complete, data sent to webview',
+        'handleRunAnalysis',
+        {
+          score: analysis.summary.overallScore,
+          totalIssues: analysis.summary.totalIssues,
+          categories: analysis.categories.length
+        }
+      );
+
+      vscode.window.showInformationMessage(
+        `Code Structure Analysis complete: ${analysis.summary.overallScore}/100 score, ${analysis.summary.totalIssues} issues found`
+      );
+    } catch (error) {
+      logger.error(
+        LogCategory.WEBVIEW,
+        'Analysis failed',
+        'handleRunAnalysis',
+        error
+      );
+
+      this.sendMessage({
+        type: 'code-structure-review:error',
+        error: error instanceof Error ? error.message : 'Analysis failed'
+      });
+
+      vscode.window.showErrorMessage(
+        `Code structure analysis failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
   }
 }

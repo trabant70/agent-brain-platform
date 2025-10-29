@@ -105,25 +105,44 @@ export class KnowledgeViewController {
       onRemoveInjection: (type, groupType, groupId, itemId, filePath) => {
         webviewLogger.debug(
           LogCategory.UI,
-          'Removing V2 injection from file',
+          'Removing injection from file',
           'KnowledgeViewController.onRemoveInjection',
           { type, groupType, groupId, itemId, filePath },
           LogPathway.KNOWLEDGE_MANAGEMENT
         );
-        // Send message to extension to remove the V2 group/item from the file
-        if (window.vscode) {
-          window.vscode.postMessage({
-            type: 'v2:remove-injection',
-            payload: { type, groupType, groupId, itemId, filePath }
-          });
-        } else {
-          webviewLogger.error(
+
+        // Check if this is a V1 item marker (item-xxx format)
+        // V1 items use the template removal system, not the V2 group system
+        if (type === 'item' && itemId && itemId.startsWith('item-')) {
+          webviewLogger.debug(
             LogCategory.UI,
-            'Cannot remove injection - VSCode API not available',
+            'Detected V1 item marker, using V1 removal',
             'KnowledgeViewController.onRemoveInjection',
-            undefined,
+            { itemId, filePath },
             LogPathway.KNOWLEDGE_MANAGEMENT
           );
+          if (window.vscode) {
+            window.vscode.postMessage({
+              type: 'v1:remove-injected-template',
+              payload: { templateId: itemId, filePath }
+            });
+          }
+        } else {
+          // V2 group/item removal
+          if (window.vscode) {
+            window.vscode.postMessage({
+              type: 'v2:remove-injection',
+              payload: { type, groupType, groupId, itemId, filePath }
+            });
+          } else {
+            webviewLogger.error(
+              LogCategory.UI,
+              'Cannot remove injection - VSCode API not available',
+              'KnowledgeViewController.onRemoveInjection',
+              undefined,
+              LogPathway.KNOWLEDGE_MANAGEMENT
+            );
+          }
         }
       },
       onScanFiles: () => this.scanClaudeMdFiles(),

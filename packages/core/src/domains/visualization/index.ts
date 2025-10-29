@@ -38,3 +38,12 @@ export * from './registry/RendererRegistry';
 
 // Theme
 export * from './theme/EventVisualTheme';
+
+// Integration (Code Structure Review visualizations)
+export { IntegrationController, createIntegrationController } from './webview/IntegrationController';
+export type { IntegrationControllerConfig } from './webview/IntegrationController';
+export { VisualizationCoordinator } from './webview/coordination/VisualizationCoordinator';
+export { AnalysisDataMapper } from './webview/coordination/AnalysisDataMapper';
+export type { AnalysisData } from './webview/coordination/AnalysisDataMapper';
+export { NavigationStateMachine } from './webview/coordination/NavigationStateMachine';
+export * from './webview/ui-panels';

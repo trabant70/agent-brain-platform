@@ -38,16 +38,6 @@
         "createdAt": "2025-10-28T19:05:00.160Z",
         "updatedAt": "2025-10-28T19:05:00.160Z"
       },
-      "injectedTo": [
-        {
-          "filePath": "c:\\projects\\agent-brain-platform\\docs\\claude.md",
-          "injectedAt": "2025-10-28T20:39:06.437Z",
-          "injectedBy": "user",
-          "injectionType": "item",
-          "parentTemplateId": "cloned.thread-aware-debugging-system-copy-1761678300160",
-          "parentTemplateName": "Thread-Aware Debugging System (Copy)"
-        }
-      ],
       "templateId": "cloned.thread-aware-debugging-system-copy-1761678300160",
       "templateName": "Thread-Aware Debugging System (Copy)",
       "maturity": {
@@ -63,7 +53,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "item-1761678300160-6nmi3gyx0",
@@ -82,7 +73,6 @@
         "createdAt": "2025-10-28T19:05:00.160Z",
         "updatedAt": "2025-10-28T19:05:00.160Z"
       },
-      "injectedTo": [],
       "templateId": "cloned.thread-aware-debugging-system-copy-1761678300160",
       "templateName": "Thread-Aware Debugging System (Copy)",
       "maturity": {
@@ -98,7 +88,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "item-1761678300160-pvazz6kdh",
@@ -117,7 +108,6 @@
         "createdAt": "2025-10-28T19:05:00.160Z",
         "updatedAt": "2025-10-28T19:05:00.160Z"
       },
-      "injectedTo": [],
       "templateId": "cloned.thread-aware-debugging-system-copy-1761678300160",
       "templateName": "Thread-Aware Debugging System (Copy)",
       "maturity": {
@@ -133,7 +123,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "item-1761678300160-apvieso0m",
@@ -153,7 +144,6 @@
         "createdAt": "2025-10-28T19:05:00.160Z",
         "updatedAt": "2025-10-28T19:05:00.160Z"
       },
-      "injectedTo": [],
       "templateId": "cloned.thread-aware-debugging-system-copy-1761678300160",
       "templateName": "Thread-Aware Debugging System (Copy)",
       "maturity": {
@@ -169,7 +159,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "item-1761678300160-5hdxar4or",
@@ -188,7 +179,6 @@
         "createdAt": "2025-10-28T19:05:00.160Z",
         "updatedAt": "2025-10-28T19:05:00.160Z"
       },
-      "injectedTo": [],
       "templateId": "cloned.thread-aware-debugging-system-copy-1761678300160",
       "templateName": "Thread-Aware Debugging System (Copy)",
       "maturity": {
@@ -204,7 +194,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "item-1761678300160-3bigzrrws",
@@ -223,7 +214,6 @@
         "createdAt": "2025-10-28T19:05:00.160Z",
         "updatedAt": "2025-10-28T19:05:00.160Z"
       },
-      "injectedTo": [],
       "templateId": "cloned.thread-aware-debugging-system-copy-1761678300160",
       "templateName": "Thread-Aware Debugging System (Copy)",
       "maturity": {
@@ -239,7 +229,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "item-1761678300160-2fr0aimq9",
@@ -259,7 +250,6 @@
         "createdAt": "2025-10-28T19:05:00.160Z",
         "updatedAt": "2025-10-28T19:05:00.160Z"
       },
-      "injectedTo": [],
       "templateId": "cloned.thread-aware-debugging-system-copy-1761678300160",
       "templateName": "Thread-Aware Debugging System (Copy)",
       "maturity": {
@@ -275,7 +265,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "item-1761678300160-a6yonuhh8",
@@ -294,7 +285,6 @@
         "createdAt": "2025-10-28T19:05:00.160Z",
         "updatedAt": "2025-10-28T19:05:00.160Z"
       },
-      "injectedTo": [],
       "templateId": "cloned.thread-aware-debugging-system-copy-1761678300160",
       "templateName": "Thread-Aware Debugging System (Copy)",
       "maturity": {
@@ -310,7 +300,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "item-1761678300160-clsnq692n",
@@ -329,7 +320,6 @@
         "createdAt": "2025-10-28T19:05:00.160Z",
         "updatedAt": "2025-10-28T19:05:00.160Z"
       },
-      "injectedTo": [],
       "templateId": "cloned.thread-aware-debugging-system-copy-1761678300160",
       "templateName": "Thread-Aware Debugging System (Copy)",
       "maturity": {
@@ -345,7 +335,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     },
     {
       "id": "item-1761678300160-dbw3bz8z6",
@@ -364,7 +355,6 @@
         "createdAt": "2025-10-28T19:05:00.160Z",
         "updatedAt": "2025-10-28T19:05:00.160Z"
       },
-      "injectedTo": [],
       "templateId": "cloned.thread-aware-debugging-system-copy-1761678300160",
       "templateName": "Thread-Aware Debugging System (Copy)",
       "maturity": {
@@ -380,7 +370,8 @@
           "min": 2,
           "max": 3
         }
-      }
+      },
+      "injectedTo": []
     }
   ],
   "itemCount": 10,

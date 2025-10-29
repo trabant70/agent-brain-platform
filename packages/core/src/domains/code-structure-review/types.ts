@@ -502,6 +502,83 @@ export interface ThreadingPromptPayload {
 }
 
 // ============================================================================
+// AI Suggestions System
+// ============================================================================
+
+export type SuggestionType =
+  | 'critical-fix'        // Security, broken features
+  | 'quick-win'           // High impact, low effort
+  | 'systemic-improvement'// Pattern-based fixes
+  | 'best-practice'       // Code quality
+  | 'refactoring'         // Complexity reduction
+  | 'testing'             // Coverage improvements
+  | 'documentation'       // Missing docs
+  | 'accessibility'       // A11y issues
+  | 'i18n'                // Internationalization
+  | 'performance';        // Optimization
+
+export interface Suggestion {
+  id: string;
+  type: SuggestionType;
+  title: string;
+  description: string;
+
+  // Priority & Impact
+  priority: number;         // 0-100 (calculated)
+  impact: 'high' | 'medium' | 'low';
+  effort: 'low' | 'medium' | 'high';
+  urgency: 'critical' | 'high' | 'medium' | 'low';
+
+  // Context
+  category?: string;
+  relatedIssues: string[];  // Issue IDs
+  affectedFiles: string[];
+
+  // Actions
+  action: SuggestionAction;
+  aiPrompt: string;         // Ready-to-copy prompt
+  learnMoreUrl?: string;
+
+  // Metadata
+  maturityLevel: MaturityLevel;
+  tags: string[];
+}
+
+export interface SuggestionAction {
+  type: 'fix-issue' | 'refactor-file' | 'add-tests' | 'improve-ux' | 'extract-strings';
+  targetFiles: string[];
+  lineNumbers?: number[];
+  data: any;
+}
+
+export interface Pattern {
+  id: string;
+  name: string;
+  description: string;
+
+  // Detection
+  issueIds: string[];
+  confidence: number;       // 0-1
+
+  // Impact
+  affectedFiles: number;
+  totalIssues: number;
+  categories: string[];
+
+  // Recommendation
+  fixStrategy: string;
+  estimatedEffort: 'low' | 'medium' | 'high';
+  potentialImpact: 'high' | 'medium' | 'low';
+}
+
+export interface UserContext {
+  recentFiles: string[];
+  recentCategories: string[];
+  dismissedSuggestions: string[];
+  completedActions: string[];
+}
+
+// ============================================================================
 // Analysis Events (for logging and monitoring)
 // ============================================================================
 

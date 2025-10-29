@@ -7,6 +7,8 @@
 import { t, tf, onI18nReady } from '../../webview/i18n';
 import { NotificationManager } from '../NotificationManager';
 import { webviewLogger, LogCategory, LogPathway } from '../../webview/WebviewLogger';
+import { createIntegrationController, type IntegrationController, type AnalysisData } from '../../webview/IntegrationController';
+import { MaturityLevelAdapter, EducationalTooltips, type MaturityLevel } from '../../webview/progressive-disclosure';
 
 export interface CodeStructureViewState {
   currentAnalysis: any | null;
@@ -18,6 +20,9 @@ export class CodeStructureViewController {
   private state: CodeStructureViewState;
   private messageHandler: ((message: any) => void) | null = null;
   private notifications: NotificationManager;
+  private maturityAdapter: MaturityLevelAdapter;
+  private tooltips: EducationalTooltips;
+  private integrationController: IntegrationController | null = null;
 
   constructor() {
     console.log('[CodeStructureViewController] Constructor called');
@@ -27,6 +32,8 @@ export class CodeStructureViewController {
       isAnalyzing: false
     };
     this.notifications = new NotificationManager();
+    this.maturityAdapter = new MaturityLevelAdapter('intermediate');
+    this.tooltips = new EducationalTooltips('intermediate');
 
     // Re-render when i18n is ready
     onI18nReady(() => {
@@ -74,7 +81,7 @@ export class CodeStructureViewController {
       case 'code-structure:analysis-complete':
         this.state.isAnalyzing = false;
         this.state.currentAnalysis = message.payload.analysis;
-        this.renderAnalysis(message.payload.analysis);
+        this.renderAnalysis(message.payload.analysis, message.payload.visualizations);
         this.notifications.show({
           type: 'success',
           message: t('codeStructure.analysisComplete'),
@@ -99,6 +106,26 @@ export class CodeStructureViewController {
 
       case 'code-structure:prompt-generated':
         this.showGeneratedPrompt(message.payload.prompt);
+        break;
+
+      // New message format for IntegrationController
+      case 'code-structure-review:data':
+        this.handleAnalysisData(message.data);
+        break;
+
+      case 'code-structure-review:clear':
+        this.clearAnalysis();
+        break;
+
+      case 'code-structure-review:error':
+        this.state.isAnalyzing = false;
+        this.renderError(message.error || 'Analysis failed');
+        this.notifications.show({
+          type: 'error',
+          message: t('codeStructure.analysisError'),
+          duration: 5000
+        });
+        webviewLogger.error(LogCategory.UI, 'Analysis error', 'handleMessage', message);
         break;
 
       default:
@@ -214,48 +241,44 @@ export class CodeStructureViewController {
   }
 
   /**
-   * Render analysis results
+   * Render analysis results with visualizations
    */
-  private renderAnalysis(analysis: any): void {
+  private async renderAnalysis(analysis: any, visualizations?: any[]): Promise<void> {
     const mainContainer = document.getElementById('code-structure-main');
     if (!mainContainer) return;
 
     const summary = analysis.summary;
     const categories = analysis.categories || [];
 
+    // Get maturity-adapted summary
+    const adaptedSummary = this.maturityAdapter.adaptSummary(summary);
+
+    // Filter categories/issues based on maturity level
+    const displayCategories = this.maturityAdapter.shouldShowDetailedMetrics()
+      ? categories
+      : categories.filter((c: any) => c.priority === 1); // Show only priority 1 for novices
+
     mainContainer.innerHTML = `
-      <div class="analysis-results">
-        <!-- Summary Dashboard -->
-        <div class="summary-dashboard">
-          <div class="score-card ${this.getScoreClass(summary.overallScore)}">
-            <div class="score-value">${summary.overallScore}</div>
-            <div class="score-label">${t('codeStructure.overallScore', 'Overall Score')}</div>
-          </div>
-          <div class="stats-grid">
-            <div class="stat-item">
-              <div class="stat-value">${summary.totalIssues}</div>
-              <div class="stat-label">${t('codeStructure.totalIssues', 'Total Issues')}</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value critical">${summary.criticalIssues || 0}</div>
-              <div class="stat-label">${t('codeStructure.critical', 'Critical')}</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value high">${summary.highPriorityIssues || 0}</div>
-              <div class="stat-label">${t('codeStructure.high', 'High')}</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value medium">${summary.mediumPriorityIssues || 0}</div>
-              <div class="stat-label">${t('codeStructure.medium', 'Medium')}</div>
-            </div>
-          </div>
+      <div class="analysis-results" data-maturity-level="${this.state.maturityLevel}">
+        <!-- Maturity-Adapted Summary -->
+        ${adaptedSummary}
+
+        <!-- Visualizations Section (shown based on maturity) -->
+        ${this.maturityAdapter.shouldShowVisualizations() ? `
+        <div class="visualizations-wrapper">
+          <h3>
+            ${t('codeStructure.visualizations', 'Visual Analysis')}
+            ${this.tooltips.createHelpIcon('visualizations', 'small')}
+          </h3>
+          <div id="visualizations-container" class="visualizations-container"></div>
         </div>
+        ` : ''}
 
         <!-- Category Results -->
         <div class="categories-container">
           <h3>${t('codeStructure.categories', 'Categories')}</h3>
           <div class="categories-list">
-            ${categories.map((cat: any) => this.renderCategoryCard(cat)).join('')}
+            ${displayCategories.map((cat: any) => this.renderCategoryCard(cat)).join('')}
           </div>
         </div>
 
@@ -264,9 +287,14 @@ export class CodeStructureViewController {
           <button id="generate-prompt" class="btn btn-primary">
             ${t('codeStructure.generatePrompt', 'Generate AI Prompt')}
           </button>
+          ${this.maturityAdapter.shouldShowAdvancedFeatures() ? `
           <button id="export-report" class="btn btn-secondary">
             ${t('codeStructure.exportReport', 'Export Report')}
           </button>
+          <button id="view-raw-data" class="btn btn-secondary">
+            View Raw Data
+          </button>
+          ` : ''}
         </div>
       </div>
     `;
@@ -274,10 +302,119 @@ export class CodeStructureViewController {
     // Setup event listeners for analysis actions
     this.setupAnalysisActionListeners();
 
+    // Initialize tooltips
+    this.tooltips.initializeTooltipListeners();
+
+    // Render visualizations (only if maturity level allows)
+    if (this.maturityAdapter.shouldShowVisualizations()) {
+      await this.renderVisualizations(analysis, visualizations);
+    }
+
     webviewLogger.info(LogCategory.UI, 'Analysis results rendered', 'renderAnalysis', {
       categories: categories.length,
-      issues: summary.totalIssues
+      issues: summary.totalIssues,
+      maturityLevel: this.state.maturityLevel
     });
+  }
+
+  /**
+   * Handle analysis data from new message format (code-structure-review:data)
+   */
+  private async handleAnalysisData(data: AnalysisData): Promise<void> {
+    webviewLogger.info(LogCategory.UI, 'Received analysis data', 'handleAnalysisData', {
+      hasData: !!data,
+      score: data.summary?.overallScore,
+      categories: data.categories?.length
+    });
+
+    this.state.isAnalyzing = false;
+    this.state.currentAnalysis = data;
+
+    // Initialize or refresh IntegrationController with new data
+    await this.initializeIntegrationController(data);
+
+    this.notifications.show({
+      type: 'success',
+      message: t('codeStructure.analysisComplete'),
+      duration: 3000
+    });
+  }
+
+  /**
+   * Clear analysis and reset to empty state
+   */
+  private clearAnalysis(): void {
+    this.state.currentAnalysis = null;
+    this.state.isAnalyzing = false;
+
+    // Dispose integration controller
+    if (this.integrationController) {
+      this.integrationController.dispose();
+      this.integrationController = null;
+    }
+
+    // Re-render empty state
+    this.render();
+  }
+
+  /**
+   * Initialize IntegrationController with analysis data
+   */
+  private async initializeIntegrationController(data: AnalysisData): Promise<void> {
+    const container = document.getElementById('code-structure-main');
+    if (!container) {
+      webviewLogger.error(LogCategory.UI, 'code-structure-main container not found', 'initializeIntegrationController');
+      return;
+    }
+
+    try {
+      // Clear container
+      container.innerHTML = '';
+
+      // Dispose existing controller
+      if (this.integrationController) {
+        this.integrationController.dispose();
+      }
+
+      // Create new integration controller
+      this.integrationController = createIntegrationController(container, {
+        enableCoordinator: true,
+        enableBreadcrumb: true,
+        enableKeyboardShortcuts: true,
+        enableDeepLinking: false, // Disabled for tab integration
+        autoUpdateHash: false,
+        autoRender: true
+      });
+
+      // Initialize with data
+      await this.integrationController.initialize(data);
+
+      webviewLogger.info(LogCategory.UI, 'IntegrationController initialized with analysis data', 'initializeIntegrationController', {
+        hasD3: this.integrationController.isD3Available(),
+        score: data.summary?.overallScore
+      });
+    } catch (error) {
+      webviewLogger.error(LogCategory.UI, 'Failed to initialize IntegrationController', 'initializeIntegrationController', error);
+      this.renderError('Failed to initialize visualizations');
+    }
+  }
+
+  /**
+   * Render visualizations for the analysis (legacy method kept for backward compatibility)
+   */
+  private async renderVisualizations(analysis: any, visualizationData?: any[]): Promise<void> {
+    // Convert to AnalysisData format and use IntegrationController
+    const analysisData: AnalysisData = {
+      summary: analysis.summary,
+      categories: analysis.categories,
+      files: visualizationData || [],
+      dependencies: [],
+      timeline: [],
+      testCoverage: {},
+      i18n: {}
+    };
+
+    await this.initializeIntegrationController(analysisData);
   }
 
   /**
@@ -333,14 +470,55 @@ export class CodeStructureViewController {
     // Maturity level selector
     document.getElementById('maturity-level-select')?.addEventListener('change', (e) => {
       const select = e.target as HTMLSelectElement;
-      this.state.maturityLevel = select.value as any;
+      this.state.maturityLevel = select.value as MaturityLevel;
+
+      // Update adapters
+      this.maturityAdapter.setLevel(this.state.maturityLevel);
+      this.tooltips.setMaturityLevel(this.state.maturityLevel);
+
+      // Re-render if we have analysis data
+      if (this.state.currentAnalysis) {
+        this.renderAnalysis(this.state.currentAnalysis);
+      }
+
+      // Notify backend
       this.sendMessage({
         type: 'code-structure:maturity-changed',
         payload: { maturityLevel: this.state.maturityLevel }
       });
+
+      webviewLogger.info(LogCategory.UI, 'Maturity level changed', 'maturity-level-select', {
+        level: this.state.maturityLevel
+      });
     });
 
+    // Visualization interaction events
+    this.setupVisualizationEventListeners();
+
     webviewLogger.debug(LogCategory.UI, 'Event listeners setup', 'setupEventListeners');
+  }
+
+  /**
+   * Setup visualization interaction event listeners
+   */
+  private setupVisualizationEventListeners(): void {
+    // Listen for bubble chart clicks (category drill-down)
+    window.addEventListener('bubble-click', ((event: CustomEvent) => {
+      const { categoryId, categoryName } = event.detail;
+      webviewLogger.info(LogCategory.UI, 'Bubble clicked', 'bubble-click', { categoryId });
+      this.showCategoryIssues(categoryId);
+    }) as EventListener);
+
+    // Listen for heatmap cell clicks (file navigation)
+    window.addEventListener('heatmap-cell-click', ((event: CustomEvent) => {
+      const { filePath, issueCount } = event.detail;
+      webviewLogger.info(LogCategory.UI, 'Heatmap cell clicked', 'heatmap-cell-click', { filePath });
+
+      // Show issues for this specific file
+      if (this.state.currentAnalysis) {
+        this.showFileIssues(filePath);
+      }
+    }) as EventListener);
   }
 
   /**
@@ -423,7 +601,56 @@ export class CodeStructureViewController {
 
     // Setup back button
     document.getElementById('back-to-summary')?.addEventListener('click', () => {
-      this.renderAnalysis(this.state.currentAnalysis);
+      if (this.state.currentAnalysis) {
+        this.renderAnalysis(this.state.currentAnalysis);
+      }
+    });
+  }
+
+  /**
+   * Show issues for a specific file
+   */
+  private showFileIssues(filePath: string): void {
+    if (!this.state.currentAnalysis) return;
+
+    const mainContainer = document.getElementById('code-structure-main');
+    if (!mainContainer) return;
+
+    // Collect all issues for this file across all categories
+    const allIssues: any[] = [];
+    for (const category of this.state.currentAnalysis.categories || []) {
+      const fileIssues = (category.issues || []).filter((issue: any) => issue.filePath === filePath);
+      allIssues.push(...fileIssues.map((issue: any) => ({ ...issue, category: category.categoryName })));
+    }
+
+    if (allIssues.length === 0) {
+      webviewLogger.warn(LogCategory.UI, 'No issues found for file', 'showFileIssues', { filePath });
+      return;
+    }
+
+    const fileName = filePath.split('/').pop() || filePath;
+
+    mainContainer.innerHTML = `
+      <div class="file-issues-view">
+        <button id="back-to-summary" class="btn-link back-btn">← ${t('codeStructure.backToSummary', 'Back to Summary')}</button>
+
+        <div class="file-issues-header">
+          <h3>${fileName}</h3>
+          <div class="file-path">${filePath}</div>
+          <div class="issue-count">${allIssues.length} issue${allIssues.length !== 1 ? 's' : ''}</div>
+        </div>
+
+        <div class="issues-list">
+          ${allIssues.map((issue: any) => this.renderIssueCard(issue)).join('')}
+        </div>
+      </div>
+    `;
+
+    // Setup back button
+    document.getElementById('back-to-summary')?.addEventListener('click', () => {
+      if (this.state.currentAnalysis) {
+        this.renderAnalysis(this.state.currentAnalysis);
+      }
     });
   }
 

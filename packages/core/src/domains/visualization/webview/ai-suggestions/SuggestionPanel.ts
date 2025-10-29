@@ -1,0 +1,209 @@
+/**
+ * Suggestion Panel Component
+ * Container for displaying multiple AI suggestions
+ */
+
+import type { Suggestion } from './SuggestionEngine';
+import { suggestionEngine } from './SuggestionEngine';
+import { SuggestionCard, type SuggestionCardConfig } from './SuggestionCard';
+import type { AnalysisData } from '../coordination/AnalysisDataMapper';
+
+/**
+ * Suggestion Panel Configuration
+ */
+export interface SuggestionPanelConfig extends SuggestionCardConfig {
+  maxSuggestions?: number;
+  collapsible?: boolean;
+  defaultCollapsed?: boolean;
+}
+
+/**
+ * Suggestion Panel Component
+ */
+export class SuggestionPanel {
+  private container: HTMLElement;
+  private analysisData: AnalysisData | null = null;
+  private suggestions: Suggestion[] = [];
+  private config: SuggestionPanelConfig;
+  private isCollapsed: boolean = false;
+
+  constructor(container: HTMLElement, config: SuggestionPanelConfig = {}) {
+    this.container = container;
+    this.config = {
+      maxSuggestions: 5,
+      collapsible: true,
+      defaultCollapsed: false,
+      ...config
+    };
+    this.isCollapsed = this.config.defaultCollapsed || false;
+  }
+
+  /**
+   * Render suggestions for analysis data
+   */
+  render(analysisData: AnalysisData): void {
+    this.analysisData = analysisData;
+
+    // Generate suggestions
+    this.suggestions = suggestionEngine.generateSuggestions(analysisData);
+
+    // Limit number of suggestions
+    const displaySuggestions = this.suggestions.slice(0, this.config.maxSuggestions);
+
+    if (displaySuggestions.length === 0) {
+      this.renderEmpty();
+      return;
+    }
+
+    // Build panel HTML
+    const panel = document.createElement('div');
+    panel.className = 'suggestion-panel';
+    panel.innerHTML = `
+      <div class="suggestion-panel-header">
+        <div class="suggestion-panel-title">
+          <span class="icon">💡</span>
+          <h3>AI Suggestions</h3>
+          <span class="suggestion-count">${displaySuggestions.length}</span>
+        </div>
+        ${this.config.collapsible ? `
+          <button class="suggestion-panel-toggle" title="${this.isCollapsed ? 'Expand' : 'Collapse'}">
+            <span class="toggle-icon">${this.isCollapsed ? '▶' : '▼'}</span>
+          </button>
+        ` : ''}
+      </div>
+
+      <div class="suggestion-panel-content ${this.isCollapsed ? 'collapsed' : ''}">
+        <div class="suggestion-cards-container">
+          <!-- Suggestion cards will be inserted here -->
+        </div>
+
+        ${this.suggestions.length > this.config.maxSuggestions! ? `
+          <div class="suggestion-panel-more">
+            <p>+${this.suggestions.length - this.config.maxSuggestions!} more suggestion${this.suggestions.length - this.config.maxSuggestions! !== 1 ? 's' : ''} available</p>
+            <button class="btn-show-all-suggestions">Show All Suggestions</button>
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    // Clear container and add panel
+    this.container.innerHTML = '';
+    this.container.appendChild(panel);
+
+    // Render suggestion cards
+    const cardsContainer = panel.querySelector('.suggestion-cards-container') as HTMLElement;
+    if (cardsContainer) {
+      displaySuggestions.forEach(suggestion => {
+        const card = new SuggestionCard(suggestion, analysisData, this.config);
+        cardsContainer.appendChild(card.render());
+      });
+    }
+
+    // Attach event listeners
+    this.attachEventListeners(panel);
+  }
+
+  /**
+   * Render empty state
+   */
+  private renderEmpty(): void {
+    this.container.innerHTML = `
+      <div class="suggestion-panel suggestion-panel-empty">
+        <div class="suggestion-panel-header">
+          <div class="suggestion-panel-title">
+            <span class="icon">✅</span>
+            <h3>All Good!</h3>
+          </div>
+        </div>
+
+        <div class="suggestion-panel-content">
+          <div class="suggestion-empty-state">
+            <div class="empty-icon">🎉</div>
+            <h4>No Suggestions Right Now</h4>
+            <p>Your code is in great shape! Keep up the good work maintaining high quality standards.</p>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /**
+   * Attach event listeners
+   */
+  private attachEventListeners(panel: HTMLElement): void {
+    // Toggle button
+    const toggleBtn = panel.querySelector('.suggestion-panel-toggle');
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', () => {
+        this.toggleCollapse(panel);
+      });
+    }
+
+    // Show all button
+    const showAllBtn = panel.querySelector('.btn-show-all-suggestions');
+    if (showAllBtn) {
+      showAllBtn.addEventListener('click', () => {
+        this.showAllSuggestions();
+      });
+    }
+  }
+
+  /**
+   * Toggle collapse/expand
+   */
+  private toggleCollapse(panel: HTMLElement): void {
+    this.isCollapsed = !this.isCollapsed;
+
+    const content = panel.querySelector('.suggestion-panel-content') as HTMLElement;
+    const toggleBtn = panel.querySelector('.suggestion-panel-toggle') as HTMLElement;
+    const toggleIcon = toggleBtn?.querySelector('.toggle-icon');
+
+    if (content) {
+      content.classList.toggle('collapsed', this.isCollapsed);
+    }
+
+    if (toggleIcon) {
+      toggleIcon.textContent = this.isCollapsed ? '▶' : '▼';
+    }
+
+    if (toggleBtn) {
+      toggleBtn.title = this.isCollapsed ? 'Expand' : 'Collapse';
+    }
+  }
+
+  /**
+   * Show all suggestions (expand limit)
+   */
+  private showAllSuggestions(): void {
+    if (!this.analysisData) return;
+
+    // Update config to show all
+    this.config.maxSuggestions = this.suggestions.length;
+
+    // Re-render
+    this.render(this.analysisData);
+  }
+
+  /**
+   * Get current suggestions
+   */
+  getSuggestions(): Suggestion[] {
+    return [...this.suggestions];
+  }
+
+  /**
+   * Clear panel
+   */
+  clear(): void {
+    this.container.innerHTML = '';
+    this.suggestions = [];
+    this.analysisData = null;
+  }
+
+  /**
+   * Dispose panel
+   */
+  dispose(): void {
+    this.clear();
+  }
+}

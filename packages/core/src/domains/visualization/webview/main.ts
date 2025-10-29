@@ -13,6 +13,9 @@ import { initI18n } from './i18n';
 // Import CSS - webpack will bundle it inline
 import '../styles/timeline.css';
 import '../styles/components/knowledge.css';
+import '../styles/components/panels.css';
+import '../styles/components/search-filter.css';
+import '../styles/components/suggestions.css';
 
 // Expose D3 globally
 window.d3 = d3;
@@ -116,7 +119,7 @@ function setupThemeObserver(): void {
 /**
  * Start the application
  */
-function startApplication(): void {
+async function startApplication(): Promise<void> {
     if (typeof window.d3 === 'undefined') {
         webviewLogger.error(LogCategory.WEBVIEW, 'D3.js not loaded', 'startApplication');
         return;
@@ -132,6 +135,9 @@ function startApplication(): void {
         });
         setupResizeObserver();
         setupThemeObserver();
+
+        // Code Structure Review is handled by CodeStructureViewController
+        // which is initialized by UIControllerManager when user navigates to Code Review tab
 
         if (window.vscode) {
             webviewLogger.debug(LogCategory.WEBVIEW, 'Requesting initial data from extension', 'startApplication', undefined, LogPathway.WEBVIEW_MESSAGING);
@@ -286,7 +292,8 @@ function setupMessageHandling(): void {
                         }
                     }
                     // Route code structure messages to CodeStructureViewController
-                    else if (message.type.startsWith('code-structure:')) {
+                    // Supports both old format (code-structure:*) and new format (code-structure-review:*)
+                    else if (message.type.startsWith('code-structure:') || message.type.startsWith('code-structure-review:')) {
                         const codeStructureController = (window as any).codeStructureController;
                         if (codeStructureController && typeof codeStructureController.handleMessage === 'function') {
                             codeStructureController.handleMessage(message);

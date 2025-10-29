@@ -154,19 +154,23 @@ export class ClaudeMdAccordionController {
       // Add V2 groups/items section with removal buttons
       contentHTML += AccordionTemplates.v2GroupsSection(file);
 
-      // Show templates section if any (V1 legacy support - can be removed if not needed)
-      if (file.templates.length > 0) {
+      // Filter to only show actual templates, not individual items (item-xxx)
+      // Individual items are shown in the "Individual Items" section
+      const actualTemplates = file.templates.filter(t => t.templateId.startsWith('template-'));
+
+      // Show templates section if any actual templates exist
+      if (actualTemplates.length > 0) {
         // Check for duplicate template IDs
-        const templateIds = file.templates.map(t => t.templateId);
+        const templateIds = actualTemplates.map(t => t.templateId);
         const duplicateIds = templateIds.filter((id, index) => templateIds.indexOf(id) !== index);
         const hasDuplicates = duplicateIds.length > 0;
 
         contentHTML += `<div class="templates-section">`;
         contentHTML += `<div class="templates-header">
-          ${tf('template.appliedTemplates', { count: file.templates.length })}
+          ${tf('template.appliedTemplates', { count: actualTemplates.length })}
           ${hasDuplicates ? `<span class="template-warning" title="${t('template.duplicatesDetected')}">${t('template.duplicatesWarning')}</span>` : ''}
         </div>`;
-        contentHTML += file.templates.map((template, idx) => {
+        contentHTML += actualTemplates.map((template, idx) => {
           const isDuplicate = duplicateIds.includes(template.templateId) &&
                               templateIds.indexOf(template.templateId) !== idx;
           return `
