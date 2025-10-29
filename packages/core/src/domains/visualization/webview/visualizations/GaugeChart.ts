@@ -188,7 +188,7 @@ export class GaugeChart extends BaseVisualization {
       .attr('stroke', 'var(--vscode-foreground)')
       .attr('stroke-width', 2);
 
-    // Tick labels - position them outside the arc without parent rotation
+    // Tick labels - position them outside the arc and rotate for readability
     g.append('g')
       .attr('class', 'tick-labels')
       .selectAll('text')
@@ -199,7 +199,10 @@ export class GaugeChart extends BaseVisualization {
         const labelRadius = radius * 0.75 - 20;
         const x = Math.cos(angle) * labelRadius;
         const y = Math.sin(angle) * labelRadius;
-        return `translate(${x},${y})`;
+        // Rotate each label by -90 degrees (counter-clockwise quarter turn)
+        const angleDeg = angle * 180 / Math.PI;
+        const rotationAngle = angleDeg - 90;
+        return `translate(${x},${y}) rotate(${rotationAngle})`;
       })
       .attr('text-anchor', 'middle')
       .attr('dy', '0.35em')

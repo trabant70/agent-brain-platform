@@ -2,7 +2,7 @@
   "name": "agent-brain-platform",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.5.25",
+  "version": "0.5.27",
   "publisher": "agent-brain-local",
   "icon": "images/timeline_large.png",
   "repository": {
@@ -236,7 +236,9 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@types/d3-sankey": "^0.12.4",
     "d3": "^7.9.0",
+    "d3-sankey": "^0.12.3",
     "vscode-nls": "^5.2.0"
   },
   "devDependencies": {

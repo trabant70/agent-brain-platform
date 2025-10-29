@@ -5,6 +5,7 @@
  */
 
 import * as d3 from 'd3';
+import { sankey as d3Sankey, sankeyLinkHorizontal } from 'd3-sankey';
 import { SimpleTimelineApp } from './SimpleTimelineApp';
 import { EventVisualTheme } from '../theme/EventVisualTheme';
 import { webviewLogger, LogLevel, LogCategory, LogPathway } from './WebviewLogger';
@@ -17,8 +18,10 @@ import '../styles/components/panels.css';
 import '../styles/components/search-filter.css';
 import '../styles/components/suggestions.css';
 
-// Expose D3 globally
+// Expose D3 globally with Sankey plugin
 window.d3 = d3;
+(window.d3 as any).sankey = d3Sankey;
+(window.d3 as any).sankeyLinkHorizontal = sankeyLinkHorizontal;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PATHWAY LOGGING CONFIGURATION

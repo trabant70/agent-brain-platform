@@ -8,6 +8,7 @@
 
 import * as vscode from 'vscode';
 import * as fs from 'fs/promises';
+import * as path from 'path';
 import {
   StreamingOrchestrator,
   type StreamingAnalysisOptions,
@@ -54,15 +55,113 @@ export interface ProviderOptions {
 /**
  * Code Structure Review Provider for VSCode
  */
+interface AnalysisHistoryEntry {
+  timestamp: number;
+  workspaceFolder: string;
+  analysis: StreamingAnalysisResult;
+}
+
 export class CodeStructureReviewProvider {
   private orchestrator: StreamingOrchestrator;
   private currentAnalysis?: StreamingAnalysisResult;
   private statusBarItem?: vscode.StatusBarItem;
   private cancellationTokenSource?: vscode.CancellationTokenSource;
+  private analysisHistory: AnalysisHistoryEntry[] = [];
+  private readonly MAX_HISTORY_SIZE = 10;
+  private historyFilePath?: string;
 
   constructor() {
     this.orchestrator = new StreamingOrchestrator();
     this.setupProgressForwarding();
+    this.initializeHistoryStorage();
+  }
+
+  /**
+   * Initialize history storage in .agent-brain folder
+   */
+  private async initializeHistoryStorage(): Promise<void> {
+    const workspace = vscode.workspace.workspaceFolders?.[0];
+    if (!workspace) return;
+
+    const agentBrainDir = path.join(workspace.uri.fsPath, '.agent-brain');
+    const codeReviewDir = path.join(agentBrainDir, 'code-structure-review');
+    this.historyFilePath = path.join(codeReviewDir, 'analysis-history.json');
+
+    try {
+      // Ensure directory exists
+      await vscode.workspace.fs.createDirectory(vscode.Uri.file(codeReviewDir));
+
+      // Load existing history
+      await this.loadHistory();
+    } catch (error) {
+      console.error('[CodeStructureReview] Failed to initialize history storage:', error);
+    }
+  }
+
+  /**
+   * Load analysis history from .agent-brain/code-structure-review/analysis-history.json
+   */
+  private async loadHistory(): Promise<void> {
+    if (!this.historyFilePath) return;
+
+    try {
+      const fs = require('fs').promises;
+      const content = await fs.readFile(this.historyFilePath, 'utf8');
+      const data = JSON.parse(content);
+
+      if (Array.isArray(data.history)) {
+        this.analysisHistory = data.history;
+        console.log(`[CodeStructureReview] Loaded ${this.analysisHistory.length} historical analyses`);
+      }
+    } catch (error) {
+      // File doesn't exist yet or is invalid - start with empty history
+      this.analysisHistory = [];
+    }
+  }
+
+  /**
+   * Save analysis history to .agent-brain/code-structure-review/analysis-history.json
+   */
+  private async saveHistory(): Promise<void> {
+    if (!this.historyFilePath) return;
+
+    try {
+      const fs = require('fs').promises;
+      const data = {
+        version: '1.0',
+        lastUpdated: new Date().toISOString(),
+        history: this.analysisHistory
+      };
+
+      await fs.writeFile(this.historyFilePath, JSON.stringify(data, null, 2), 'utf8');
+      console.log(`[CodeStructureReview] Saved ${this.analysisHistory.length} analyses to history`);
+    } catch (error) {
+      console.error('[CodeStructureReview] Failed to save history:', error);
+    }
+  }
+
+  /**
+   * Add current analysis to history
+   */
+  private async addToHistory(analysis: StreamingAnalysisResult): Promise<void> {
+    const workspace = vscode.workspace.workspaceFolders?.[0];
+    if (!workspace) return;
+
+    const entry: AnalysisHistoryEntry = {
+      timestamp: Date.now(),
+      workspaceFolder: workspace.name,
+      analysis
+    };
+
+    // Add to front of array
+    this.analysisHistory.unshift(entry);
+
+    // Keep only MAX_HISTORY_SIZE entries
+    if (this.analysisHistory.length > this.MAX_HISTORY_SIZE) {
+      this.analysisHistory = this.analysisHistory.slice(0, this.MAX_HISTORY_SIZE);
+    }
+
+    await this.saveHistory();
   }
 
   /**
@@ -165,6 +264,9 @@ export class CodeStructureReviewProvider {
 
           // Step 4: Cache result
           this.currentAnalysis = analysis;
+
+          // Step 4b: Add to history
+          await this.addToHistory(analysis);
 
           // Step 5: Update status bar
           this.updateStatusBar(analysis);
@@ -311,6 +413,13 @@ export class CodeStructureReviewProvider {
   }
 
   /**
+   * Get analysis history for timeline visualization
+   */
+  getAnalysisHistory(): AnalysisHistoryEntry[] {
+    return this.analysisHistory;
+  }
+
+  /**
    * Get orchestrator statistics
    */
   getStatistics() {
@@ -344,7 +453,14 @@ export class CodeStructureReviewProvider {
         hasTest: f.hasCorrespondingTest
       })),
       dependencies: [], // Not yet implemented in streaming
-      timeline: [], // Not yet implemented in streaming
+      timeline: this.analysisHistory.map(entry => ({
+        timestamp: new Date(entry.timestamp).toISOString(),
+        overallScore: entry.analysis.summary.overallScore,
+        categoryScores: entry.analysis.categories.reduce((acc, cat) => {
+          acc[cat.categoryId] = cat.score;
+          return acc;
+        }, {} as Record<string, number>)
+      })),
       testCoverage: {
         percentage: this.currentAnalysis.categories.find(c => c.categoryId === 'test-coverage')?.score || 0,
         testedFiles: registry.testCoverage.getCounts().total - registry.testCoverage.getCounts().untested,
