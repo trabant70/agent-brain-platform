@@ -39,15 +39,8 @@ export class ThreadingViewController {
       showLevelSelector: false
     };
 
-    // Re-render when i18n is ready to ensure translations are applied
-    onI18nReady(() => {
-      console.log('[ThreadingViewController] i18n ready in constructor, checking if render needed');
-      const container = document.getElementById('threading-content');
-      if (container && container.innerHTML) {
-        console.log('[ThreadingViewController] Container already has content, re-rendering with translations');
-        this.render();
-      }
-    });
+    // Note: Following KnowledgeViewController pattern - no onI18nReady in constructor
+    // Initialize() handles rendering directly, t() provides fallback translations if i18n not ready
   }
 
   /**
@@ -55,13 +48,12 @@ export class ThreadingViewController {
    */
   initialize(onMessage: (message: any) => void): void {
     this.messageHandler = onMessage;
-    this.setupEventListeners();
 
-    // Wait for i18n to be ready before rendering
-    onI18nReady(() => {
-      console.log('[ThreadingViewController] i18n ready, rendering with translations');
-      this.render();
-    });
+    // Render immediately - t() provides fallback translations if i18n not ready yet
+    // Following KnowledgeViewController pattern: direct render, no onI18nReady wrapper
+    console.log('[ThreadingViewController] Rendering with translations');
+    this.render();
+    this.setupEventListeners();
 
     // Request initial state from backend
     this.sendMessage({ type: 'threading:get-state', payload: {} });

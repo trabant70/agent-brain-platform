@@ -38,18 +38,8 @@ export class CodeStructureViewController {
     this.maturityAdapter = new MaturityLevelAdapter('intermediate');
     this.tooltips = new EducationalTooltips('intermediate');
 
-    // Re-render when i18n is ready
-    onI18nReady(() => {
-      console.log('[CodeStructureViewController] i18n ready in constructor callback');
-      webviewLogger.debug(LogCategory.UI, 'i18n ready, checking if render needed', 'CodeStructureViewController.constructor');
-      const container = document.getElementById('code-structure-content');
-      console.log('[CodeStructureViewController] Container found:', !!container, 'has content:', container?.innerHTML?.length);
-      if (container && container.innerHTML) {
-        webviewLogger.debug(LogCategory.UI, 'Container has content, re-rendering with translations', 'CodeStructureViewController.constructor');
-        this.render();
-        this.setupEventListeners(); // Re-attach event listeners after render
-      }
-    });
+    // Note: Following KnowledgeViewController pattern - no onI18nReady in constructor
+    // Initialize() handles rendering directly, t() provides fallback translations if i18n not ready
   }
 
   /**
@@ -59,16 +49,15 @@ export class CodeStructureViewController {
     console.log('[CodeStructureViewController] initialize() called');
     this.messageHandler = onMessage;
 
-    // Wait for i18n before rendering
-    onI18nReady(() => {
-      console.log('[CodeStructureViewController] i18n ready in initialize callback, calling render()');
-      webviewLogger.info(LogCategory.UI, 'i18n ready, rendering Code Structure tab', 'CodeStructureViewController.initialize');
-      this.render();
-      this.setupEventListeners();
+    // Render immediately - t() provides fallback translations if i18n not ready yet
+    // Following KnowledgeViewController pattern: direct render, no onI18nReady wrapper
+    console.log('[CodeStructureViewController] Calling render()');
+    webviewLogger.info(LogCategory.UI, 'Rendering Code Structure tab', 'CodeStructureViewController.initialize');
+    this.render();
+    this.setupEventListeners();
 
-      // Request cached data when tab first initializes
-      this.requestCachedData();
-    });
+    // Request cached data when tab first initializes
+    this.requestCachedData();
 
     // Listen for tab changes to request cached data when becoming visible
     const tabManager = (window as any).tabManager;
