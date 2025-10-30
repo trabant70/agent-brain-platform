@@ -7,10 +7,13 @@
 import { t, tf, onI18nReady } from '../../webview/i18n';
 import { NotificationManager } from '../NotificationManager';
 import { webviewLogger, LogCategory, LogPathway } from '../../webview/WebviewLogger';
-import { createIntegrationController, type IntegrationController, type AnalysisData } from '../../webview/IntegrationController';
+import type { AnalysisData } from '../../webview/coordination/AnalysisDataMapper';
 import { MaturityLevelAdapter, EducationalTooltips, type MaturityLevel } from '../../webview/progressive-disclosure';
 import { createProgressNotification, type ProgressNotificationUI } from './ProgressNotificationUI';
 import type { ProgressEvent } from '../../../code-structure-review/streaming/ProgressEventEmitter';
+import { CodeStructurePanel } from '../../webview/ui-panels/CodeStructurePanel';
+import { VisualizationCoordinator } from '../../webview/coordination/VisualizationCoordinator';
+import { VisualizationManager } from '../../webview/visualizations/VisualizationManager';
 
 export interface CodeStructureViewState {
   currentAnalysis: any | null;
@@ -24,7 +27,8 @@ export class CodeStructureViewController {
   private notifications: NotificationManager;
   private maturityAdapter: MaturityLevelAdapter;
   private tooltips: EducationalTooltips;
-  private integrationController: IntegrationController | null = null;
+  private codeStructurePanel: CodeStructurePanel | null = null;
+  private coordinator: VisualizationCoordinator | null = null;
   private progressNotification: ProgressNotificationUI | null = null;
 
   constructor() {
@@ -429,8 +433,8 @@ export class CodeStructureViewController {
     this.state.isAnalyzing = false;
     this.state.currentAnalysis = data;
 
-    // Initialize or refresh IntegrationController with new data
-    await this.initializeIntegrationController(data);
+    // Initialize or refresh CodeStructurePanel with new data
+    await this.initializeCodeStructurePanel(data);
 
     this.notifications.show({
       type: 'success',
@@ -458,12 +462,12 @@ export class CodeStructureViewController {
   }
 
   /**
-   * Initialize IntegrationController with analysis data
+   * Initialize unified CodeStructurePanel with analysis data
    */
-  private async initializeIntegrationController(data: AnalysisData): Promise<void> {
+  private async initializeCodeStructurePanel(data: AnalysisData): Promise<void> {
     const container = document.getElementById('code-structure-main');
     if (!container) {
-      webviewLogger.error(LogCategory.UI, 'code-structure-main container not found', 'initializeIntegrationController');
+      webviewLogger.error(LogCategory.UI, 'code-structure-main container not found', 'initializeCodeStructurePanel');
       return;
     }
 
@@ -471,29 +475,29 @@ export class CodeStructureViewController {
       // Clear container
       container.innerHTML = '';
 
-      // Dispose existing controller
-      if (this.integrationController) {
-        this.integrationController.dispose();
+      // Dispose existing panel and coordinator
+      if (this.codeStructurePanel) {
+        this.codeStructurePanel.dispose();
+      }
+      if (this.coordinator) {
+        this.coordinator.destroy();
       }
 
-      // Create new integration controller
-      this.integrationController = createIntegrationController(container, {
-        enableCoordinator: true,
-        enableKeyboardShortcuts: true,
-        enableDeepLinking: false, // Disabled for tab integration
-        autoUpdateHash: false,
-        autoRender: true
-      });
+      // Create visualization manager and coordinator
+      const vizManager = new VisualizationManager();
+      this.coordinator = new VisualizationCoordinator(vizManager);
+      await this.coordinator.initialize(data);
 
-      // Initialize with data
-      await this.integrationController.initialize(data);
+      // Create unified panel
+      this.codeStructurePanel = new CodeStructurePanel(container, this.coordinator);
+      await this.codeStructurePanel.render(data);
 
-      webviewLogger.info(LogCategory.UI, 'IntegrationController initialized with analysis data', 'initializeIntegrationController', {
-        hasD3: this.integrationController.isD3Available(),
-        score: data.summary?.overallScore
+      webviewLogger.info(LogCategory.UI, 'CodeStructurePanel initialized with analysis data', 'initializeCodeStructurePanel', {
+        score: data.summary?.overallScore,
+        categoryCount: data.categories?.length || 0
       });
     } catch (error) {
-      webviewLogger.error(LogCategory.UI, 'Failed to initialize IntegrationController', 'initializeIntegrationController', error);
+      webviewLogger.error(LogCategory.UI, 'Failed to initialize CodeStructurePanel', 'initializeCodeStructurePanel', error);
       this.renderError('Failed to initialize visualizations');
     }
   }
@@ -513,7 +517,7 @@ export class CodeStructureViewController {
       i18n: {}
     };
 
-    await this.initializeIntegrationController(analysisData);
+    await this.initializeCodeStructurePanel(analysisData);
   }
 
   /**

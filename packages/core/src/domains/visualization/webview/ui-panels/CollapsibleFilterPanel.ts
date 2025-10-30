@@ -307,6 +307,14 @@ export class CollapsibleFilterPanel {
   }
 
   /**
+   * Set selected categories and trigger filter change
+   */
+  setCategories(categoryIds: string[]): void {
+    this.currentCriteria.categories = categoryIds;
+    this.applyFilter();
+  }
+
+  /**
    * Dispose
    */
   dispose(): void {

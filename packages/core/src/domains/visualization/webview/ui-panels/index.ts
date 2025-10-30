@@ -3,8 +3,7 @@
  * Exports all UI panel components for visualization integration
  */
 
-export { OverviewPanel } from './OverviewPanel';
-export { CategoryDetailPanel } from './CategoryDetailPanel';
+export { CodeStructurePanel } from './CodeStructurePanel';
 export { FileDetailPanel } from './FileDetailPanel';
 export { VisualizationSelector } from './VisualizationSelector';
 export { VisualizationTabManager } from './VisualizationTabManager';
