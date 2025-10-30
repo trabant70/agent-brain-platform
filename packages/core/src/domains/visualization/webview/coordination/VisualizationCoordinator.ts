@@ -6,8 +6,9 @@
  * - Navigation state machine (Overview → Category → File)
  * - Visualization context switching
  * - Event routing and handling
- * - Breadcrumb management
+ * - Internal navigation state tracking
  * - Filter and selection state
+ * - Tab-based visualization management
  */
 
 import { AnalysisDataMapper, type AnalysisData } from './AnalysisDataMapper';
@@ -66,9 +67,9 @@ export class VisualizationCoordinator {
   // Visualization configurations for each state
   private readonly stateConfigs: Record<NavigationState, StateVisualizationConfig> = {
     overview: {
-      primary: 'bubble',
-      secondary: ['gauge', 'radar', 'sunburst'],
-      layout: 'grid'
+      primary: 'gauge',
+      secondary: ['bubble', 'radar', 'sankey', 'stacked-bar', 'sunburst'],
+      layout: 'tabs'
     },
     'category-detail': {
       primary: 'heatmap',
@@ -633,6 +634,13 @@ export class VisualizationCoordinator {
    */
   getDataMapper(): AnalysisDataMapper {
     return this.dataMapper;
+  }
+
+  /**
+   * Get visualization manager (for tab-based lazy rendering)
+   */
+  getVisualizationManager(): VisualizationManager {
+    return this.visualizationManager;
   }
 
   /**

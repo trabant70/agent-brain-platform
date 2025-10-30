@@ -395,3 +395,211 @@
 .filter-panel::-webkit-scrollbar-thumb:hover {
   background: var(--vscode-scrollbarSlider-hoverBackground);
 }
+
+/* Collapsible Filter Panel */
+.collapsible-filter-panel {
+  margin: 1rem 0;
+  background: var(--vscode-sideBar-background);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.filter-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  background: var(--vscode-sideBarSectionHeader-background);
+  color: var(--vscode-sideBarSectionHeader-foreground);
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.filter-header:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.filter-header .filter-icon {
+  font-size: 16px;
+}
+
+.filter-header .filter-title {
+  flex: 1;
+  font-weight: 600;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-header .collapse-arrow {
+  font-size: 10px;
+  color: var(--vscode-descriptionForeground);
+  transition: transform 0.2s;
+}
+
+.filter-content {
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, opacity 0.2s ease-out;
+}
+
+.filter-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+
+.filter-content.expanded {
+  max-height: 800px;
+  opacity: 1;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--vscode-editor-background);
+}
+
+.filter-group {
+  flex: 1;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group .filter-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vscode-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.filter-input {
+  padding: 0.5rem 0.75rem;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border);
+  border-radius: 4px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.filter-input:focus {
+  border-color: var(--vscode-focusBorder);
+}
+
+.filter-input::placeholder {
+  color: var(--vscode-input-placeholderForeground);
+}
+
+.filter-checkboxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--vscode-button-secondaryBackground);
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  user-select: none;
+  transition: all 0.2s;
+}
+
+.checkbox-label:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"]:checked {
+  accent-color: var(--vscode-button-background);
+}
+
+.score-range-inputs {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.score-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.range-separator {
+  color: var(--vscode-descriptionForeground);
+  font-weight: 600;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--vscode-sideBar-background);
+  border-top: 1px solid var(--vscode-panel-border);
+}
+
+.filter-actions .btn {
+  padding: 0.6rem 1.25rem;
+  font-size: 13px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.filter-actions .btn-primary {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.filter-actions .btn-primary:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.filter-actions .btn-secondary {
+  background: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: 1px solid var(--vscode-panel-border);
+}
+
+.filter-actions .btn-secondary:hover {
+  background: var(--vscode-button-secondaryHoverBackground);
+}
+
+/* Responsive adjustments for collapsible filter */
+@media (max-width: 1024px) {
+  .filter-row {
+    flex-direction: column;
+  }
+
+  .filter-group {
+    min-width: 100%;
+  }
+
+  .score-range-inputs {
+    flex-direction: column;
+  }
+
+  .score-input {
+    width: 100%;
+  }
+}

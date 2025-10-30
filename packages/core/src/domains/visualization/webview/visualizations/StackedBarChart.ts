@@ -285,8 +285,11 @@ export class StackedBarChart extends BaseVisualization {
    * Render controls
    */
   private renderControls(): void {
-    const controlsContainer = this.container.parentElement?.querySelector('.stacked-bar-controls');
-    if (controlsContainer) return;
+    // Remove existing controls first
+    const existingControls = this.container.querySelector('.stacked-bar-controls');
+    if (existingControls) {
+      existingControls.remove();
+    }
 
     const controls = document.createElement('div');
     controls.className = 'stacked-bar-controls';
@@ -337,7 +340,7 @@ export class StackedBarChart extends BaseVisualization {
       </div>
     `;
 
-    this.container.parentElement?.appendChild(controls);
+    this.container.appendChild(controls);
 
     // Add event listeners
     controls.querySelectorAll('input[name="sort"]').forEach(radio => {
@@ -371,7 +374,7 @@ export class StackedBarChart extends BaseVisualization {
    * Clean up
    */
   override destroy(): void {
-    const controls = this.container.parentElement?.querySelector('.stacked-bar-controls');
+    const controls = this.container.querySelector('.stacked-bar-controls');
     if (controls) {
       controls.remove();
     }

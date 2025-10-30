@@ -25,9 +25,9 @@ export interface BubbleChartData {
 
 export class BubbleChart extends BaseVisualization {
   constructor(container: HTMLElement, config: VisualizationConfig = {}) {
+    // Let BaseVisualization handle sizing from container
     super(container, {
       ...config,
-      height: config.height || 500,
       margin: config.margin || { top: 20, right: 20, bottom: 20, left: 20 }
     });
   }

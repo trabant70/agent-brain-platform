@@ -33,9 +33,14 @@ export abstract class BaseVisualization {
 
   constructor(container: HTMLElement, config: VisualizationConfig = {}) {
     this.container = container;
+
+    // Use container dimensions if not explicitly set
+    const containerWidth = container.clientWidth || container.offsetWidth || 800;
+    const containerHeight = container.clientHeight || container.offsetHeight || 400;
+
     this.config = {
-      width: config.width || 800,
-      height: config.height || 400,
+      width: config.width || containerWidth,
+      height: config.height || containerHeight,
       margin: config.margin || { top: 20, right: 20, bottom: 30, left: 40 },
       interactive: config.interactive !== false,
       showLabels: config.showLabels !== false,

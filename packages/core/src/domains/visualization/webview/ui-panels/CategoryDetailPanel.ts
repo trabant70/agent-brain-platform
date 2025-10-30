@@ -3,17 +3,18 @@
  * Displays category-specific visualizations for Code Structure Review
  *
  * Layout:
- * - Primary: Heatmap (issue distribution)
- * - Tabs: Sankey (flow), Timeline (trends), Stacked Bar (severity breakdown)
+ * - Tabbed visualizations: Heatmap, Sankey, Timeline, Stacked Bar
+ * - Lazy rendering: Only active tab visualization is rendered
+ * - Collapsible filters and AI suggestions (category-specific)
  */
 
 import { VisualizationCoordinator } from '../coordination/VisualizationCoordinator';
 import type { AnalysisData } from '../coordination/AnalysisDataMapper';
-import { SearchFilter } from './SearchFilter';
-import type { FilterCriteria } from './SearchFilter';
+import { CollapsibleFilterPanel } from './CollapsibleFilterPanel';
+import type { FilterCriteria } from './CollapsibleFilterPanel';
 import { SuggestionPanel } from '../ai-suggestions/SuggestionPanel';
-
-type VisualizationTab = 'heatmap' | 'sankey' | 'timeline' | 'stacked-bar';
+import { VisualizationTabManager } from './VisualizationTabManager';
+import type { VisualizationTab as VizTab } from './VisualizationTabManager';
 
 /**
  * Category Detail Panel Controller
@@ -21,11 +22,11 @@ type VisualizationTab = 'heatmap' | 'sankey' | 'timeline' | 'stacked-bar';
 export class CategoryDetailPanel {
   private container: HTMLElement;
   private coordinator: VisualizationCoordinator;
-  private searchFilter: SearchFilter | null = null;
+  private filterPanel: CollapsibleFilterPanel | null = null;
   private suggestionPanel: SuggestionPanel | null = null;
+  private tabManager: VisualizationTabManager | null = null;
   private categoryId: string | null = null;
   private categoryName: string | null = null;
-  private activeTab: VisualizationTab = 'heatmap';
   private isRendered: boolean = false;
   private analysisData: AnalysisData | null = null;
 
@@ -67,8 +68,8 @@ export class CategoryDetailPanel {
           </div>
         </div>
 
-        <!-- Search and filter -->
-        <div id="search-filter-container"></div>
+        <!-- Collapsible Filter Panel -->
+        <div id="filter-panel-container"></div>
 
         <!-- AI Suggestions (category-specific) -->
         <div id="suggestions-container"></div>
@@ -99,41 +100,8 @@ export class CategoryDetailPanel {
         </div>
 
         <div class="panel-content">
-          <!-- Visualization tabs -->
-          <div class="viz-tabs">
-            <button class="viz-tab ${this.activeTab === 'heatmap' ? 'active' : ''}"
-                    data-tab="heatmap">
-              Issue Distribution
-            </button>
-            <button class="viz-tab ${this.activeTab === 'sankey' ? 'active' : ''}"
-                    data-tab="sankey">
-              Issue Flow
-            </button>
-            <button class="viz-tab ${this.activeTab === 'timeline' ? 'active' : ''}"
-                    data-tab="timeline">
-              Trend Analysis
-            </button>
-            <button class="viz-tab ${this.activeTab === 'stacked-bar' ? 'active' : ''}"
-                    data-tab="stacked-bar">
-              Severity Breakdown
-            </button>
-          </div>
-
-          <!-- Visualization containers -->
-          <div class="viz-tab-content">
-            <div id="viz-category-heatmap"
-                 class="viz-container ${this.activeTab === 'heatmap' ? 'active' : ''}">
-            </div>
-            <div id="viz-category-sankey"
-                 class="viz-container ${this.activeTab === 'sankey' ? 'active' : ''}">
-            </div>
-            <div id="viz-category-timeline"
-                 class="viz-container ${this.activeTab === 'timeline' ? 'active' : ''}">
-            </div>
-            <div id="viz-category-stacked-bar"
-                 class="viz-container ${this.activeTab === 'stacked-bar' ? 'active' : ''}">
-            </div>
-          </div>
+          <!-- Tabbed Visualizations -->
+          <div id="viz-tab-container"></div>
         </div>
 
         <!-- Issue list -->
@@ -152,10 +120,13 @@ export class CategoryDetailPanel {
     `;
 
     // Render search filter
-    this.renderSearchFilter(analysisData);
+    this.renderFilterPanel(analysisData);
 
     // Render AI suggestions (category-specific)
     this.renderSuggestions(analysisData, categoryId);
+
+    // Render visualization tabs
+    this.renderVisualizationTabs();
 
     // Populate issue list
     this.populateIssueList(category.issues || []);
@@ -172,19 +143,21 @@ export class CategoryDetailPanel {
   }
 
   /**
-   * Render search filter
+   * Render filter panel
    */
-  private renderSearchFilter(analysisData: AnalysisData): void {
-    const filterContainer = document.getElementById('search-filter-container');
+  private renderFilterPanel(analysisData: AnalysisData): void {
+    const filterContainer = document.getElementById('filter-panel-container');
     if (!filterContainer) return;
 
-    this.searchFilter = new SearchFilter(filterContainer, this.coordinator);
-    this.searchFilter.render(analysisData);
-
-    // Setup filter callback
-    this.searchFilter.onFilter((criteria) => {
-      this.handleFilterChange(criteria);
+    this.filterPanel = new CollapsibleFilterPanel(filterContainer, {
+      showCategoryFilter: false, // Category tabs don't need category filter
+      defaultCollapsed: true,
+      onFilterChange: (criteria) => {
+        this.handleFilterChange(criteria);
+      }
     });
+
+    this.filterPanel.render(analysisData);
   }
 
   /**
@@ -196,6 +169,7 @@ export class CategoryDetailPanel {
 
     this.suggestionPanel = new SuggestionPanel(suggestionsContainer, {
       maxSuggestions: 5,
+      defaultCollapsed: true,
       onNavigateToFile: (filePath: string) => {
         // Send message to extension to open file
         window.dispatchEvent(new CustomEvent('open-file-requested', {
@@ -204,7 +178,114 @@ export class CategoryDetailPanel {
       }
     });
 
-    this.suggestionPanel.render(analysisData);
+    // Render with category ID so suggestions are filtered to this category
+    this.suggestionPanel.render(analysisData, categoryId);
+  }
+
+  /**
+   * Render visualization tabs
+   */
+  private renderVisualizationTabs(): void {
+    const vizTabContainer = document.getElementById('viz-tab-container');
+    if (!vizTabContainer) return;
+
+    // Define visualization tabs for category detail
+    const tabs: VizTab[] = [
+      {
+        id: 'heatmap',
+        label: 'Issue Distribution',
+        icon: '🗺️',
+        containerId: 'viz-category-heatmap'
+      },
+      {
+        id: 'sankey',
+        label: 'Issue Flow',
+        icon: '🌊',
+        containerId: 'viz-category-sankey'
+      },
+      {
+        id: 'timeline',
+        label: 'Trend Analysis',
+        icon: '📈',
+        containerId: 'viz-category-timeline'
+      },
+      {
+        id: 'stacked-bar',
+        label: 'Severity Breakdown',
+        icon: '📊',
+        containerId: 'viz-category-stacked-bar'
+      }
+    ];
+
+    // Create tab manager
+    this.tabManager = new VisualizationTabManager(vizTabContainer, {
+      tabs,
+      defaultTab: 'heatmap',
+      onTabChange: (tabId) => {
+        this.handleTabChange(tabId);
+      }
+    });
+
+    // Render tabs
+    this.tabManager.render();
+  }
+
+  /**
+   * Handle visualization tab change
+   */
+  private async handleTabChange(tabId: string): Promise<void> {
+    if (!this.analysisData || !this.categoryId) return;
+
+    // Get the data mapper for any active filters
+    const dataMapper = this.coordinator.getDataMapper();
+    const filteredData = this.filterPanel
+      ? dataMapper.filterAnalysisData(this.analysisData, {})
+      : this.analysisData;
+
+    // Lazy render the active tab's visualization
+    await this.renderVisualization(tabId, filteredData);
+  }
+
+  /**
+   * Render a specific visualization
+   */
+  private async renderVisualization(tabId: string, analysisData: AnalysisData): Promise<void> {
+    const container = this.tabManager?.getTabContainer(tabId);
+    if (!container || !this.categoryId) return;
+
+    // Check if already rendered (has children)
+    if (container.children.length > 0) {
+      return; // Already rendered
+    }
+
+    // Ensure coordinator is in category-detail state
+    if (this.coordinator.getContext().state !== 'category-detail') {
+      console.warn('Coordinator not in category-detail state, navigating...');
+      await this.coordinator.navigateToCategoryDetail(this.categoryId, this.categoryName || '');
+      return;
+    }
+
+    try {
+      // Render the specific visualization based on tab ID
+      const vizManager = this.coordinator.getVisualizationManager();
+
+      switch (tabId) {
+        case 'heatmap':
+          await vizManager.createVisualization(container.id, 'heatmap', analysisData);
+          break;
+        case 'sankey':
+          await vizManager.createVisualization(container.id, 'sankey', analysisData);
+          break;
+        case 'timeline':
+          await vizManager.createVisualization(container.id, 'timeline', analysisData);
+          break;
+        case 'stacked-bar':
+          await vizManager.createVisualization(container.id, 'stacked-bar', analysisData);
+          break;
+      }
+    } catch (error) {
+      console.error(`Error rendering ${tabId} visualization:`, error);
+    }
   }
 
   /**
@@ -221,6 +302,11 @@ export class CategoryDetailPanel {
     // Apply filters to analysis data
     const filteredData = dataMapper.filterAnalysisData(this.analysisData, criteria);
 
+    // Update AI Suggestions with filter
+    if (this.suggestionPanel) {
+      this.suggestionPanel.setFilter(criteria);
+    }
+
     // Re-render visualizations with filtered data
     await this.renderVisualizations(filteredData);
 
@@ -233,26 +319,14 @@ export class CategoryDetailPanel {
   }
 
   /**
-   * Render category visualizations
-   * Note: Calls renderCurrentState directly to avoid navigation event loop
+   * Render category visualizations (lazy rendering via tabs)
    */
   private async renderVisualizations(analysisData: AnalysisData): Promise<void> {
-    if (!this.categoryId || !this.categoryName) return;
+    if (!this.tabManager) return;
 
-    // Ensure coordinator is in category-detail state
-    if (this.coordinator.getContext().state !== 'category-detail') {
-      console.warn('Coordinator not in category-detail state, navigating...');
-      await this.coordinator.navigateToCategoryDetail(this.categoryId, this.categoryName);
-      return; // Navigation will trigger re-render through IntegrationController
-    }
-
-    try {
-      // Render visualizations directly without triggering navigation
-      await this.coordinator.renderCurrentState();
-    } catch (error) {
-      console.error('Error rendering category visualizations:', error);
-      this.showError('Failed to render visualizations');
-    }
+    // Get the active tab and render only that visualization
+    const activeTabId = this.tabManager.getActiveTab();
+    await this.renderVisualization(activeTabId, analysisData);
   }
 
   /**
@@ -270,7 +344,7 @@ export class CategoryDetailPanel {
     // Group issues by file
     const fileGroups = new Map<string, any[]>();
     issues.forEach(issue => {
-      const file = issue.file || 'Unknown';
+      const file = issue.file || 'No file specified';
       if (!fileGroups.has(file)) {
         fileGroups.set(file, []);
       }
@@ -287,15 +361,46 @@ export class CategoryDetailPanel {
             <span class="file-count">${fileIssues.length} issue${fileIssues.length !== 1 ? 's' : ''}</span>
           </div>
           <div class="file-issues">
-            ${fileIssues.map(issue => `
-              <div class="issue-item severity-${issue.severity || 'medium'}">
-                <div class="issue-header">
-                  <span class="issue-severity">${(issue.severity || 'medium').toUpperCase()}</span>
-                  ${issue.line ? `<span class="issue-line">Line ${issue.line}</span>` : ''}
+            ${fileIssues.map(issue => {
+              // Build a meaningful description from available fields
+              const parts: string[] = [];
+
+              if (issue.message) {
+                parts.push(issue.message);
+              }
+
+              if (issue.category && issue.category !== this.categoryName) {
+                parts.push(`Category: ${issue.category}`);
+              }
+
+              if (issue.impact) {
+                parts.push(`Impact: ${issue.impact}`);
+              }
+
+              if (issue.rule) {
+                parts.push(`Rule: ${issue.rule}`);
+              }
+
+              const description = parts.length > 0
+                ? parts.join(' • ')
+                : 'Issue detected - details pending analysis';
+
+              return `
+                <div class="issue-item severity-${issue.severity || 'medium'}">
+                  <div class="issue-header">
+                    <span class="issue-severity">${(issue.severity || 'medium').toUpperCase()}</span>
+                    ${issue.line ? `<span class="issue-line">Line ${issue.line}</span>` : ''}
+                    ${issue.column ? `<span class="issue-column">:${issue.column}</span>` : ''}
+                  </div>
+                  <div class="issue-message">${this.escapeHtml(description)}</div>
+                  ${issue.suggestion ? `
+                    <div class="issue-suggestion">
+                      💡 ${this.escapeHtml(issue.suggestion)}
+                    </div>
+                  ` : ''}
                 </div>
-                <div class="issue-message">${this.escapeHtml(issue.message || 'No description')}</div>
-              </div>
-            `).join('')}
+              `;
+            }).join('')}
           </div>
         </div>
       `;
@@ -316,16 +421,6 @@ export class CategoryDetailPanel {
       });
     }
 
-    // Tab switching
-    const tabs = this.container.querySelectorAll('.viz-tab');
-    tabs.forEach(tab => {
-      tab.addEventListener('click', (e) => {
-        const target = e.currentTarget as HTMLElement;
-        const tabName = target.getAttribute('data-tab') as VisualizationTab;
-        this.switchTab(tabName);
-      });
-    });
-
     // Listen for heatmap cell clicks to navigate to file
     window.addEventListener('heatmap-cell-click', ((event: CustomEvent) => {
       const { metadata } = event.detail;
@@ -333,29 +428,6 @@ export class CategoryDetailPanel {
         this.coordinator.navigateToFileDetail(metadata.file, this.categoryId || undefined);
       }
     }) as EventListener);
-  }
-
-  /**
-   * Switch visualization tab
-   */
-  private switchTab(tabName: VisualizationTab): void {
-    this.activeTab = tabName;
-
-    // Update tab buttons
-    const tabs = this.container.querySelectorAll('.viz-tab');
-    tabs.forEach(tab => {
-      const target = tab as HTMLElement;
-      const isActive = target.getAttribute('data-tab') === tabName;
-      target.classList.toggle('active', isActive);
-    });
-
-    // Update tab content
-    const contents = this.container.querySelectorAll('.viz-tab-content .viz-container');
-    contents.forEach(content => {
-      const target = content as HTMLElement;
-      const isActive = target.id === `viz-category-${tabName}`;
-      target.classList.toggle('active', isActive);
-    });
   }
 
   /**
@@ -407,13 +479,17 @@ export class CategoryDetailPanel {
    * Clear panel
    */
   clear(): void {
-    if (this.searchFilter) {
-      this.searchFilter.dispose();
-      this.searchFilter = null;
+    if (this.filterPanel) {
+      this.filterPanel.dispose();
+      this.filterPanel = null;
     }
     if (this.suggestionPanel) {
       this.suggestionPanel.dispose();
       this.suggestionPanel = null;
+    }
+    if (this.tabManager) {
+      this.tabManager.dispose();
+      this.tabManager = null;
     }
     this.container.innerHTML = '';
     this.isRendered = false;

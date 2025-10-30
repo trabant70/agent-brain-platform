@@ -8,7 +8,6 @@
  *   ├── VisualizationCoordinator (navigation & state)
  *   ├── OverviewPanel (overview visualizations)
  *   ├── CategoryDetailPanel (category visualizations)
- *   ├── NavigationBreadcrumb (breadcrumb nav)
  *   └── VisualizationSelector (viz switching)
  */
 
@@ -18,7 +17,6 @@ import { AnalysisDataMapper, type AnalysisData } from './coordination/AnalysisDa
 import { OverviewPanel } from './ui-panels/OverviewPanel';
 import { CategoryDetailPanel } from './ui-panels/CategoryDetailPanel';
 import { FileDetailPanel } from './ui-panels/FileDetailPanel';
-import { NavigationBreadcrumb } from './ui-panels/NavigationBreadcrumb';
 import { KeyboardShortcutHandler } from './ui-panels/KeyboardShortcutHandler';
 import { DeepLinkHandler } from './ui-panels/DeepLinkHandler';
 import type { NavigationState } from './coordination/NavigationStateMachine';
@@ -28,7 +26,6 @@ import type { NavigationState } from './coordination/NavigationStateMachine';
  */
 export interface IntegrationControllerConfig {
   enableCoordinator?: boolean;
-  enableBreadcrumb?: boolean;
   enableKeyboardShortcuts?: boolean;
   enableDeepLinking?: boolean;
   autoUpdateHash?: boolean;
@@ -47,7 +44,6 @@ export class IntegrationController {
   private overviewPanel: OverviewPanel | null = null;
   private categoryDetailPanel: CategoryDetailPanel | null = null;
   private fileDetailPanel: FileDetailPanel | null = null;
-  private breadcrumb: NavigationBreadcrumb | null = null;
   private keyboardHandler: KeyboardShortcutHandler | null = null;
   private deepLinkHandler: DeepLinkHandler | null = null;
 
@@ -57,7 +53,6 @@ export class IntegrationController {
 
   // Containers
   private mainContainer: HTMLElement;
-  private breadcrumbContainer: HTMLElement | null = null;
 
   // Config
   private config: Required<IntegrationControllerConfig>;
@@ -66,7 +61,6 @@ export class IntegrationController {
     this.mainContainer = mainContainer;
     this.config = {
       enableCoordinator: config.enableCoordinator !== false,
-      enableBreadcrumb: config.enableBreadcrumb !== false,
       enableKeyboardShortcuts: config.enableKeyboardShortcuts !== false,
       enableDeepLinking: config.enableDeepLinking !== false,
       autoUpdateHash: config.autoUpdateHash !== false,
@@ -156,14 +150,12 @@ export class IntegrationController {
     const structure = document.createElement('div');
     structure.className = 'visualization-integration';
     structure.innerHTML = `
-      <div id="breadcrumb-container" class="breadcrumb-container"></div>
       <div id="content-container" class="content-container"></div>
     `;
 
     this.mainContainer.appendChild(structure);
 
     // Get containers
-    this.breadcrumbContainer = document.getElementById('breadcrumb-container');
     const contentContainer = document.getElementById('content-container');
 
     if (!contentContainer) {
@@ -171,13 +163,6 @@ export class IntegrationController {
     }
 
     // Initialize panels
-    if (this.breadcrumbContainer && this.config.enableBreadcrumb) {
-      this.breadcrumb = new NavigationBreadcrumb(
-        this.breadcrumbContainer,
-        this.coordinator
-      );
-    }
-
     this.overviewPanel = new OverviewPanel(contentContainer, this.coordinator);
     this.categoryDetailPanel = new CategoryDetailPanel(contentContainer, this.coordinator);
     this.fileDetailPanel = new FileDetailPanel(contentContainer, this.coordinator);
@@ -187,10 +172,7 @@ export class IntegrationController {
    * Initialize panels
    */
   private async initializePanels(): Promise<void> {
-    // Render breadcrumb
-    if (this.breadcrumb) {
-      this.breadcrumb.render();
-    }
+    // Panels will be rendered when navigation state changes
   }
 
   /**
@@ -427,7 +409,6 @@ export class IntegrationController {
     this.overviewPanel?.dispose();
     this.categoryDetailPanel?.dispose();
     this.fileDetailPanel?.dispose();
-    this.breadcrumb?.dispose();
 
     // Dispose keyboard handler
     this.keyboardHandler?.dispose();

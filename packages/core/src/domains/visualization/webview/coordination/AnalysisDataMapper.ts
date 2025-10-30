@@ -299,53 +299,41 @@ export class AnalysisDataMapper {
     const category = (analysis.categories || []).find(c => c.categoryId === categoryId);
     const issues = category?.issues || [];
 
-    // Create flow: Files → Severity → Impact
+    // Check if we have any issues with the required fields
+    if (issues.length === 0) {
+      return { nodes: [], links: [] };
+    }
+
+    // Create flow: Files → Severity (simplified, since impact might not be available)
     const fileNodes = new Set<string>();
     const severityNodes = new Set<string>();
-    const impactNodes = new Set<string>();
 
     issues.forEach(issue => {
       if (issue.file) fileNodes.add(issue.file);
       if (issue.severity) severityNodes.add(issue.severity);
-      if (issue.impact) impactNodes.add(issue.impact);
     });
 
+    // Limit to top 10 files to avoid clutter
+    const topFiles = Array.from(fileNodes).slice(0, 10);
+
     const nodes = [
-      ...Array.from(fileNodes).map(file => ({
+      ...topFiles.map(file => ({
         id: `file-${file}`,
         name: this.getFileName(file)
       })),
       ...Array.from(severityNodes).map(sev => ({
         id: `severity-${sev}`,
         name: sev.toUpperCase()
-      })),
-      ...Array.from(impactNodes).map(imp => ({
-        id: `impact-${imp}`,
-        name: imp
       }))
     ];
 
     const links: Array<{ source: string; target: string; value: number }> = [];
 
-    // File → Severity links
+    // File → Severity links (only for top files)
     issues.forEach(issue => {
-      if (issue.file && issue.severity) {
+      if (issue.file && topFiles.includes(issue.file) && issue.severity) {
         const sourceId = `file-${issue.file}`;
         const targetId = `severity-${issue.severity}`;
-        const existing = links.find(l => l.source === sourceId && l.target === targetId);
-        if (existing) {
-          existing.value++;
-        } else {
-          links.push({ source: sourceId, target: targetId, value: 1 });
-        }
-      }
-    });
-
-    // Severity → Impact links
-    issues.forEach(issue => {
-      if (issue.severity && issue.impact) {
-        const sourceId = `severity-${issue.severity}`;
-        const targetId = `impact-${issue.impact}`;
         const existing = links.find(l => l.source === sourceId && l.target === targetId);
         if (existing) {
           existing.value++;

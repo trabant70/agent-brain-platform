@@ -190,12 +190,11 @@ export class RadarChart extends BaseVisualization {
     const datasetGroup = g.append('g')
       .attr('class', `dataset dataset-${index}`);
 
-    // Draw filled area
+    // Draw outline only (no fill to avoid z-order occlusion of dots)
     datasetGroup.append('path')
       .datum(polarData)
       .attr('d', lineGenerator)
-      .attr('fill', color)
-      .attr('fill-opacity', 0.2)
+      .attr('fill', 'none')
       .attr('stroke', color)
       .attr('stroke-width', 2)
       .style('cursor', 'pointer')
@@ -213,20 +212,40 @@ export class RadarChart extends BaseVisualization {
     const dotsGroup = datasetGroup.append('g').attr('class', 'dots');
 
     polarData.forEach((d, i) => {
-      dotsGroup.append('circle')
+      const dotGroup = dotsGroup.append('g').attr('class', 'dot-group');
+
+      // Larger invisible hit area for better interaction
+      dotGroup.append('circle')
         .attr('cx', d.x)
         .attr('cy', d.y)
-        .attr('r', 4)
-        .attr('fill', color)
-        .attr('stroke', 'var(--vscode-editor-background)')
-        .attr('stroke-width', 2)
+        .attr('r', 12)
+        .attr('fill', 'transparent')
         .style('cursor', 'pointer')
         .on('mouseenter', (event: MouseEvent) => {
+          // Highlight the visible dot
+          dotGroup.select('.visible-dot')
+            .attr('r', 6)
+            .attr('stroke-width', 3);
           this.showDataPointTooltip(event, d.point, dataset.name);
         })
         .on('mouseleave', () => {
+          // Reset the visible dot
+          dotGroup.select('.visible-dot')
+            .attr('r', 5)
+            .attr('stroke-width', 2);
           this.hideDataPointTooltip();
         });
+
+      // Visible dot (slightly larger since no fill occlusion)
+      dotGroup.append('circle')
+        .attr('class', 'visible-dot')
+        .attr('cx', d.x)
+        .attr('cy', d.y)
+        .attr('r', 5)
+        .attr('fill', color)
+        .attr('stroke', 'var(--vscode-editor-background)')
+        .attr('stroke-width', 2)
+        .style('pointer-events', 'none'); // Let hit area handle events
     });
   }
 
@@ -358,50 +377,94 @@ export class RadarChart extends BaseVisualization {
   }
 
   /**
-   * Render legend
+   * Render legend inside the SVG visualization
    */
   private renderLegend(datasets: RadarData[], colorScale: any): void {
     if (datasets.length <= 1) return; // No need for legend with single dataset
+    if (!this.svg) return;
 
-    const legendContainer = this.container.parentElement?.querySelector('.radar-legend');
-    if (legendContainer) return;
+    const g = this.svg.select('.visualization-content');
 
-    const legend = document.createElement('div');
-    legend.className = 'radar-legend';
-    legend.style.cssText = `
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      background: var(--vscode-editorWidget-background);
-      border: 1px solid var(--vscode-panel-border);
-      border-radius: 4px;
-      padding: 12px;
-      font-size: 11px;
-      z-index: 100;
-    `;
+    // Check if legend already exists
+    if (g.select('.radar-legend-group').node()) return;
 
-    let legendHtml = '<div style="font-weight: bold; margin-bottom: 8px;">Datasets</div>';
+    const width = this.getContentWidth();
+    const height = this.getContentHeight();
+    const radius = Math.min(width, height) / 2 - 40;
 
+    // Position legend in bottom-right area inside the radar chart
+    const legendX = radius * 0.55;
+    const legendY = radius * 0.5;
+    const itemHeight = 20;
+    const padding = 10;
+
+    // Create legend group
+    const legendGroup = g.append('g')
+      .attr('class', 'radar-legend-group')
+      .attr('transform', `translate(${legendX}, ${legendY})`);
+
+    // Calculate legend background size
+    const bgWidth = 120;
+    const bgHeight = datasets.length * itemHeight + padding * 2 + 15; // +15 for title
+
+    // Background rectangle
+    legendGroup.append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', bgWidth)
+      .attr('height', bgHeight)
+      .attr('fill', 'var(--vscode-editorWidget-background)')
+      .attr('stroke', 'var(--vscode-panel-border)')
+      .attr('stroke-width', 1)
+      .attr('rx', 4)
+      .attr('opacity', 0.95);
+
+    // Title
+    legendGroup.append('text')
+      .attr('x', padding)
+      .attr('y', padding + 10)
+      .style('font-size', '11px')
+      .style('font-weight', 'bold')
+      .style('fill', 'var(--vscode-foreground)')
+      .text('Datasets');
+
+    // Legend items
     datasets.forEach((dataset, index) => {
       const datasetColor = colorScale(String(index));
-      legendHtml += `
-        <div style="display: flex; align-items: center; margin-bottom: 4px; cursor: pointer;"
-             data-dataset-index="${index}">
-          <div style="width: 20px; height: 2px; background: ${datasetColor}; margin-right: 8px;"></div>
-          <span>${dataset.name}</span>
-        </div>
-      `;
-    });
+      const itemY = padding + 15 + index * itemHeight + 10;
 
-    legend.innerHTML = legendHtml;
-    this.container.parentElement?.appendChild(legend);
+      const itemGroup = legendGroup.append('g')
+        .attr('class', `legend-item legend-item-${index}`)
+        .style('cursor', 'pointer')
+        .on('click', () => {
+          this.handleDatasetClick(index);
+        });
 
-    // Add click handlers
-    legend.querySelectorAll('[data-dataset-index]').forEach(item => {
-      item.addEventListener('click', () => {
-        const index = parseInt(item.getAttribute('data-dataset-index') || '0');
-        this.handleDatasetClick(index);
+      // Add hover effects
+      itemGroup.on('mouseenter', function() {
+        (window as any).d3.select(this).style('opacity', 0.7);
+      })
+      .on('mouseleave', function() {
+        (window as any).d3.select(this).style('opacity', 1);
       });
+
+      // Color line
+      itemGroup.append('line')
+        .attr('x1', padding)
+        .attr('y1', itemY)
+        .attr('x2', padding + 20)
+        .attr('y2', itemY)
+        .attr('stroke', datasetColor)
+        .attr('stroke-width', 3);
+
+      // Dataset name
+      itemGroup.append('text')
+        .attr('x', padding + 28)
+        .attr('y', itemY)
+        .attr('dy', '0.35em')
+        .style('font-size', '11px')
+        .style('fill', 'var(--vscode-foreground)')
+        .text(dataset.name);
     });
   }
 
@@ -409,10 +472,7 @@ export class RadarChart extends BaseVisualization {
    * Clean up
    */
   override destroy(): void {
-    const legend = this.container.parentElement?.querySelector('.radar-legend');
-    if (legend) {
-      legend.remove();
-    }
+    // Legend is now part of the SVG and will be cleaned up by super.destroy()
 
     const tooltip = document.getElementById('radar-tooltip');
     if (tooltip) {

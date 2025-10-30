@@ -3,15 +3,18 @@
  * Displays overview-level visualizations for Code Structure Review
  *
  * Layout:
- * - Primary: Bubble chart (category overview)
- * - Secondary: Gauge (overall health), Radar (category comparison), Sunburst (file hierarchy)
+ * - Tabbed visualizations: Gauge, Bubble, Radar, Sankey, Stacked Bar, Sunburst
+ * - Lazy rendering: Only active tab visualization is rendered
+ * - Collapsible filters and AI suggestions
  */
 
 import { VisualizationCoordinator } from '../coordination/VisualizationCoordinator';
 import type { AnalysisData } from '../coordination/AnalysisDataMapper';
-import { SearchFilter } from './SearchFilter';
-import type { FilterCriteria } from './SearchFilter';
+import { CollapsibleFilterPanel } from './CollapsibleFilterPanel';
+import type { FilterCriteria } from './CollapsibleFilterPanel';
 import { SuggestionPanel } from '../ai-suggestions/SuggestionPanel';
+import { VisualizationTabManager } from './VisualizationTabManager';
+import type { VisualizationTab } from './VisualizationTabManager';
 
 /**
  * Overview Panel Controller
@@ -19,8 +22,9 @@ import { SuggestionPanel } from '../ai-suggestions/SuggestionPanel';
 export class OverviewPanel {
   private container: HTMLElement;
   private coordinator: VisualizationCoordinator;
-  private searchFilter: SearchFilter | null = null;
+  private filterPanel: CollapsibleFilterPanel | null = null;
   private suggestionPanel: SuggestionPanel | null = null;
+  private tabManager: VisualizationTabManager | null = null;
   private isRendered: boolean = false;
   private analysisData: AnalysisData | null = null;
 
@@ -39,57 +43,30 @@ export class OverviewPanel {
     // Create panel structure
     this.container.innerHTML = `
       <div class="overview-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">Code Quality Overview</h2>
-          <div class="panel-actions">
-            <button class="btn-refresh" title="Refresh analysis">
-              <span class="icon">⟳</span>
-            </button>
-          </div>
-        </div>
+        <!-- Collapsible Filter Panel -->
+        <div id="filter-panel-container"></div>
 
-        <!-- Search and filter -->
-        <div id="search-filter-container"></div>
-
-        <!-- AI Suggestions -->
+        <!-- AI Suggestions (collapsed by default) -->
         <div id="suggestions-container"></div>
 
         <div class="panel-content">
-          <!-- Primary visualization: Category Overview -->
-          <div class="viz-section viz-primary">
-            <div class="viz-header">
-              <h3 class="viz-title">Category Overview</h3>
-              <p class="viz-subtitle">Click a bubble to drill into category details</p>
-            </div>
-            <div id="viz-overview-bubble" class="viz-container"></div>
-          </div>
+          <!-- Tabbed Visualizations -->
+          <div id="viz-tab-container"></div>
+        </div>
 
-          <!-- Secondary visualizations grid -->
-          <div class="viz-grid">
-            <!-- Overall Health Gauge -->
-            <div class="viz-section viz-secondary">
-              <div class="viz-header">
-                <h3 class="viz-title">Overall Health</h3>
-              </div>
-              <div id="viz-overview-gauge" class="viz-container"></div>
+        <!-- Collapsible Issue List -->
+        <div class="panel-section">
+          <details class="issue-details" id="overview-issues">
+            <summary class="issue-summary">
+              <span class="summary-icon">📋</span>
+              <span class="summary-label">All Issues</span>
+              <span class="summary-count" id="issue-count-badge">0</span>
+              <span class="summary-arrow">▼</span>
+            </summary>
+            <div class="issue-list-container" id="overview-issue-list">
+              <!-- Issues will be populated here -->
             </div>
-
-            <!-- Category Comparison Radar -->
-            <div class="viz-section viz-secondary">
-              <div class="viz-header">
-                <h3 class="viz-title">Category Comparison</h3>
-              </div>
-              <div id="viz-overview-radar" class="viz-container"></div>
-            </div>
-
-            <!-- File Hierarchy Sunburst -->
-            <div class="viz-section viz-secondary">
-              <div class="viz-header">
-                <h3 class="viz-title">File Structure</h3>
-              </div>
-              <div id="viz-overview-sunburst" class="viz-container"></div>
-            </div>
-          </div>
+          </details>
         </div>
 
         <!-- Summary stats -->
@@ -124,22 +101,11 @@ export class OverviewPanel {
       </div>
     `;
 
-    // Make visualization containers visible by adding 'active' class
-    const vizContainers = [
-      'viz-overview-bubble',
-      'viz-overview-gauge',
-      'viz-overview-radar',
-      'viz-overview-sunburst'
-    ];
-    vizContainers.forEach(containerId => {
-      const container = document.getElementById(containerId);
-      if (container) {
-        container.classList.add('active');
-      }
-    });
+    // Render visualization tabs
+    this.renderVisualizationTabs();
 
-    // Render search filter
-    this.renderSearchFilter(analysisData);
+    // Render filter panel
+    this.renderFilterPanel(analysisData);
 
     // Render AI suggestions
     this.renderSuggestions(analysisData);
@@ -150,6 +116,9 @@ export class OverviewPanel {
     // Update stats
     this.updateStats(analysisData);
 
+    // Populate issue list
+    this.populateIssueList(analysisData);
+
     // Setup event listeners
     this.setupEventListeners();
 
@@ -157,19 +126,21 @@ export class OverviewPanel {
   }
 
   /**
-   * Render search filter
+   * Render filter panel
    */
-  private renderSearchFilter(analysisData: AnalysisData): void {
-    const filterContainer = document.getElementById('search-filter-container');
+  private renderFilterPanel(analysisData: AnalysisData): void {
+    const filterContainer = document.getElementById('filter-panel-container');
     if (!filterContainer) return;
 
-    this.searchFilter = new SearchFilter(filterContainer, this.coordinator);
-    this.searchFilter.render(analysisData);
-
-    // Setup filter callback
-    this.searchFilter.onFilter((criteria) => {
-      this.handleFilterChange(criteria);
+    this.filterPanel = new CollapsibleFilterPanel(filterContainer, {
+      showCategoryFilter: true, // Overview shows category filter
+      defaultCollapsed: true,
+      onFilterChange: (criteria) => {
+        this.handleFilterChange(criteria);
+      }
     });
+
+    this.filterPanel.render(analysisData);
   }
 
   /**
@@ -181,6 +152,7 @@ export class OverviewPanel {
 
     this.suggestionPanel = new SuggestionPanel(suggestionsContainer, {
       maxSuggestions: 3,
+      defaultCollapsed: true, // Start collapsed for progressive disclosure
       onNavigateToCategory: (categoryId: string) => {
         const category = analysisData.categories?.find(c => c.categoryId === categoryId);
         if (category) {
@@ -190,6 +162,131 @@ export class OverviewPanel {
     });
 
     this.suggestionPanel.render(analysisData);
+  }
+
+  /**
+   * Render visualization tabs
+   */
+  private renderVisualizationTabs(): void {
+    const vizTabContainer = document.getElementById('viz-tab-container');
+    if (!vizTabContainer) return;
+
+    // Define visualization tabs
+    const tabs: VisualizationTab[] = [
+      {
+        id: 'gauge',
+        label: 'Overall Health',
+        icon: '🎯',
+        containerId: 'viz-overview-gauge'
+      },
+      {
+        id: 'bubble',
+        label: 'Category Overview',
+        icon: '⚪',
+        containerId: 'viz-overview-bubble'
+      },
+      {
+        id: 'radar',
+        label: 'Category Comparison',
+        icon: '📊',
+        containerId: 'viz-overview-radar'
+      },
+      {
+        id: 'sankey',
+        label: 'Issue Flow',
+        icon: '🌊',
+        containerId: 'viz-overview-sankey'
+      },
+      {
+        id: 'stacked-bar',
+        label: 'Severity Distribution',
+        icon: '📈',
+        containerId: 'viz-overview-stacked-bar'
+      },
+      {
+        id: 'sunburst',
+        label: 'File Hierarchy',
+        icon: '🌞',
+        containerId: 'viz-overview-sunburst'
+      }
+    ];
+
+    // Create tab manager
+    this.tabManager = new VisualizationTabManager(vizTabContainer, {
+      tabs,
+      defaultTab: 'gauge',
+      onTabChange: (tabId) => {
+        this.handleTabChange(tabId);
+      }
+    });
+
+    // Render tabs
+    this.tabManager.render();
+  }
+
+  /**
+   * Handle visualization tab change
+   */
+  private async handleTabChange(tabId: string): Promise<void> {
+    if (!this.analysisData) return;
+
+    // Get the data mapper for any active filters
+    const dataMapper = this.coordinator.getDataMapper();
+    const filteredData = this.filterPanel
+      ? dataMapper.filterAnalysisData(this.analysisData, {})
+      : this.analysisData;
+
+    // Lazy render the active tab's visualization
+    await this.renderVisualization(tabId, filteredData);
+  }
+
+  /**
+   * Render a specific visualization
+   */
+  private async renderVisualization(tabId: string, analysisData: AnalysisData): Promise<void> {
+    const container = this.tabManager?.getTabContainer(tabId);
+    if (!container) return;
+
+    // Check if already rendered (has children)
+    if (container.children.length > 0) {
+      return; // Already rendered
+    }
+
+    // Ensure coordinator is in overview state
+    if (this.coordinator.getContext().state !== 'overview') {
+      console.warn('Coordinator not in overview state, navigating...');
+      await this.coordinator.navigateToOverview();
+      return;
+    }
+
+    try {
+      // Render the specific visualization based on tab ID
+      const vizManager = this.coordinator.getVisualizationManager();
+      const vizType = tabId as any; // Map tabId to visualization type
+
+      switch (tabId) {
+        case 'gauge':
+          await vizManager.createVisualization(container.id, 'gauge', analysisData);
+          break;
+        case 'bubble':
+          await vizManager.createVisualization(container.id, 'bubble', analysisData);
+          break;
+        case 'radar':
+          await vizManager.createVisualization(container.id, 'radar', analysisData);
+          break;
+        case 'sankey':
+          await vizManager.createVisualization(container.id, 'sankey', analysisData);
+          break;
+        case 'stacked-bar':
+          await vizManager.createVisualization(container.id, 'stacked-bar', analysisData);
+          break;
+        case 'sunburst':
+          await vizManager.createVisualization(container.id, 'sunburst', analysisData);
+          break;
+      }
+    } catch (error) {
+      console.error(`Error rendering ${tabId} visualization:`, error);
+    }
   }
 
   /**
@@ -206,32 +303,30 @@ export class OverviewPanel {
     // Apply filters to analysis data
     const filteredData = dataMapper.filterAnalysisData(this.analysisData, criteria);
 
+    // Update AI Suggestions with filter
+    if (this.suggestionPanel) {
+      this.suggestionPanel.setFilter(criteria);
+    }
+
     // Re-render visualizations with filtered data
     await this.renderVisualizations(filteredData);
 
     // Update stats with filtered data
     this.updateStats(filteredData);
+
+    // Update issue list with filtered data
+    this.populateIssueList(filteredData);
   }
 
   /**
-   * Render all overview visualizations
-   * Note: Calls renderVisualizations directly to avoid navigation event loop
+   * Render overview visualizations (lazy rendering via tabs)
    */
   private async renderVisualizations(analysisData: AnalysisData): Promise<void> {
-    // Ensure coordinator is in overview state
-    if (this.coordinator.getContext().state !== 'overview') {
-      console.warn('Coordinator not in overview state, navigating...');
-      await this.coordinator.navigateToOverview();
-      return; // Navigation will trigger re-render through IntegrationController
-    }
+    if (!this.tabManager) return;
 
-    try {
-      // Render visualizations directly without triggering navigation
-      await this.coordinator.renderCurrentState();
-    } catch (error) {
-      console.error('Error rendering overview visualizations:', error);
-      this.showError('Failed to render visualizations');
-    }
+    // Get the active tab and render only that visualization
+    const activeTabId = this.tabManager.getActiveTab();
+    await this.renderVisualization(activeTabId, analysisData);
   }
 
   /**
@@ -275,29 +370,143 @@ export class OverviewPanel {
   }
 
   /**
+   * Populate issue list with all issues from all categories
+   */
+  private populateIssueList(analysisData: AnalysisData): void {
+    const issueListContainer = document.getElementById('overview-issue-list');
+    const issueCountBadge = document.getElementById('issue-count-badge');
+
+    if (!issueListContainer) return;
+
+    // Collect all issues from all categories
+    const allIssues: Array<{
+      issue: any;
+      categoryName: string;
+      categoryId: string;
+    }> = [];
+
+    (analysisData.categories || []).forEach(category => {
+      (category.issues || []).forEach(issue => {
+        allIssues.push({
+          issue,
+          categoryName: category.categoryName,
+          categoryId: category.categoryId
+        });
+      });
+    });
+
+    // Update badge count
+    if (issueCountBadge) {
+      issueCountBadge.textContent = String(allIssues.length);
+    }
+
+    if (allIssues.length === 0) {
+      issueListContainer.innerHTML = `
+        <div class="no-issues">
+          <div class="no-issues-icon">✅</div>
+          <p>No issues found. Great work!</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Group issues by category
+    const categoryGroups = new Map<string, Array<{ issue: any; categoryName: string; categoryId: string }>>();
+    allIssues.forEach(item => {
+      if (!categoryGroups.has(item.categoryId)) {
+        categoryGroups.set(item.categoryId, []);
+      }
+      categoryGroups.get(item.categoryId)!.push(item);
+    });
+
+    // Render grouped issues as a table
+    let html = '<div class="issue-table-wrapper">';
+    html += '<table class="issue-table">';
+    html += `
+      <thead>
+        <tr>
+          <th class="col-severity">Severity</th>
+          <th class="col-category">Category</th>
+          <th class="col-file">File</th>
+          <th class="col-location">Location</th>
+          <th class="col-message">Issue</th>
+        </tr>
+      </thead>
+      <tbody>
+    `;
+
+    categoryGroups.forEach((items, categoryId) => {
+      items.forEach(({ issue, categoryName }) => {
+        const severity = issue.severity || 'medium';
+        const file = issue.file || issue.filePath || 'N/A';
+        const fileName = file.split('/').pop() || file;
+        const location = issue.line ? `Line ${issue.line}${issue.column ? `:${issue.column}` : ''}` : '-';
+
+        // Build message from available fields
+        const message = issue.message || issue.description || issue.title || 'Issue detected';
+        const suggestion = issue.suggestion || issue.recommendation;
+
+        html += `
+          <tr class="issue-row severity-${severity}" data-category="${this.escapeHtml(categoryId)}">
+            <td class="col-severity">
+              <span class="severity-badge severity-${severity}">${severity.toUpperCase()}</span>
+            </td>
+            <td class="col-category">
+              <span class="category-link" data-category-id="${this.escapeHtml(categoryId)}">${this.escapeHtml(categoryName)}</span>
+            </td>
+            <td class="col-file" title="${this.escapeHtml(file)}">
+              ${this.escapeHtml(fileName)}
+            </td>
+            <td class="col-location">${this.escapeHtml(location)}</td>
+            <td class="col-message">
+              <div class="issue-message">${this.escapeHtml(message)}</div>
+              ${suggestion ? `
+                <div class="issue-suggestion">
+                  <span class="suggestion-icon">💡</span>
+                  ${this.escapeHtml(suggestion)}
+                </div>
+              ` : ''}
+            </td>
+          </tr>
+        `;
+      });
+    });
+
+    html += '</tbody></table></div>';
+    issueListContainer.innerHTML = html;
+
+    // Add click handlers for category links
+    issueListContainer.querySelectorAll('.category-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        const categoryId = (e.target as HTMLElement).dataset.categoryId;
+        if (categoryId) {
+          const category = analysisData.categories?.find(c => c.categoryId === categoryId);
+          if (category) {
+            this.coordinator.navigateToCategoryDetail(categoryId, category.categoryName);
+          }
+        }
+      });
+    });
+  }
+
+  /**
+   * Escape HTML to prevent XSS
+   */
+  private escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  /**
    * Setup event listeners
    */
   private setupEventListeners(): void {
-    // Refresh button
-    const refreshBtn = this.container.querySelector('.btn-refresh');
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', () => {
-        this.handleRefresh();
-      });
-    }
-
     // Listen for bubble click to navigate to category
     window.addEventListener('bubble-click', ((event: CustomEvent) => {
       const { id, name } = event.detail;
       this.handleCategoryClick(id, name);
     }) as EventListener);
-  }
-
-  /**
-   * Handle refresh
-   */
-  private handleRefresh(): void {
-    window.dispatchEvent(new CustomEvent('overview-refresh-requested'));
   }
 
   /**
@@ -324,13 +533,17 @@ export class OverviewPanel {
    * Clear panel
    */
   clear(): void {
-    if (this.searchFilter) {
-      this.searchFilter.dispose();
-      this.searchFilter = null;
+    if (this.filterPanel) {
+      this.filterPanel.dispose();
+      this.filterPanel = null;
     }
     if (this.suggestionPanel) {
       this.suggestionPanel.dispose();
       this.suggestionPanel = null;
+    }
+    if (this.tabManager) {
+      this.tabManager.dispose();
+      this.tabManager = null;
     }
     this.container.innerHTML = '';
     this.isRendered = false;

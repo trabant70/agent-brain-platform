@@ -7,6 +7,7 @@ import type { Suggestion } from './SuggestionEngine';
 import { suggestionEngine } from './SuggestionEngine';
 import { SuggestionCard, type SuggestionCardConfig } from './SuggestionCard';
 import type { AnalysisData } from '../coordination/AnalysisDataMapper';
+import type { FilterCriteria } from '../ui-panels/CollapsibleFilterPanel';
 
 /**
  * Suggestion Panel Configuration
@@ -24,8 +25,11 @@ export class SuggestionPanel {
   private container: HTMLElement;
   private analysisData: AnalysisData | null = null;
   private suggestions: Suggestion[] = [];
+  private filteredSuggestions: Suggestion[] = [];
   private config: SuggestionPanelConfig;
   private isCollapsed: boolean = false;
+  private currentFilter: FilterCriteria = {};
+  private currentCategory: string | null = null;
 
   constructor(container: HTMLElement, config: SuggestionPanelConfig = {}) {
     this.container = container;
@@ -41,14 +45,18 @@ export class SuggestionPanel {
   /**
    * Render suggestions for analysis data
    */
-  render(analysisData: AnalysisData): void {
+  render(analysisData: AnalysisData, categoryId?: string): void {
     this.analysisData = analysisData;
+    this.currentCategory = categoryId || null;
 
     // Generate suggestions
     this.suggestions = suggestionEngine.generateSuggestions(analysisData);
 
+    // Apply filtering
+    this.applyFiltering();
+
     // Limit number of suggestions
-    const displaySuggestions = this.suggestions.slice(0, this.config.maxSuggestions);
+    const displaySuggestions = this.filteredSuggestions.slice(0, this.config.maxSuggestions);
 
     if (displaySuggestions.length === 0) {
       this.renderEmpty();
@@ -198,6 +206,110 @@ export class SuggestionPanel {
     this.container.innerHTML = '';
     this.suggestions = [];
     this.analysisData = null;
+  }
+
+  /**
+   * Set filter criteria and re-render
+   */
+  setFilter(criteria: FilterCriteria): void {
+    this.currentFilter = criteria;
+    if (this.analysisData) {
+      this.applyFiltering();
+      this.render(this.analysisData, this.currentCategory ?? undefined);
+    }
+  }
+
+  /**
+   * Set active category filter
+   */
+  setCategory(categoryId: string | null): void {
+    this.currentCategory = categoryId;
+    if (this.analysisData) {
+      this.applyFiltering();
+      this.render(this.analysisData, this.currentCategory ?? undefined);
+    }
+  }
+
+  /**
+   * Apply filtering to suggestions based on current filter criteria and category
+   */
+  private applyFiltering(): void {
+    let filtered = [...this.suggestions];
+
+    // Filter by category (if in category tab)
+    if (this.currentCategory) {
+      filtered = filtered.filter(s =>
+        s.category === this.currentCategory
+      );
+    }
+
+    // Filter by search query
+    if (this.currentFilter.searchQuery) {
+      const query = this.currentFilter.searchQuery.toLowerCase();
+      filtered = filtered.filter(s =>
+        s.title.toLowerCase().includes(query) ||
+        s.description.toLowerCase().includes(query) ||
+        (s.category?.toLowerCase().includes(query) ?? false)
+      );
+    }
+
+    // Filter by categories (from filter panel)
+    if (this.currentFilter.categories && this.currentFilter.categories.length > 0) {
+      filtered = filtered.filter(s =>
+        s.category && this.currentFilter.categories!.includes(s.category)
+      );
+    }
+
+    // Filter by severity - map severity strings to priority levels
+    if (this.currentFilter.severities && this.currentFilter.severities.length > 0) {
+      const priorityThresholds: Record<string, number> = {
+        'critical': 75,
+        'high': 50,
+        'medium': 25,
+        'low': 0
+      };
+      const minPriority = Math.min(...this.currentFilter.severities.map(s => priorityThresholds[s] ?? 0));
+      filtered = filtered.filter(s => s.priority >= minPriority);
+    }
+
+    // Filter by score range (map impact to score)
+    if (this.currentFilter.scoreMin !== undefined || this.currentFilter.scoreMax !== undefined) {
+      filtered = filtered.filter(s => {
+        // Map impact level to score (0-100)
+        const impactScore = s.impact === 'high' ? 80 :
+                           s.impact === 'medium' ? 50 : 20;
+
+        const min = this.currentFilter.scoreMin ?? 0;
+        const max = this.currentFilter.scoreMax ?? 100;
+        return impactScore >= min && impactScore <= max;
+      });
+    }
+
+    // Filter by file pattern (if specified)
+    if (this.currentFilter.filePattern) {
+      const pattern = this.currentFilter.filePattern.toLowerCase();
+      filtered = filtered.filter(s => {
+        if (!s.affectedFiles || s.affectedFiles.length === 0) return true;
+        return s.affectedFiles.some(file =>
+          file.toLowerCase().includes(pattern) ||
+          this.matchGlob(file, pattern)
+        );
+      });
+    }
+
+    this.filteredSuggestions = filtered;
+  }
+
+  /**
+   * Simple glob pattern matching
+   */
+  private matchGlob(path: string, pattern: string): boolean {
+    const regexPattern = pattern
+      .replace(/\./g, '\\.')
+      .replace(/\*/g, '.*')
+      .replace(/\?/g, '.');
+    const regex = new RegExp(`^${regexPattern}$`, 'i');
+    return regex.test(path);
   }
 
   /**

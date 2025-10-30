@@ -64,10 +64,39 @@ export class CodeStructureViewController {
       webviewLogger.info(LogCategory.UI, 'i18n ready, rendering Code Structure tab', 'CodeStructureViewController.initialize');
       this.render();
       this.setupEventListeners();
+
+      // Request cached data when tab first initializes
+      this.requestCachedData();
     });
+
+    // Listen for tab changes to request cached data when becoming visible
+    const tabManager = (window as any).tabManager;
+    if (tabManager && typeof tabManager.on === 'function') {
+      tabManager.on('tab:changed', (event: any) => {
+        if (event.to === 'code-review') {
+          // Tab became visible, request cached data if we don't have any
+          if (!this.state.currentAnalysis) {
+            webviewLogger.debug(LogCategory.UI, 'Code Review tab became visible, requesting cached data', 'CodeStructureViewController.initialize');
+            this.requestCachedData();
+          }
+        }
+      });
+    }
 
     console.log('[CodeStructureViewController] initialize() completed');
     webviewLogger.info(LogCategory.UI, 'CodeStructureViewController initialized', 'initialize');
+  }
+
+  /**
+   * Request cached analysis data from extension
+   */
+  private requestCachedData(): void {
+    if (this.messageHandler && (window as any).vscode) {
+      webviewLogger.debug(LogCategory.UI, 'Requesting cached code structure data', 'requestCachedData', undefined, LogPathway.WEBVIEW_MESSAGING);
+      (window as any).vscode.postMessage({
+        type: 'code-structure-review:request-data'
+      });
+    }
   }
 
   /**
@@ -156,19 +185,33 @@ export class CodeStructureViewController {
     console.log('[CodeStructureViewController] Setting container innerHTML...');
     container.innerHTML = `
       <div class="code-structure-container">
-        <!-- Header with controls -->
-        <div class="code-structure-header">
-          <h2>${t('codeStructure.title', 'Code Structure Review')}</h2>
-          <div class="code-structure-controls">
-            <div class="maturity-selector">
-              <label>${t('codeStructure.maturityLevel', 'Maturity Level')}:</label>
-              <select id="maturity-level-select" class="maturity-select">
-                <option value="novice">${t('maturity.novice', 'Novice')}</option>
-                <option value="intermediate" selected>${t('maturity.intermediate', 'Intermediate')}</option>
-                <option value="advanced">${t('maturity.advanced', 'Advanced')}</option>
-                <option value="expert">${t('maturity.expert', 'Expert')}</option>
-              </select>
-            </div>
+        <!-- Tab Navigation Header -->
+        <div class="code-structure-tabs-header">
+          <div class="category-tabs">
+            <button class="category-tab active" data-category="overview">
+              ${t('codeStructure.overview', 'Overview')}
+            </button>
+            <button class="category-tab" data-category="ui-ux">
+              ${t('codeStructure.uiUxQuality', 'UI/UX')}
+            </button>
+            <button class="category-tab" data-category="test-coverage">
+              ${t('codeStructure.testCoverage', 'Test Coverage')}
+            </button>
+            <button class="category-tab" data-category="i18n">
+              ${t('codeStructure.internationalization', 'Internationalization')}
+            </button>
+            <button class="category-tab" data-category="features">
+              ${t('codeStructure.featureCompleteness', 'Feature Completeness')}
+            </button>
+          </div>
+          <div class="header-controls">
+            <label>${t('codeStructure.maturity', 'Maturity')}:</label>
+            <select id="maturity-level-select">
+              <option value="novice">${t('maturity.novice', 'Novice')}</option>
+              <option value="intermediate" selected>${t('maturity.intermediate', 'Intermediate')}</option>
+              <option value="advanced">${t('maturity.advanced', 'Advanced')}</option>
+              <option value="expert">${t('maturity.expert', 'Expert')}</option>
+            </select>
             <button id="run-analysis" class="btn btn-primary">
               ${t('codeStructure.runAnalysis', 'Run Analysis')}
             </button>
@@ -445,7 +488,6 @@ export class CodeStructureViewController {
       // Create new integration controller
       this.integrationController = createIntegrationController(container, {
         enableCoordinator: true,
-        enableBreadcrumb: true,
         enableKeyboardShortcuts: true,
         enableDeepLinking: false, // Disabled for tab integration
         autoUpdateHash: false,
@@ -520,9 +562,59 @@ export class CodeStructureViewController {
   }
 
   /**
+   * Handle tab switch
+   */
+  private handleTabSwitch(category: string | undefined): void {
+    if (!category) return;
+
+    // Update active tab styling
+    document.querySelectorAll('.category-tab').forEach(tab => {
+      tab.classList.remove('active');
+    });
+    const clickedTab = document.querySelector(`[data-category="${category}"]`);
+    if (clickedTab) {
+      clickedTab.classList.add('active');
+    }
+
+    webviewLogger.info(LogCategory.UI, 'Tab switched', 'handleTabSwitch', { category });
+
+    // If no analysis data, just update the UI state
+    if (!this.integrationController || !this.state.currentAnalysis) {
+      return;
+    }
+
+    // Navigate to the appropriate view
+    if (category === 'overview') {
+      this.integrationController.navigateToOverview();
+    } else {
+      // Map category ID to category name and navigate
+      const categoryMap: Record<string, { id: string; name: string }> = {
+        'ui-ux': { id: 'ui-ux-quality', name: 'UI/UX Quality' },
+        'test-coverage': { id: 'test-coverage', name: 'Test Coverage' },
+        'i18n': { id: 'internationalization', name: 'Internationalization' },
+        'features': { id: 'feature-completeness', name: 'Feature Completeness' }
+      };
+
+      const categoryInfo = categoryMap[category];
+      if (categoryInfo) {
+        this.integrationController.navigateToCategoryDetail(categoryInfo.id, categoryInfo.name);
+      }
+    }
+  }
+
+  /**
    * Setup event listeners
    */
   private setupEventListeners(): void {
+    // Tab navigation
+    document.querySelectorAll('.category-tab').forEach(tab => {
+      tab.addEventListener('click', (e) => {
+        const button = e.target as HTMLButtonElement;
+        const category = button.dataset.category;
+        this.handleTabSwitch(category);
+      });
+    });
+
     // Run analysis button
     document.getElementById('run-analysis')?.addEventListener('click', () => {
       this.runAnalysis();

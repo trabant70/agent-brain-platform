@@ -134,6 +134,7 @@ export class GaugeChart extends BaseVisualization {
   ): void {
     const d3 = (window as any).d3;
 
+    // Color zones stay in original position (no rotation)
     const arc = d3.arc()
       .innerRadius(radius * 0.75)
       .outerRadius(radius)
@@ -161,6 +162,9 @@ export class GaugeChart extends BaseVisualization {
     angleScale: any,
     radius: number
   ): void {
+    // Rotate everything 90 degrees counterclockwise (-PI/2)
+    const rotationOffset = -Math.PI / 2;
+
     const numTicks = 5;
     const tickValues: number[] = [];
     const step = (data.max - data.min) / (numTicks - 1);
@@ -175,7 +179,7 @@ export class GaugeChart extends BaseVisualization {
       .data(tickValues)
       .join('g')
       .attr('transform', (d: number) => {
-        const angle = angleScale(d);
+        const angle = angleScale(d) + rotationOffset;
         return `rotate(${(angle * 180 / Math.PI)})`;
       });
 
@@ -188,21 +192,19 @@ export class GaugeChart extends BaseVisualization {
       .attr('stroke', 'var(--vscode-foreground)')
       .attr('stroke-width', 2);
 
-    // Tick labels - position them outside the arc and rotate for readability
+    // Tick labels - position them outside the arc horizontally for readability
     g.append('g')
       .attr('class', 'tick-labels')
       .selectAll('text')
       .data(tickValues)
       .join('text')
       .attr('transform', (d: number) => {
-        const angle = angleScale(d);
+        const angle = angleScale(d) + rotationOffset;
         const labelRadius = radius * 0.75 - 20;
         const x = Math.cos(angle) * labelRadius;
         const y = Math.sin(angle) * labelRadius;
-        // Rotate each label by -90 degrees (counter-clockwise quarter turn)
-        const angleDeg = angle * 180 / Math.PI;
-        const rotationAngle = angleDeg - 90;
-        return `translate(${x},${y}) rotate(${rotationAngle})`;
+        // Keep labels horizontal (no rotation)
+        return `translate(${x},${y})`;
       })
       .attr('text-anchor', 'middle')
       .attr('dy', '0.35em')
@@ -220,7 +222,9 @@ export class GaugeChart extends BaseVisualization {
     angleScale: any,
     radius: number
   ): void {
-    const angle = angleScale(target);
+    // Rotate everything 90 degrees counterclockwise (-PI/2)
+    const rotationOffset = -Math.PI / 2;
+    const angle = angleScale(target) + rotationOffset;
 
     const targetGroup = g.append('g')
       .attr('class', 'target-indicator')
@@ -271,7 +275,9 @@ export class GaugeChart extends BaseVisualization {
     angleScale: any,
     radius: number
   ): any {
-    const angle = angleScale(value);
+    // Rotate everything 90 degrees counterclockwise (-PI/2)
+    const rotationOffset = -Math.PI / 2;
+    const angle = angleScale(value) + rotationOffset;
 
     const needleGroup = g.append('g')
       .attr('class', 'needle')
@@ -345,12 +351,14 @@ export class GaugeChart extends BaseVisualization {
   ): void {
     const d3 = (window as any).d3;
 
-    // Add invisible arc for hover detection
+    // Rotate everything 90 degrees counterclockwise (-PI/2)
+    const rotationOffset = -Math.PI / 2;
+
     const arc = d3.arc()
       .innerRadius(0)
       .outerRadius(radius)
-      .startAngle(-Math.PI / 2)
-      .endAngle(Math.PI / 2);
+      .startAngle(-Math.PI / 2 + rotationOffset)
+      .endAngle(Math.PI / 2 + rotationOffset);
 
     g.append('path')
       .attr('d', arc)
@@ -358,7 +366,7 @@ export class GaugeChart extends BaseVisualization {
       .style('cursor', 'pointer')
       .on('mousemove', (event: MouseEvent) => {
         const [x, y] = d3.pointer(event);
-        const angle = Math.atan2(y, x);
+        const angle = Math.atan2(y, x) - rotationOffset;
 
         // Only show tooltip if within gauge range
         if (angle >= -Math.PI / 2 && angle <= Math.PI / 2) {
@@ -495,8 +503,10 @@ export class GaugeChart extends BaseVisualization {
       .range([-Math.PI / 2, Math.PI / 2])
       .clamp(true);
 
-    const oldAngle = angleScale(this.currentValue);
-    const newAngle = angleScale(newValue);
+    // Rotate everything 90 degrees counterclockwise (-PI/2)
+    const rotationOffset = -Math.PI / 2;
+    const oldAngle = angleScale(this.currentValue) + rotationOffset;
+    const newAngle = angleScale(newValue) + rotationOffset;
 
     return new Promise((resolve) => {
       this.needle

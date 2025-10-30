@@ -5,6 +5,7 @@
  */
 
 import { BaseVisualization, VisualizationConfig } from './BaseVisualization';
+import { webviewLogger, LogCategory, LogPathway } from '../WebviewLogger';
 
 export interface SankeyNode {
   id: string;
@@ -36,13 +37,25 @@ export class SankeyDiagram extends BaseVisualization {
   protected async renderContent(): Promise<void> {
     const d3 = (window as any).d3;
     if (!d3 || !d3.sankey) {
-      console.error('D3 Sankey is not available. Make sure d3-sankey is loaded.');
+      webviewLogger.error(LogCategory.VISUALIZATION, 'D3 Sankey is not available', 'renderContent', undefined, LogPathway.RENDER_PIPELINE);
       this.renderFallback();
       return;
     }
 
     const data = this.data as SankeyData;
-    if (!data || !data.nodes || !data.links) {
+    webviewLogger.debug(LogCategory.VISUALIZATION, 'Sankey rendering', 'renderContent', {
+      hasData: !!data,
+      nodeCount: data?.nodes?.length || 0,
+      linkCount: data?.links?.length || 0
+    }, LogPathway.RENDER_PIPELINE);
+
+    if (!data || !data.nodes || !data.links || data.nodes.length === 0 || data.links.length === 0) {
+      webviewLogger.warn(LogCategory.VISUALIZATION, 'Insufficient Sankey data', 'renderContent', {
+        hasNodes: !!data?.nodes,
+        hasLinks: !!data?.links,
+        nodeCount: data?.nodes?.length || 0,
+        linkCount: data?.links?.length || 0
+      }, LogPathway.RENDER_PIPELINE);
       this.renderEmpty();
       return;
     }

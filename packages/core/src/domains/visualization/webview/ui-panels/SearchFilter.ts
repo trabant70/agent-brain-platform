@@ -43,9 +43,9 @@ export class SearchFilter {
     const severities = ['critical', 'high', 'medium', 'low'];
 
     this.container.innerHTML = `
-      <div class="search-filter">
+      <div class="search-filter" style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 1rem;">
         <!-- Search input -->
-        <div class="filter-section">
+        <div class="filter-section" style="flex: 1;">
           <div class="search-input-wrapper">
             <span class="search-icon">🔍</span>
             <input type="text"
@@ -57,8 +57,8 @@ export class SearchFilter {
           </div>
         </div>
 
-        <!-- Filter toggles -->
-        <div class="filter-section">
+        <!-- Filter toggle -->
+        <div class="filter-section" style="flex-shrink: 0;">
           <button class="filter-toggle" id="filter-toggle">
             <span class="filter-icon">⚙️</span>
             <span class="filter-label">Filters</span>
