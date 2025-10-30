@@ -266,21 +266,27 @@ export class CategoryDetailPanel {
     }
 
     try {
-      // Render the specific visualization based on tab ID
+      // Get data mapper and visualization manager from coordinator
+      const dataMapper = this.coordinator.getDataMapper();
       const vizManager = this.coordinator.getVisualizationManager();
 
+      // Transform data using the data mapper and render the specific visualization
       switch (tabId) {
         case 'heatmap':
-          await vizManager.createVisualization(container.id, 'heatmap', analysisData);
+          const heatmapData = dataMapper.toHeatmap(analysisData, this.categoryId);
+          await vizManager.createVisualization(container.id, 'heatmap', heatmapData);
           break;
         case 'sankey':
-          await vizManager.createVisualization(container.id, 'sankey', analysisData);
+          const sankeyData = dataMapper.toSankeyDiagram(analysisData, this.categoryId);
+          await vizManager.createVisualization(container.id, 'sankey', sankeyData);
           break;
         case 'timeline':
-          await vizManager.createVisualization(container.id, 'timeline', analysisData);
+          const timelineData = dataMapper.toTimelineVisualization(analysisData, this.categoryId);
+          await vizManager.createVisualization(container.id, 'timeline', timelineData);
           break;
         case 'stacked-bar':
-          await vizManager.createVisualization(container.id, 'stacked-bar', analysisData);
+          const stackedBarData = dataMapper.toStackedBarChart(analysisData, this.categoryId);
+          await vizManager.createVisualization(container.id, 'stacked-bar', stackedBarData);
           break;
       }
     } catch (error) {

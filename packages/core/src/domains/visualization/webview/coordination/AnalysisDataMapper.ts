@@ -289,7 +289,66 @@ export class AnalysisDataMapper {
   }
 
   /**
-   * Category Detail: Data flow sankey
+   * Overview: Category → Severity flow sankey (for overview page)
+   */
+  toOverviewSankey(analysis: AnalysisData): SankeyData {
+    const cacheKey = 'sankey-overview';
+    const cached = this.getCached(cacheKey, analysis);
+    if (cached) return cached;
+
+    const categories = analysis.categories || [];
+
+    if (categories.length === 0) {
+      return { nodes: [], links: [] };
+    }
+
+    // Create flow: Category → Severity
+    const categoryNodes: Array<{ id: string; name: string }> = [];
+    const severityNodes = new Set<string>();
+    const links: Array<{ source: string; target: string; value: number }> = [];
+
+    categories.forEach(cat => {
+      const issues = cat.issues || [];
+      if (issues.length > 0) {
+        // Add category node
+        categoryNodes.push({
+          id: `category-${cat.categoryId}`,
+          name: cat.categoryName
+        });
+
+        // Aggregate severity counts
+        issues.forEach(issue => {
+          if (issue.severity) {
+            severityNodes.add(issue.severity);
+            const sourceId = `category-${cat.categoryId}`;
+            const targetId = `severity-${issue.severity}`;
+            const existing = links.find(l => l.source === sourceId && l.target === targetId);
+            if (existing) {
+              existing.value++;
+            } else {
+              links.push({ source: sourceId, target: targetId, value: 1 });
+            }
+          }
+        });
+      }
+    });
+
+    const nodes = [
+      ...categoryNodes,
+      ...Array.from(severityNodes).map(sev => ({
+        id: `severity-${sev}`,
+        name: sev.toUpperCase()
+      }))
+    ];
+
+    const data: SankeyData = { nodes, links };
+
+    this.setCached(cacheKey, data, analysis);
+    return data;
+  }
+
+  /**
+   * Category Detail: Data flow sankey (File → Severity for single category)
    */
   toSankeyDiagram(analysis: AnalysisData, categoryId: string): SankeyData {
     const cacheKey = `sankey-${categoryId}`;

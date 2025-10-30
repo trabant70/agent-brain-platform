@@ -260,43 +260,36 @@ export class OverviewPanel {
     }
 
     try {
-      // Render the specific visualization based on tab ID
+      // Get data mapper and visualization manager from coordinator
+      const dataMapper = this.coordinator.getDataMapper();
       const vizManager = this.coordinator.getVisualizationManager();
 
+      // Transform data using the data mapper and render the specific visualization
       switch (tabId) {
         case 'gauge':
-          // Transform AnalysisData to GaugeData format
-          const gaugeData = {
-            value: analysisData.summary?.overallScore ?? 0,
-            min: 0,
-            max: 100,
-            target: 70, // Target score
-            unit: 'Score',
-            title: 'Overall Quality Score',
-            subtitle: `${analysisData.summary?.totalIssues ?? 0} total issues`,
-            zones: [
-              { from: 0, to: 40, color: '#dc2626', label: 'Critical' },
-              { from: 40, to: 70, color: '#f59e0b', label: 'Needs Work' },
-              { from: 70, to: 90, color: '#3b82f6', label: 'Good' },
-              { from: 90, to: 100, color: '#10b981', label: 'Excellent' }
-            ]
-          };
+          const gaugeData = dataMapper.toGaugeChart(analysisData);
           await vizManager.createVisualization(container.id, 'gauge', gaugeData);
           break;
         case 'bubble':
-          await vizManager.createVisualization(container.id, 'bubble', analysisData);
+          const bubbleData = dataMapper.toBubbleChart(analysisData);
+          await vizManager.createVisualization(container.id, 'bubble', bubbleData);
           break;
         case 'radar':
-          await vizManager.createVisualization(container.id, 'radar', analysisData);
+          const radarData = dataMapper.toRadarChart(analysisData);
+          await vizManager.createVisualization(container.id, 'radar', radarData);
           break;
         case 'sankey':
-          await vizManager.createVisualization(container.id, 'sankey', analysisData);
+          // Overview Sankey: Category → Severity flow
+          const sankeyData = dataMapper.toOverviewSankey(analysisData);
+          await vizManager.createVisualization(container.id, 'sankey', sankeyData);
           break;
         case 'stacked-bar':
-          await vizManager.createVisualization(container.id, 'stacked-bar', analysisData);
+          const stackedBarData = dataMapper.toStackedBarChart(analysisData);
+          await vizManager.createVisualization(container.id, 'stacked-bar', stackedBarData);
           break;
         case 'sunburst':
-          await vizManager.createVisualization(container.id, 'sunburst', analysisData);
+          const sunburstData = dataMapper.toSunburstDiagram(analysisData);
+          await vizManager.createVisualization(container.id, 'sunburst', sunburstData);
           break;
       }
     } catch (error) {
