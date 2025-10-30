@@ -42,31 +42,27 @@ export class CodeStructurePanel {
     this.analysisData = analysisData;
     this.clear();
 
-    // Create unified panel structure
+    // Create unified panel structure (compact, no heading)
     this.container.innerHTML = `
-      <div class="code-structure-panel">
-        <div class="panel-header">
-          <h2 class="panel-title">Code Structure Review</h2>
-        </div>
-
-        <!-- Collapsible Filter Panel -->
-        <div id="filter-panel-container"></div>
+      <div class="code-structure-panel compact">
+        <!-- Collapsible Filter Panel (directly under header) -->
+        <div id="filter-panel-container" class="compact-filter"></div>
 
         <!-- AI Suggestions (collapsible, default collapsed) -->
-        <div id="suggestions-container"></div>
+        <div id="suggestions-container" class="compact-section"></div>
 
         <!-- Stats Summary -->
-        <div class="panel-stats" id="panel-stats">
+        <div class="panel-stats compact-stats" id="panel-stats">
           <!-- Stats will be populated dynamically -->
         </div>
 
         <!-- Visualization Tabs -->
-        <div class="panel-content">
+        <div class="panel-content compact-content">
           <div id="viz-tab-container"></div>
         </div>
 
         <!-- Issue List Table (collapsible) -->
-        <div class="panel-section">
+        <div class="panel-section compact-section">
           <details class="issue-details" id="issue-details-section">
             <summary class="issue-summary">
               <span class="summary-icon">📋</span>
@@ -94,8 +90,24 @@ export class CodeStructurePanel {
     // Initial render with no filter (all data)
     await this.handleFilterChange({});
 
+    // Setup bubble click handler to filter by category
+    this.setupBubbleClickHandler();
+
     // Use requestAnimationFrame to ensure DOM is ready
     await new Promise(resolve => requestAnimationFrame(() => resolve(undefined)));
+  }
+
+  /**
+   * Setup bubble click handler to filter by clicked category
+   */
+  private setupBubbleClickHandler(): void {
+    window.addEventListener('bubble-click', ((event: CustomEvent) => {
+      const { categoryId } = event.detail;
+      if (categoryId && this.filterPanel) {
+        // Filter to show only the clicked category
+        this.filterPanel.setCategories([categoryId]);
+      }
+    }) as EventListener);
   }
 
   /**

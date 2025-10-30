@@ -179,25 +179,8 @@ export class CodeStructureViewController {
     console.log('[CodeStructureViewController] Setting container innerHTML...');
     container.innerHTML = `
       <div class="code-structure-container">
-        <!-- Tab Navigation Header -->
-        <div class="code-structure-tabs-header">
-          <div class="category-tabs">
-            <button class="category-tab active" data-category="overview">
-              ${t('codeStructure.overview', 'Overview')}
-            </button>
-            <button class="category-tab" data-category="ui-ux">
-              ${t('codeStructure.uiUxQuality', 'UI/UX')}
-            </button>
-            <button class="category-tab" data-category="test-coverage">
-              ${t('codeStructure.testCoverage', 'Test Coverage')}
-            </button>
-            <button class="category-tab" data-category="i18n">
-              ${t('codeStructure.internationalization', 'Internationalization')}
-            </button>
-            <button class="category-tab" data-category="features">
-              ${t('codeStructure.featureCompleteness', 'Feature Completeness')}
-            </button>
-          </div>
+        <!-- Compact Header -->
+        <div class="code-structure-header">
           <div class="header-controls">
             <label>${t('codeStructure.maturity', 'Maturity')}:</label>
             <select id="maturity-level-select">
@@ -212,7 +195,7 @@ export class CodeStructureViewController {
           </div>
         </div>
 
-        <!-- Main content area -->
+        <!-- Main content area (filter will be here, rendered by CodeStructurePanel) -->
         <div class="code-structure-main" id="code-structure-main">
           ${this.renderEmptyState()}
         </div>
