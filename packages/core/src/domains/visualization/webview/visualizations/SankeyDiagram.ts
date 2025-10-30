@@ -63,8 +63,9 @@ export class SankeyDiagram extends BaseVisualization {
     const width = this.getContentWidth();
     const height = this.getContentHeight();
 
-    // Create Sankey generator
+    // Create Sankey generator with nodeId accessor
     const sankey = d3.sankey()
+      .nodeId((d: any) => d.id)
       .nodeWidth(20)
       .nodePadding(10)
       .extent([[0, 0], [width, height]]);
