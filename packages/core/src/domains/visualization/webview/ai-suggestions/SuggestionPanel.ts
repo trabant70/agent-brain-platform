@@ -115,24 +115,36 @@ export class SuggestionPanel {
    * Render empty state
    */
   private renderEmpty(): void {
-    this.container.innerHTML = `
-      <div class="suggestion-panel suggestion-panel-empty">
-        <div class="suggestion-panel-header">
-          <div class="suggestion-panel-title">
-            <span class="icon">✅</span>
-            <h3>All Good!</h3>
-          </div>
+    const panel = document.createElement('div');
+    panel.className = 'suggestion-panel suggestion-panel-empty';
+    panel.innerHTML = `
+      <div class="suggestion-panel-header">
+        <div class="suggestion-panel-title">
+          <span class="icon">💡</span>
+          <h3>AI Suggestions</h3>
+          <span class="suggestion-count">0</span>
         </div>
+        ${this.config.collapsible ? `
+          <button class="suggestion-panel-toggle" title="${this.isCollapsed ? 'Expand' : 'Collapse'}">
+            <span class="toggle-icon">${this.isCollapsed ? '▶' : '▼'}</span>
+          </button>
+        ` : ''}
+      </div>
 
-        <div class="suggestion-panel-content">
-          <div class="suggestion-empty-state">
-            <div class="empty-icon">🎉</div>
-            <h4>No Suggestions Right Now</h4>
-            <p>Your code is in great shape! Keep up the good work maintaining high quality standards.</p>
-          </div>
+      <div class="suggestion-panel-content ${this.isCollapsed ? 'collapsed' : ''}">
+        <div class="suggestion-empty-state">
+          <div class="empty-icon">💡</div>
+          <h4>No AI Suggestions Available</h4>
+          <p>No actionable suggestions were generated for this view. Check the issue list below for details.</p>
         </div>
       </div>
     `;
+
+    this.container.innerHTML = '';
+    this.container.appendChild(panel);
+
+    // Attach event listeners for collapse toggle
+    this.attachEventListeners(panel);
   }
 
   /**
