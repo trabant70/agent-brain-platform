@@ -47,6 +47,7 @@ export class CodeStructureViewController {
       if (container && container.innerHTML) {
         webviewLogger.debug(LogCategory.UI, 'Container has content, re-rendering with translations', 'CodeStructureViewController.constructor');
         this.render();
+        this.setupEventListeners(); // Re-attach event listeners after render
       }
     });
   }
@@ -464,6 +465,7 @@ export class CodeStructureViewController {
 
     // Re-render empty state
     this.render();
+    this.setupEventListeners(); // Re-attach event listeners after render
   }
 
   /**
