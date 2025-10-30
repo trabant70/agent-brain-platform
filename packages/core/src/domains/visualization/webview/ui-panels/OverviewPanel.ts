@@ -262,11 +262,26 @@ export class OverviewPanel {
     try {
       // Render the specific visualization based on tab ID
       const vizManager = this.coordinator.getVisualizationManager();
-      const vizType = tabId as any; // Map tabId to visualization type
 
       switch (tabId) {
         case 'gauge':
-          await vizManager.createVisualization(container.id, 'gauge', analysisData);
+          // Transform AnalysisData to GaugeData format
+          const gaugeData = {
+            value: analysisData.summary?.overallScore ?? 0,
+            min: 0,
+            max: 100,
+            target: 70, // Target score
+            unit: 'Score',
+            title: 'Overall Quality Score',
+            subtitle: `${analysisData.summary?.totalIssues ?? 0} total issues`,
+            zones: [
+              { from: 0, to: 40, color: '#dc2626', label: 'Critical' },
+              { from: 40, to: 70, color: '#f59e0b', label: 'Needs Work' },
+              { from: 70, to: 90, color: '#3b82f6', label: 'Good' },
+              { from: 90, to: 100, color: '#10b981', label: 'Excellent' }
+            ]
+          };
+          await vizManager.createVisualization(container.id, 'gauge', gaugeData);
           break;
         case 'bubble':
           await vizManager.createVisualization(container.id, 'bubble', analysisData);
