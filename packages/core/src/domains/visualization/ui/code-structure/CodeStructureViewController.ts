@@ -616,9 +616,25 @@ export class CodeStructureViewController {
     });
 
     // Run analysis button
-    document.getElementById('run-analysis')?.addEventListener('click', () => {
-      this.runAnalysis();
-    });
+    const runAnalysisButton = document.getElementById('run-analysis');
+    console.log('[CodeStructureViewController] Run Analysis button found:', runAnalysisButton);
+    webviewLogger.debug(LogCategory.UI, 'Run Analysis button element', 'setupEventListeners', {
+      found: !!runAnalysisButton,
+      elementId: runAnalysisButton?.id
+    }, LogPathway.WEBVIEW_MESSAGING);
+
+    if (runAnalysisButton) {
+      runAnalysisButton.addEventListener('click', () => {
+        console.log('[CodeStructureViewController] Run Analysis button clicked!');
+        webviewLogger.info(LogCategory.UI, 'Run Analysis button clicked', 'runAnalysisButton.click', undefined, LogPathway.WEBVIEW_MESSAGING);
+        this.runAnalysis();
+      });
+      console.log('[CodeStructureViewController] Run Analysis button event listener attached');
+      webviewLogger.info(LogCategory.UI, 'Run Analysis button listener attached', 'setupEventListeners', undefined, LogPathway.WEBVIEW_MESSAGING);
+    } else {
+      console.error('[CodeStructureViewController] Run Analysis button NOT FOUND');
+      webviewLogger.error(LogCategory.UI, 'Run Analysis button not found in DOM', 'setupEventListeners', undefined, LogPathway.WEBVIEW_MESSAGING);
+    }
 
     // Maturity level selector
     document.getElementById('maturity-level-select')?.addEventListener('change', (e) => {
@@ -648,7 +664,7 @@ export class CodeStructureViewController {
     // Visualization interaction events
     this.setupVisualizationEventListeners();
 
-    webviewLogger.debug(LogCategory.UI, 'Event listeners setup', 'setupEventListeners');
+    webviewLogger.debug(LogCategory.UI, 'Event listeners setup complete', 'setupEventListeners');
   }
 
   /**
@@ -707,11 +723,22 @@ export class CodeStructureViewController {
    * Run analysis
    */
   private runAnalysis(): void {
+    console.log('[CodeStructureViewController] runAnalysis() called');
+    console.log('[CodeStructureViewController] messageHandler exists:', !!this.messageHandler);
+    console.log('[CodeStructureViewController] window.vscode exists:', !!(window as any).vscode);
+
+    webviewLogger.info(LogCategory.UI, 'Run Analysis method called', 'runAnalysis', {
+      hasMessageHandler: !!this.messageHandler,
+      hasVscode: !!(window as any).vscode
+    }, LogPathway.WEBVIEW_MESSAGING);
+
     this.sendMessage({
       type: 'code-structure-review:run-analysis',
       payload: {}
     });
-    webviewLogger.info(LogCategory.UI, 'Analysis requested', 'runAnalysis');
+
+    webviewLogger.info(LogCategory.UI, 'Analysis request message sent', 'runAnalysis', undefined, LogPathway.WEBVIEW_MESSAGING);
+    console.log('[CodeStructureViewController] Analysis request message sent to extension');
   }
 
   /**
@@ -883,10 +910,25 @@ export class CodeStructureViewController {
    * Send message to extension
    */
   private sendMessage(message: any): void {
+    console.log('[CodeStructureViewController] sendMessage() called with:', message);
+
     if (this.messageHandler) {
-      this.messageHandler(message);
+      console.log('[CodeStructureViewController] Calling messageHandler with message');
+      webviewLogger.debug(LogCategory.UI, 'Sending message via messageHandler', 'sendMessage', {
+        type: message.type
+      }, LogPathway.WEBVIEW_MESSAGING);
+
+      try {
+        this.messageHandler(message);
+        console.log('[CodeStructureViewController] messageHandler called successfully');
+        webviewLogger.debug(LogCategory.UI, 'Message sent successfully', 'sendMessage', undefined, LogPathway.WEBVIEW_MESSAGING);
+      } catch (error) {
+        console.error('[CodeStructureViewController] Error calling messageHandler:', error);
+        webviewLogger.error(LogCategory.UI, 'Error sending message', 'sendMessage', error, LogPathway.WEBVIEW_MESSAGING);
+      }
     } else {
-      webviewLogger.warn(LogCategory.UI, 'No message handler set', 'sendMessage');
+      console.warn('[CodeStructureViewController] No message handler set!');
+      webviewLogger.warn(LogCategory.UI, 'No message handler set', 'sendMessage', undefined, LogPathway.WEBVIEW_MESSAGING);
     }
   }
 }
