@@ -10,11 +10,7 @@ export {
 } from './AnalysisDataMapper';
 
 export {
-  VisualizationCoordinator,
-  type NavigationContext,
-  type BreadcrumbItem,
-  type StateVisualizationConfig,
-  type EventHandler
+  VisualizationCoordinator
 } from './VisualizationCoordinator';
 
 export {

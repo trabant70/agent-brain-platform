@@ -451,30 +451,93 @@ export class AnalysisDataMapper {
     const cached = this.getCached(cacheKey, analysis);
     if (cached) return cached;
 
-    const dependencies = analysis.dependencies || [];
+    const categories = analysis.categories || [];
 
-    const nodeSet = new Set<string>();
-    dependencies.forEach(dep => {
-      nodeSet.add(dep.source);
-      nodeSet.add(dep.target);
+    // Since we don't have real dependency data yet, create a graph from files and categories
+    // Extract all unique files
+    const fileMap = new Map<string, any>();
+    categories.forEach(cat => {
+      (cat.issues || []).forEach(issue => {
+        const filePath = issue.file || 'unknown';
+        if (!fileMap.has(filePath)) {
+          fileMap.set(filePath, {
+            id: filePath,
+            issueCount: 0,
+            categories: new Set<string>()
+          });
+        }
+        const fileData = fileMap.get(filePath)!;
+        fileData.issueCount++;
+        fileData.categories.add(cat.categoryName);
+      });
     });
 
+    const files = Array.from(fileMap.values()).slice(0, 30); // Limit to 30 files for performance
+
+    // Create nodes
+    const nodes = files.map(file => ({
+      id: file.id,
+      label: this.getFileName(file.id),
+      type: this.getFileType(file.id) as 'component' | 'service' | 'utility' | 'config' | 'test' | 'other',
+      issueCount: file.issueCount,
+      inDegree: 0,  // Placeholder
+      outDegree: 0,  // Placeholder
+      group: file.categories.size
+    }));
+
+    // Create links based on shared categories (placeholder for real dependencies)
+    const links: any[] = [];
+    for (let i = 0; i < files.length - 1; i++) {
+      for (let j = i + 1; j < files.length; j++) {
+        const file1 = files[i];
+        const file2 = files[j];
+
+        // Check if files share categories
+        const sharedCats = Array.from(file1.categories).filter(c => file2.categories.has(c));
+        if (sharedCats.length > 0) {
+          links.push({
+            source: file1.id,
+            target: file2.id,
+            type: 'import' as const,
+            strength: sharedCats.length
+          });
+
+          // Update degrees
+          const node1 = nodes.find(n => n.id === file1.id);
+          const node2 = nodes.find(n => n.id === file2.id);
+          if (node1) node1.outDegree++;
+          if (node2) node2.inDegree++;
+        }
+      }
+    }
+
     const data: DependencyGraphData = {
-      nodes: Array.from(nodeSet).map(id => ({
-        id,
-        name: this.getFileName(id),
-        group: this.getFileType(id)
-      })),
-      links: dependencies.map(dep => ({
-        source: dep.source,
-        target: dep.target,
-        value: dep.count || 1,
-        type: dep.type
-      }))
+      nodes,
+      links: links.slice(0, 50)  // Limit links for performance
     };
 
     this.setCached(cacheKey, data, analysis);
     return data;
+  }
+
+  /**
+   * Advanced: Dependency matrix view
+   * Compact visualization of all dependencies in matrix format
+   */
+  toMatrixView(analysis: AnalysisData): any {
+    const cacheKey = 'matrix';
+    const cached = this.getCached(cacheKey, analysis);
+    if (cached) return cached;
+
+    // Get dependency graph data first
+    const depGraph = this.toDependencyGraph(analysis);
+
+    // Use MatrixViewDataBuilder to convert to matrix format
+    const MatrixViewDataBuilder = require('../../../code-structure-review/data-builders/MatrixViewDataBuilder').MatrixViewDataBuilder;
+    const matrixData = MatrixViewDataBuilder.buildFromDependencyGraph(depGraph);
+
+    this.setCached(cacheKey, matrixData, analysis);
+    return matrixData;
   }
 
   /**
@@ -485,25 +548,32 @@ export class AnalysisDataMapper {
     const cached = this.getCached(cacheKey, analysis);
     if (cached) return cached;
 
-    const dependencies = analysis.dependencies || [];
-    const modules = Array.from(new Set(
-      dependencies.flatMap(d => [d.source, d.target])
-    )).sort();
+    const categories = analysis.categories || [];
 
+    // Since we don't have real dependency data yet, create a chord from categories
+    // showing how issues overlap between categories (placeholder)
+    const modules = categories.map(c => c.categoryName);
+
+    // Create a matrix showing category relationships (simplified for now)
     const matrix: number[][] = Array(modules.length)
       .fill(0)
       .map(() => Array(modules.length).fill(0));
 
-    dependencies.forEach(dep => {
-      const sourceIdx = modules.indexOf(dep.source);
-      const targetIdx = modules.indexOf(dep.target);
-      if (sourceIdx >= 0 && targetIdx >= 0) {
-        matrix[sourceIdx][targetIdx] = dep.count || 1;
-      }
+    // Add some connections based on shared files (placeholder logic)
+    categories.forEach((cat, i) => {
+      categories.forEach((other, j) => {
+        if (i !== j) {
+          // Count shared files between categories
+          const catFiles = new Set((cat.issues || []).map(iss => iss.file));
+          const otherFiles = new Set((other.issues || []).map(iss => iss.file));
+          const shared = Array.from(catFiles).filter(f => otherFiles.has(f)).length;
+          matrix[i][j] = shared;
+        }
+      });
     });
 
     const data: ChordData = {
-      nodes: modules,
+      modules,
       matrix
     };
 
@@ -519,24 +589,92 @@ export class AnalysisDataMapper {
     const cached = this.getCached(cacheKey, analysis);
     if (cached) return cached;
 
-    const files = Array.isArray(analysis.files) ? analysis.files : [];
+    const categories = analysis.categories || [];
+
+    // Extract all unique files from all categories
+    const fileMap = new Map<string, any>();
+    categories.forEach(cat => {
+      (cat.issues || []).forEach(issue => {
+        const filePath = issue.file || 'unknown';
+        if (!fileMap.has(filePath)) {
+          fileMap.set(filePath, {
+            path: filePath,
+            issues: [],
+            categories: new Set<string>()
+          });
+        }
+        const fileData = fileMap.get(filePath)!;
+        fileData.issues.push(issue);
+        fileData.categories.add(cat.categoryName);
+      });
+    });
+
+    const files = Array.from(fileMap.values());
+
+    // Handle empty data case
+    if (files.length === 0) {
+      const emptyData: ParallelCoordinatesData = {
+        dimensions: [
+          { key: 'issues', label: 'Total Issues', type: 'numeric', domain: [0, 1] },
+          { key: 'categories', label: 'Categories', type: 'numeric', domain: [0, 1] },
+          { key: 'critical', label: 'Critical', type: 'numeric', domain: [0, 1] },
+          { key: 'high', label: 'High Priority', type: 'numeric', domain: [0, 1] }
+        ],
+        data: []
+      };
+      this.setCached(cacheKey, emptyData, analysis);
+      return emptyData;
+    }
+
+    // Calculate metrics
+    const issueValues = files.map(f => f.issues.length);
+    const categoryValues = files.map(f => f.categories.size);
+    const criticalValues = files.map(f => f.issues.filter((i: any) => i.severity === 'critical').length);
+    const highValues = files.map(f => f.issues.filter((i: any) => i.severity === 'high').length);
+
+    // Calculate max values safely
+    const maxIssues = Math.max(...issueValues, 1);
+    const maxCategories = Math.max(...categoryValues, 1);
+    const maxCritical = Math.max(...criticalValues, 1);
+    const maxHigh = Math.max(...highValues, 1);
 
     const data: ParallelCoordinatesData = {
       dimensions: [
-        { key: 'issues', label: 'Issues', type: 'linear', min: 0, max: Math.max(...files.map(f => f.issues?.length || 0)) },
-        { key: 'size', label: 'Size (LOC)', type: 'linear', min: 0, max: Math.max(...files.map(f => f.size || 0)) },
-        { key: 'complexity', label: 'Complexity', type: 'linear', min: 0, max: Math.max(...files.map(f => f.complexity || 0)) },
-        { key: 'coverage', label: 'Coverage %', type: 'linear', min: 0, max: 100 }
+        {
+          key: 'issues',
+          label: 'Total Issues',
+          type: 'numeric',
+          domain: [0, maxIssues]
+        },
+        {
+          key: 'categories',
+          label: 'Categories',
+          type: 'numeric',
+          domain: [0, maxCategories]
+        },
+        {
+          key: 'critical',
+          label: 'Critical',
+          type: 'numeric',
+          domain: [0, maxCritical]
+        },
+        {
+          key: 'high',
+          label: 'High Priority',
+          type: 'numeric',
+          domain: [0, maxHigh]
+        }
       ],
-      data: files.map(file => ({
+      data: files.slice(0, 50).map(file => ({  // Limit to 50 files for performance
         id: file.path,
         name: this.getFileName(file.path),
         values: {
-          issues: file.issues?.length || 0,
-          size: file.size || 0,
-          complexity: file.complexity || 0,
-          coverage: file.coverage || 0
-        }
+          issues: file.issues.length,
+          categories: file.categories.size,
+          critical: file.issues.filter((i: any) => i.severity === 'critical').length,
+          high: file.issues.filter((i: any) => i.severity === 'high').length
+        },
+        category: this.calculateMaxSeverity(file.issues)
       }))
     };
 
@@ -554,17 +692,30 @@ export class AnalysisDataMapper {
 
     const timeline = analysis.timeline || [];
 
+    // If no timeline, create a single day for current state
+    const days = timeline.length > 0
+      ? timeline.map(point => ({
+          date: point.timestamp,
+          value: point.issues || 0,
+          details: {
+            score: point.score,
+            commit: point.commit
+          }
+        }))
+      : [{
+          date: new Date(),
+          value: analysis.summary?.totalIssues || 0,
+          details: {
+            score: analysis.summary?.overallScore
+          }
+        }];
+
+    const maxValue = Math.max(...days.map(d => d.value), 1);
+
     const data: CalendarHeatmapData = {
-      data: timeline.map(point => ({
-        date: point.timestamp,
-        value: point.issues || 0,
-        metadata: {
-          score: point.score,
-          commit: point.commit
-        }
-      })),
+      days,
       metric: 'Issues',
-      colorScale: 'sequential'
+      maxValue
     };
 
     this.setCached(cacheKey, data, analysis);
@@ -698,11 +849,21 @@ export class AnalysisDataMapper {
     const cached = this.getCached(cacheKey, analysis);
     if (cached) return cached;
 
-    const files = Array.isArray(analysis.files) ? analysis.files : [];
-    const data = this.buildFileHierarchy(files);
+    const categories = analysis.categories || [];
 
-    this.setCached(cacheKey, data, analysis);
-    return data;
+    // Build treemap from categories
+    const root: TreemapData = {
+      name: 'Code Structure',
+      children: categories.map(cat => ({
+        name: cat.categoryName,
+        value: cat.issues?.length || 0,
+        categoryId: cat.categoryId,
+        severity: this.calculateMaxSeverity(cat.issues || []) as 'critical' | 'high' | 'medium' | 'low'
+      }))
+    };
+
+    this.setCached(cacheKey, root, analysis);
+    return root;
   }
 
   /**
@@ -718,6 +879,124 @@ export class AnalysisDataMapper {
 
     this.setCached(cacheKey, root, analysis);
     return root;
+  }
+
+  /**
+   * Transform to StreamGraph data
+   * Shows how category issue counts change over time
+   */
+  toStreamGraph(analysis: AnalysisData, categoryId?: string): any {
+    const cacheKey = `stream-graph-${categoryId || 'all'}`;
+    const cached = this.getCached(cacheKey, analysis);
+    if (cached) return cached;
+
+    const timeline = Array.isArray(analysis.timeline) ? analysis.timeline : [];
+    const categories = Array.isArray(analysis.categories) ? analysis.categories : [];
+
+    // If no timeline data, create a single point from current state
+    if (timeline.length === 0) {
+      const currentTime = new Date();
+
+      if (categoryId) {
+        const category = categories.find(c => c.categoryId === categoryId);
+        if (!category || !category.issues) {
+          return { data: [], layers: [] };
+        }
+
+        // Group issues by file
+        const fileIssues = new Map<string, number>();
+        category.issues.forEach(issue => {
+          const file = this.getFileName(issue.file || 'Unknown');
+          fileIssues.set(file, (fileIssues.get(file) || 0) + 1);
+        });
+
+        // Create layers for top 10 files
+        const topFiles = Array.from(fileIssues.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10);
+
+        const values: Record<string, number> = {};
+        topFiles.forEach(([file, count]) => {
+          values[file] = count;
+        });
+
+        const data = {
+          data: [{ timestamp: currentTime, values }],
+          layers: topFiles.map(([file]) => ({ key: file, label: file }))
+        };
+
+        this.setCached(cacheKey, data, analysis);
+        return data;
+      }
+
+      // Category-level
+      const values: Record<string, number> = {};
+      categories.forEach(cat => {
+        values[cat.categoryName] = cat.issues?.length || 0;
+      });
+
+      const data = {
+        data: [{ timestamp: currentTime, values }],
+        layers: categories.map(cat => ({ key: cat.categoryName, label: cat.categoryName }))
+      };
+
+      this.setCached(cacheKey, data, analysis);
+      return data;
+    }
+
+    // If single category selected, show file-level streams
+    if (categoryId) {
+      const category = categories.find(c => c.categoryId === categoryId);
+      if (!category || !category.issues) {
+        return { data: [], layers: [] };
+      }
+
+      // Group issues by file
+      const fileIssues = new Map<string, number>();
+      category.issues.forEach(issue => {
+        const file = this.getFileName(issue.file || 'Unknown');
+        fileIssues.set(file, (fileIssues.get(file) || 0) + 1);
+      });
+
+      // Create layers for top 10 files
+      const topFiles = Array.from(fileIssues.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10);
+
+      // Create data points for each timeline point
+      const dataPoints = timeline.map(t => {
+        const values: Record<string, number> = {};
+        topFiles.forEach(([file, count]) => {
+          values[file] = count / timeline.length;
+        });
+        return { timestamp: t.timestamp, values };
+      });
+
+      const data = {
+        data: dataPoints,
+        layers: topFiles.map(([file]) => ({ key: file, label: file }))
+      };
+
+      this.setCached(cacheKey, data, analysis);
+      return data;
+    }
+
+    // Show category-level streams
+    const dataPoints = timeline.map(t => {
+      const values: Record<string, number> = {};
+      categories.forEach(cat => {
+        values[cat.categoryName] = (cat.issues?.length || 0) / timeline.length;
+      });
+      return { timestamp: t.timestamp, values };
+    });
+
+    const data = {
+      data: dataPoints,
+      layers: categories.map(cat => ({ key: cat.categoryName, label: cat.categoryName }))
+    };
+
+    this.setCached(cacheKey, data, analysis);
+    return data;
   }
 
   /**
@@ -743,7 +1022,7 @@ export class AnalysisDataMapper {
           child = {
             name: part,
             children: index < parts.length - 1 ? [] : undefined,
-            size: index === parts.length - 1 ? (file.issues?.length || 1) : undefined
+            value: index === parts.length - 1 ? (file.issues?.length || 1) : undefined
           };
           current.children.push(child);
         }

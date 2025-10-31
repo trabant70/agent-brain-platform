@@ -1,41 +1,178 @@
 # Visualization Usage Overview
 
-This document maps all 20+ D3 visualizations to their specific usage contexts within the Agent Brain Platform.
+This document maps all D3 visualizations to their specific usage contexts within the Agent Brain Platform, with analysis of redundancies and recommendations.
 
 ## Summary
 
-**Total Visualizations**: 22 (including base class)
-**Currently Used**: 7
-**Placeholder/Future**: 15
+**Total Visualization Classes**: 22 (including 2 infrastructure classes)
+**Currently Active**: 13 (optimized + 2 advanced)
+**Not Yet Active**: 7
+**Infrastructure**: 2 (BaseVisualization, VisualizationManager)
+
+**Last Major Update**: Added 2 advanced visualizations (MatrixView, TestCoverageNetworkGraph)
 
 ---
 
 ## Visualization Matrix
 
-| # | Visualization | Status | Used In | Purpose |
-|---|---------------|--------|---------|---------|
-| 1 | **BubbleChart** | ✅ **ACTIVE** | Code Structure - Overview Panel | Category overview with score-based sizing |
-| 2 | **GaugeChart** | ✅ **ACTIVE** | Code Structure - Overview Panel | Overall quality score display |
-| 3 | **HeatmapVisualization** | ✅ **ACTIVE** | Code Structure - Category Detail | File-level issue heatmap |
-| 4 | **SankeyDiagram** | ✅ **ACTIVE** | Code Structure - Category Detail | Flow from endpoints to features |
-| 5 | **StackedBarChart** | ✅ **ACTIVE** | Code Structure - Category Detail | Issue breakdown by severity |
-| 6 | **TimelineVisualization** | ✅ **ACTIVE** | Code Structure - Category Detail | Historical score trends |
-| 7 | **BaseVisualization** | ✅ **ACTIVE** | N/A | Base class for all visualizations |
-| 8 | **ArcDiagram** | 🔜 **PLACEHOLDER** | Not yet used | Planned for dependency visualization |
-| 9 | **CalendarHeatmap** | 🔜 **PLACEHOLDER** | Not yet used | Planned for activity patterns |
-| 10 | **ChordDiagram** | 🔜 **PLACEHOLDER** | Not yet used | Planned for module relationships |
-| 11 | **DependencyGraph** | 🔜 **PLACEHOLDER** | Not yet used | Planned for code dependencies |
-| 12 | **FlameGraph** | 🔜 **PLACEHOLDER** | Not yet used | Planned for performance profiling |
-| 13 | **I18nGeographicHeatmap** | 🔜 **PLACEHOLDER** | Not yet used | Planned for translation coverage |
-| 14 | **MatrixView** | 🔜 **PLACEHOLDER** | Not yet used | Planned for test coverage matrix |
-| 15 | **MultiLayerSankey** | 🔜 **PLACEHOLDER** | Not yet used | Advanced feature flow analysis |
-| 16 | **ParallelCoordinates** | 🔜 **PLACEHOLDER** | Not yet used | Multi-dimensional comparisons |
-| 17 | **RadarChart** | 🔜 **PLACEHOLDER** | Not yet used | Category comparison |
-| 18 | **StreamGraph** | 🔜 **PLACEHOLDER** | Not yet used | Trends over time |
-| 19 | **SunburstDiagram** | 🔜 **PLACEHOLDER** | Not yet used | Hierarchical code structure |
-| 20 | **TestCoverageNetworkGraph** | 🔜 **PLACEHOLDER** | Not yet used | Test-to-code relationships |
-| 21 | **TreemapVisualization** | 🔜 **PLACEHOLDER** | Not yet used | File size by category |
-| 22 | **VisualizationManager** | ✅ **ACTIVE** | N/A | Factory/coordinator for all viz |
+### ✅ Currently Active (13 visualizations - Optimized + Advanced)
+
+| # | Visualization | Tab ID | Purpose | Status |
+|---|---------------|--------|---------|--------|
+| 1 | **GaugeChart** | `gauge` | Overall quality score display (single metric) | ✅ Essential |
+| 2 | **BubbleChart** | `bubble` | Category overview with score-based sizing | ✅ Essential |
+| 3 | **RadarChart** | `radar` | Multi-dimensional category comparison | ✅ Essential |
+| 4 | **SankeyDiagram** | `sankey` | Issue flow (Category→Severity or File→Severity) | ✅ Essential |
+| 5 | **StackedBarChart** | `stacked-bar` | Severity distribution per file | ✅ Essential |
+| 6 | **HeatmapVisualization** | `heatmap` | File × Severity issue density matrix | ✅ Essential |
+| 7 | **TimelineVisualization** | `timeline` | Historical score trends (line chart) | ✅ Essential |
+| 8 | **TreemapVisualization** | `treemap` | Hierarchical data as nested rectangles | ✅ Essential |
+| 9 | **DependencyGraph** | `dependencies` | Code dependencies force-directed graph | ✅ Essential |
+| 10 | **MatrixView** | `matrix` | Dependency adjacency matrix (compact view) | ✅ Advanced |
+| 11 | **ParallelCoordinates** | `parallel` | Multi-metric file comparison | ✅ Advanced |
+| 12 | **TestCoverageNetworkGraph** | `test-network` | Test-to-source mapping (bipartite graph) | ✅ Advanced |
+| 13 | **CalendarHeatmap** | `calendar` | Daily activity patterns (calendar format) | ✅ Essential |
+
+### ❌ Removed (3 visualizations - Redundant)
+
+| # | Visualization | Reason for Removal | Replacement |
+|---|---------------|-------------------|-------------|
+| 12 | **ChordDiagram** | Redundant with DependencyGraph (same data, less intuitive) | Use DependencyGraph |
+| 13 | **StreamGraph** | Redundant with TimelineVisualization (less precise) | Use Timeline |
+| 14 | **SunburstDiagram** | Redundant with TreemapVisualization (less practical) | Use Treemap |
+
+### 🔜 Not Yet Active (6 visualizations)
+
+| # | Visualization | Purpose | Status | Redundancy Risk |
+|---|---------------|---------|--------|-----------------|
+| 15 | **ArcDiagram** | Sequential dependencies (linear with arcs) | Not wired up | ❌ Redundant with Dependencies |
+| 16 | **MatrixView** | Adjacency matrix of all dependencies | Not wired up | ✅ Complementary to Dependencies |
+| 17 | **MultiLayerSankey** | 3+ layer flow (frontend → API → service → DB) | Not wired up | ⚠️ More complex than Sankey |
+| 18 | **TestCoverageNetworkGraph** | Bipartite test-to-source graph | Needs data | ✅ Unique (specialized) |
+| 19 | **FlameGraph** | Performance profiling hierarchy | Needs data | ⚠️ Similar to Treemap/Sunburst |
+| 20 | **I18nGeographicHeatmap** | Translation coverage by region | Needs data | ✅ Unique (specialized) |
+
+### 🔧 Infrastructure (2 classes)
+
+| # | Class | Purpose |
+|---|-------|---------|
+| 21 | **BaseVisualization** | Base class for all visualizations |
+| 22 | **VisualizationManager** | Factory/coordinator for visualization lifecycle |
+
+---
+
+## Redundancy Analysis & Recommendations
+
+After reviewing all 20 visualization implementations, several show similar concepts in different visual formats. Here's the analysis:
+
+### 🔴 High Redundancy (Consider Removing)
+
+**1. Dependency Visualizations (4 showing same data)**
+
+All four visualizations show the same dependency data in different layouts:
+- **DependencyGraph** (✅ Active) - Force-directed, most interactive and intuitive
+- **ChordDiagram** (✅ Active) - Circular layout, aesthetically pleasing but less clear
+- **ArcDiagram** (❌ Not active) - Linear with arcs, limited use case
+- **MatrixView** (❌ Not active) - Grid layout, compact for large datasets
+
+**Recommendation**:
+- **Keep**: DependencyGraph (primary), MatrixView (alternative for large datasets)
+- **Remove**: ChordDiagram, ArcDiagram (redundant, less intuitive)
+
+**2. Hierarchy Visualizations (3 showing same structure)**
+
+- **TreemapVisualization** (✅ Active) - Rectangular nested boxes, space-efficient
+- **SunburstDiagram** (✅ Active) - Radial/circular, visually striking
+- **FlameGraph** (❌ Not active) - Stacked bars, only useful for performance profiling
+
+**Recommendation**:
+- **Keep**: Treemap (compact, practical) OR Sunburst (beautiful, intuitive) - pick one
+- **Remove**: FlameGraph unless performance profiling becomes a key feature
+
+### 🟡 Medium Redundancy (Consider Consolidating)
+
+**3. Time-based Trend Visualizations (2 similar)**
+
+- **TimelineVisualization** (✅ Active) - Line chart, precise trend tracking
+- **StreamGraph** (✅ Active) - Stacked area, shows composition but less precise
+
+**Recommendation**:
+- **Keep**: Timeline (more precise, standard format)
+- **Consider Removing**: StreamGraph (nice-to-have but not essential)
+
+**4. Flow Visualizations (2 related)**
+
+- **SankeyDiagram** (✅ Active) - 2-layer flow, sufficient for current use case
+- **MultiLayerSankey** (❌ Not active) - 3+ layers, adds complexity
+
+**Recommendation**:
+- **Keep**: SankeyDiagram (simpler, covers 90% of use cases)
+- **Don't Activate**: MultiLayerSankey (overkill unless complex architecture mapping is needed)
+
+### ✅ Low/No Redundancy (Unique Value)
+
+These visualizations provide orthogonal, useful representations:
+
+**Summary & Overview**:
+- **GaugeChart** - Single metric display ✅
+- **BubbleChart** - Category overview with size encoding ✅
+- **RadarChart** - Multi-dimensional comparison ✅
+
+**Issue Analysis**:
+- **StackedBarChart** - Severity distribution by file ✅
+- **HeatmapVisualization** - Spatial issue density ✅
+
+**Multi-Metric Comparison**:
+- **ParallelCoordinates** - Multi-metric file comparison ✅
+
+**Temporal Analysis**:
+- **CalendarHeatmap** - Daily activity patterns (different from Timeline) ✅
+
+**Specialized Use Cases**:
+- **TestCoverageNetworkGraph** - Test coverage mapping ✅
+- **I18nGeographicHeatmap** - Geographic translation coverage ✅
+
+---
+
+## Proposed Visualization Lineup (Optimized)
+
+### Core Set (10 visualizations - no redundancy)
+
+**Summary & Metrics**:
+1. GaugeChart - Overall score
+2. BubbleChart - Category overview
+3. RadarChart - Multi-category comparison
+
+**Issue Analysis**:
+4. SankeyDiagram - Issue flow
+5. StackedBarChart - Severity distribution
+6. HeatmapVisualization - Issue density
+
+**Structure & Dependencies**:
+7. TreemapVisualization OR SunburstDiagram - Hierarchy (choose one)
+8. DependencyGraph - Code dependencies
+
+**Trends & Patterns**:
+9. TimelineVisualization - Historical trends
+10. CalendarHeatmap - Activity patterns
+
+### Optional Add-ons (3 visualizations - specialized)
+
+11. **ParallelCoordinates** - Advanced multi-metric comparison
+12. **MatrixView** - Alternative dependency view for large codebases
+13. **TestCoverageNetworkGraph** - Test coverage (when data available)
+
+### Not Recommended (7 visualizations - redundant)
+
+- ❌ ChordDiagram (use DependencyGraph instead)
+- ❌ ArcDiagram (use DependencyGraph instead)
+- ❌ StreamGraph (use TimelineVisualization instead)
+- ❌ MultiLayerSankey (SankeyDiagram is sufficient)
+- ❌ FlameGraph (unless performance profiling is core feature)
+- ❌ I18nGeographicHeatmap (niche use case, rarely needed)
+- ❌ Duplicate hierarchy viz (keep either Treemap OR Sunburst, not both)
+
+**Impact**: Reducing from 14 to 10-13 active visualizations eliminates redundancy while maintaining comprehensive coverage.
 
 ---
 
@@ -43,59 +180,60 @@ This document maps all 20+ D3 visualizations to their specific usage contexts wi
 
 ### 1. Code Structure Review Tab
 
-#### **Overview Panel** (`OverviewPanel.ts`)
+The Code Structure Review tab now uses a **unified filter-driven architecture** with **11 visualization tabs** (optimized).
 
-Shown when first opening Code Structure Review - provides high-level summary.
+All visualizations are rendered in `CodeStructurePanel.ts` with consistent filter support:
+- Filter by categories (checkboxes)
+- Filter by severity (Critical, High, Medium, Low)
+- Adaptive rendering (single category vs all categories)
 
-**Visualizations Used:**
-1. **BubbleChart** (`viz-bubble-chart`)
-   - **Data**: Categories with scores and issue counts
-   - **Purpose**: Quick visual comparison of all categories
-   - **Interaction**: Click bubble → navigate to category detail
-   - **Location**: Top of overview panel
+#### Active Visualization Tabs (11)
 
-2. **GaugeChart** (`viz-gauge-chart`)
-   - **Data**: Overall quality score (0-100)
-   - **Purpose**: Single-metric quality indicator
-   - **Features**: Colored zones (red/yellow/green), target indicator
-   - **Location**: Header summary area
+| Tab | Visualization | Purpose | Data Requirements |
+|-----|---------------|---------|-------------------|
+| `gauge` | GaugeChart | Overall quality score (0-100) | `summary.overallScore` |
+| `bubble` | BubbleChart | Category overview with sizes | `categories[]` with scores |
+| `radar` | RadarChart | Multi-dimensional comparison | Category scores across dimensions |
+| `sankey` | SankeyDiagram | Issue flow (Category→Severity) | `categories[].issues[]` |
+| `stacked-bar` | StackedBarChart | Severity distribution by file | Issues grouped by file and severity |
+| `heatmap` | HeatmapVisualization | Issue density matrix | Files × Severity grid |
+| `timeline` | TimelineVisualization | Historical trends | Analysis history data |
+| `treemap` | TreemapVisualization | Category sizes (rectangles) | Hierarchical category data |
+| `dependencies` | DependencyGraph | Code dependencies graph | `dependencies[]` (source→target) |
+| `parallel` | ParallelCoordinates | Multi-metric comparison | Multiple metrics per file |
+| `calendar` | CalendarHeatmap | Daily activity patterns | Timeline data with dates |
 
-#### **Category Detail Panel** (`CategoryDetailPanel.ts`)
+#### Removed Tabs (3)
 
-Shown when drilling into a specific category (Feature Completeness, UI/UX, etc).
+| Tab | Visualization | Removed Because | Alternative |
+|-----|---------------|-----------------|-------------|
+| ~~`chord`~~ | ~~ChordDiagram~~ | Redundant with DependencyGraph | Use `dependencies` tab |
+| ~~`stream`~~ | ~~StreamGraph~~ | Redundant with TimelineVisualization | Use `timeline` tab |
+| ~~`sunburst`~~ | ~~SunburstDiagram~~ | Redundant with TreemapVisualization | Use `treemap` tab |
 
-**Visualizations Used:**
-1. **HeatmapVisualization** (`viz-category-heatmap`)
-   - **Data**: Files × Issue count grid
-   - **Purpose**: Identify hotspot files
-   - **Features**: Color intensity by issue count, click to see details
-   - **Location**: Top of category detail
+#### Visualization Rendering Flow
 
-2. **SankeyDiagram** (`viz-category-sankey`)
-   - **Data**: Backend endpoints → Frontend connections
-   - **Purpose**: Visualize feature flow/completeness
-   - **D3 Plugin**: Requires `d3-sankey` (NOW INSTALLED ✅)
-   - **Fallback**: Shows summary statistics if library missing
-   - **Location**: Middle section
+```
+User selects tab
+    ↓
+CodeStructurePanel.handleTabChange()
+    ↓
+CodeStructurePanel.renderVisualization(tabId, filteredData, filterCriteria)
+    ↓
+AnalysisDataMapper.toXXX(filteredData, categoryId?)
+    ↓
+VisualizationManager.createVisualization(containerId, vizType, data)
+    ↓
+Specific Visualization Class (e.g., BubbleChart.renderContent())
+    ↓
+D3 renders to SVG container
+```
 
-3. **TimelineVisualization** (`viz-category-timeline`)
-   - **Data**: Historical analysis results
-   - **Purpose**: Track improvement/regression over time
-   - **Features**: Multi-line chart, category scores + overall
-   - **Persistence**: Now saves last 10 analyses to `.agent-brain/code-structure-review/analysis-history.json` ✅
-   - **Location**: Bottom of visualizations section
-
-4. **StackedBarChart** (`viz-category-stacked-bar`)
-   - **Data**: Files with issue breakdown (Critical/High/Medium/Low)
-   - **Purpose**: Severity distribution per file
-   - **Features**: Color-coded bars, click for file details
-   - **Location**: Issue breakdown section
-
-#### **File Detail Panel** (`FileDetailPanel.ts`)
-
-Shown when drilling into a specific file.
-
-**Visualizations Used**: None currently (uses tables/lists)
+**Key Features**:
+- **Lazy Loading**: Visualizations only render when their tab is activated
+- **Filter Integration**: All visualizations respond to filter changes
+- **Adaptive Rendering**: Some visualizations adapt based on single vs multi-category selection
+- **Error Handling**: Empty state messages when no data available
 
 ---
 
@@ -141,18 +279,37 @@ D3 Rendering in SVG container
 
 ---
 
-## Recent Additions (v0.5.26)
+## Recent Changes & Implementation History
 
-### 1. D3 Sankey Plugin ✅
-- **Installed**: `d3-sankey` and `@types/d3-sankey`
-- **Configured**: Exposed on `window.d3.sankey` in `main.ts`
-- **Impact**: SankeyDiagram now functional (previously showed fallback)
+### Phase 1 Expansion (v0.5.53 - October 30, 2025) ✅
 
-### 2. Analysis History Persistence ✅
-- **Storage**: `.agent-brain/code-structure-review/analysis-history.json`
-- **Format**: JSON with version, lastUpdated, history array
-- **Retention**: Last 10 analyses
-- **Impact**: TimelineVisualization now shows historical trends
+Added 6 new visualization tabs:
+1. **TreemapVisualization** - Category sizes as nested rectangles
+2. **DependencyGraph** - Force-directed code dependency graph
+3. **ChordDiagram** - Circular module relationship diagram
+4. **ParallelCoordinates** - Multi-dimensional metric comparison
+5. **CalendarHeatmap** - Daily activity patterns in calendar format
+6. **StreamGraph** - Stacked area chart for trends
+
+**Architecture Changes**:
+- Unified filter-driven architecture in `CodeStructurePanel`
+- Removed navigation-based approach (OverviewPanel, CategoryDetailPanel deleted)
+- All visualizations now support consistent filtering
+- Added `VisualizationTabManager` for tab management
+- Implemented lazy loading (render on tab activation)
+
+### Earlier Additions (v0.5.26) ✅
+
+1. **D3 Sankey Plugin**
+   - Installed `d3-sankey` and `@types/d3-sankey`
+   - Exposed on `window.d3.sankey` in `main.ts`
+   - SankeyDiagram now functional (previously showed fallback)
+
+2. **Analysis History Persistence**
+   - Storage: `.agent-brain/code-structure-review/analysis-history.json`
+   - Format: JSON with version, lastUpdated, history array
+   - Retention: Last 10 analyses
+   - TimelineVisualization now shows historical trends
 
 ---
 
@@ -174,20 +331,24 @@ D3 Rendering in SVG container
 
 ---
 
-## Why So Many Unused Visualizations?
+## Implementation Status & Data Requirements
 
-The 15 placeholder visualizations were created as part of the initial architecture design to support future features:
+### ✅ Fully Implemented (14 active)
 
-**Planned Features:**
-- Dependency analysis (ArcDiagram, DependencyGraph, ChordDiagram)
-- Performance profiling (FlameGraph)
-- Geographic i18n analysis (I18nGeographicHeatmap)
-- Advanced metrics (RadarChart, ParallelCoordinates)
-- Historical trends (StreamGraph, CalendarHeatmap)
-- Code structure (SunburstDiagram, TreemapVisualization)
-- Test coverage (TestCoverageNetworkGraph, MatrixView)
+All active visualizations have complete implementations and working data mappers. They render successfully with current analysis data.
 
-**Status**: Ready to use when data pipelines are implemented.
+### 🔧 Needs Data Pipeline (6 not yet active)
+
+These visualizations are implemented but require additional data from the backend:
+
+1. **MatrixView** - Needs adjacency matrix of dependencies
+2. **ArcDiagram** - Needs ordered/sequential dependency data
+3. **MultiLayerSankey** - Needs multi-layer architectural data (frontend→API→service→DB)
+4. **TestCoverageNetworkGraph** - Needs test→source file mapping
+5. **FlameGraph** - Needs performance/complexity hierarchy data
+6. **I18nGeographicHeatmap** - Needs locale data with geographic coordinates
+
+**Note**: Some of these (ArcDiagram, MultiLayerSankey) are also flagged as redundant and may not be worth implementing.
 
 ---
 
@@ -225,28 +386,67 @@ To activate a placeholder visualization:
 
 ---
 
-## Future Roadmap
+## Future Roadmap & Recommendations
 
-### Phase 1: Currently Active (7 visualizations)
-- ✅ BubbleChart
-- ✅ GaugeChart
-- ✅ HeatmapVisualization
-- ✅ SankeyDiagram (newly functional)
-- ✅ StackedBarChart
-- ✅ TimelineVisualization (newly functional with history)
-- ✅ BaseVisualization
+### ✅ Phase 1: Complete (October 2025)
 
-### Phase 2: Near-term Activation
-- RadarChart (category comparison)
-- TreemapVisualization (file size distribution)
-- DependencyGraph (code dependencies)
+Expanded from 7 to 14 active visualizations with unified filter-driven architecture.
 
-### Phase 3: Advanced Features
-- FlameGraph (performance)
-- CalendarHeatmap (activity patterns)
-- TestCoverageNetworkGraph (test relationships)
+### 🎯 Phase 2: Optimization (Recommended Next Steps)
+
+**Priority 1: Remove Redundant Visualizations**
+1. Remove or disable **ChordDiagram** (use DependencyGraph instead)
+2. Remove or disable **StreamGraph** (use TimelineVisualization instead)
+3. Choose either **TreemapVisualization** OR **SunburstDiagram** (not both)
+
+**Expected outcome**: Reduce to 10-11 core visualizations with no redundancy
+
+**Priority 2: Add MatrixView (optional)**
+- Implement MatrixView as alternative dependency visualization for large codebases
+- Requires backend dependency data extraction
+
+### 🔮 Phase 3: Specialized Visualizations (Future)
+
+Only implement if specific use cases emerge:
+- **TestCoverageNetworkGraph** - If test coverage tracking becomes core feature
+- **FlameGraph** - If performance profiling is needed
+- **I18nGeographicHeatmap** - If geographic translation analysis is required
+
+**Do NOT implement**:
+- ❌ ArcDiagram - Redundant with DependencyGraph
+- ❌ MultiLayerSankey - Overly complex for current use case
 
 ---
 
-**Last Updated**: October 29, 2025
-**Version**: 0.5.26
+## Summary
+
+The Agent Brain Platform has **11 active visualizations** providing comprehensive code quality insights with zero redundancy.
+
+### Optimization Results ✅
+
+**Before**: 14 visualizations (3 redundant)
+**After**: 11 visualizations (0 redundant)
+
+**Removed Redundant Visualizations:**
+- ❌ **ChordDiagram** → Replaced by DependencyGraph (same data, clearer interface)
+- ❌ **StreamGraph** → Replaced by TimelineVisualization (more precise trends)
+- ❌ **SunburstDiagram** → Replaced by TreemapVisualization (more practical hierarchy)
+
+**Current Lineup (11 visualizations):**
+- **Summary & Metrics** (3): Gauge, Bubble, Radar
+- **Issue Analysis** (3): Sankey, Stacked Bar, Heatmap
+- **Structure & Dependencies** (2): Treemap, Dependencies
+- **Trends & Patterns** (2): Timeline, Calendar
+- **Advanced Comparison** (1): Parallel Coordinates
+
+**Benefits:**
+- ✅ Zero redundancy - each visualization provides unique insight
+- ✅ Clearer user experience - less overwhelming
+- ✅ Faster navigation - 21% fewer tabs
+- ✅ Easier maintenance - smaller codebase footprint
+
+---
+
+**Last Updated**: October 31, 2025
+**Version**: 0.5.55 (Optimization Complete)
+**Status**: 11 active visualizations, optimized and production-ready

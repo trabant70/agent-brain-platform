@@ -1,14 +1,17 @@
 {
   "permissions": {
     "allow": [
-      "Bash(chmod:*)",
+      "Bash(fi)",
+      "Bash(done)",
+      "Bash(for file in ArcDiagram.ts CalendarHeatmap.ts ChordDiagram.ts DependencyGraph.ts FlameGraph.ts I18nGeographicHeatmap.ts MatrixView.ts MultiLayerSankey.ts ParallelCoordinates.ts StreamGraph.ts TestCoverageNetworkGraph.ts)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(head:*)",
       "Bash(npm run build:*)",
-      "Bash(cat:*)",
-      "Bash(npm run package:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git push:*)",
-      "Bash(npm install:*)"
+      "Bash(awk:*)",
+      "Bash(find:*)",
+      "Bash(npm run build:vscode:*)",
+      "Bash(npm run package:vscode:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

@@ -1021,13 +1021,14 @@
 .code-structure-header {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   padding: 8px 12px; /* Compact padding */
   border-bottom: 1px solid var(--vscode-panel-border);
   background: var(--vscode-sideBar-background);
 }
 
-.code-structure-header .header-controls {
+.code-structure-header .header-controls-left,
+.code-structure-header .header-controls-right {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1045,7 +1046,7 @@
   background: var(--vscode-input-background);
   color: var(--vscode-input-foreground);
   border: 1px solid var(--vscode-input-border);
-  border-radius: 2px;
+  border-radius: 4px;
   cursor: pointer;
 }
 
@@ -1057,6 +1058,29 @@
 .code-structure-header .btn {
   padding: 6px 12px;
   font-size: 13px;
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.code-structure-header .btn:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.code-structure-header .btn.btn-primary {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.code-structure-header .filter-icon {
+  font-size: 14px;
 }
 
 /* Remove extra spacing from panel sections */
@@ -1072,4 +1096,195 @@
 /* Tighter spacing for filter panel content */
 .compact-filter .filter-panel-content {
   padding: 8px 12px; /* Reduced from default */
+}
+
+/* Sliding Filter Panel (Timeline-style) */
+.filter-control-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: var(--vscode-sideBar-background);
+  border: 2px solid rgba(0, 212, 255, 0.6); /* Blue border like Timeline */
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, opacity 0.3s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.filter-control-panel.open {
+  max-height: 600px; /* Adjust based on content */
+  overflow-y: auto;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.filter-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(0, 212, 255, 0.05);
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.filter-panel-header h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--vscode-foreground);
+}
+
+.filter-panel-content {
+  padding: 12px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* Button styling for close button */
+.filter-panel-header .btn-icon {
+  padding: 4px 8px;
+  background: transparent;
+  border: none;
+  color: var(--vscode-foreground);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  font-size: 20px;
+  line-height: 1;
+}
+
+.filter-panel-header .btn-icon:hover {
+  background: rgba(255, 68, 68, 0.15);
+  color: #ff4444;
+}
+
+/* Ensure the panel appears above content */
+.code-structure-panel.compact {
+  position: relative;
+}
+
+/* Filter Sections Grid - Similar to Timeline */
+.code-structure-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.code-structure-filter-section {
+  border: 1px solid var(--vscode-panel-border);
+  border-left: 3px solid rgba(0, 212, 255, 0.4);
+  border-radius: 6px;
+  background: var(--vscode-sideBar-background);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.code-structure-filter-section:hover {
+  border-left-color: rgba(0, 212, 255, 0.8);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.code-structure-section-header {
+  padding: 8px 12px;
+  background: rgba(0, 212, 255, 0.03);
+  border-bottom: 1px solid var(--vscode-panel-border);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--vscode-foreground);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.code-structure-section-count {
+  background: rgba(0, 212, 255, 0.2);
+  color: rgba(0, 212, 255, 1);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.code-structure-checkbox-list {
+  padding: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.code-structure-filter-item {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.code-structure-filter-item:hover {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.code-structure-filter-item input[type="checkbox"] {
+  margin-right: 8px;
+  cursor: pointer;
+}
+
+.code-structure-filter-item label {
+  flex: 1;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--vscode-foreground);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Filter Actions */
+.code-structure-filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--vscode-panel-border);
+  background: rgba(0, 212, 255, 0.02);
+}
+
+.code-structure-filter-actions button {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 4px;
+  border: 1px solid var(--vscode-button-border, transparent);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.code-structure-filter-actions .btn-apply {
+  background: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+}
+
+.code-structure-filter-actions .btn-apply:hover {
+  background: var(--vscode-button-hoverBackground);
+}
+
+.code-structure-filter-actions .btn-clear {
+  background: transparent;
+  color: var(--vscode-foreground);
+  border: 1px solid var(--vscode-panel-border);
+}
+
+.code-structure-filter-actions .btn-clear:hover {
+  background: var(--vscode-list-hoverBackground);
 }

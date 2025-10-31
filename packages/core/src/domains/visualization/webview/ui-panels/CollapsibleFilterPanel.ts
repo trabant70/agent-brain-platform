@@ -311,7 +311,7 @@ export class CollapsibleFilterPanel {
    */
   setCategories(categoryIds: string[]): void {
     this.currentCriteria.categories = categoryIds;
-    this.applyFilter();
+    this.applyFilters();
   }
 
   /**

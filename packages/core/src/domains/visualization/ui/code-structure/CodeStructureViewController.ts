@@ -179,9 +179,12 @@ export class CodeStructureViewController {
     console.log('[CodeStructureViewController] Setting container innerHTML...');
     container.innerHTML = `
       <div class="code-structure-container">
-        <!-- Compact Header -->
+        <!-- Compact Header with Filter Button -->
         <div class="code-structure-header">
-          <div class="header-controls">
+          <div class="header-controls-left">
+            <button id="run-analysis" class="btn btn-primary">
+              ${t('codeStructure.runAnalysis', 'Run Analysis')}
+            </button>
             <label>${t('codeStructure.maturity', 'Maturity')}:</label>
             <select id="maturity-level-select">
               <option value="novice">${t('maturity.novice', 'Novice')}</option>
@@ -189,8 +192,10 @@ export class CodeStructureViewController {
               <option value="advanced">${t('maturity.advanced', 'Advanced')}</option>
               <option value="expert">${t('maturity.expert', 'Expert')}</option>
             </select>
-            <button id="run-analysis" class="btn btn-primary">
-              ${t('codeStructure.runAnalysis', 'Run Analysis')}
+          </div>
+          <div class="header-controls-right">
+            <button id="toggle-filter-panel" class="btn btn-primary" title="Filters & Settings">
+              <span class="filter-icon">🎛️</span> Filters
             </button>
           </div>
         </div>
@@ -433,10 +438,10 @@ export class CodeStructureViewController {
     this.state.currentAnalysis = null;
     this.state.isAnalyzing = false;
 
-    // Dispose integration controller
-    if (this.integrationController) {
-      this.integrationController.dispose();
-      this.integrationController = null;
+    // Dispose code structure panel
+    if (this.codeStructurePanel) {
+      this.codeStructurePanel.dispose();
+      this.codeStructurePanel = null;
     }
 
     // Re-render empty state
@@ -540,44 +545,13 @@ export class CodeStructureViewController {
   }
 
   /**
-   * Handle tab switch
+   * Handle tab switch (DEPRECATED - category tabs removed)
+   * Kept as stub to prevent breaking event listener setup
    */
   private handleTabSwitch(category: string | undefined): void {
-    if (!category) return;
-
-    // Update active tab styling
-    document.querySelectorAll('.category-tab').forEach(tab => {
-      tab.classList.remove('active');
-    });
-    const clickedTab = document.querySelector(`[data-category="${category}"]`);
-    if (clickedTab) {
-      clickedTab.classList.add('active');
-    }
-
-    webviewLogger.info(LogCategory.UI, 'Tab switched', 'handleTabSwitch', { category });
-
-    // If no analysis data, just update the UI state
-    if (!this.integrationController || !this.state.currentAnalysis) {
-      return;
-    }
-
-    // Navigate to the appropriate view
-    if (category === 'overview') {
-      this.integrationController.navigateToOverview();
-    } else {
-      // Map category ID to category name and navigate
-      const categoryMap: Record<string, { id: string; name: string }> = {
-        'ui-ux': { id: 'ui-ux-quality', name: 'UI/UX Quality' },
-        'test-coverage': { id: 'test-coverage', name: 'Test Coverage' },
-        'i18n': { id: 'internationalization', name: 'Internationalization' },
-        'features': { id: 'feature-completeness', name: 'Feature Completeness' }
-      };
-
-      const categoryInfo = categoryMap[category];
-      if (categoryInfo) {
-        this.integrationController.navigateToCategoryDetail(categoryInfo.id, categoryInfo.name);
-      }
-    }
+    // No-op: Category tabs have been removed in favor of unified CodeStructurePanel
+    // with filter-driven navigation. This method is kept as a stub to prevent
+    // breaking existing event listener references.
   }
 
   /**
@@ -612,6 +586,15 @@ export class CodeStructureViewController {
     } else {
       console.error('[CodeStructureViewController] Run Analysis button NOT FOUND');
       webviewLogger.error(LogCategory.UI, 'Run Analysis button not found in DOM', 'setupEventListeners', undefined, LogPathway.WEBVIEW_MESSAGING);
+    }
+
+    // Toggle filter panel button
+    const toggleFilterButton = document.getElementById('toggle-filter-panel');
+    if (toggleFilterButton) {
+      toggleFilterButton.addEventListener('click', () => {
+        webviewLogger.debug(LogCategory.UI, 'Filter panel toggle button clicked', 'toggle-filter-panel');
+        window.dispatchEvent(new CustomEvent('toggle-filter-panel'));
+      });
     }
 
     // Maturity level selector

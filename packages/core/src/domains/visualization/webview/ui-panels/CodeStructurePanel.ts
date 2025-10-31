@@ -12,7 +12,6 @@
 
 import { VisualizationCoordinator } from '../coordination/VisualizationCoordinator';
 import type { AnalysisData } from '../coordination/AnalysisDataMapper';
-import { CollapsibleFilterPanel } from './CollapsibleFilterPanel';
 import type { FilterCriteria } from './CollapsibleFilterPanel';
 import { SuggestionPanel } from '../ai-suggestions/SuggestionPanel';
 import { VisualizationTabManager } from './VisualizationTabManager';
@@ -24,11 +23,11 @@ import type { VisualizationTab as VizTab } from './VisualizationTabManager';
 export class CodeStructurePanel {
   private container: HTMLElement;
   private coordinator: VisualizationCoordinator;
-  private filterPanel: CollapsibleFilterPanel | null = null;
   private suggestionPanel: SuggestionPanel | null = null;
   private tabManager: VisualizationTabManager | null = null;
   private analysisData: AnalysisData | null = null;
   private currentFilter: FilterCriteria = {};
+  private isFilterPanelOpen: boolean = false;
 
   constructor(container: HTMLElement, coordinator: VisualizationCoordinator) {
     this.container = container;
@@ -45,8 +44,50 @@ export class CodeStructurePanel {
     // Create unified panel structure (compact, no heading)
     this.container.innerHTML = `
       <div class="code-structure-panel compact">
-        <!-- Collapsible Filter Panel (directly under header) -->
-        <div id="filter-panel-container" class="compact-filter"></div>
+        <!-- Sliding Filter Panel (Timeline-style) -->
+        <div id="filter-control-panel" class="filter-control-panel">
+          <div class="filter-panel-header">
+            <h3>Filters & Settings</h3>
+            <button id="close-filter-panel" class="btn btn-icon" title="Close">×</button>
+          </div>
+          <div class="filter-panel-content">
+            <!-- Filter Grid -->
+            <div class="code-structure-filter-grid" id="code-structure-filter-grid">
+              <!-- Categories Section -->
+              <div class="code-structure-filter-section">
+                <div class="code-structure-section-header">
+                  <span>Categories</span>
+                  <span class="code-structure-section-count" id="categories-count">0</span>
+                </div>
+                <div class="code-structure-checkbox-list" id="categories-list"></div>
+              </div>
+
+              <!-- Severities Section -->
+              <div class="code-structure-filter-section">
+                <div class="code-structure-section-header">
+                  <span>Severities</span>
+                  <span class="code-structure-section-count" id="severities-count">0</span>
+                </div>
+                <div class="code-structure-checkbox-list" id="severities-list"></div>
+              </div>
+
+              <!-- Files Section -->
+              <div class="code-structure-filter-section">
+                <div class="code-structure-section-header">
+                  <span>Files</span>
+                  <span class="code-structure-section-count" id="files-count">0</span>
+                </div>
+                <div class="code-structure-checkbox-list" id="files-list"></div>
+              </div>
+            </div>
+
+            <!-- Filter Actions -->
+            <div class="code-structure-filter-actions">
+              <button class="btn-clear" id="clear-filters">Clear All</button>
+              <button class="btn-apply" id="apply-filters">Apply Filters</button>
+            </div>
+          </div>
+        </div>
 
         <!-- AI Suggestions (collapsible, default collapsed) -->
         <div id="suggestions-container" class="compact-section"></div>
@@ -81,6 +122,9 @@ export class CodeStructurePanel {
     // Render filter panel
     this.renderFilterPanel(analysisData);
 
+    // Setup filter panel toggle handlers
+    this.setupFilterPanelHandlers();
+
     // Render AI suggestions
     this.renderSuggestions(analysisData);
 
@@ -103,27 +147,259 @@ export class CodeStructurePanel {
   private setupBubbleClickHandler(): void {
     window.addEventListener('bubble-click', ((event: CustomEvent) => {
       const { categoryId } = event.detail;
-      if (categoryId && this.filterPanel) {
-        // Filter to show only the clicked category
-        this.filterPanel.setCategories([categoryId]);
+      if (categoryId) {
+        // Uncheck all categories
+        document.querySelectorAll('.code-structure-filter-item input[type="checkbox"][id^="cat-"]').forEach(cb => {
+          (cb as HTMLInputElement).checked = false;
+        });
+
+        // Check only the clicked category
+        const targetCheckbox = document.getElementById(`cat-${categoryId}`) as HTMLInputElement;
+        if (targetCheckbox) {
+          targetCheckbox.checked = true;
+        }
+
+        // Apply filters
+        this.applyFiltersFromCheckboxes();
+
+        // Open the filter panel to show what was selected
+        this.openFilterPanel();
       }
     }) as EventListener);
   }
 
   /**
-   * Render filter panel
+   * Setup filter panel toggle handlers
    */
-  private renderFilterPanel(analysisData: AnalysisData): void {
-    const filterContainer = document.getElementById('filter-panel-container');
-    if (!filterContainer) return;
+  private setupFilterPanelHandlers(): void {
+    const filterControlPanel = document.getElementById('filter-control-panel');
+    const closeButton = document.getElementById('close-filter-panel');
 
-    this.filterPanel = new CollapsibleFilterPanel(filterContainer, {
-      showCategoryFilter: true,  // Always show category filter
-      defaultCollapsed: true,     // Collapsed by default
-      onFilterChange: (criteria) => this.handleFilterChange(criteria)
+    if (!filterControlPanel) return;
+
+    // Close button handler
+    if (closeButton) {
+      closeButton.addEventListener('click', () => {
+        this.closeFilterPanel();
+      });
+    }
+
+    // Click outside to close
+    document.addEventListener('click', (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const toggleButton = document.getElementById('toggle-filter-panel');
+
+      // Don't close if clicking the toggle button (let toggleFilterPanel handle it)
+      if (toggleButton && toggleButton.contains(target)) {
+        return;
+      }
+
+      // Close if clicking outside the panel and it's open
+      if (this.isFilterPanelOpen &&
+          !filterControlPanel.contains(target) &&
+          !target.closest('#filter-control-panel')) {
+        this.closeFilterPanel();
+      }
     });
 
-    this.filterPanel.render(analysisData);
+    // Listen for toggle event from header button
+    window.addEventListener('toggle-filter-panel', (() => {
+      this.toggleFilterPanel();
+    }) as EventListener);
+  }
+
+  /**
+   * Toggle filter panel open/closed
+   */
+  toggleFilterPanel(): void {
+    if (this.isFilterPanelOpen) {
+      this.closeFilterPanel();
+    } else {
+      this.openFilterPanel();
+    }
+  }
+
+  /**
+   * Open filter panel
+   */
+  private openFilterPanel(): void {
+    const filterControlPanel = document.getElementById('filter-control-panel');
+    if (filterControlPanel) {
+      filterControlPanel.classList.add('open');
+      this.isFilterPanelOpen = true;
+    }
+  }
+
+  /**
+   * Close filter panel
+   */
+  private closeFilterPanel(): void {
+    const filterControlPanel = document.getElementById('filter-control-panel');
+    if (filterControlPanel) {
+      filterControlPanel.classList.remove('open');
+      this.isFilterPanelOpen = false;
+    }
+  }
+
+  /**
+   * Render filter panel with Timeline-style checkboxes
+   */
+  private renderFilterPanel(analysisData: AnalysisData): void {
+    // Extract unique categories
+    const categories = analysisData.categories || [];
+    const categoryList = document.getElementById('categories-list');
+    const categoriesCount = document.getElementById('categories-count');
+
+    if (categoryList && categoriesCount) {
+      categoriesCount.textContent = String(categories.length);
+      categories.forEach(cat => {
+        const item = document.createElement('div');
+        item.className = 'code-structure-filter-item';
+        item.innerHTML = `
+          <input type="checkbox" id="cat-${cat.categoryId}" value="${cat.categoryId}" checked>
+          <label for="cat-${cat.categoryId}">${cat.categoryName}</label>
+        `;
+        categoryList.appendChild(item);
+      });
+    }
+
+    // Extract unique severities
+    const severities = new Set<string>();
+    categories.forEach(cat => {
+      (cat.issues || []).forEach(issue => {
+        if (issue.severity) {
+          severities.add(issue.severity);
+        }
+      });
+    });
+
+    const severityList = document.getElementById('severities-list');
+    const severitiesCount = document.getElementById('severities-count');
+
+    if (severityList && severitiesCount) {
+      const severityOrder = ['critical', 'high', 'medium', 'low'];
+      const sortedSeverities = Array.from(severities).sort((a, b) =>
+        severityOrder.indexOf(a) - severityOrder.indexOf(b)
+      );
+
+      severitiesCount.textContent = String(sortedSeverities.length);
+      sortedSeverities.forEach(severity => {
+        const item = document.createElement('div');
+        item.className = 'code-structure-filter-item';
+        item.innerHTML = `
+          <input type="checkbox" id="sev-${severity}" value="${severity}" checked>
+          <label for="sev-${severity}">${severity.toUpperCase()}</label>
+        `;
+        severityList.appendChild(item);
+      });
+    }
+
+    // Extract unique files
+    const files = new Set<string>();
+    categories.forEach(cat => {
+      (cat.issues || []).forEach(issue => {
+        if (issue.file) {
+          files.add(issue.file);
+        }
+      });
+    });
+
+    const fileList = document.getElementById('files-list');
+    const filesCount = document.getElementById('files-count');
+
+    if (fileList && filesCount) {
+      const sortedFiles = Array.from(files).sort();
+      filesCount.textContent = String(sortedFiles.length);
+
+      // Show first 50 files to avoid overwhelming the UI
+      const displayFiles = sortedFiles.slice(0, 50);
+      displayFiles.forEach(filePath => {
+        const fileName = filePath.split('/').pop() || filePath;
+        const item = document.createElement('div');
+        item.className = 'code-structure-filter-item';
+        item.innerHTML = `
+          <input type="checkbox" id="file-${this.escapeHtml(filePath)}" value="${this.escapeHtml(filePath)}" checked>
+          <label for="file-${this.escapeHtml(filePath)}" title="${this.escapeHtml(filePath)}">${this.escapeHtml(fileName)}</label>
+        `;
+        fileList.appendChild(item);
+      });
+
+      if (sortedFiles.length > 50) {
+        const moreItem = document.createElement('div');
+        moreItem.className = 'code-structure-filter-item';
+        moreItem.style.fontStyle = 'italic';
+        moreItem.style.color = 'var(--vscode-descriptionForeground)';
+        moreItem.textContent = `... and ${sortedFiles.length - 50} more files`;
+        fileList.appendChild(moreItem);
+      }
+    }
+
+    // Setup filter action handlers
+    const clearButton = document.getElementById('clear-filters');
+    const applyButton = document.getElementById('apply-filters');
+
+    if (clearButton) {
+      clearButton.addEventListener('click', () => {
+        this.clearAllFilters();
+      });
+    }
+
+    if (applyButton) {
+      applyButton.addEventListener('click', () => {
+        this.applyFiltersFromCheckboxes();
+      });
+    }
+
+    // Apply filters on checkbox change (live filtering)
+    document.querySelectorAll('.code-structure-filter-item input[type="checkbox"]').forEach(checkbox => {
+      checkbox.addEventListener('change', () => {
+        this.applyFiltersFromCheckboxes();
+      });
+    });
+  }
+
+  /**
+   * Clear all filters
+   */
+  private clearAllFilters(): void {
+    document.querySelectorAll('.code-structure-filter-item input[type="checkbox"]').forEach(checkbox => {
+      (checkbox as HTMLInputElement).checked = true;
+    });
+    this.applyFiltersFromCheckboxes();
+  }
+
+  /**
+   * Apply filters from checkbox selections
+   */
+  private applyFiltersFromCheckboxes(): void {
+    const criteria: FilterCriteria = {};
+
+    // Get selected categories
+    const selectedCategories: string[] = [];
+    document.querySelectorAll('.code-structure-filter-item input[type="checkbox"][id^="cat-"]:checked').forEach(cb => {
+      selectedCategories.push((cb as HTMLInputElement).value);
+    });
+    if (selectedCategories.length > 0 && selectedCategories.length < (this.analysisData?.categories?.length || 0)) {
+      criteria.categories = selectedCategories;
+    }
+
+    // Get selected severities
+    const selectedSeverities: string[] = [];
+    document.querySelectorAll('.code-structure-filter-item input[type="checkbox"][id^="sev-"]:checked').forEach(cb => {
+      selectedSeverities.push((cb as HTMLInputElement).value);
+    });
+    if (selectedSeverities.length > 0 && selectedSeverities.length < 4) {
+      criteria.severities = selectedSeverities;
+    }
+
+    // Get selected files (file-level filtering not yet implemented in FilterCriteria)
+    // TODO: Add file-level filtering support to FilterCriteria type
+    // const selectedFiles: string[] = [];
+    // document.querySelectorAll('.code-structure-filter-item input[type="checkbox"][id^="file-"]:checked').forEach(cb => {
+    //   selectedFiles.push((cb as HTMLInputElement).value);
+    // });
+
+    this.handleFilterChange(criteria);
   }
 
   /**
@@ -193,16 +469,47 @@ export class CodeStructurePanel {
         containerId: 'viz-heatmap'
       },
       {
-        id: 'sunburst',
-        label: 'File Hierarchy',
-        icon: '🌞',
-        containerId: 'viz-sunburst'
-      },
-      {
         id: 'timeline',
         label: 'Trend Analysis',
         icon: '📈',
         containerId: 'viz-timeline'
+      },
+      // NEW: Phase 1 - Working with current data
+      {
+        id: 'treemap',
+        label: 'Category Sizes',
+        icon: '🟦',
+        containerId: 'viz-treemap'
+      },
+      {
+        id: 'dependencies',
+        label: 'Dependencies',
+        icon: '🔗',
+        containerId: 'viz-dependencies'
+      },
+      {
+        id: 'matrix',
+        label: 'Dependency Matrix',
+        icon: '⬛',
+        containerId: 'viz-matrix'
+      },
+      {
+        id: 'parallel',
+        label: 'Multi-Metric',
+        icon: '📊',
+        containerId: 'viz-parallel'
+      },
+      {
+        id: 'test-network',
+        label: 'Test Coverage',
+        icon: '🧪',
+        containerId: 'viz-test-network'
+      },
+      {
+        id: 'calendar',
+        label: 'Activity Calendar',
+        icon: '📅',
+        containerId: 'viz-calendar'
       }
     ];
 
@@ -329,18 +636,49 @@ export class CodeStructurePanel {
           await vizManager.createVisualization(container.id, 'heatmap', heatmapData);
           break;
 
-        case 'sunburst':
-          // Show file hierarchy with filtered issues
-          const sunburstData = dataMapper.toSunburstDiagram(filteredData);
-          await vizManager.createVisualization(container.id, 'sunburst', sunburstData);
-          break;
-
         case 'timeline':
           // Show trend over time for filtered data
           const timelineData = isSingleCategory && selectedCategoryId
             ? dataMapper.toTimelineVisualization(filteredData, selectedCategoryId)
             : dataMapper.toTimelineVisualization(filteredData);
           await vizManager.createVisualization(container.id, 'timeline', timelineData);
+          break;
+
+        // NEW: Phase 1 visualizations
+        case 'treemap':
+          // Show category sizes as nested rectangles
+          const treemapData = dataMapper.toTreemap(filteredData);
+          await vizManager.createVisualization(container.id, 'treemap', treemapData);
+          break;
+
+        case 'dependencies':
+          // Show code dependencies as force-directed graph
+          const depData = dataMapper.toDependencyGraph(filteredData);
+          await vizManager.createVisualization(container.id, 'dependency-graph', depData);
+          break;
+
+        case 'matrix':
+          // Show dependency matrix (compact view of all dependencies)
+          const matrixData = dataMapper.toMatrixView(filteredData);
+          await vizManager.createVisualization(container.id, 'matrix-view', matrixData);
+          break;
+
+        case 'parallel':
+          // Show multi-dimensional comparison
+          const parallelData = dataMapper.toParallelCoordinates(filteredData);
+          await vizManager.createVisualization(container.id, 'parallel-coordinates', parallelData);
+          break;
+
+        case 'test-network':
+          // Show test coverage network (tests → source files)
+          const testNetworkData = dataMapper.toTestCoverageNetwork(filteredData);
+          await vizManager.createVisualization(container.id, 'test-coverage-network', testNetworkData);
+          break;
+
+        case 'calendar':
+          // Show daily activity patterns
+          const calendarData = dataMapper.toCalendarHeatmap(filteredData);
+          await vizManager.createVisualization(container.id, 'calendar-heatmap', calendarData);
           break;
       }
     } catch (error) {
@@ -481,9 +819,17 @@ export class CodeStructurePanel {
     issueListContainer.querySelectorAll('.category-link').forEach(link => {
       link.addEventListener('click', (e) => {
         const categoryId = (e.target as HTMLElement).dataset.categoryId;
-        if (categoryId && this.filterPanel) {
-          // Update filter to show only this category
-          this.filterPanel.setCategories([categoryId]);
+        if (categoryId) {
+          // Update checkboxes to show only this category
+          document.querySelectorAll('.code-structure-filter-item input[type="checkbox"][id^="cat-"]').forEach(cb => {
+            (cb as HTMLInputElement).checked = false;
+          });
+          const targetCheckbox = document.getElementById(`cat-${categoryId}`) as HTMLInputElement;
+          if (targetCheckbox) {
+            targetCheckbox.checked = true;
+          }
+          // Apply the filter
+          this.applyFiltersFromCheckboxes();
         }
       });
     });
@@ -560,16 +906,12 @@ export class CodeStructurePanel {
    * Clear panel
    */
   clear(): void {
-    if (this.filterPanel) {
-      this.filterPanel.dispose();
-      this.filterPanel = null;
-    }
     if (this.suggestionPanel) {
       this.suggestionPanel.dispose();
       this.suggestionPanel = null;
     }
     if (this.tabManager) {
-      this.tabManager.destroy();
+      this.tabManager.dispose();
       this.tabManager = null;
     }
     this.container.innerHTML = '';

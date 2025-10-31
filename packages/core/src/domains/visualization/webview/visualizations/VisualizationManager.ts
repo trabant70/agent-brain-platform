@@ -567,4 +567,3 @@ export const visualizationManager = new VisualizationManager();
 
 // Re-export types from coordination module
 export type { AnalysisData } from '../coordination/AnalysisDataMapper';
-export type { NavigationContext, BreadcrumbItem } from '../coordination/VisualizationCoordinator';
