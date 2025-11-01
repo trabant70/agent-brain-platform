@@ -468,6 +468,14 @@ export class AnalysisDataMapper {
     categories.forEach(cat => {
       console.log(`[AnalysisDataMapper] Processing category: ${cat.categoryName}, issues: ${cat.issues?.length || 0}`);
 
+      // Log first issue structure for debugging
+      if (cat.issues && cat.issues.length > 0) {
+        console.log('[AnalysisDataMapper] Sample issue keys:', Object.keys(cat.issues[0]));
+        console.log('[AnalysisDataMapper] Sample issue.file:', cat.issues[0].file);
+        console.log('[AnalysisDataMapper] Sample issue.filePath:', (cat.issues[0] as any).filePath);
+        console.log('[AnalysisDataMapper] Sample full issue:', cat.issues[0]);
+      }
+
       (cat.issues || []).forEach(issue => {
         const filePath = issue.file;
 

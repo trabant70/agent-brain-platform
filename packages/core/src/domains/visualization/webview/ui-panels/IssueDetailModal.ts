@@ -169,6 +169,15 @@ export class IssueDetailModal {
     document.body.appendChild(this.modal);
     console.log('[IssueDetailModal] Modal appended, now visible in DOM');
 
+    // Add modal-open class to make it visible (required by CSS)
+    const overlay = this.modal.querySelector('.modal-overlay');
+    if (overlay) {
+      overlay.classList.add('modal-open');
+      console.log('[IssueDetailModal] Added modal-open class to overlay');
+    } else {
+      console.error('[IssueDetailModal] Could not find modal-overlay element!');
+    }
+
     this.attachEventListeners(issue);
     console.log('[IssueDetailModal] Event listeners attached');
   }

@@ -190,6 +190,7 @@ export class ParallelCoordinates extends BaseVisualization {
       .data(data.dimensions)
       .join('g')
       .attr('class', 'axis')
+      .attr('data-dimension', (d: ParallelDimension) => d.key)  // Add data attribute for easy selection
       .attr('transform', (d: ParallelDimension) => `translate(${xScale(d.key)},0)`);
 
     // Add axis lines and labels
@@ -281,19 +282,19 @@ export class ParallelCoordinates extends BaseVisualization {
   ): void {
     const d3 = (window as any).d3;
     const data = this.data as ParallelCoordinatesData;
+    const self = this;  // Capture class instance
 
-    axes.each((dim: ParallelDimension) => {
+    axes.each(function(this: SVGGElement, dim: ParallelDimension) {
       const brush = d3.brushY()
         .extent([[-10, 0], [10, height]])
         .on('brush end', () => {
-          this.updateSelection(lines, dimensions, dimensionScales, data.data);
+          self.updateSelection(lines, dimensions, dimensionScales, data.data);
         });
 
-      d3.select(`.axis`)
-        .filter((d: ParallelDimension) => d.key === dim.key)
-        .call(brush);
+      // Use 'this' context which refers to the current axis element
+      d3.select(this).call(brush);
 
-      this.brushes.set(dim.key, brush);
+      self.brushes.set(dim.key, brush);
     });
   }
 
@@ -312,14 +313,15 @@ export class ParallelCoordinates extends BaseVisualization {
     const selections = new Map<string, [number, number]>();
 
     dimensions.forEach(dim => {
-      const brushSelection = d3.brushSelection(
-        d3.select('.axis')
-          .filter((d: ParallelDimension) => d.key === dim.key)
-          .node()
-      );
+      // Use data attribute to find the specific axis element
+      const axisElement = d3.select(`.axis[data-dimension="${dim.key}"]`).node();
 
-      if (brushSelection) {
-        selections.set(dim.key, brushSelection as [number, number]);
+      if (axisElement) {
+        const brushSelection = d3.brushSelection(axisElement);
+
+        if (brushSelection) {
+          selections.set(dim.key, brushSelection as [number, number]);
+        }
       }
     });
 
