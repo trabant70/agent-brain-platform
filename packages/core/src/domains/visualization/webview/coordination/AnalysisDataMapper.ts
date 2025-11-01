@@ -448,26 +448,46 @@ export class AnalysisDataMapper {
    * FIXED: Filters out invalid file paths, provides explicit empty states
    */
   toDependencyGraph(analysis: AnalysisData): any {
+    console.log('[AnalysisDataMapper] toDependencyGraph() called');
+
     const cacheKey = 'dependency-graph';
     const cached = this.getCached(cacheKey, analysis);
-    if (cached) return cached;
+    if (cached) {
+      console.log('[AnalysisDataMapper] Returning cached dependency graph');
+      return cached;
+    }
 
     const categories = analysis.categories || [];
+    console.log('[AnalysisDataMapper] Categories count:', categories.length);
 
     // Extract all unique files with valid paths
     const fileMap = new Map<string, any>();
+    let skippedCount = 0;
+    let validCount = 0;
+
     categories.forEach(cat => {
+      console.log(`[AnalysisDataMapper] Processing category: ${cat.categoryName}, issues: ${cat.issues?.length || 0}`);
+
       (cat.issues || []).forEach(issue => {
         const filePath = issue.file;
 
         // SKIP invalid file paths (unknown, null, undefined, N/A, etc.)
-        if (!filePath ||
-            filePath === 'unknown' ||
-            filePath === 'N/A' ||
-            filePath.trim() === '' ||
-            filePath === 'undefined') {
+        // NOTE: Made less aggressive - only skip truly invalid paths
+        if (!filePath || filePath.trim() === '') {
+          skippedCount++;
           return;  // Skip this issue
         }
+
+        // Also skip obvious placeholders
+        if (filePath.toLowerCase() === 'unknown' ||
+            filePath.toLowerCase() === 'n/a' ||
+            filePath === 'undefined') {
+          console.log(`[AnalysisDataMapper] Skipping placeholder file: ${filePath}`);
+          skippedCount++;
+          return;
+        }
+
+        validCount++;
 
         if (!fileMap.has(filePath)) {
           fileMap.set(filePath, {
@@ -482,19 +502,26 @@ export class AnalysisDataMapper {
       });
     });
 
+    console.log(`[AnalysisDataMapper] File collection complete: ${validCount} valid issues, ${skippedCount} skipped`);
+    console.log(`[AnalysisDataMapper] Unique files found: ${fileMap.size}`);
+
     // If no valid files found, return explicit empty state
     if (fileMap.size === 0) {
+      console.log('[AnalysisDataMapper] No valid files found, returning empty state');
+      console.log('[AnalysisDataMapper] Sample issue files:', categories[0]?.issues?.slice(0, 3).map(i => i.file));
+
       const emptyData = {
         nodes: [],
         links: [],
         isEmpty: true,
-        emptyReason: 'No valid file data available in analysis results'
+        emptyReason: `No valid file data available. Skipped ${skippedCount} invalid paths. Check that analysis results include valid file paths.`
       };
       this.setCached(cacheKey, emptyData, analysis);
       return emptyData;
     }
 
     const files = Array.from(fileMap.values()).slice(0, 30); // Limit to 30 files for performance
+    console.log(`[AnalysisDataMapper] Using ${files.length} files for visualization`);
 
     // Create nodes with enhanced metadata
     const nodes = files.map(file => ({

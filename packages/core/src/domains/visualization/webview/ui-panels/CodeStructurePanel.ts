@@ -827,10 +827,14 @@ export class CodeStructurePanel {
     issueListContainer.innerHTML = html;
 
     // Add modal click handlers for detail buttons
-    issueListContainer.querySelectorAll('.btn-details').forEach(btn => {
+    console.log('[CodeStructurePanel] Attaching detail button handlers, count:', issueListContainer.querySelectorAll('.btn-details').length);
+    issueListContainer.querySelectorAll('.btn-details').forEach((btn, btnIndex) => {
       btn.addEventListener('click', (e) => {
+        console.log('[CodeStructurePanel] Detail button clicked, index:', btnIndex);
         const index = parseInt((e.target as HTMLElement).dataset.issueIndex || '0');
+        console.log('[CodeStructurePanel] Issue index:', index, 'allIssues length:', allIssues.length);
         const { issue, categoryName } = allIssues[index];
+        console.log('[CodeStructurePanel] Calling issueModal.show', { issue, categoryName });
         this.issueModal.show(issue as IssueDetail, categoryName);
       });
     });

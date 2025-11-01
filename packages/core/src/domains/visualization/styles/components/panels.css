@@ -359,20 +359,21 @@
   margin-bottom: 0;
 }
 
+/* Unified Color System - Issue Item Borders */
 .issue-item.severity-critical {
-  border-left-color: #dc2626;
+  border-left-color: #dc2626;  /* red-600 */
 }
 
 .issue-item.severity-high {
-  border-left-color: #f59e0b;
+  border-left-color: #ea580c;  /* orange-600 */
 }
 
 .issue-item.severity-medium {
-  border-left-color: #3b82f6;
+  border-left-color: #f59e0b;  /* amber-500 */
 }
 
 .issue-item.severity-low {
-  border-left-color: #10b981;
+  border-left-color: #65a30d;  /* lime-600 */
 }
 
 .issue-header {
@@ -391,24 +392,25 @@
   letter-spacing: 0.5px;
 }
 
+/* Unified Color System - Issue Severity Labels */
 .severity-critical .issue-severity {
   background: rgba(220, 38, 38, 0.15);
-  color: #dc2626;
+  color: #dc2626;  /* red-600 */
 }
 
 .severity-high .issue-severity {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  background: rgba(234, 88, 12, 0.15);
+  color: #ea580c;  /* orange-600 */
 }
 
 .severity-medium .issue-severity {
-  background: rgba(59, 130, 246, 0.15);
-  color: #3b82f6;
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;  /* amber-500 */
 }
 
 .severity-low .issue-severity {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
+  background: rgba(101, 163, 13, 0.15);
+  color: #65a30d;  /* lime-600 */
 }
 
 .issue-line {
@@ -849,28 +851,35 @@
   white-space: nowrap;
 }
 
+/* Unified Color System - Severity Badges */
 .severity-badge.severity-critical {
   background: rgba(220, 38, 38, 0.2);
-  color: #dc2626;
+  color: #dc2626;  /* red-600 */
   border: 1px solid rgba(220, 38, 38, 0.4);
 }
 
 .severity-badge.severity-high {
-  background: rgba(245, 158, 11, 0.2);
-  color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.4);
+  background: rgba(234, 88, 12, 0.2);
+  color: #ea580c;  /* orange-600 */
+  border: 1px solid rgba(234, 88, 12, 0.4);
 }
 
 .severity-badge.severity-medium {
-  background: rgba(59, 130, 246, 0.2);
-  color: #3b82f6;
-  border: 1px solid rgba(59, 130, 246, 0.4);
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;  /* amber-500 */
+  border: 1px solid rgba(245, 158, 11, 0.4);
 }
 
 .severity-badge.severity-low {
-  background: rgba(16, 185, 129, 0.2);
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.4);
+  background: rgba(101, 163, 13, 0.2);
+  color: #65a30d;  /* lime-600 */
+  border: 1px solid rgba(101, 163, 13, 0.4);
+}
+
+.severity-badge.severity-info {
+  background: rgba(2, 132, 199, 0.2);
+  color: #0284c7;  /* sky-600 */
+  border: 1px solid rgba(2, 132, 199, 0.4);
 }
 
 /* Category Link */

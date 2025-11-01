@@ -39,13 +39,23 @@ export class ParallelCoordinates extends BaseVisualization {
    * Render parallel coordinates
    */
   protected async renderContent(): Promise<void> {
+    console.log('[ParallelCoordinates] renderContent() called');
+    console.log('[ParallelCoordinates] this.data:', this.data);
+
     const d3 = (window as any).d3;
-    if (!this.svg) return;
+    if (!this.svg) {
+      console.log('[ParallelCoordinates] No SVG element');
+      return;
+    }
 
     const data: ParallelCoordinatesData = this.data;
+    console.log('[ParallelCoordinates] data assigned:', data);
+    console.log('[ParallelCoordinates] data type:', typeof data);
+    console.log('[ParallelCoordinates] data.dimensions:', data?.dimensions);
 
     // DEFENSIVE: Validate data structure
     if (!data || typeof data !== 'object') {
+      console.log('[ParallelCoordinates] Invalid data object');
       this.renderEmptyState(
         'No data available',
         '📊',
@@ -54,7 +64,21 @@ export class ParallelCoordinates extends BaseVisualization {
       return;
     }
 
-    if (!Array.isArray(data.dimensions) || data.dimensions.length === 0) {
+    if (!Array.isArray(data.dimensions)) {
+      console.log('[ParallelCoordinates] dimensions is not an array:', data.dimensions);
+      this.renderEmptyState(
+        'Invalid data structure - dimensions missing',
+        '📊',
+        [
+          'The visualization data is malformed',
+          'Please refresh the analysis'
+        ]
+      );
+      return;
+    }
+
+    if (data.dimensions.length === 0) {
+      console.log('[ParallelCoordinates] dimensions array is empty');
       this.renderEmptyState(
         'No dimensions available for comparison',
         '📊',
@@ -67,6 +91,7 @@ export class ParallelCoordinates extends BaseVisualization {
     }
 
     if (!Array.isArray(data.data) || data.data.length === 0) {
+      console.log('[ParallelCoordinates] data.data is empty or invalid');
       this.renderEmptyState(
         'No data points to visualize',
         '📊',
@@ -78,19 +103,31 @@ export class ParallelCoordinates extends BaseVisualization {
       return;
     }
 
-    const width = this.getContentWidth();
-    const height = this.getContentHeight();
+    console.log('[ParallelCoordinates] All validation passed, proceeding with render');
+    console.log('[ParallelCoordinates] dimensions count:', data.dimensions.length);
+    console.log('[ParallelCoordinates] data points count:', data.data.length);
 
-    const margin = { top: 40, right: 20, bottom: 20, left: 20 };
-    const innerWidth = width - margin.left - margin.right;
-    const innerHeight = height - margin.top - margin.bottom;
+    try {
+      const width = this.getContentWidth();
+      const height = this.getContentHeight();
 
-    // Create scales for dimensions
-    const dimensionScales = new Map<string, any>();
-    const xScale = d3.scalePoint()
-      .domain(data.dimensions.map(d => d.key))
-      .range([0, innerWidth])
-      .padding(0.1);
+      const margin = { top: 40, right: 20, bottom: 20, left: 20 };
+      const innerWidth = width - margin.left - margin.right;
+      const innerHeight = height - margin.top - margin.bottom;
+
+      // Create scales for dimensions
+      const dimensionScales = new Map<string, any>();
+      console.log('[ParallelCoordinates] Creating xScale with dimensions:', data.dimensions);
+
+      const xScale = d3.scalePoint()
+        .domain(data.dimensions.map(d => {
+          console.log('[ParallelCoordinates] Mapping dimension:', d, 'key:', d.key);
+          return d.key;
+        }))
+        .range([0, innerWidth])
+        .padding(0.1);
+
+      console.log('[ParallelCoordinates] xScale created successfully');
 
     data.dimensions.forEach(dim => {
       if (dim.type === 'numeric') {
@@ -189,11 +226,25 @@ export class ParallelCoordinates extends BaseVisualization {
       this.addBrushes(axes, data.dimensions, lines, dimensionScales, innerHeight);
     }
 
-    // Add legend
-    this.addLegend(g, colorScale, categories, innerWidth);
+      // Add legend
+      this.addLegend(g, colorScale, categories, innerWidth);
 
-    // Add controls
-    this.addControls(lines);
+      // Add controls
+      this.addControls(lines);
+
+      console.log('[ParallelCoordinates] Rendering completed successfully');
+    } catch (error) {
+      console.error('[ParallelCoordinates] Error during rendering:', error);
+      this.renderEmptyState(
+        'Error rendering visualization',
+        '⚠️',
+        [
+          `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          'Please check the console for details',
+          'Try refreshing the analysis'
+        ]
+      );
+    }
   }
 
   /**

@@ -33,7 +33,10 @@ export class IssueDetailModal {
    * Show modal with issue details
    */
   show(issue: IssueDetail, categoryName: string): void {
+    console.log('[IssueDetailModal] show() called', { issue, categoryName, isOpen: this.isOpen });
+
     if (this.isOpen) {
+      console.log('[IssueDetailModal] Closing existing modal');
       this.close();
     }
 
@@ -43,6 +46,7 @@ export class IssueDetailModal {
     // Focus trap and accessibility
     setTimeout(() => {
       const closeButton = document.getElementById('close-issue-modal');
+      console.log('[IssueDetailModal] Close button found:', !!closeButton);
       if (closeButton) {
         closeButton.focus();
       }
@@ -53,13 +57,17 @@ export class IssueDetailModal {
    * Create modal element
    */
   private createModal(issue: IssueDetail, categoryName: string): void {
+    console.log('[IssueDetailModal] createModal() called');
+
     // Remove existing modal if any
     if (this.modal) {
+      console.log('[IssueDetailModal] Removing existing modal');
       this.modal.remove();
     }
 
     this.modal = document.createElement('div');
     this.modal.id = 'issue-detail-modal-container';
+    console.log('[IssueDetailModal] Modal element created:', this.modal);
 
     const file = issue.file || issue.filePath || 'N/A';
     const message = issue.message || issue.description || issue.title || 'No description available';
@@ -157,8 +165,12 @@ export class IssueDetailModal {
       </div>
     `;
 
+    console.log('[IssueDetailModal] Appending modal to document.body');
     document.body.appendChild(this.modal);
+    console.log('[IssueDetailModal] Modal appended, now visible in DOM');
+
     this.attachEventListeners(issue);
+    console.log('[IssueDetailModal] Event listeners attached');
   }
 
   /**

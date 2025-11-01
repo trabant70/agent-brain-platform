@@ -136,6 +136,7 @@ export interface MatrixViewData {
   nodes: MatrixNode[];
   cells: MatrixCell[];
   isEmpty?: boolean;
+  emptyReason?: string;
 }
 
 // ============================================================================

@@ -4,6 +4,7 @@
  */
 
 import { Logger, LogCategory, LogPathway } from '../../../../infrastructure/logging/Logger';
+import { ColorSystem } from '../../styles/ColorSystem';
 
 const logger = Logger.getInstance();
 
@@ -229,29 +230,34 @@ export abstract class BaseVisualization {
 
   /**
    * Get severity-based color
+   * Now uses unified ColorSystem
    */
   protected getSeverityColor(severity: string): string {
-    const colors: Record<string, string> = {
-      critical: '#ef4444',
-      high: '#f97316',
-      medium: '#f59e0b',
-      low: '#84cc16',
-      info: '#3b82f6'
-    };
-    return colors[severity] || '#6b7280';
+    return ColorSystem.getSeverityColor(severity);
   }
 
   /**
    * Get status-based color
+   * Now uses unified ColorSystem
    */
   protected getStatusColor(status: string): string {
-    const colors: Record<string, string> = {
-      excellent: '#10b981',
-      good: '#84cc16',
-      warning: '#f59e0b',
-      critical: '#ef4444'
-    };
-    return colors[status] || '#6b7280';
+    return ColorSystem.getStatusColor(status);
+  }
+
+  /**
+   * Get category color (consistent hashing)
+   * New method for category-based coloring
+   */
+  protected getCategoryColor(categoryId: string): string {
+    return ColorSystem.getCategoryColor(categoryId);
+  }
+
+  /**
+   * Get status color by score
+   * New method for score-based status coloring
+   */
+  protected getStatusColorByScore(score: number): string {
+    return ColorSystem.getStatusColorByScore(score);
   }
 
   /**
