@@ -195,6 +195,7 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
       set isOrchestratorInitialized(value) { provider.providerState.isOrchestratorInitialized = value; },
       get isWebviewReady() { return provider.providerState.isWebviewReady; },
       set isWebviewReady(value) { provider.providerState.isWebviewReady = value; },
+      lifecycleManager: this.lifecycleManager,
       onI18nRequest: () => { provider.sendI18nData(); }
     } as any);
 

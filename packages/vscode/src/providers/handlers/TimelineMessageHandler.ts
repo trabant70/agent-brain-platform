@@ -14,6 +14,7 @@ import * as path from 'path';
 import { DataOrchestrator } from '@agent-brain/core/domains/visualization/orchestration/DataOrchestrator';
 import { FilterState } from '@agent-brain/core/domains/events';
 import { logger, LogCategory, LogPathway } from '@agent-brain/core/infrastructure/logging/Logger';
+import { WebviewLifecycleManager } from '../services/WebviewLifecycleManager';
 
 export interface TimelineHandlerContext {
   orchestrator: DataOrchestrator;
@@ -21,6 +22,7 @@ export interface TimelineHandlerContext {
   currentRepoPath: string;
   isOrchestratorInitialized: boolean;
   isWebviewReady: boolean;
+  lifecycleManager: WebviewLifecycleManager;
   onI18nRequest?: () => void;  // Callback to send i18n data to webview
 }
 
@@ -73,8 +75,9 @@ export class TimelineMessageHandler {
       LogPathway.WEBVIEW_MESSAGING
     );
 
-    // Mark webview as ready
+    // Mark webview as ready (both flags for consistency)
     this.context.isWebviewReady = true;
+    this.context.lifecycleManager.setWebviewReady(true);
 
     // Ensure orchestrator is initialized
     if (!this.context.isOrchestratorInitialized) {
