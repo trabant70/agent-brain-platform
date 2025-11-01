@@ -379,8 +379,8 @@ export class SuggestionEngine {
     // Count issues per file
     (analysis.categories || []).forEach(category => {
       (category.issues || []).forEach(issue => {
-        if (issue.file) {
-          fileIssueMap.set(issue.file, (fileIssueMap.get(issue.file) || 0) + 1);
+        if (issue.filePath) {
+          fileIssueMap.set(issue.filePath, (fileIssueMap.get(issue.filePath) || 0) + 1);
         }
       });
     });
@@ -462,7 +462,7 @@ export class SuggestionEngine {
 
     const issues = this.getIssuesBySeverity(analysis, severity).slice(0, 10);
     const issueList = issues.map((issue, i) =>
-      `${i + 1}. ${issue.file}:${issue.line || '?'} - ${issue.message}`
+      `${i + 1}. ${issue.filePath}:${issue.line || '?'} - ${issue.message}`
     ).join('\n');
 
     return `${context}Task: Fix ${count} ${severity} severity issue${count !== 1 ? 's' : ''}

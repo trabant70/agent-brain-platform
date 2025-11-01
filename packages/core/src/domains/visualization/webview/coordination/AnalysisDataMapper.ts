@@ -50,7 +50,7 @@ export interface AnalysisData {
     status?: string;
     issues?: Array<{
       severity: string;
-      file?: string;
+      filePath?: string;  // FIXED: Changed from file to filePath to match Issue interface
       line?: number;
       message?: string;
       category?: string;
@@ -254,7 +254,7 @@ export class AnalysisDataMapper {
     const fileIssueMap = new Map<string, { critical: number; high: number; medium: number; low: number; total: number }>();
 
     issues.forEach(issue => {
-      const filePath = issue.file || 'unknown';
+      const filePath = issue.filePath || 'unknown';
       if (!fileIssueMap.has(filePath)) {
         fileIssueMap.set(filePath, { critical: 0, high: 0, medium: 0, low: 0, total: 0 });
       }
@@ -368,7 +368,7 @@ export class AnalysisDataMapper {
     const severityNodes = new Set<string>();
 
     issues.forEach(issue => {
-      if (issue.file) fileNodes.add(issue.file);
+      if (issue.filePath) fileNodes.add(issue.filePath);
       if (issue.severity) severityNodes.add(issue.severity);
     });
 
@@ -390,8 +390,8 @@ export class AnalysisDataMapper {
 
     // File → Severity links (only for top files)
     issues.forEach(issue => {
-      if (issue.file && topFiles.includes(issue.file) && issue.severity) {
-        const sourceId = `file-${issue.file}`;
+      if (issue.filePath && topFiles.includes(issue.filePath) && issue.severity) {
+        const sourceId = `file-${issue.filePath}`;
         const targetId = `severity-${issue.severity}`;
         const existing = links.find(l => l.source === sourceId && l.target === targetId);
         if (existing) {
@@ -471,13 +471,12 @@ export class AnalysisDataMapper {
       // Log first issue structure for debugging
       if (cat.issues && cat.issues.length > 0) {
         console.log('[AnalysisDataMapper] Sample issue keys:', Object.keys(cat.issues[0]));
-        console.log('[AnalysisDataMapper] Sample issue.file:', cat.issues[0].file);
-        console.log('[AnalysisDataMapper] Sample issue.filePath:', (cat.issues[0] as any).filePath);
+        console.log('[AnalysisDataMapper] Sample issue.filePath:', cat.issues[0].filePath);
         console.log('[AnalysisDataMapper] Sample full issue:', cat.issues[0]);
       }
 
       (cat.issues || []).forEach(issue => {
-        const filePath = issue.file;
+        const filePath = issue.filePath;  // FIXED: Changed from issue.file to issue.filePath
 
         // SKIP invalid file paths (unknown, null, undefined, N/A, etc.)
         // NOTE: Made less aggressive - only skip truly invalid paths
@@ -516,7 +515,7 @@ export class AnalysisDataMapper {
     // If no valid files found, return explicit empty state
     if (fileMap.size === 0) {
       console.log('[AnalysisDataMapper] No valid files found, returning empty state');
-      console.log('[AnalysisDataMapper] Sample issue files:', categories[0]?.issues?.slice(0, 3).map(i => i.file));
+      console.log('[AnalysisDataMapper] Sample issue files:', categories[0]?.issues?.slice(0, 3).map(i => i.filePath));
 
       const emptyData = {
         nodes: [],
@@ -666,8 +665,8 @@ export class AnalysisDataMapper {
       categories.forEach((other, j) => {
         if (i !== j) {
           // Count shared files between categories
-          const catFiles = new Set((cat.issues || []).map(iss => iss.file));
-          const otherFiles = new Set((other.issues || []).map(iss => iss.file));
+          const catFiles = new Set((cat.issues || []).map(iss => iss.filePath));
+          const otherFiles = new Set((other.issues || []).map(iss => iss.filePath));
           const shared = Array.from(catFiles).filter(f => otherFiles.has(f)).length;
           matrix[i][j] = shared;
         }
@@ -697,7 +696,7 @@ export class AnalysisDataMapper {
     const fileMap = new Map<string, any>();
     categories.forEach(cat => {
       (cat.issues || []).forEach(issue => {
-        const filePath = issue.file || 'unknown';
+        const filePath = issue.filePath || 'unknown';
         if (!fileMap.has(filePath)) {
           fileMap.set(filePath, {
             path: filePath,
@@ -933,7 +932,7 @@ export class AnalysisDataMapper {
     const fileIssueMap = new Map<string, { critical: number; high: number; medium: number; low: number; total: number }>();
 
     issues.forEach(issue => {
-      const filePath = issue.file || 'unknown';
+      const filePath = issue.filePath || 'unknown';
       if (!fileIssueMap.has(filePath)) {
         fileIssueMap.set(filePath, { critical: 0, high: 0, medium: 0, low: 0, total: 0 });
       }
@@ -1034,7 +1033,7 @@ export class AnalysisDataMapper {
         // Group issues by file
         const fileIssues = new Map<string, number>();
         category.issues.forEach(issue => {
-          const file = this.getFileName(issue.file || 'Unknown');
+          const file = this.getFileName(issue.filePath || 'Unknown');
           fileIssues.set(file, (fileIssues.get(file) || 0) + 1);
         });
 
@@ -1082,7 +1081,7 @@ export class AnalysisDataMapper {
       // Group issues by file
       const fileIssues = new Map<string, number>();
       category.issues.forEach(issue => {
-        const file = this.getFileName(issue.file || 'Unknown');
+        const file = this.getFileName(issue.filePath || 'Unknown');
         fileIssues.set(file, (fileIssues.get(file) || 0) + 1);
       });
 
@@ -1337,8 +1336,8 @@ export class AnalysisDataMapper {
       }
 
       // File pattern filter
-      if (criteria.filePattern && issue.file) {
-        if (!this.matchesFilePattern(issue.file, criteria.filePattern)) {
+      if (criteria.filePattern && issue.filePath) {
+        if (!this.matchesFilePattern(issue.filePath, criteria.filePattern)) {
           return false;
         }
       }
@@ -1347,7 +1346,7 @@ export class AnalysisDataMapper {
       if (criteria.searchQuery) {
         const query = criteria.searchQuery.toLowerCase();
         const matchesMessage = issue.message?.toLowerCase().includes(query);
-        const matchesFile = issue.file?.toLowerCase().includes(query);
+        const matchesFile = issue.filePath?.toLowerCase().includes(query);
         if (!matchesMessage && !matchesFile) {
           return false;
         }

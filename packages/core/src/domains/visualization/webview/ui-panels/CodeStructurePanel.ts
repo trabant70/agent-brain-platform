@@ -301,8 +301,8 @@ export class CodeStructurePanel {
     const files = new Set<string>();
     categories.forEach(cat => {
       (cat.issues || []).forEach(issue => {
-        if (issue.file) {
-          files.add(issue.file);
+        if (issue.filePath) {
+          files.add(issue.filePath);
         }
       });
     });
@@ -785,7 +785,7 @@ export class CodeStructurePanel {
 
     allIssues.forEach(({ issue, categoryName, categoryId }, index) => {
       const severity = issue.severity || 'medium';
-      const file = issue.file || issue.filePath || 'N/A';
+      const file = issue.filePath || 'N/A';
       const fileName = file.split('/').pop() || file;
       const location = issue.line
         ? `${issue.line}${issue.column ? `:${issue.column}` : ''}`
