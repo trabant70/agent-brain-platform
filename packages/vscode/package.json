@@ -2,7 +2,7 @@
   "name": "agent-brain-platform",
   "displayName": "%displayName%",
   "description": "%description%",
-  "version": "0.5.60",
+  "version": "0.5.61",
   "publisher": "agent-brain-local",
   "icon": "images/timeline_large.png",
   "repository": {
@@ -182,6 +182,7 @@
           "default": [
             "feature-completeness",
             "ui-ux-quality",
+            "test-coverage",
             "internationalization"
           ],
           "description": "Categories to include in code structure analysis"
