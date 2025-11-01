@@ -25,6 +25,7 @@ export interface MatrixCell {
 export interface MatrixViewData {
   nodes: MatrixNode[];
   cells: MatrixCell[];
+  isEmpty?: boolean;   // Explicit empty state flag
 }
 
 export class MatrixView extends BaseVisualization {
@@ -42,6 +43,32 @@ export class MatrixView extends BaseVisualization {
     if (!this.svg) return;
 
     const data: MatrixViewData = this.data;
+
+    // DEFENSIVE: Check for empty or invalid data
+    if (!data || data.isEmpty || !data.nodes || data.nodes.length === 0) {
+      this.renderEmptyState(
+        'No data to display in matrix',
+        '📊',
+        [
+          'Matrix view requires node data from dependency analysis',
+          'Ensure your analysis includes file relationships'
+        ]
+      );
+      return;
+    }
+
+    if (data.nodes.length === 1) {
+      this.renderEmptyState(
+        'Only one node found',
+        '⚠️',
+        [
+          'Matrix view requires at least 2 nodes to show relationships',
+          'Try analyzing more files or adjusting filters'
+        ]
+      );
+      return;
+    }
+
     const width = this.getContentWidth();
     const height = this.getContentHeight();
 

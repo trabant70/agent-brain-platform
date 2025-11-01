@@ -16,6 +16,7 @@ import type { FilterCriteria } from './CollapsibleFilterPanel';
 import { SuggestionPanel } from '../ai-suggestions/SuggestionPanel';
 import { VisualizationTabManager } from './VisualizationTabManager';
 import type { VisualizationTab as VizTab } from './VisualizationTabManager';
+import { IssueDetailModal, type IssueDetail } from './IssueDetailModal';
 
 /**
  * Unified Code Structure Panel
@@ -28,10 +29,12 @@ export class CodeStructurePanel {
   private analysisData: AnalysisData | null = null;
   private currentFilter: FilterCriteria = {};
   private isFilterPanelOpen: boolean = false;
+  private issueModal: IssueDetailModal;
 
   constructor(container: HTMLElement, coordinator: VisualizationCoordinator) {
     this.container = container;
     this.coordinator = coordinator;
+    this.issueModal = new IssueDetailModal();
   }
 
   /**
@@ -763,7 +766,7 @@ export class CodeStructurePanel {
       return;
     }
 
-    // Render as table
+    // Render as table (ENHANCED: with truncation, modal, and actions column)
     let html = '<div class="issue-table-wrapper">';
     html += '<table class="issue-table">';
     html += `
@@ -772,41 +775,49 @@ export class CodeStructurePanel {
           <th class="col-severity">Severity</th>
           <th class="col-category">Category</th>
           <th class="col-file">File</th>
-          <th class="col-location">Location</th>
+          <th class="col-location">Loc</th>
           <th class="col-message">Issue</th>
+          <th class="col-actions">Actions</th>
         </tr>
       </thead>
       <tbody>
     `;
 
-    allIssues.forEach(({ issue, categoryName, categoryId }) => {
+    allIssues.forEach(({ issue, categoryName, categoryId }, index) => {
       const severity = issue.severity || 'medium';
       const file = issue.file || issue.filePath || 'N/A';
       const fileName = file.split('/').pop() || file;
-      const location = issue.line ? `Line ${issue.line}${issue.column ? `:${issue.column}` : ''}` : '-';
+      const location = issue.line
+        ? `${issue.line}${issue.column ? `:${issue.column}` : ''}`
+        : '-';
       const message = issue.message || issue.description || issue.title || 'Issue detected';
-      const suggestion = issue.suggestion || issue.recommendation;
+
+      // Truncate long messages for table display
+      const truncatedMessage = message.length > 80
+        ? message.substring(0, 77) + '...'
+        : message;
 
       html += `
-        <tr class="issue-row severity-${severity}" data-category="${this.escapeHtml(categoryId)}">
+        <tr class="issue-row severity-${severity}" data-issue-index="${index}">
           <td class="col-severity">
             <span class="severity-badge severity-${severity}">${severity.toUpperCase()}</span>
           </td>
           <td class="col-category">
-            <span class="category-link" data-category-id="${this.escapeHtml(categoryId)}">${this.escapeHtml(categoryName)}</span>
+            <span class="category-link" data-category-id="${this.escapeHtml(categoryId)}">
+              ${this.escapeHtml(categoryName)}
+            </span>
           </td>
           <td class="col-file" title="${this.escapeHtml(file)}">
-            ${this.escapeHtml(fileName)}
+            <span class="file-name">${this.escapeHtml(fileName)}</span>
           </td>
           <td class="col-location">${this.escapeHtml(location)}</td>
           <td class="col-message">
-            <div class="issue-message">${this.escapeHtml(message)}</div>
-            ${suggestion ? `
-              <div class="issue-suggestion">
-                <span class="suggestion-icon">💡</span>
-                ${this.escapeHtml(suggestion)}
-              </div>
-            ` : ''}
+            <span class="message-text">${this.escapeHtml(truncatedMessage)}</span>
+          </td>
+          <td class="col-actions">
+            <button class="btn-icon btn-details" data-issue-index="${index}" title="View Details">
+              🔍
+            </button>
           </td>
         </tr>
       `;
@@ -814,6 +825,15 @@ export class CodeStructurePanel {
 
     html += '</tbody></table></div>';
     issueListContainer.innerHTML = html;
+
+    // Add modal click handlers for detail buttons
+    issueListContainer.querySelectorAll('.btn-details').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const index = parseInt((e.target as HTMLElement).dataset.issueIndex || '0');
+        const { issue, categoryName } = allIssues[index];
+        this.issueModal.show(issue as IssueDetail, categoryName);
+      });
+    });
 
     // Add click handlers for category links (filter to that category)
     issueListContainer.querySelectorAll('.category-link').forEach(link => {

@@ -445,20 +445,30 @@ export class AnalysisDataMapper {
 
   /**
    * Advanced: Dependency graph
+   * FIXED: Filters out invalid file paths, provides explicit empty states
    */
-  toDependencyGraph(analysis: AnalysisData): DependencyGraphData {
+  toDependencyGraph(analysis: AnalysisData): any {
     const cacheKey = 'dependency-graph';
     const cached = this.getCached(cacheKey, analysis);
     if (cached) return cached;
 
     const categories = analysis.categories || [];
 
-    // Since we don't have real dependency data yet, create a graph from files and categories
-    // Extract all unique files
+    // Extract all unique files with valid paths
     const fileMap = new Map<string, any>();
     categories.forEach(cat => {
       (cat.issues || []).forEach(issue => {
-        const filePath = issue.file || 'unknown';
+        const filePath = issue.file;
+
+        // SKIP invalid file paths (unknown, null, undefined, N/A, etc.)
+        if (!filePath ||
+            filePath === 'unknown' ||
+            filePath === 'N/A' ||
+            filePath.trim() === '' ||
+            filePath === 'undefined') {
+          return;  // Skip this issue
+        }
+
         if (!fileMap.has(filePath)) {
           fileMap.set(filePath, {
             id: filePath,
@@ -472,17 +482,34 @@ export class AnalysisDataMapper {
       });
     });
 
+    // If no valid files found, return explicit empty state
+    if (fileMap.size === 0) {
+      const emptyData = {
+        nodes: [],
+        links: [],
+        isEmpty: true,
+        emptyReason: 'No valid file data available in analysis results'
+      };
+      this.setCached(cacheKey, emptyData, analysis);
+      return emptyData;
+    }
+
     const files = Array.from(fileMap.values()).slice(0, 30); // Limit to 30 files for performance
 
-    // Create nodes
+    // Create nodes with enhanced metadata
     const nodes = files.map(file => ({
       id: file.id,
       label: this.getFileName(file.id),
-      type: this.getFileType(file.id) as 'component' | 'service' | 'utility' | 'config' | 'test' | 'other',
+      type: this.inferFileType(file.id) as 'component' | 'service' | 'utility' | 'config' | 'test' | 'other',
       issueCount: file.issueCount,
-      inDegree: 0,  // Placeholder
-      outDegree: 0,  // Placeholder
-      group: file.categories.size
+      inDegree: 0,  // Will be calculated
+      outDegree: 0,  // Will be calculated
+      group: file.categories.size,
+      metadata: {
+        path: file.id,
+        hasIssues: file.issueCount > 0,
+        categories: Array.from(file.categories)
+      }
     }));
 
     // Create links based on shared categories (placeholder for real dependencies)
@@ -511,13 +538,53 @@ export class AnalysisDataMapper {
       }
     }
 
-    const data: DependencyGraphData = {
+    const data = {
       nodes,
-      links: links.slice(0, 50)  // Limit links for performance
+      links: links.slice(0, 50),  // Limit links for performance
+      isEmpty: false
     };
 
     this.setCached(cacheKey, data, analysis);
     return data;
+  }
+
+  /**
+   * Helper: Infer file type from extension (better type inference)
+   */
+  private inferFileType(path: string): string {
+    const ext = path.split('.').pop()?.toLowerCase() || '';
+    const fileName = this.getFileName(path).toLowerCase();
+
+    // Test files
+    if (fileName.includes('.test.') || fileName.includes('.spec.') || fileName.includes('test')) {
+      return 'test';
+    }
+
+    // Config files
+    if (['json', 'yaml', 'yml', 'toml', 'ini', 'env', 'config'].includes(ext)) {
+      return 'config';
+    }
+
+    // Components (React, Vue, etc.)
+    if (['tsx', 'jsx', 'vue', 'svelte'].includes(ext)) {
+      return 'component';
+    }
+
+    // Services/utilities
+    if (fileName.includes('service') || fileName.includes('api') || fileName.includes('client')) {
+      return 'service';
+    }
+
+    if (fileName.includes('util') || fileName.includes('helper') || fileName.includes('lib')) {
+      return 'utility';
+    }
+
+    // Default based on extension
+    if (['ts', 'js', 'py', 'java', 'go', 'rs', 'cpp', 'c'].includes(ext)) {
+      return 'other';
+    }
+
+    return 'other';
   }
 
   /**
@@ -724,34 +791,60 @@ export class AnalysisDataMapper {
 
   /**
    * Category Detail: Test coverage network
+   * FIXED: Returns unified nodes array matching TestCoverageGraphData contract
    */
-  toTestCoverageNetwork(analysis: AnalysisData): TestCoverageData {
+  toTestCoverageNetwork(analysis: AnalysisData): any {
     const cacheKey = 'test-coverage';
     const cached = this.getCached(cacheKey, analysis);
     if (cached) return cached;
 
     const coverage = analysis.testCoverage?.files || [];
 
-    const data: TestCoverageData = {
-      sourceFiles: coverage.map(file => ({
-        id: file.file,
+    // Create unified nodes array (test nodes + source nodes)
+    const nodes: any[] = [];
+    const testNodeIds = new Set<string>();
+
+    // Add source files as nodes
+    coverage.forEach(file => {
+      nodes.push({
+        id: `source-${file.file}`,
         name: this.getFileName(file.file),
-        coverage: file.coverage
-      })),
-      testFiles: coverage.flatMap(file =>
-        (file.tests || []).map(test => ({
-          id: test,
-          name: this.getFileName(test),
-          type: 'unit' as const
-        }))
-      ),
-      links: coverage.flatMap(file =>
-        (file.tests || []).map(test => ({
-          source: test,
-          target: file.file,
-          coverage: file.coverage
-        }))
-      )
+        type: 'source',
+        filePath: file.file,
+        coverage: file.coverage,
+        linesCovered: 0,  // placeholder
+        totalLines: 0     // placeholder
+      });
+
+      // Track test files to avoid duplicates
+      (file.tests || []).forEach(test => {
+        if (!testNodeIds.has(test)) {
+          testNodeIds.add(test);
+          nodes.push({
+            id: `test-${test}`,
+            name: this.getFileName(test),
+            type: 'test',
+            filePath: test,
+            testCount: 1
+          });
+        }
+      });
+    });
+
+    // Create links from test to source
+    const links: any[] = coverage.flatMap(file =>
+      (file.tests || []).map(test => ({
+        source: `test-${test}`,
+        target: `source-${file.file}`,
+        coveragePercent: file.coverage || 0,
+        linesCovered: 0  // placeholder
+      }))
+    );
+
+    const data = {
+      nodes,
+      links,
+      overallCoverage: analysis.testCoverage?.overall || 0
     };
 
     this.setCached(cacheKey, data, analysis);

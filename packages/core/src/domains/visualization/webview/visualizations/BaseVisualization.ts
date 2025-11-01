@@ -255,6 +255,73 @@ export abstract class BaseVisualization {
   }
 
   /**
+   * Render empty state with message and optional suggestions
+   * Used when data validation fails or no data is available
+   */
+  protected renderEmptyState(
+    message: string,
+    icon: string = '📊',
+    suggestions?: string[]
+  ): void {
+    if (!this.svg) return;
+
+    const width = this.getContentWidth();
+    const height = this.getContentHeight();
+
+    const g = this.svg.select('.visualization-content');
+    g.selectAll('*').remove();  // Clear existing content
+
+    // Create foreignObject for HTML content (better text rendering)
+    const foreign = g.append('foreignObject')
+      .attr('width', width)
+      .attr('height', height)
+      .attr('x', 0)
+      .attr('y', 0);
+
+    let html = `
+      <div xmlns="http://www.w3.org/1999/xhtml" style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        text-align: center;
+        padding: 40px;
+        font-family: var(--vscode-font-family);
+        color: var(--vscode-foreground);
+      ">
+        <div style="font-size: 48px; margin-bottom: 16px;">${icon}</div>
+        <h3 style="margin: 0 0 8px 0; font-size: 16px; font-weight: 600;">
+          ${this.escapeHtml(message)}
+        </h3>
+    `;
+
+    if (suggestions && suggestions.length > 0) {
+      html += `
+        <div style="margin-top: 16px; text-align: left; max-width: 400px; font-size: 13px;">
+          <p style="margin: 0 0 8px 0; font-weight: 600;">Try:</p>
+          <ul style="margin: 0; padding-left: 20px;">
+            ${suggestions.map(s => `<li style="margin-bottom: 4px;">${this.escapeHtml(s)}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+    }
+
+    html += '</div>';
+
+    foreign.html(html);
+  }
+
+  /**
+   * Escape HTML to prevent XSS
+   */
+  protected escapeHtml(text: string): string {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  /**
    * Clean up resources
    */
   destroy(): void {

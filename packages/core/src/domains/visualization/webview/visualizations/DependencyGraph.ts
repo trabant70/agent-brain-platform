@@ -28,6 +28,8 @@ export interface DependencyLink {
 export interface DependencyGraphData {
   nodes: DependencyNode[];
   links: DependencyLink[];
+  isEmpty?: boolean;        // Explicit empty state flag
+  emptyReason?: string;     // Reason for empty state
 }
 
 export class DependencyGraph extends BaseVisualization {
@@ -49,6 +51,33 @@ export class DependencyGraph extends BaseVisualization {
     if (!this.svg) return;
 
     const data: DependencyGraphData = this.data;
+
+    // DEFENSIVE: Check for empty state
+    if (!data || data.isEmpty || !data.nodes || data.nodes.length === 0) {
+      this.renderEmptyState(
+        data?.emptyReason || 'No dependency data available',
+        '🔗',
+        [
+          'Run a code analysis that includes file dependency information',
+          'Ensure your analysis results include valid file paths',
+          'Check that issue data contains file references'
+        ]
+      );
+      return;
+    }
+
+    if (data.nodes.length === 1) {
+      this.renderEmptyState(
+        'Only one file found',
+        '📄',
+        [
+          'Dependency graphs require at least 2 files to show relationships',
+          'Try analyzing a larger codebase or adjusting filters'
+        ]
+      );
+      return;
+    }
+
     const width = this.getContentWidth();
     const height = this.getContentHeight();
 

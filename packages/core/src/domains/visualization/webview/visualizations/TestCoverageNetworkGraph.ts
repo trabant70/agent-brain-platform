@@ -48,6 +48,33 @@ export class TestCoverageNetworkGraph extends BaseVisualization {
     if (!this.svg) return;
 
     const data: TestCoverageData = this.data;
+
+    // DEFENSIVE: Validate data structure
+    if (!data || !Array.isArray(data.nodes) || data.nodes.length === 0) {
+      this.renderEmptyState(
+        'No test coverage data available',
+        '🧪',
+        [
+          'Run tests with coverage reporting enabled',
+          'Ensure your analysis includes test coverage information',
+          'Check that test files are properly linked to source files'
+        ]
+      );
+      return;
+    }
+
+    if (!Array.isArray(data.links) || data.links.length === 0) {
+      this.renderEmptyState(
+        'No test-to-source links found',
+        '🔗',
+        [
+          'Coverage data must include relationships between tests and source files',
+          'Verify your test coverage tool exports link data'
+        ]
+      );
+      return;
+    }
+
     const width = this.getContentWidth();
     const height = this.getContentHeight();
 

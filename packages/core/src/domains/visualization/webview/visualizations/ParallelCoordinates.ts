@@ -43,6 +43,41 @@ export class ParallelCoordinates extends BaseVisualization {
     if (!this.svg) return;
 
     const data: ParallelCoordinatesData = this.data;
+
+    // DEFENSIVE: Validate data structure
+    if (!data || typeof data !== 'object') {
+      this.renderEmptyState(
+        'No data available',
+        '📊',
+        ['Run a code analysis to generate metrics data']
+      );
+      return;
+    }
+
+    if (!Array.isArray(data.dimensions) || data.dimensions.length === 0) {
+      this.renderEmptyState(
+        'No dimensions available for comparison',
+        '📊',
+        [
+          'Analysis data must include multiple metrics',
+          'Ensure files have measurable properties (issues, complexity, etc.)'
+        ]
+      );
+      return;
+    }
+
+    if (!Array.isArray(data.data) || data.data.length === 0) {
+      this.renderEmptyState(
+        'No data points to visualize',
+        '📊',
+        [
+          'No files found in analysis',
+          'Apply different filters to see results'
+        ]
+      );
+      return;
+    }
+
     const width = this.getContentWidth();
     const height = this.getContentHeight();
 
