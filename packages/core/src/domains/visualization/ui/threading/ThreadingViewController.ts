@@ -10,6 +10,7 @@ import { t, onI18nReady } from '../../webview/i18n';
 import type { AnalysisReport, DetectedPattern, AnalysisInsight, Recommendation, MaturityLevel, DetectionResult } from '../../../threading/types';
 import { AdaptiveControlCenter } from '../../../threading/ui/AdaptiveControlCenter';
 import { LevelSelector } from '../../../threading/ui/LevelSelector';
+import { ThreadingTimeline, type ThreadingTimelineData } from '../../webview/visualizations/ThreadingTimeline';
 
 export interface ThreadingViewState {
   enabled: boolean;
@@ -28,6 +29,7 @@ export class ThreadingViewController {
   private messageHandler: ((message: any) => void) | null = null;
   private controlCenter: AdaptiveControlCenter | null = null;
   private levelSelector: LevelSelector | null = null;
+  private timelineVisualization: ThreadingTimeline | null = null;
 
   constructor() {
     this.state = {
@@ -62,14 +64,14 @@ export class ThreadingViewController {
   /**
    * Handle messages from the extension
    */
-  handleMessage(message: any): void {
+  async handleMessage(message: any): Promise<void> {
     switch (message.type) {
       case 'threading:state':
         this.updateState(message.payload);
         break;
 
       case 'threading:timeline-data':
-        this.renderTimeline(message.payload);
+        await this.renderTimeline(message.payload);
         break;
 
       case 'threading:analysis-data':
@@ -88,7 +90,7 @@ export class ThreadingViewController {
 
       // Multi-tier system messages
       case 'threading:detection-result':
-        this.handleDetectionResult(message.payload);
+        await this.handleDetectionResult(message.payload);
         break;
 
       case 'threading:level-changed':
@@ -329,18 +331,52 @@ export class ThreadingViewController {
   /**
    * Render timeline visualization
    */
-  private renderTimeline(data: any): void {
-    const timeline = document.getElementById('threading-timeline');
-    if (!timeline) return;
+  private async renderTimeline(data: ThreadingTimelineData): Promise<void> {
+    const container = document.getElementById('threading-timeline');
+    if (!container) {
+      console.error('[ThreadingViewController] threading-timeline container not found');
+      return;
+    }
 
-    // TODO: Implement D3.js timeline visualization
-    // For now, show placeholder
-    timeline.innerHTML = `
-      <div class="timeline-placeholder">
-        <p>${t('threading.timelineComingSoon')}</p>
-        <pre>${JSON.stringify(data, null, 2)}</pre>
-      </div>
-    `;
+    try {
+      // Clear empty state if present
+      container.innerHTML = '';
+
+      // Create timeline visualization if not already created
+      if (!this.timelineVisualization) {
+        this.timelineVisualization = new ThreadingTimeline(container, {
+          width: container.clientWidth || 800,
+          height: 400,
+          margin: { top: 40, right: 40, bottom: 40, left: 120 }
+        });
+
+        await this.timelineVisualization.initialize();
+      }
+
+      // Render timeline with data
+      if (data && data.events && data.events.length > 0) {
+        console.log(`[ThreadingViewController] Rendering timeline with ${data.events.length} events`);
+        await this.timelineVisualization.render(data);
+      } else {
+        console.log('[ThreadingViewController] No timeline data to render');
+        container.innerHTML = `
+          <div class="empty-state">
+            <span class="codicon codicon-graph-line"></span>
+            <p>${t('threading.noData')}</p>
+            <p class="help-text">${t('threading.startSessionToSeeData')}</p>
+          </div>
+        `;
+      }
+    } catch (error) {
+      console.error('[ThreadingViewController] Failed to render timeline:', error);
+      container.innerHTML = `
+        <div class="error-state">
+          <span class="codicon codicon-error"></span>
+          <p>Failed to render timeline visualization</p>
+          <p class="help-text">${error}</p>
+        </div>
+      `;
+    }
   }
 
   /**
@@ -865,5 +901,33 @@ ${JSON.stringify(p.evidence, null, 2)}</pre>
         toggleBtn.textContent = this.state.showLevelSelector ? 'Hide Level Selector' : 'Show Level Selector';
       });
     }
+  }
+
+  /**
+   * Destroy and clean up resources
+   */
+  destroy(): void {
+    console.log('[ThreadingViewController] Cleaning up resources');
+
+    // Clean up timeline visualization
+    if (this.timelineVisualization) {
+      this.timelineVisualization.destroy();
+      this.timelineVisualization = null;
+    }
+
+    // Clean up control center
+    if (this.controlCenter) {
+      // AdaptiveControlCenter doesn't have a destroy method, but we can null it
+      this.controlCenter = null;
+    }
+
+    // Clean up level selector
+    if (this.levelSelector) {
+      // LevelSelector doesn't have a destroy method, but we can null it
+      this.levelSelector = null;
+    }
+
+    // Clear message handler
+    this.messageHandler = null;
   }
 }

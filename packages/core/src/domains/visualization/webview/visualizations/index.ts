@@ -24,6 +24,7 @@ export { StreamGraph, type StreamGraphData, type StreamDataPoint, type StreamLay
 export { CalendarHeatmap, type CalendarHeatmapData, type CalendarDay } from './CalendarHeatmap';
 export { GaugeChart, type GaugeData, type GaugeZone } from './GaugeChart';
 export { FlameGraph, type FlameGraphData, type FlameNode } from './FlameGraph';
+export { ThreadingTimeline, type ThreadingTimelineData, type ThreadingTimelineEvent } from './ThreadingTimeline';
 export {
   VisualizationManager,
   visualizationManager,

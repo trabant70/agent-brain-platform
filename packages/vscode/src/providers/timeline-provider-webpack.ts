@@ -22,6 +22,7 @@ import { TimelineMessageHandler } from './handlers/TimelineMessageHandler';
 import { KnowledgeMessageHandler } from './handlers/KnowledgeMessageHandler';
 import { SessionMessageHandler } from './handlers/SessionMessageHandler';
 import { CodeStructureMessageHandler } from './handlers/CodeStructureMessageHandler';
+import { ThreadingMessageHandler } from './handlers/ThreadingMessageHandler';
 
 // Specialized services (NEW - Facade Pattern)
 import {
@@ -61,6 +62,7 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
   private knowledgeHandler!: KnowledgeMessageHandler;
   private sessionHandler!: SessionMessageHandler;
   private codeStructureHandler!: CodeStructureMessageHandler;
+  private threadingHandler!: ThreadingMessageHandler;
 
   // Specialized services (NEW)
   private webviewContentService: WebviewContentService;
@@ -162,6 +164,7 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
     this.messageRouter.registerHandler(this.knowledgeHandler);
     this.messageRouter.registerHandler(this.sessionHandler);
     this.messageRouter.registerHandler(this.codeStructureHandler);
+    this.messageRouter.registerHandler(this.threadingHandler);
 
     // Setup message listener
     this.setupMessageListener(webviewView);
@@ -217,6 +220,12 @@ export class TimelineProvider implements vscode.WebviewViewProvider {
       this.codeStructureProvider,
       (message) => webviewView.webview.postMessage(message)
     );
+
+    // Initialize threading handler
+    this.threadingHandler = new ThreadingMessageHandler({
+      view: webviewView,
+      workspacePath: this.currentRepoPath
+    });
   }
 
   /**

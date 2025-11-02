@@ -67,7 +67,7 @@ export interface DependencyLink {
 export interface DependencyGraphData {
   nodes: DependencyNode[];
   links: DependencyLink[];
-  isEmpty: boolean;
+  isEmpty?: boolean;
   emptyReason?: string;
 }
 
